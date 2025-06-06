@@ -1,6 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using UnityEditor;
 using UnityEngine;
 
 public class PlayerController : MonoBehaviour
@@ -11,20 +10,24 @@ public class PlayerController : MonoBehaviour
     private Quaternion targetRotation;
     private bool isRotatingToTarget = false;
     private bool shouldApplyForceAfterRotation = false;
+    private bool hasAppliedBoost = false; // Track if boost was already applied
     private bool isMoving = false;
 
     [Header("Rotation Settings")]
-    public float rotationSpeed = 5f;
-    public float rotationThreshold = 2f; // How close to target before considering "complete"
+    public float rotationSpeed = 10f;
+    public float rotationThreshold = 10f; // Degrees - How close to target before considering "complete"
+    public float boostThreshold = 10f; // Degrees - When to apply boost (higher = earlier boost)
+
 
     [Header("Movement Settings")]
     public float forceAmount = 1f;
     public ForceMode2D forceMode = ForceMode2D.Impulse;
     public float maxSpeed = 5f;
     public float naturalDrag = 0.5f;
+    public float rotationDrag = 1f; // Extra drag applied during rotation
     public float constantAccel = 0.2f; 
     public float minForwardVelocity = 1f; 
-    public float sidewaysDrag = 4f; // higher = less sideways drift
+    public float sidewaysDrag = 1f; // higher = less sideways drift
 
     [Header("Steering Settings")]
     public float steeringForce = 5f;
@@ -55,8 +58,6 @@ public class PlayerController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        //currentMousePosition = GetMouseWorldPosition(); // Calculate once
-
         HandleMouseInput();
         UpdateMovementState();
         UpdateRotation();
@@ -96,7 +97,9 @@ public class PlayerController : MonoBehaviour
     {
         if (isRotatingToTarget)
         {
+            ApplyRotationDeceleration(); // Start decelerating immediately
             ContinueRotationToTarget();
+            CheckForBoostTiming(); // Check if it's time to boost
             CheckRotationCompletion();
         }
     }
@@ -121,7 +124,7 @@ public class PlayerController : MonoBehaviour
         shouldApplyForceAfterRotation = true; // Flag to apply force when rotation completes
 
         DebugLog("Mouse clicked - rotating to point at: " + mousePosition);
-
+        hasAppliedBoost = false;
     }
 
     //Triggers as long as mouse is being clicked
@@ -160,9 +163,31 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    void ApplyRotationDeceleration()
+    {
+        // Apply extra drag during rotation to simulate fish slowing down to turn
+        rb.velocity *= (1f - rotationDrag * Time.deltaTime);
+        DebugLog($"Applying rotation deceleration - Current speed: {rb.velocity.magnitude:F2}");
+    }
+
     void ContinueRotationToTarget()
     {
         transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
+    }
+
+    void CheckForBoostTiming()
+    {
+        if (hasAppliedBoost) return; // Only boost once per rotation
+
+        float angleDifference = Quaternion.Angle(transform.rotation, targetRotation);
+
+        // Apply boost when close to target (but not complete)
+        if (angleDifference <= boostThreshold)
+        {
+            ApplyForceInDirection();
+            hasAppliedBoost = true;
+            DebugLog($"Applied boost at {angleDifference:F1} degrees from target!");
+        }
     }
 
     void CheckRotationCompletion()
@@ -175,12 +200,9 @@ public class PlayerController : MonoBehaviour
             transform.rotation = targetRotation; // Snap to exact rotation
             isRotatingToTarget = false;
 
-            // Apply force if flagged to do so
-            if (shouldApplyForceAfterRotation)
-            {
-                ApplyForceInDirection();
-                shouldApplyForceAfterRotation = false;
-            }
+            // Apply force
+            //ApplyForceInDirection();
+            //shouldApplyForceAfterRotation = false;
 
             DebugLog("Rotation completed!");
         }

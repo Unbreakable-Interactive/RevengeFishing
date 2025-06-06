@@ -542,14 +542,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   rotationSpeed: 10
   rotationThreshold: 10
-  forceAmount: 1
+  boostThreshold: 15
+  forceAmount: 2
   forceMode: 1
-  maxSpeed: 10
-  naturalDrag: 0.5
+  maxSpeed: 20
+  naturalDrag: 0.2
+  rotationDrag: 0.5
   constantAccel: 0.2
   minForwardVelocity: 1
-  sidewaysDrag: 4
-  steeringForce: 5
+  sidewaysDrag: 2
+  steeringForce: 10
   minVelocityForSteering: 0.5
   steeringDamping: 0.98
   enableDebugLogs: 0
