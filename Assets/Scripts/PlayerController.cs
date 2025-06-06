@@ -12,11 +12,6 @@ public class PlayerController : MonoBehaviour
     private bool isRotatingToTarget = false;
     private bool shouldApplyForceAfterRotation = false;
     private bool isMoving = false;
-    private Vector2 currentMousePosition;
-    private FishState fishState = FishState.Idle;
-
-    public enum FishState { Idle, Rotating, Swimming, Steering }
-
 
     [Header("Rotation Settings")]
     public float rotationSpeed = 5f;
@@ -39,21 +34,10 @@ public class PlayerController : MonoBehaviour
     [Header("Debug")]
     public bool enableDebugLogs = false;
 
-    //Passes Debugger messages through enabled check
-    void DebugLog(string message)
-    {
-        if (enableDebugLogs) Debug.Log(message);
-    }
-
     // Start is called before the first frame update
     void Start()
     {
-        mainCamera = Camera.main;
-
-        if (mainCamera == null)
-        {
-            mainCamera = FindObjectOfType<Camera>();
-        }
+        mainCamera = Camera.main ?? FindObjectOfType<Camera>();
 
         rb = GetComponent<Rigidbody2D>();
 
@@ -74,14 +58,8 @@ public class PlayerController : MonoBehaviour
         //currentMousePosition = GetMouseWorldPosition(); // Calculate once
 
         HandleMouseInput();
-        CheckIfMoving();
-
-        if (isRotatingToTarget)
-        {
-            ContinueRotationToTarget();
-        }
-
-        CheckRotationCompletion();
+        UpdateMovementState();
+        UpdateRotation();
         HandleSteering();
         ApplyConstantAccel();
         ReduceSidewaysVelocity();
@@ -108,10 +86,19 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    void CheckIfMoving()
+    void UpdateMovementState()
     {
         // Consider the object moving if it has significant velocity
         isMoving = rb.velocity.magnitude > minVelocityForSteering;
+    }
+
+    void UpdateRotation()
+    {
+        if (isRotatingToTarget)
+        {
+            ContinueRotationToTarget();
+            CheckRotationCompletion();
+        }
     }
 
     void HandleSteering()
@@ -122,30 +109,7 @@ public class PlayerController : MonoBehaviour
         // 3. Not currently doing initial rotation
         if (isMoving && Input.GetMouseButton(0) && !shouldApplyForceAfterRotation)
         {
-            Vector2 mousePosition = GetMouseWorldPosition();
-            ApplySteering(mousePosition);
-        }
-    }
-
-    void ApplySteering(Vector2 targetPosition)
-    {
-        Vector2 direction = targetPosition - (Vector2)transform.position;
-
-        if (direction != Vector2.zero)
-        {
-            // Rotate toward the target
-            float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
-            Quaternion targetRotation = Quaternion.AngleAxis(angle, Vector3.forward);
-            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
-
-            // Apply steering force in the direction we're facing
-            Vector2 steeringDirection = transform.right;
-            rb.AddForce(steeringDirection * steeringForce, ForceMode2D.Force);
-
-            // Apply damping to prevent infinite acceleration
-            rb.velocity *= steeringDamping;
-
-            DebugLog("Steering toward: " + targetPosition);
+            ApplySteering(GetMouseWorldPosition());
         }
     }
 
@@ -203,25 +167,22 @@ public class PlayerController : MonoBehaviour
 
     void CheckRotationCompletion()
     {
-        if (isRotatingToTarget)
+        float angleDifference = Quaternion.Angle(transform.rotation, targetRotation);
+
+        if (angleDifference < rotationThreshold)
         {
-            float angleDifference = Quaternion.Angle(transform.rotation, targetRotation);
+            // Rotation is complete
+            transform.rotation = targetRotation; // Snap to exact rotation
+            isRotatingToTarget = false;
 
-            if (angleDifference < rotationThreshold)
+            // Apply force if flagged to do so
+            if (shouldApplyForceAfterRotation)
             {
-                // Rotation is complete
-                transform.rotation = targetRotation; // Snap to exact rotation
-                isRotatingToTarget = false;
-
-                // Apply force if flagged to do so
-                if (shouldApplyForceAfterRotation)
-                {
-                    ApplyForceInDirection();
-                    shouldApplyForceAfterRotation = false;
-                }
-
-                DebugLog("Rotation completed!");
+                ApplyForceInDirection();
+                shouldApplyForceAfterRotation = false;
             }
+
+            DebugLog("Rotation completed!");
         }
     }
 
@@ -234,6 +195,28 @@ public class PlayerController : MonoBehaviour
         rb.AddForce(forceDirection * forceAmount, forceMode);
 
         DebugLog("Applied force in direction: " + forceDirection);
+    }
+
+    void ApplySteering(Vector2 targetPosition)
+    {
+        Vector2 direction = targetPosition - (Vector2)transform.position;
+
+        if (direction != Vector2.zero)
+        {
+            // Rotate toward the target
+            float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+            Quaternion targetRotation = Quaternion.AngleAxis(angle, Vector3.forward);
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
+
+            // Apply steering force in the direction we're facing
+            Vector2 steeringDirection = transform.right;
+            rb.AddForce(steeringDirection * steeringForce, ForceMode2D.Force);
+
+            // Apply damping to prevent infinite acceleration
+            rb.velocity *= steeringDamping;
+
+            DebugLog("Steering toward: " + targetPosition);
+        }
     }
 
     void ApplyConstantAccel()
@@ -288,17 +271,9 @@ public class PlayerController : MonoBehaviour
         return new Vector2(mouseWorldPosition.x, mouseWorldPosition.y);
     }
 
-    //Rotates the player's vector to the provided mouse position
-    //void RotatePlayerToMouse(Vector2 mousePosition)
-    //{
-    //    Vector2 direction = mousePosition - (Vector2)transform.position;
-
-    //    if (direction != Vector2.zero)
-    //    {
-    //        float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
-    //        Quaternion targetRotation = Quaternion.AngleAxis(angle, Vector3.forward);
-
-    //        transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
-    //    }
-    //}
+    //Passes Debugger messages through enabled check
+    void DebugLog(string message)
+    {
+        if (enableDebugLogs) Debug.Log(message);
+    }
 }
