@@ -394,6 +394,14 @@ PrefabInstance:
       propertyPath: m_Name
       value: Player
       objectReference: {fileID: 0}
+    - target: {fileID: 7015856836239744414, guid: b69f09c4e1675754487856532c9a780a, type: 3}
+      propertyPath: rotationDrag
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 7015856836239744414, guid: b69f09c4e1675754487856532c9a780a, type: 3}
+      propertyPath: rotationSpeed
+      value: 15
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
