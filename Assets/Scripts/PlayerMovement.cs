@@ -18,8 +18,26 @@ public class PlayerMovement : MonoBehaviour
     public float rotationThreshold = 10f; // Degrees - How close to target before considering "complete"
     public float boostThreshold = 10f; // Degrees - When to apply boost (higher = earlier boost)
 
+    [Header("Water/Air Movement Modes")]
+    public bool isAboveWater = false;
+    public float airGravityScale = 2f;
+    public float underwaterGravityScale = 0.1f;
+    public float airDrag = 1.5f;
+    public float underwaterDrag = 0.5f;
+    public float airMaxSpeed = 3f;
+    public float underwaterMaxSpeed = 5f;
+    public float airRotationSpeed = 15f;
+    public float underwaterRotationSpeed = 10f;
 
-    [Header("Movement Settings")]
+    [Header("Variable Gravity Settings")]
+    public float airGravityAscending = 1.5f;    // Lighter gravity when moving upward
+    public float airGravityDescending = 4f;     // Stronger gravity when falling down
+    public float gravityTransitionSpeed = 2f;   // How quickly gravity changes
+    public float velocityThreshold = 0.1f;      // Minimum velocity to determine direction
+
+    private float currentGravityScale;          // Current gravity being applied
+
+    [Header("Water Movement Settings")]
     public float forceAmount = 1f;
     public ForceMode2D forceMode = ForceMode2D.Impulse;
     public float maxSpeed = 5f;
@@ -58,6 +76,18 @@ public class PlayerMovement : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (isAboveWater)
+        {
+            AirborneBehavior();
+        }
+        else
+        {
+            UnderwaterBehavior();
+        }
+    }
+
+    public void UnderwaterBehavior()
+    {
         HandleMouseInput();
         UpdateMovementState();
         UpdateRotation();
@@ -65,6 +95,69 @@ public class PlayerMovement : MonoBehaviour
         ApplyConstantAccel();
         ReduceSidewaysVelocity();
         ClampVelocity();
+    }
+
+    public void AirborneBehavior()
+    {
+        // Determine if fish is ascending or descending
+        bool isAscending = rb.velocity.y > velocityThreshold;
+        bool isDescending = rb.velocity.y < -velocityThreshold;
+
+        // Determine target gravity based on vertical movement
+        float targetGravityScale;
+
+        if (isAscending)
+        {
+            // Fish is jumping up - apply lighter gravity
+            targetGravityScale = airGravityAscending;
+            DebugLog("Fish ascending - applying lighter gravity");
+        }
+        else if (isDescending)
+        {
+            // Fish is falling down - apply stronger gravity
+            targetGravityScale = airGravityDescending;
+            DebugLog("Fish descending - applying stronger gravity");
+        }
+        else
+        {
+            // Fish is at peak or nearly stationary - use default air gravity
+            targetGravityScale = airGravityScale;
+            DebugLog("Fish at peak - using default air gravity");
+        }
+
+        // Smoothly transition to target gravity for natural feel
+        currentGravityScale = Mathf.Lerp(currentGravityScale, targetGravityScale, gravityTransitionSpeed * Time.deltaTime);
+        rb.gravityScale = currentGravityScale;
+
+        // Reduce control when airborne (existing behavior)
+        steeringForce *= 0.3f;
+
+        DebugLog($"Current gravity scale: {currentGravityScale:F2}, Y velocity: {rb.velocity.y:F2}");
+    }
+
+    public void SetMovementMode(bool aboveWater)
+    {
+        isAboveWater = aboveWater;
+
+        if (isAboveWater)
+        {
+            // Airborne mode - fish is out of water
+            currentGravityScale = airGravityScale; // Initialize current gravity
+            rb.gravityScale = currentGravityScale;
+            rb.drag = airDrag;
+            maxSpeed = airMaxSpeed;
+            rotationSpeed = airRotationSpeed;
+            Debug.Log("Switched to AIRBORNE mode");
+        }
+        else
+        {
+            // Underwater mode - fish is in water
+            rb.gravityScale = underwaterGravityScale;
+            rb.drag = underwaterDrag;
+            maxSpeed = underwaterMaxSpeed;
+            rotationSpeed = underwaterRotationSpeed;
+            Debug.Log("Switched to UNDERWATER mode");
+        }
     }
 
     void HandleMouseInput()
