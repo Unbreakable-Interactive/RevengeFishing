@@ -37,6 +37,14 @@ public class PlayerMovement : MonoBehaviour
 
     private float currentGravityScale;          // Current gravity being applied
 
+    [Header("Airborne Rotation Settings")]
+    public bool enableAirborneAutoRotation = true;     // Master toggle for auto-rotation
+    public float airborneRotationSpeed = 8f;          // How fast fish rotates to face velocity
+    public float minVelocityForAutoRotation = 0.3f;   // Minimum speed needed for auto-rotation
+    public bool allowAirborneRotationOverride = false; // Special override flag for future features
+
+    private bool isAirborneRotationOverridden = false; // Internal override state
+
     [Header("Water Movement Settings")]
     public float forceAmount = 1f;
     public ForceMode2D forceMode = ForceMode2D.Impulse;
@@ -99,40 +107,11 @@ public class PlayerMovement : MonoBehaviour
 
     public void AirborneBehavior()
     {
-        // Determine if fish is ascending or descending
-        bool isAscending = rb.velocity.y > velocityThreshold;
-        bool isDescending = rb.velocity.y < -velocityThreshold;
-
-        // Determine target gravity based on vertical movement
-        float targetGravityScale;
-
-        if (isAscending)
-        {
-            // Fish is jumping up - apply lighter gravity
-            targetGravityScale = airGravityAscending;
-            DebugLog("Fish ascending - applying lighter gravity");
-        }
-        else if (isDescending)
-        {
-            // Fish is falling down - apply stronger gravity
-            targetGravityScale = airGravityDescending;
-            DebugLog("Fish descending - applying stronger gravity");
-        }
-        else
-        {
-            // Fish is at peak or nearly stationary - use default air gravity
-            targetGravityScale = airGravityScale;
-            DebugLog("Fish at peak - using default air gravity");
-        }
-
-        // Smoothly transition to target gravity for natural feel
-        currentGravityScale = Mathf.Lerp(currentGravityScale, targetGravityScale, gravityTransitionSpeed * Time.deltaTime);
-        rb.gravityScale = currentGravityScale;
-
+        AirGravity();
+        HandleAirborneRotation();
         // Reduce control when airborne (existing behavior)
         steeringForce *= 0.3f;
 
-        DebugLog($"Current gravity scale: {currentGravityScale:F2}, Y velocity: {rb.velocity.y:F2}");
     }
 
     public void SetMovementMode(bool aboveWater)
@@ -377,6 +356,111 @@ public class PlayerMovement : MonoBehaviour
             rb.velocity = rb.velocity.normalized * maxSpeed;
         }
     }
+
+    void AirGravity()
+    {
+        // Determine if fish is ascending or descending
+        bool isAscending = rb.velocity.y > velocityThreshold;
+        bool isDescending = rb.velocity.y < -velocityThreshold;
+
+        // Determine target gravity based on vertical movement
+        float targetGravityScale;
+
+        if (isAscending)
+        {
+            // Fish is jumping up - apply lighter gravity
+            targetGravityScale = airGravityAscending;
+            DebugLog("Fish ascending - applying lighter gravity");
+        }
+        else if (isDescending)
+        {
+            // Fish is falling down - apply stronger gravity
+            targetGravityScale = airGravityDescending;
+            DebugLog("Fish descending - applying stronger gravity");
+        }
+        else
+        {
+            // Fish is at peak or nearly stationary - use default air gravity
+            targetGravityScale = airGravityScale;
+            DebugLog("Fish at peak - using default air gravity");
+        }
+
+        // Smoothly transition to target gravity for natural feel
+        currentGravityScale = Mathf.Lerp(currentGravityScale, targetGravityScale, gravityTransitionSpeed * Time.deltaTime);
+        rb.gravityScale = currentGravityScale;
+
+        DebugLog($"Current gravity scale: {currentGravityScale:F2}, Y velocity: {rb.velocity.y:F2}");
+
+    }
+
+    void HandleAirborneRotation()
+    {
+        // Check if auto-rotation should be applied
+        bool shouldAutoRotate = enableAirborneAutoRotation &&
+                               !isAirborneRotationOverridden &&
+                               !allowAirborneRotationOverride &&
+                               rb.velocity.magnitude > minVelocityForAutoRotation;
+
+        if (shouldAutoRotate)
+        {
+            // Calculate target rotation based on velocity direction
+            Vector2 velocityDirection = rb.velocity.normalized;
+            float targetAngle = Mathf.Atan2(velocityDirection.y, velocityDirection.x) * Mathf.Rad2Deg;
+            Quaternion targetRotation = Quaternion.AngleAxis(targetAngle, Vector3.forward);
+
+            // Smoothly rotate to face the velocity direction
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation,
+                                                airborneRotationSpeed * Time.deltaTime);
+
+            DebugLog($"Auto-rotating fish to face velocity direction: {targetAngle:F1}°");
+        }
+        else if (!shouldAutoRotate && rb.velocity.magnitude <= minVelocityForAutoRotation)
+        {
+            DebugLog("Fish velocity too low for auto-rotation");
+        }
+        else if (isAirborneRotationOverridden || allowAirborneRotationOverride)
+        {
+            DebugLog("Airborne auto-rotation is overridden");
+        }
+    }
+
+    /// <summary>
+    /// Temporarily override airborne auto-rotation (for special abilities, etc.)
+    /// </summary>
+    /// <param name="overrideRotation">True to disable auto-rotation, false to re-enable</param>
+    public void SetAirborneRotationOverride(bool overrideRotation)
+    {
+        isAirborneRotationOverridden = overrideRotation;
+        DebugLog($"Airborne rotation override set to: {overrideRotation}");
+    }
+
+    /// <summary>
+    /// Check if airborne auto-rotation is currently active
+    /// </summary>
+    /// <returns>True if auto-rotation is active, false if overridden or disabled</returns>
+    public bool IsAirborneAutoRotationActive()
+    {
+        return enableAirborneAutoRotation &&
+               !isAirborneRotationOverridden &&
+               !allowAirborneRotationOverride &&
+               rb.velocity.magnitude > minVelocityForAutoRotation;
+    }
+
+    /// <summary>
+    /// Manually set the fish's rotation while airborne (when override is active)
+    /// </summary>
+    /// <param name="targetAngle">Angle in degrees</param>
+    /// <param name="rotationSpeed">Speed of rotation (optional, uses airborneRotationSpeed if not specified)</param>
+    public void SetAirborneRotation(float targetAngle, float? rotationSpeed = null)
+    {
+        if (isAboveWater && (isAirborneRotationOverridden || allowAirborneRotationOverride))
+        {
+            Quaternion targetRotation = Quaternion.AngleAxis(targetAngle, Vector3.forward);
+            float speed = rotationSpeed ?? airborneRotationSpeed;
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, speed * Time.deltaTime);
+            DebugLog($"Manually setting airborne rotation to: {targetAngle:F1}°");
+        }
+    } 
 
     //Determines the current position of the mouse in the context of the game world
     Vector2 GetMouseWorldPosition()

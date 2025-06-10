@@ -196,7 +196,7 @@ CircleCollider2D:
   m_UsedByComposite: 0
   m_Offset: {x: -0.2, y: 0}
   serializedVersion: 2
-  m_Radius: 0.4
+  m_Radius: 0.5
 --- !u!1 &6728867108004361845
 GameObject:
   m_ObjectHideFlags: 0
@@ -249,14 +249,18 @@ MonoBehaviour:
   rotationThreshold: 10
   boostThreshold: 15
   isAboveWater: 0
-  airGravityScale: 2
+  airGravityScale: 1
   underwaterGravityScale: 0.1
-  airDrag: 1.5
+  airDrag: 0
   underwaterDrag: 0.5
-  airMaxSpeed: 3
-  underwaterMaxSpeed: 5
+  airMaxSpeed: 10
+  underwaterMaxSpeed: 20
   airRotationSpeed: 15
   underwaterRotationSpeed: 10
+  airGravityAscending: 1.5
+  airGravityDescending: 4
+  gravityTransitionSpeed: 2
+  velocityThreshold: 0.1
   forceAmount: 2
   forceMode: 1
   maxSpeed: 20

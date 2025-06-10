@@ -1588,29 +1588,9 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5938476875424283519, guid: b69f09c4e1675754487856532c9a780a, type: 3}
-      propertyPath: m_Radius
-      value: 0.5
-      objectReference: {fileID: 0}
     - target: {fileID: 6728867108004361845, guid: b69f09c4e1675754487856532c9a780a, type: 3}
       propertyPath: m_Name
       value: Player
-      objectReference: {fileID: 0}
-    - target: {fileID: 7015856836239744414, guid: b69f09c4e1675754487856532c9a780a, type: 3}
-      propertyPath: airDrag
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7015856836239744414, guid: b69f09c4e1675754487856532c9a780a, type: 3}
-      propertyPath: airMaxSpeed
-      value: 10
-      objectReference: {fileID: 0}
-    - target: {fileID: 7015856836239744414, guid: b69f09c4e1675754487856532c9a780a, type: 3}
-      propertyPath: airGravityScale
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 7015856836239744414, guid: b69f09c4e1675754487856532c9a780a, type: 3}
-      propertyPath: underwaterMaxSpeed
-      value: 20
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
