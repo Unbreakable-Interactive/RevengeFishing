@@ -21,7 +21,7 @@ public class PlayerMovement : MonoBehaviour
     [Header("Water/Air Movement Modes")]
     public bool isAboveWater = false;
     public float airGravityScale = 2f;
-    public float underwaterGravityScale = 0.1f;
+    public float underwaterGravityScale = 0f;
     public float airDrag = 1.5f;
     public float underwaterDrag = 0.5f;
     public float airMaxSpeed = 3f;
@@ -107,9 +107,6 @@ public class PlayerMovement : MonoBehaviour
     {
         AirGravity();
         HandleAirborneRotation();
-        // Reduce control when airborne (existing behavior)
-        steeringForce *= 0.3f;
-
     }
 
     public void SetMovementMode(bool aboveWater)

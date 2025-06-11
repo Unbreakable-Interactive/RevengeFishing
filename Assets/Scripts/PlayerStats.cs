@@ -9,7 +9,7 @@ public class PlayerStats : MonoBehaviour
     /*[SerializeField]*/ private float hunger; //player dies if reaches 100%
     /*[SerializeField]*/ private float fatigue; //player dies if reaches 100%
     private enum Phase { infant, juvenile, adult, beast, monster }
-    [SerializeField] private Phase phase;
+    [SerializeField] private Phase phase = Phase.infant;
 
     // Start is called before the first frame update
     void Start()
@@ -26,31 +26,10 @@ public class PlayerStats : MonoBehaviour
 
     void SetPhase(float powLevel)
     {
-        switch (powerLevel)
-        {
-            case (100):
-                phase = Phase.infant;
-                break;
-
-            case (10000):
-                phase = Phase.juvenile;
-                break;
-
-            case (1000000):
-                phase = Phase.adult;
-                break;
-
-            case (100000000):
-                phase = Phase.beast;
-                break;
-
-            case (10000000000):
-                phase = Phase.monster;
-                break;
-
-            default:
-                phase = Phase.infant;
-                break;
-        }
+        if (powLevel >= 10000000000) phase = Phase.monster; //modify these to be dynamic instead of hardcoded
+        else if (powLevel >= 100000000) phase = Phase.beast;
+        else if (powLevel >= 1000000) phase = Phase.adult;
+        else if (powLevel >= 10000) phase = Phase.juvenile;
+        else phase = Phase.infant;
     }
 }
