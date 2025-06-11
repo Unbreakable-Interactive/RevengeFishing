@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class WaterCheck : MonoBehaviour
+public class WaterCheckPlayer : MonoBehaviour
 {
     [Header("Water Detection")]
     public LayerMask playerLayerMask = -1;
