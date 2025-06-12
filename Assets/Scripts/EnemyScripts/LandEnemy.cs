@@ -9,7 +9,7 @@ public abstract class LandEnemy : Enemy
     public float maxUpwardWaterSpeed = 3f;
 
     [Header("Water detection")]
-    public WaterCheckPlayer waterCheck;
+    public WaterCheck waterCheck;
     public bool isInWater = false;
     public bool isAboveWater = true;
 

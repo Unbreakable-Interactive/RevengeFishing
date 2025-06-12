@@ -61,7 +61,7 @@ public class Fisherman : LandEnemy
         // Find water check if not assigned
         if (waterCheck == null)
         {
-            waterCheck = FindObjectOfType<WaterCheckPlayer>();
+            waterCheck = FindObjectOfType<WaterCheck>();
         }
 
         // Start with idle state

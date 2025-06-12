@@ -121,7 +121,7 @@ public class PlayerMovement : MonoBehaviour
             rb.drag = airDrag;
             maxSpeed = airMaxSpeed;
             rotationSpeed = airRotationSpeed;
-            Debug.Log("Switched to AIRBORNE mode");
+            DebugLog("Switched to AIRBORNE mode");
         }
         else
         {
@@ -130,7 +130,7 @@ public class PlayerMovement : MonoBehaviour
             rb.drag = underwaterDrag;
             maxSpeed = underwaterMaxSpeed;
             rotationSpeed = underwaterRotationSpeed;
-            Debug.Log("Switched to UNDERWATER mode");
+            DebugLog("Switched to UNDERWATER mode");
         }
     }
 

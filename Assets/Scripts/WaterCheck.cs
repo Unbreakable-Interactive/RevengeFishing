@@ -1,10 +1,11 @@
 using UnityEngine;
 
-public class WaterCheckPlayer : MonoBehaviour
+public class WaterCheck : MonoBehaviour
 {
     [Header("Water Detection")]
     public LayerMask playerLayerMask = -1;
     public PlayerMovement playerMovement;
+    public EnemyLandMovement enemyLandMovement;
 
     private void Start()
     {
@@ -23,6 +24,13 @@ public class WaterCheckPlayer : MonoBehaviour
             playerMovement.SetMovementMode(isAboveWater);
 
             Debug.Log($"Player {(isAboveWater ? "jumped out of" : "dove into")} water!");
+        }
+        
+        if (enemyLandMovement != null)
+        {
+            bool isAboveWater = other.transform.position.y > transform.position.y;
+
+            enemyLandMovement.SetMovementMode(isAboveWater);
         }
     }
 }
