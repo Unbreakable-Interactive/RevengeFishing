@@ -68,4 +68,42 @@ public class Platform : MonoBehaviour
             Physics2D.IgnoreCollision(platformCollider, enemyCollider, !shouldCollide);
         }
     }
+
+    // Add this method to your Platform.cs
+    public void RegisterEnemyAtRuntime(EnemyBase enemy)
+    {
+        if (enemy != null && !assignedEnemies.Contains(enemy))
+        {
+            assignedEnemies.Add(enemy);
+            enemy.SetAssignedPlatform(this);
+
+            // Apply collision rules immediately
+            Collider2D enemyCollider = enemy.GetComponent<Collider2D>();
+            if (enemyCollider != null && platformCollider != null)
+            {
+                Physics2D.IgnoreCollision(enemyCollider, platformCollider, false);
+            }
+
+            if (showDebugInfo)
+            {
+                Debug.Log($"Registered {enemy.name} to platform {gameObject.name} at runtime");
+            }
+        }
+    }
+
+    // Helper method to find and register nearby enemies
+    public void RegisterNearbyEnemies(float radius = 10f)
+    {
+        Collider2D[] nearbyColliders = Physics2D.OverlapCircleAll(transform.position, radius);
+
+        foreach (Collider2D col in nearbyColliders)
+        {
+            EnemyBase enemy = col.GetComponent<EnemyBase>();
+            if (enemy != null && !assignedEnemies.Contains(enemy))
+            {
+                RegisterEnemyAtRuntime(enemy);
+            }
+        }
+    }
+
 }
