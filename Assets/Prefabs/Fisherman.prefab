@@ -172,6 +172,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2444740548177980365}
   - component: {fileID: 3522423683038717205}
+  - component: {fileID: 1633933352196915432}
   - component: {fileID: 2117141073483461364}
   m_Layer: 0
   m_Name: Fisherman
@@ -224,6 +225,27 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 0
+--- !u!114 &1633933352196915432
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7667254095196824905}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4cd301563b4b88d419bb8bdb59a48461, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  isAboveWater: 1
+  airGravityScale: 2
+  underwaterGravityScale: 0
+  airDrag: 1.5
+  underwaterDrag: 0.5
+  airMaxSpeed: 3
+  underwaterMaxSpeed: 5
+  underwaterRotationSpeed: 10
+  maxSpeed: 5
 --- !u!114 &2117141073483461364
 MonoBehaviour:
   m_ObjectHideFlags: 0

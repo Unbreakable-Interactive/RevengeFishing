@@ -22,7 +22,7 @@ public class Platform : MonoBehaviour
         platformCollider = GetComponent<Collider2D>();
         platformCollider.isTrigger = false; // Make it solid
 
-        Collider2D playerCollider = player.GetComponent<Collider2D>();
+        Collider2D playerCollider = player.GetComponentInChildren<Collider2D>();
         Physics2D.IgnoreCollision(platformCollider, playerCollider, true);
 
         // Set up selective collisions
@@ -69,7 +69,24 @@ public class Platform : MonoBehaviour
         }
     }
 
-    // Add this method to your Platform.cs
+    public void ScanForNewEnemies(float radius = 10f)
+    {
+        Collider2D[] nearbyColliders = Physics2D.OverlapCircleAll(transform.position, radius);
+
+        foreach (Collider2D col in nearbyColliders)
+        {
+            EnemyBase enemy = col.GetComponent<EnemyBase>();
+            if (enemy != null && !assignedEnemies.Contains(enemy))
+            {
+                // Check if enemy doesn't already have a platform assigned
+                if (enemy.GetAssignedPlatform() == null)
+                {
+                    RegisterEnemyAtRuntime(enemy);
+                }
+            }
+        }
+    }
+
     public void RegisterEnemyAtRuntime(EnemyBase enemy)
     {
         if (enemy != null && !assignedEnemies.Contains(enemy))
@@ -86,24 +103,8 @@ public class Platform : MonoBehaviour
 
             if (showDebugInfo)
             {
-                Debug.Log($"Registered {enemy.name} to platform {gameObject.name} at runtime");
+                Debug.Log($"Auto-assigned {enemy.name} to platform {gameObject.name}");
             }
         }
     }
-
-    // Helper method to find and register nearby enemies
-    public void RegisterNearbyEnemies(float radius = 10f)
-    {
-        Collider2D[] nearbyColliders = Physics2D.OverlapCircleAll(transform.position, radius);
-
-        foreach (Collider2D col in nearbyColliders)
-        {
-            EnemyBase enemy = col.GetComponent<EnemyBase>();
-            if (enemy != null && !assignedEnemies.Contains(enemy))
-            {
-                RegisterEnemyAtRuntime(enemy);
-            }
-        }
-    }
-
 }

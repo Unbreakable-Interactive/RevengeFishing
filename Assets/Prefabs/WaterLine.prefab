@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 314844239601557528}
   - component: {fileID: 5767422448254304977}
+  - component: {fileID: 239239663148630835}
   - component: {fileID: 7442979135199402340}
   m_Layer: 0
   m_Name: WaterLine
@@ -78,6 +79,23 @@ BoxCollider2D:
   serializedVersion: 2
   m_Size: {x: 2, y: 0.5}
   m_EdgeRadius: 0
+--- !u!114 &239239663148630835
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8258166059126711420}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8cfe11e371c05b849ba85b8d2c30f40b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playerLayerMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  playerMovement: {fileID: 0}
+  enemyLandMovement: {fileID: 0}
 --- !u!114 &7442979135199402340
 MonoBehaviour:
   m_ObjectHideFlags: 0
