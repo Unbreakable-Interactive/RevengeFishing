@@ -36,6 +36,24 @@ public abstract class EnemyBase : MonoBehaviour
     protected EnemyState _state;
     protected EnemyType _type;
 
+    #region Platform Assignment
+    [Header("Platform Assignment")]
+    public Platform assignedPlatform;
+
+    // Method called by Platform when assigning this enemy
+    public virtual void SetAssignedPlatform(Platform platform)
+    {
+        assignedPlatform = platform;
+    }
+
+    public Platform GetAssignedPlatform()
+    {
+        return assignedPlatform;
+    }
+
+
+    #endregion
+
     #region Land Variables
 
     protected float walkingSpeed;
@@ -100,6 +118,12 @@ public abstract class EnemyBase : MonoBehaviour
     #endregion
 
     #region State Management
+    
+    // Make sure your GetState() method is public
+    public EnemyState GetState()
+    {
+        return _state;
+    }
 
     public virtual void ChangeState_Defeated() => _state = EnemyState.Defeated;
     public virtual void ChangeState_Eaten() => _state = EnemyState.Eaten;

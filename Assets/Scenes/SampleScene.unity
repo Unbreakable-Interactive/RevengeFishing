@@ -559,52 +559,14 @@ GameObject:
   m_Component:
   - component: {fileID: 472240867}
   - component: {fileID: 472240864}
-  - component: {fileID: 472240863}
+  - component: {fileID: 472240868}
   m_Layer: 0
   m_Name: Fisherman
   m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
---- !u!114 &472240863
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 472240862}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2f0680152de15c144bce0757560a35a1, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  powerLevel: 100
-  maxFatigue: 100
-  currentFatigue: 0
-  spriteRenderer: {fileID: 0}
-  showDebugInfo: 1
-  isDefeated: 0
-  airDrag: 0.5
-  waterDrag: 2
-  buoyancyForce: 5
-  maxUpwardWaterSpeed: 3
-  waterCheck: {fileID: 0}
-  isInWater: 0
-  isAboveWater: 1
-  fishingRodVisual: {fileID: 2033306073}
-  hookPoint: {fileID: 1907866703}
-  fishingLine: {fileID: 0}
-  fishingRange: 5
-  hasRodEquipped: 0
-  isLineCast: 0
-  rodAttachPoint: {fileID: 0}
-  animator: {fileID: 0}
-  facingRight: 1
-  currentFish: {fileID: 0}
-  fishOnHook: 0
-  strikeForce: 10
-  jigStrength: 2
+  m_IsActive: 1
 --- !u!50 &472240864
 Rigidbody2D:
   serializedVersion: 4
@@ -649,6 +611,19 @@ Transform:
   - {fileID: 2056965513}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &472240868
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 472240862}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 74f210aa94814394cbc3a52e26206a1e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  assignedPlatform: {fileID: 1130133055}
 --- !u!1 &510033171 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 8258166059126711420, guid: d864e1d7d3d7d86458db1be6c7ac35ab, type: 3}
@@ -1192,7 +1167,6 @@ GameObject:
   m_Component:
   - component: {fileID: 778301493}
   - component: {fileID: 778301495}
-  - component: {fileID: 778301494}
   m_Layer: 0
   m_Name: Sprite
   m_TagString: Untagged
@@ -1216,51 +1190,6 @@ Transform:
   - {fileID: 2033306074}
   m_Father: {fileID: 472240867}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!61 &778301494
-BoxCollider2D:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 778301492}
-  m_Enabled: 0
-  m_Density: 1
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_ForceSendLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_ForceReceiveLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_ContactCaptureLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_CallbackLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_IsTrigger: 1
-  m_UsedByEffector: 0
-  m_UsedByComposite: 0
-  m_Offset: {x: 0, y: 0.1}
-  m_SpriteTilingProperty:
-    border: {x: 0, y: 0, z: 0, w: 0}
-    pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 1, y: 2}
-    newSize: {x: 1, y: 1}
-    adaptiveTilingThreshold: 0.5
-    drawMode: 0
-    adaptiveTiling: 0
-  m_AutoTiling: 0
-  serializedVersion: 2
-  m_Size: {x: 1.5, y: 2.2}
-  m_EdgeRadius: 0
 --- !u!212 &778301495
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -1616,7 +1545,7 @@ GameObject:
   - component: {fileID: 1130133051}
   - component: {fileID: 1130133053}
   - component: {fileID: 1130133052}
-  - component: {fileID: 1130133054}
+  - component: {fileID: 1130133055}
   m_Layer: 0
   m_Name: Port
   m_TagString: Untagged
@@ -1736,7 +1665,7 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!114 &1130133054
+--- !u!114 &1130133055
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1745,11 +1674,14 @@ MonoBehaviour:
   m_GameObject: {fileID: 1130133050}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7a778b8df4b60284c93287f59b4180c0, type: 3}
+  m_Script: {fileID: 11500000, guid: 946d42393381fbe4a8517c499e4ad995, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  platformSurfaceOffset: 0.1
-  showDebugGizmos: 1
+  player: {fileID: 2183849481622994903}
+  assignedEnemies:
+  - {fileID: 472240868}
+  surfaceOffset: 0.1
+  showDebugInfo: 1
 --- !u!1 &1243773335
 GameObject:
   m_ObjectHideFlags: 0
@@ -2683,7 +2615,7 @@ BoxCollider2D:
   m_CallbackLayers:
     serializedVersion: 2
     m_Bits: 4294967295
-  m_IsTrigger: 1
+  m_IsTrigger: 0
   m_UsedByEffector: 0
   m_UsedByComposite: 0
   m_Offset: {x: 0, y: 1.29}
