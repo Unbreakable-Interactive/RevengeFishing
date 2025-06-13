@@ -2425,17 +2425,9 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 3033624813667994110, guid: 29c863f917d5e8846acde5d4d6a4ca7e, type: 3}
-      propertyPath: m_SortingOrder
-      value: -1
-      objectReference: {fileID: 0}
     - target: {fileID: 7667254095196824905, guid: 29c863f917d5e8846acde5d4d6a4ca7e, type: 3}
       propertyPath: m_Name
       value: Fisherman
-      objectReference: {fileID: 0}
-    - target: {fileID: 8651322663268210135, guid: 29c863f917d5e8846acde5d4d6a4ca7e, type: 3}
-      propertyPath: m_SortingOrder
-      value: -2
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
