@@ -4,18 +4,9 @@ using UnityEngine;
 
 public class FishermanScript : EnemyBase
 {
-
-    [Header("Fisherman Settings")]
-    public float walkSpd;
-    public float runSpd;
-    public float edgeBfr; // Distance before edge to stop walking
-    public float minActTime;
-    public float maxActTime;
-
     // Start is called before the first frame update
     void Start()
     {
-
         _type = EnemyType.Land;
 
         // Initialize with default power level
