@@ -42,9 +42,9 @@ PrefabInstance:
     m_TransformParent: {fileID: 665198961168709930}
     m_Modifications:
     - target: {fileID: 239239663148630835, guid: d864e1d7d3d7d86458db1be6c7ac35ab, type: 3}
-      propertyPath: enemyLandMovement
+      propertyPath: entityMovement
       value: 
-      objectReference: {fileID: 6863578943372382891}
+      objectReference: {fileID: 6092571517471514807}
     - target: {fileID: 314844239601557528, guid: d864e1d7d3d7d86458db1be6c7ac35ab, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -155,7 +155,8 @@ PrefabInstance:
       propertyPath: m_Name
       value: Fisherman
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 1633933352196915432, guid: 29c863f917d5e8846acde5d4d6a4ca7e, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
@@ -165,15 +166,15 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 7667254095196824905, guid: 29c863f917d5e8846acde5d4d6a4ca7e, type: 3}
   m_PrefabInstance: {fileID: 5326827163894387267}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &6863578943372382891 stripped
+--- !u!114 &6092571517471514807 stripped
 MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 1633933352196915432, guid: 29c863f917d5e8846acde5d4d6a4ca7e, type: 3}
+  m_CorrespondingSourceObject: {fileID: 2117141073483461364, guid: 29c863f917d5e8846acde5d4d6a4ca7e, type: 3}
   m_PrefabInstance: {fileID: 5326827163894387267}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2561211109777225482}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4cd301563b4b88d419bb8bdb59a48461, type: 3}
+  m_Script: {fileID: 11500000, guid: 74f210aa94814394cbc3a52e26206a1e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!4 &7494490634703075726 stripped

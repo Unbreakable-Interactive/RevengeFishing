@@ -4,8 +4,7 @@ public class WaterCheck : MonoBehaviour
 {
     [Header("Water Detection")]
     public LayerMask playerLayerMask = -1;
-    public PlayerMovement playerMovement;
-    public EnemyLandMovement enemyLandMovement;
+    public EntityMovement entityMovement; // Reference to the target entity movement script
 
     private void Start()
     {
@@ -15,22 +14,14 @@ public class WaterCheck : MonoBehaviour
 
     private void OnTriggerExit2D(Collider2D other)
     {
-        if (playerMovement != null)
-        {
-            // Determine if player is above or below the water line
-            bool isAboveWater = other.transform.position.y > transform.position.y;
+        // Determine if object is above or below the water line
+        bool isAboveWater = other.transform.position.y > transform.position.y;
 
-            // Update the player's movement mode
-            playerMovement.SetMovementMode(isAboveWater);
+        // Update the object's water state
+        entityMovement.IsAboveWater = isAboveWater;
 
-            Debug.Log($"Player {(isAboveWater ? "jumped out of" : "dove into")} water!");
-        }
-        
-        if (enemyLandMovement != null)
-        {
-            bool isAboveWater = other.transform.position.y > transform.position.y;
+        entityMovement.SetMovementMode(isAboveWater);
 
-            enemyLandMovement.SetMovementMode(isAboveWater);
-        }
+        Debug.Log($"{other.name} {(isAboveWater ? "exited" : "entered")} water!");
     }
 }

@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public abstract class EnemyBase : MonoBehaviour
+public abstract class EnemyBase : EntityMovement
 {
     public enum Tier
     {
@@ -39,7 +39,6 @@ public abstract class EnemyBase : MonoBehaviour
         RunRight
     }
 
-    protected Rigidbody2D _rb;
     protected float _powerLevel;
     protected float _fatigue;
     protected float _maxFatigue;
@@ -106,10 +105,29 @@ public abstract class EnemyBase : MonoBehaviour
     protected float swimForce;
     protected float minSwimSpeed;
     protected float maxSwimSpeed;
-    
+
     #endregion
 
     #region Base Behaviours
+
+    protected override void Start()
+    {
+        // Set entity type for water detection
+        entityType = EntityType.Enemy;
+
+        // Call base initialization (handles Rigidbody2D and water detection)
+        base.Start();
+
+        // Enemy-specific initialization
+        Initialize(100f);
+    }
+
+    protected override void Update()
+    {
+        // Call base Update for water detection logic
+        base.Update();
+    }
+
 
     // How enemy behaves when interacts with player
     public abstract void ReverseFishingBehaviour();
@@ -120,7 +138,52 @@ public abstract class EnemyBase : MonoBehaviour
     }
 
     public abstract void WaterMovement();
-    
+
+    protected virtual void HandleEnemyMovement()
+    {
+        if (isAboveWater)
+        {
+            AirborneBehavior();
+        }
+        else
+        {
+            UnderwaterBehavior();
+        }
+    }
+
+    protected override void AirborneBehavior()
+    {
+        // Override in derived classes for airborne behavior
+        if (_type == EnemyType.Land)
+        {
+            LandMovement();
+        }
+    }
+
+    protected override void UnderwaterBehavior()
+    {
+        // Override in derived classes for underwater behavior
+        if (_type == EnemyType.Water)
+        {
+            WaterMovement();
+        }
+    }
+
+    // Override SetMovementMode to add enemy-specific behavior
+    public override void SetMovementMode(bool aboveWater)
+    {
+        base.SetMovementMode(aboveWater); // Call base implementation
+
+        // Enemy-specific mode changes
+        if (aboveWater)
+        {
+            Debug.Log($"{gameObject.name} enemy switched to AIRBORNE mode");
+        }
+        else
+        {
+            Debug.Log($"{gameObject.name} enemy switched to UNDERWATER mode");
+        }
+    }
 
     public virtual void Initialize(float powerLevel)
     {
@@ -131,9 +194,7 @@ public abstract class EnemyBase : MonoBehaviour
 
         _state = EnemyState.Alive;
 
-        // weight must be a random value between x and y
-
-        // CalculateTier();
+        CalculateTier();
 
         walkingSpeed = 2f;
         runningSpeed = 4f;
@@ -144,16 +205,19 @@ public abstract class EnemyBase : MonoBehaviour
         minActionTime = 1f; //Minimum seconds enemy will do an action, like walk, idle, or run
         maxActionTime = 4f; //Maximum seconds enemy will do an action, like walk, idle, or run
 
-        LandMovementState currentMovementState;
+        currentMovementState = LandMovementState.Idle;
         isGrounded = false;
 
         platformBoundsCalculated = false;
 
+        // weight must be a random value between x and y. Set to default 6f for now
         weight = 6f; // How much the enemy sinks in water; varies between 60 and 100 kg
 
-}
+        // Set initial movement mode
+        SetMovementMode(isAboveWater);
+    }
 
-private void CalculateTier()
+    private void CalculateTier()
     {
         // if (_powerLevel is > 100 and < 500)
         // {
@@ -191,7 +255,7 @@ private void CalculateTier()
 
     public virtual void OnTriggerEnter2D(Collider2D other)
     {
-        if (_state == EnemyState.Defeated)
+        if (_state == EnemyState.Defeated && other.CompareTag("PlayerCollider"))
         {
             ChangeState_Eaten();
         }
@@ -217,18 +281,7 @@ private void CalculateTier()
     {
         if (_type != EnemyType.Land) return;
 
-        // Initialize components if needed
-        if (_rb == null)
-        {
-            _rb = GetComponent<Rigidbody2D>();
-            if (_rb == null)
-            {
-                _rb = gameObject.AddComponent<Rigidbody2D>();
-                _rb.freezeRotation = true;
-            }
-        }
-
-        // Check if we're on our assigned platform
+        //Check if we have an assigned platform
         CheckGroundedStatus();
 
         // Calculate platform bounds once we have an assigned platform
@@ -252,7 +305,6 @@ private void CalculateTier()
         {
             CheckPlatformBounds();
         }
-
     }
 
     protected virtual void CalculatePlatformBounds()
@@ -319,9 +371,9 @@ private void CalculateTier()
         }
 
         // Apply movement while preserving Y velocity (gravity)
-        if (_rb != null)
+        if (rb != null)
         {
-            _rb.velocity = new Vector2(movement.x, _rb.velocity.y);
+            rb.velocity = new Vector2(movement.x, rb.velocity.y);
         }
     }
 

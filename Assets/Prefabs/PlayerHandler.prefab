@@ -42,6 +42,10 @@ PrefabInstance:
     m_TransformParent: {fileID: 3182908382894097092}
     m_Modifications:
     - target: {fileID: 239239663148630835, guid: d864e1d7d3d7d86458db1be6c7ac35ab, type: 3}
+      propertyPath: entityMovement
+      value: 
+      objectReference: {fileID: 4422969977109999104}
+    - target: {fileID: 239239663148630835, guid: d864e1d7d3d7d86458db1be6c7ac35ab, type: 3}
       propertyPath: playerMovement
       value: 
       objectReference: {fileID: 4422969977109999104}
@@ -150,6 +154,10 @@ PrefabInstance:
     - target: {fileID: 4283144278362533936, guid: b69f09c4e1675754487856532c9a780a, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6436991216858690687, guid: b69f09c4e1675754487856532c9a780a, type: 3}
+      propertyPath: m_TagString
+      value: PlayerCollider
       objectReference: {fileID: 0}
     - target: {fileID: 6728867108004361845, guid: b69f09c4e1675754487856532c9a780a, type: 3}
       propertyPath: m_Name

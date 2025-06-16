@@ -2,10 +2,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PlayerMovement : MonoBehaviour
+public class PlayerMovement : EntityMovement
 {
     private Camera mainCamera;
-    private Rigidbody2D rb;
     private Vector2 lastMousePosition = Vector2.zero;
     private Quaternion targetRotation;
     private bool isRotatingToTarget = false;
@@ -19,13 +18,13 @@ public class PlayerMovement : MonoBehaviour
     public float boostThreshold = 10f; // Degrees - When to apply boost (higher = earlier boost)
 
     [Header("Water/Air Movement Modes")]
-    public bool isAboveWater = false;
-    public float airGravityScale = 2f;
-    public float underwaterGravityScale = 0f;
-    public float airDrag = 1.5f;
-    public float underwaterDrag = 0.5f;
-    public float airMaxSpeed = 3f;
-    public float underwaterMaxSpeed = 5f;
+    //public bool isAboveWater = false;
+    //public float airGravityScale = 2f;
+    //public float underwaterGravityScale = 0f;
+    //public float airDrag = 1.5f;
+    //public float underwaterDrag = 0.5f;
+    //public float airMaxSpeed = 3f;
+    //public float underwaterMaxSpeed = 5f;
     public float underwaterRotationSpeed = 10f;
 
     [Header("Variable Gravity Settings")]
@@ -62,37 +61,34 @@ public class PlayerMovement : MonoBehaviour
     public bool enableDebugLogs = false;
 
     // Start is called before the first frame update
-    void Start()
+    protected override void Start()
     {
+        entityType = EntityType.Player; // Set entity type to Player
+
+        base.Start(); // Call base Start to initialize Rigidbody2D and movement mode
+
         mainCamera = Camera.main ?? FindObjectOfType<Camera>();
 
-        rb = GetComponent<Rigidbody2D>();
+        //rb = GetComponent<Rigidbody2D>();
 
-        // Add Rigidbody2D if it doesn't exist
-        if (rb == null)
-        {
-            rb = gameObject.AddComponent<Rigidbody2D>();
-            DebugLog("Added Rigidbody2D component to Player");
-        }
+        //// Add Rigidbody2D if it doesn't exist
+        //if (rb == null)
+        //{
+        //    rb = gameObject.AddComponent<Rigidbody2D>();
+        //    DebugLog("Added Rigidbody2D component to Player");
+        //}
         rb.drag = naturalDrag;
-
-        targetRotation = transform.rotation; //sets the target rotation to the player's current rotation
+        targetRotation = transform.rotation; //set target rotation to Player's current rotation
+        currentGravityScale = airGravityScale;
     }
 
     // Update is called once per frame
-    void Update()
+    protected override void Update()
     {
-        if (isAboveWater)
-        {
-            AirborneBehavior();
-        }
-        else
-        {
-            UnderwaterBehavior();
-        }
+        base.Update(); // Call base Update to handle movement mode
     }
 
-    public void UnderwaterBehavior()
+    protected override void UnderwaterBehavior()
     {
         HandleMouseInput();
         UpdateMovementState();
@@ -103,35 +99,52 @@ public class PlayerMovement : MonoBehaviour
         ClampVelocity();
     }
 
-    public void AirborneBehavior()
+    protected override void AirborneBehavior()
     {
         AirGravity();
         HandleAirborneRotation();
     }
 
-    public void SetMovementMode(bool aboveWater)
+    public override void SetMovementMode(bool aboveWater)
     {
-        isAboveWater = aboveWater;
+        base.SetMovementMode(aboveWater);
 
-        if (isAboveWater)
+        // Player-specific mode changes
+        if (aboveWater)
         {
-            // Airborne mode - fish is out of water
-            currentGravityScale = airGravityScale; // Initialize current gravity
-            rb.gravityScale = currentGravityScale;
-            rb.drag = airDrag;
+            currentGravityScale = airGravityScale;
             maxSpeed = airMaxSpeed;
             rotationSpeed = airRotationSpeed;
-            DebugLog("Switched to AIRBORNE mode");
+            DebugLog("Player switched to AIRBORNE mode");
         }
         else
         {
-            // Underwater mode - fish is in water
-            rb.gravityScale = underwaterGravityScale;
-            rb.drag = underwaterDrag;
             maxSpeed = underwaterMaxSpeed;
             rotationSpeed = underwaterRotationSpeed;
-            DebugLog("Switched to UNDERWATER mode");
+            DebugLog("Player switched to UNDERWATER mode");
         }
+
+        //isAboveWater = aboveWater;
+
+        //if (isAboveWater)
+        //{
+        //    // Airborne mode - fish is out of water
+        //    currentGravityScale = airGravityScale; // Initialize current gravity
+        //    rb.gravityScale = currentGravityScale;
+        //    rb.drag = airDrag;
+        //    maxSpeed = airMaxSpeed;
+        //    rotationSpeed = airRotationSpeed;
+        //    DebugLog("Switched to AIRBORNE mode");
+        //}
+        //else
+        //{
+        //    // Underwater mode - fish is in water
+        //    rb.gravityScale = underwaterGravityScale;
+        //    rb.drag = underwaterDrag;
+        //    maxSpeed = underwaterMaxSpeed;
+        //    rotationSpeed = underwaterRotationSpeed;
+        //    DebugLog("Switched to UNDERWATER mode");
+        //}
     }
 
     void HandleMouseInput()

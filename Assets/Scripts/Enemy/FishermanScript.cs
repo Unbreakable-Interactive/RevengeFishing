@@ -5,8 +5,9 @@ using UnityEngine;
 public class FishermanScript : EnemyBase
 {
     private int timer;
+
     // Start is called before the first frame update
-    void Start()
+    protected override void Start()
     {
         timer = 0;
         _type = EnemyType.Land;
@@ -14,25 +15,30 @@ public class FishermanScript : EnemyBase
         //enable fishing tool for fisherman
         hasFishingTool = true;
 
-        // Initialize with default power level
-        Initialize(100f);
+        base.Start(); // Call the base class Start method
+        //// Initialize with default power level
+        //Initialize(100f);
 
-        // Ensure we have a Rigidbody2D for gravity
-        if (GetComponent<Rigidbody2D>() == null)
-        {
-            gameObject.AddComponent<Rigidbody2D>();
-        }
+        //// Ensure we have a Rigidbody2D for gravity
+        //if (GetComponent<Rigidbody2D>() == null)
+        //{
+        //    gameObject.AddComponent<Rigidbody2D>();
+        //}
     }
 
     // Update is called once per frame
-    void Update()
+    protected override void Update()
     {
         timer++;
-        // Call the base class land movement AI
-        if (_type == EnemyType.Land)
-        {
-            LandMovement();
-        }
+
+        // Call base Update for movement handling
+        base.Update();
+
+        //// Call the base class land movement AI
+        //if (_type == EnemyType.Land)
+        //{
+        //    LandMovement();
+        //}
 
         if (timer >= 600)
         {
