@@ -73,6 +73,13 @@ public abstract class EnemyBase : MonoBehaviour
     protected float edgeBuffer; // Distance from platform edge to change direction
     // assigned platform was set previously in Platform Assignment region
 
+    // Fishing tool equip system
+    protected bool hasFishingTool = false; // Can this enemy use a tool?
+    protected bool fishingToolEquipped = false; // Is tool currently out?
+
+    // For dropping tools when defeated
+    [SerializeField] protected GameObject toolDropPrefab; // Tool to spawn when defeated
+
     // AI state for land movement
     protected float minActionTime; //Minimum seconds enemy will do an action, like walk, idle, or run
     protected float maxActionTime; //Maximum seconds enemy will do an action, like walk, idle, or run
@@ -192,6 +199,17 @@ private void CalculateTier()
 
     public virtual void EnemyDie() { }
 
+    // In your enemy defeat/health system (wherever you handle enemy death)
+    public void OnEnemyDefeated()
+    {
+        // Drop tool if enemy has one
+        DropTool();
+
+        // Handle other defeat logic (destroy enemy, play effects, etc.)
+        // ...
+    }
+
+
     #endregion
 
     #region Land Movement Logic
@@ -220,12 +238,12 @@ private void CalculateTier()
         }
 
         // Execute current movement behavior
-        ExecuteLandMovementBehavior();
+        ExecuteLandMovementBehaviour();
 
         // Check if it's time to change behavior
         if (Time.time >= nextActionTime)
         {
-            ChooseRandomAction();
+            ChooseRandomLandAction();
             ScheduleNextAction();
         }
 
@@ -263,33 +281,41 @@ private void CalculateTier()
         isGrounded = hit.collider != null && hit.collider.gameObject == assignedPlatform?.gameObject;
     }
 
-    protected virtual void ExecuteLandMovementBehavior()
+    protected virtual void ExecuteLandMovementBehaviour()
     {
         if (!isGrounded || assignedPlatform == null) return;
 
         Vector2 movement = Vector2.zero;
 
-        switch (currentMovementState)
+        if (fishingToolEquipped)
         {
-            case LandMovementState.Idle:
-                // Do nothing, just stand still
-                break;
+            currentMovementState = LandMovementState.Idle;
+            // No movement allowed
+        }
+        else
+        {
+            switch (currentMovementState)
+            {
+                case LandMovementState.Idle:
+                    // Do nothing, just stand still
+                    break;
 
-            case LandMovementState.WalkLeft:
-                movement = Vector2.left * walkingSpeed;
-                break;
+                case LandMovementState.WalkLeft:
+                    movement = Vector2.left * walkingSpeed;
+                    break;
 
-            case LandMovementState.WalkRight:
-                movement = Vector2.right * walkingSpeed;
-                break;
+                case LandMovementState.WalkRight:
+                    movement = Vector2.right * walkingSpeed;
+                    break;
 
-            case LandMovementState.RunLeft:
-                movement = Vector2.left * runningSpeed;
-                break;
+                case LandMovementState.RunLeft:
+                    movement = Vector2.left * runningSpeed;
+                    break;
 
-            case LandMovementState.RunRight:
-                movement = Vector2.right * runningSpeed;
-                break;
+                case LandMovementState.RunRight:
+                    movement = Vector2.right * runningSpeed;
+                    break;
+            }
         }
 
         // Apply movement while preserving Y velocity (gravity)
@@ -319,14 +345,25 @@ private void CalculateTier()
         }
     }
 
-    protected virtual void ChooseRandomAction()
+    protected virtual void ChooseRandomLandAction()
     {
+        if (fishingToolEquipped)
+        {
+            currentMovementState = LandMovementState.Idle;
+            return;
+        }
+
         // WEIGHTED SELECTION - Bias toward idle
         float randomValue = UnityEngine.Random.value; // 0.0 to 1.0
 
         if (randomValue < 0.5f) // 50% chance for idle
         {
             currentMovementState = LandMovementState.Idle;
+            if (hasFishingTool && !fishingToolEquipped && UnityEngine.Random.value < 0.4f) // 40% chance
+            {
+                TryEquipFishingTool();
+            }
+
         }
         else if (randomValue < 0.7f) // 20% chance for walk left
         {
@@ -408,4 +445,98 @@ private void CalculateTier()
     }
 
     #endregion
+
+    #region Fishing Tool System
+
+    /// <summary>
+    /// Attempt to equip fishing tool. Only works when idle.
+    /// </summary>
+    public virtual bool TryEquipFishingTool()
+    {
+        if (!hasFishingTool) return false;
+        if (fishingToolEquipped) return false;
+        if (currentMovementState != LandMovementState.Idle) return false;
+
+        fishingToolEquipped = true;
+        OnFishingToolEquipped();
+
+        if (assignedPlatform != null && assignedPlatform.showDebugInfo)
+        {
+            Debug.Log($"{gameObject.name} equipped fishing tool");
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// Put away the fishing tool. Can only be done when tool is equipped.
+    /// </summary>
+    public virtual bool TryUnequipFishingTool()
+    {
+        if (!fishingToolEquipped) return false;
+
+        fishingToolEquipped = false;
+        OnFishingToolUnequipped();
+
+        if (assignedPlatform != null && assignedPlatform.showDebugInfo)
+        {
+            Debug.Log($"{gameObject.name} put away fishing tool");
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// Called when fishing tool is equipped. Override in derived classes.
+    /// </summary>
+    protected virtual void OnFishingToolEquipped()
+    {
+        // Override in derived classes:
+        // - Play "equip tool" animation
+        // - Set up internal tool object (inactive, for dropping later)
+    }
+
+    /// <summary>
+    /// Called when fishing tool is unequipped. Override in derived classes.
+    /// </summary>
+    protected virtual void OnFishingToolUnequipped()
+    {
+        // Override in derived classes:
+        // - Play "put away tool" animation
+    }
+
+    /// <summary>
+    /// Called when enemy is defeated. Drops the tool if equipped.
+    /// </summary>
+    public virtual void DropTool()
+    {
+        if (toolDropPrefab != null)
+        {
+            // Instantiate tool only when needed
+            GameObject droppedTool = Instantiate(toolDropPrefab, transform.position, transform.rotation);
+
+            // Add physics for dropping effect
+            Rigidbody2D toolRb = droppedTool.GetComponent<Rigidbody2D>();
+            if (toolRb == null)
+            {
+                toolRb = droppedTool.AddComponent<Rigidbody2D>();
+            }
+
+            // Apply random force for "flying" effect
+            Vector2 dropForce = new Vector2(
+                UnityEngine.Random.Range(-5f, 5f),
+                UnityEngine.Random.Range(2f, 6f)
+            );
+            toolRb.AddForce(dropForce, ForceMode2D.Impulse);
+
+            if (assignedPlatform != null && assignedPlatform.showDebugInfo)
+            {
+                Debug.Log($"{gameObject.name} dropped their tool");
+            }
+        }
+    }
+
+
+    #endregion
+
 }
