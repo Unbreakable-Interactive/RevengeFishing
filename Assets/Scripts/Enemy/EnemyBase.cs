@@ -220,7 +220,7 @@ private void CalculateTier()
         }
 
         // Execute current movement behavior
-        ExecuteMovementBehavior();
+        ExecuteLandMovementBehavior();
 
         // Check if it's time to change behavior
         if (Time.time >= nextActionTime)
@@ -263,7 +263,7 @@ private void CalculateTier()
         isGrounded = hit.collider != null && hit.collider.gameObject == assignedPlatform?.gameObject;
     }
 
-    protected virtual void ExecuteMovementBehavior()
+    protected virtual void ExecuteLandMovementBehavior()
     {
         if (!isGrounded || assignedPlatform == null) return;
 
@@ -321,20 +321,44 @@ private void CalculateTier()
 
     protected virtual void ChooseRandomAction()
     {
-        LandMovementState[] possibleStates = {
-            LandMovementState.Idle,
-            LandMovementState.WalkLeft,
-            LandMovementState.WalkRight,
-            LandMovementState.RunLeft,
-            LandMovementState.RunRight
-        };
+        // WEIGHTED SELECTION - Bias toward idle
+        float randomValue = UnityEngine.Random.value; // 0.0 to 1.0
 
-        currentMovementState = possibleStates[UnityEngine.Random.Range(0, possibleStates.Length)];
-
-        if (assignedPlatform != null && assignedPlatform.showDebugInfo)
+        if (randomValue < 0.5f) // 50% chance for idle
         {
-            Debug.Log($"{gameObject.name} chose action: {currentMovementState}");
+            currentMovementState = LandMovementState.Idle;
         }
+        else if (randomValue < 0.7f) // 20% chance for walk left
+        {
+            currentMovementState = LandMovementState.WalkLeft;
+        }
+        else if (randomValue < 0.9f) // 20% chance for walk right
+        {
+            currentMovementState = LandMovementState.WalkRight;
+        }
+        else if (randomValue < 0.95f) // 5% chance for run left
+        {
+            currentMovementState = LandMovementState.RunLeft;
+        }
+        else // 5% chance for run right
+        {
+            currentMovementState = LandMovementState.RunRight;
+        }
+
+        //LandMovementState[] possibleStates = {
+        //    LandMovementState.Idle,
+        //    LandMovementState.WalkLeft,
+        //    LandMovementState.WalkRight,
+        //    LandMovementState.RunLeft,
+        //    LandMovementState.RunRight
+        //};
+
+        //currentMovementState = possibleStates[UnityEngine.Random.Range(0, possibleStates.Length)];
+
+        //if (assignedPlatform != null && assignedPlatform.showDebugInfo)
+        //{
+        //    Debug.Log($"{gameObject.name} chose action: {currentMovementState}");
+        //}
     }
 
     protected virtual void ChooseRandomActionExcluding(params LandMovementState[] excludedStates)
