@@ -2472,6 +2472,10 @@ PrefabInstance:
       value: FishermanHandler
       objectReference: {fileID: 0}
     - target: {fileID: 6092571517471514807, guid: a8a1f6cfed63bb145a560de9fc880833, type: 3}
+      propertyPath: multiplier
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 6092571517471514807, guid: a8a1f6cfed63bb145a560de9fc880833, type: 3}
       propertyPath: assignedPlatform
       value: 
       objectReference: {fileID: 1130133055}

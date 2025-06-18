@@ -39,17 +39,36 @@ public class HookSpawner : MonoBehaviour
         Debug.Log($"Hook thrown by {gameObject.name}!");
     }
 
-    public void RetractHook()
+    public void ThrowProjectile()
+    {
+        FishingProjectile fishingProjectile = currentHook.GetComponent<FishingProjectile>();
+        if (fishingProjectile != null)
+        {
+            fishingProjectile.ThrowProjectile(throwDirection, throwForce);
+        }
+    }
+
+    public void RetractHook(float newLength)
     {
         if (currentHook != null)
         {
             FishingProjectile fishingProjectile = currentHook.GetComponent<FishingProjectile>();
             if (fishingProjectile != null)
             {
-                fishingProjectile.RetractProjectile();
+                if (GetLineLength() > 0.1f)
+                {
+                    SetLineLength(GetLineLength() - newLength);
+                }
+                else
+                {
+                    fishingProjectile.RetractProjectile();
+                }
             }
+            
+            // Max length == 0 / destroy
+            // 
 
-            currentHook = null;
+            // currentHook = null;
             Debug.Log($"Hook retracted by {gameObject.name}!");
         }
     }
@@ -67,6 +86,20 @@ public class HookSpawner : MonoBehaviour
                 fishingProjectile.maxDistance = newLength;
             }
         }
+    }
+
+    public float GetLineLength()
+    {
+        if (currentHook != null)
+        {
+            FishingProjectile fishingProjectile = currentHook.GetComponent<FishingProjectile>();
+            if (fishingProjectile != null)
+            {
+                return fishingProjectile.maxDistance;
+            }
+        }
+        
+        return 0;
     }
 
     public bool HasActiveHook()

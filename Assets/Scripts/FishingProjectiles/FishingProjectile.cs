@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 public abstract class FishingProjectile : EntityMovement
@@ -70,6 +71,11 @@ public abstract class FishingProjectile : EntityMovement
     public virtual void RetractProjectile()
     {
         OnProjectileRetracted();
+    }
+
+    protected IEnumerator IProjectileRetracted()
+    {
+        yield return new WaitUntil(() => maxDistance <= 0.1f);
         Destroy(gameObject);
     }
 

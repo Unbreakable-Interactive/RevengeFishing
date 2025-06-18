@@ -10,6 +10,13 @@ public class FishermanScript : EnemyBase
 
     private int timer;
 
+    [SerializeField] private float hookTimer;
+
+    [SerializeField] private bool isFishing;
+    [SerializeField] private float multiplier;
+
+    private bool hasThrowHook;
+
     // Start is called before the first frame update
     protected override void Start()
     {
@@ -27,7 +34,7 @@ public class FishermanScript : EnemyBase
         }
 
         base.Start(); // Call the base class Start method
-
+        hookTimer = (Random.value + 1) * 5;
     }
 
     // Update is called once per frame
@@ -46,6 +53,9 @@ public class FishermanScript : EnemyBase
             ReverseFishingBehaviour();
             timer = 0; // Reset timer after 10 seconds (600 frames at 60 FPS)
         }
+        
+        if(hasThrowHook)
+            RetractHook();
     }
 
     private void CheckHookThrowing()
@@ -62,6 +72,18 @@ public class FishermanScript : EnemyBase
             Random.value < hookThrowChance * Time.deltaTime)
         {
             hookSpawner.ThrowHook();
+            hasThrowHook = true;
+        }
+    }
+
+    private void RetractHook()
+    {
+        // between 5 - 10 secs - Common behaviour
+
+        hookTimer -= Time.deltaTime;
+        if (hookTimer <= 0)
+        {
+            hookSpawner.RetractHook(Time.deltaTime*multiplier);
         }
     }
 

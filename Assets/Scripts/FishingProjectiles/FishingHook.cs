@@ -15,6 +15,7 @@ public class FishingHook : FishingProjectile
     protected override void OnProjectileRetracted()
     {
         Debug.Log("Fishing hook retracted!");
+        StartCoroutine(IProjectileRetracted());
     }
 
     protected override void OnAirborneBehavior()
