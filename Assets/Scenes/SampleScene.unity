@@ -465,11 +465,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1071202440}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &395883601 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 2561211109777225482, guid: a8a1f6cfed63bb145a560de9fc880833, type: 3}
-  m_PrefabInstance: {fileID: 8471196664114344537}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &471156693
 GameObject:
   m_ObjectHideFlags: 0
@@ -559,29 +554,12 @@ MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 6092571517471514807, guid: a8a1f6cfed63bb145a560de9fc880833, type: 3}
   m_PrefabInstance: {fileID: 8471196664114344537}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 395883601}
+  m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 74f210aa94814394cbc3a52e26206a1e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &472240871
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 395883601}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 57a7ee0e523af8c4e8c5dad099f3e8a4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  hookPrefab: {fileID: 3932039236167525111, guid: ce012608d650bc94d9ed1fde3e90d2cb, type: 3}
-  spawnPoint: {fileID: 1681131374}
-  throwForce: 10
-  throwDirection: {x: 1, y: 0.2}
-  hookMaxDistance: 8
 --- !u!1 &519420028
 GameObject:
   m_ObjectHideFlags: 0
@@ -1088,11 +1066,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1924318398}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!61 &709517748 stripped
-BoxCollider2D:
-  m_CorrespondingSourceObject: {fileID: 3479015762017106946, guid: a8a1f6cfed63bb145a560de9fc880833, type: 3}
-  m_PrefabInstance: {fileID: 8471196664114344537}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1071202439
 GameObject:
   m_ObjectHideFlags: 0
@@ -1217,11 +1190,6 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!58 &1083271721 stripped
-CircleCollider2D:
-  m_CorrespondingSourceObject: {fileID: 1032848364154259681, guid: 7f9eb2fb35364a94db718320167335ab, type: 3}
-  m_PrefabInstance: {fileID: 6708799861719085447}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1087811782
 GameObject:
   m_ObjectHideFlags: 0
@@ -2091,11 +2059,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1924318398}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!4 &1681131374 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 8774570743886161678, guid: a8a1f6cfed63bb145a560de9fc880833, type: 3}
-  m_PrefabInstance: {fileID: 8471196664114344537}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1820794526
 GameObject:
   m_ObjectHideFlags: 0
@@ -2407,10 +2370,6 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 2547414314093962726, guid: 7f9eb2fb35364a94db718320167335ab, type: 3}
-      propertyPath: targetCollider
-      value: 
-      objectReference: {fileID: 1083271721}
     - target: {fileID: 3182908382894097092, guid: 7f9eb2fb35364a94db718320167335ab, type: 3}
       propertyPath: m_LocalPosition.x
       value: -14.23
@@ -2512,14 +2471,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: FishermanHandler
       objectReference: {fileID: 0}
-    - target: {fileID: 4809832258875326968, guid: a8a1f6cfed63bb145a560de9fc880833, type: 3}
-      propertyPath: targetCollider
-      value: 
-      objectReference: {fileID: 709517748}
-    - target: {fileID: 6092571517471514807, guid: a8a1f6cfed63bb145a560de9fc880833, type: 3}
-      propertyPath: toolDropPrefab
-      value: 
-      objectReference: {fileID: 2743509415465814910, guid: a106a3ba687ec00469ed0a6d34ab4fe9, type: 3}
     - target: {fileID: 6092571517471514807, guid: a8a1f6cfed63bb145a560de9fc880833, type: 3}
       propertyPath: assignedPlatform
       value: 
@@ -2527,10 +2478,7 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 2561211109777225482, guid: a8a1f6cfed63bb145a560de9fc880833, type: 3}
-      insertIndex: 2
-      addedObject: {fileID: 472240871}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: a8a1f6cfed63bb145a560de9fc880833, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:

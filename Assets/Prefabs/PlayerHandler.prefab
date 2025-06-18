@@ -49,6 +49,10 @@ PrefabInstance:
       propertyPath: playerMovement
       value: 
       objectReference: {fileID: 4422969977109999104}
+    - target: {fileID: 239239663148630835, guid: d864e1d7d3d7d86458db1be6c7ac35ab, type: 3}
+      propertyPath: targetCollider
+      value: 
+      objectReference: {fileID: 1032848364154259681}
     - target: {fileID: 314844239601557528, guid: d864e1d7d3d7d86458db1be6c7ac35ab, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -171,6 +175,11 @@ PrefabInstance:
 --- !u!1 &98344338058364395 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 6728867108004361845, guid: b69f09c4e1675754487856532c9a780a, type: 3}
+  m_PrefabInstance: {fileID: 6646432737778152350}
+  m_PrefabAsset: {fileID: 0}
+--- !u!58 &1032848364154259681 stripped
+CircleCollider2D:
+  m_CorrespondingSourceObject: {fileID: 5938476875424283519, guid: b69f09c4e1675754487856532c9a780a, type: 3}
   m_PrefabInstance: {fileID: 6646432737778152350}
   m_PrefabAsset: {fileID: 0}
 --- !u!114 &4422969977109999104 stripped
