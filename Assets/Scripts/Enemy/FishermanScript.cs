@@ -4,6 +4,10 @@ using UnityEngine;
 
 public class FishermanScript : EnemyBase
 {
+    [Header("Hook Throwing")]
+    private HookSpawner hookSpawner;
+    public float hookThrowChance = 0.4f; // 40% chance per frame when idle
+
     private int timer;
 
     // Start is called before the first frame update
@@ -15,15 +19,15 @@ public class FishermanScript : EnemyBase
         //enable fishing tool for fisherman
         hasFishingTool = true;
 
-        base.Start(); // Call the base class Start method
-        //// Initialize with default power level
-        //Initialize(100f);
+        // Get or add hook spawner component
+        hookSpawner = GetComponent<HookSpawner>();
+        if (hookSpawner == null)
+        {
+            hookSpawner = gameObject.AddComponent<HookSpawner>();
+        }
 
-        //// Ensure we have a Rigidbody2D for gravity
-        //if (GetComponent<Rigidbody2D>() == null)
-        //{
-        //    gameObject.AddComponent<Rigidbody2D>();
-        //}
+        base.Start(); // Call the base class Start method
+
     }
 
     // Update is called once per frame
@@ -34,11 +38,8 @@ public class FishermanScript : EnemyBase
         // Call base Update for movement handling
         base.Update();
 
-        //// Call the base class land movement AI
-        //if (_type == EnemyType.Land)
-        //{
-        //    LandMovement();
-        //}
+        // Check for hook throwing when idle and equipped
+        CheckHookThrowing();
 
         if (timer >= 600)
         {
@@ -47,9 +48,33 @@ public class FishermanScript : EnemyBase
         }
     }
 
+    private void CheckHookThrowing()
+    {
+        // Only throw hook if:
+        // 1. Fisherman is in idle state
+        // 2. Has fishing tool equipped
+        // 3. Hook spawner can throw (cooldown passed)
+        // 4. Random chance passes
+        if (currentMovementState == LandMovementState.Idle &&
+            fishingToolEquipped &&
+            hookSpawner != null &&
+            hookSpawner.CanThrowHook() &&
+            Random.value < hookThrowChance * Time.deltaTime)
+        {
+            hookSpawner.ThrowHook();
+        }
+    }
+
     public override void ReverseFishingBehaviour()
     {
         if (!fishingToolEquipped) return;
+
+        // Check if there's an active hook - cannot unequip while hook is out!
+        if (hookSpawner != null && hookSpawner.HasActiveHook())
+        {
+            Debug.Log($"{gameObject.name} cannot put away fishing rod - hook is still out!");
+            return; // Cannot unequip while hook is active
+        }
 
         // WEIGHTED SELECTION
         float randomValue = UnityEngine.Random.value; // 0.0 to 1.0

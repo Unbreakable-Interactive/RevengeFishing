@@ -3,8 +3,9 @@ using UnityEngine;
 public class WaterCheck : MonoBehaviour
 {
     [Header("Water Detection")]
-    public LayerMask playerLayerMask = -1;
+    //public LayerMask playerLayerMask = -1;
     public EntityMovement entityMovement; // Reference to the target entity movement script
+    public Collider2D targetCollider;
 
     private void Start()
     {
@@ -14,6 +15,8 @@ public class WaterCheck : MonoBehaviour
 
     private void OnTriggerExit2D(Collider2D other)
     {
+        if (other != targetCollider) return;
+
         // Determine if object is above or below the water line
         bool isAboveWater = other.transform.position.y > transform.position.y;
 
