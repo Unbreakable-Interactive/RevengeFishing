@@ -408,46 +408,32 @@ public abstract class EnemyBase : EntityMovement
         // WEIGHTED SELECTION - Bias toward idle
         float randomValue = UnityEngine.Random.value; // 0.0 to 1.0
 
-        if (randomValue < 0.5f) // 50% chance for idle
+        if (randomValue < 0.7f) // 70% chance for idle
         {
             currentMovementState = LandMovementState.Idle;
-            if (hasFishingTool && !fishingToolEquipped && UnityEngine.Random.value < 0.4f) // 40% chance
+            if (hasFishingTool && !fishingToolEquipped && UnityEngine.Random.value < 0.7f) // 70% chance
             {
                 TryEquipFishingTool();
             }
 
         }
-        else if (randomValue < 0.7f) // 20% chance for walk left
+        else if (randomValue < 0.825f) // % chance for walk left
         {
             currentMovementState = LandMovementState.WalkLeft;
         }
-        else if (randomValue < 0.9f) // 20% chance for walk right
+        else if (randomValue < 0.95f) // % chance for walk right
         {
             currentMovementState = LandMovementState.WalkRight;
         }
-        else if (randomValue < 0.95f) // 5% chance for run left
+        else if (randomValue < 0.975f) // 2.5% chance for run left
         {
             currentMovementState = LandMovementState.RunLeft;
         }
-        else // 5% chance for run right
+        else // 2.5% chance for run right
         {
             currentMovementState = LandMovementState.RunRight;
         }
 
-        //LandMovementState[] possibleStates = {
-        //    LandMovementState.Idle,
-        //    LandMovementState.WalkLeft,
-        //    LandMovementState.WalkRight,
-        //    LandMovementState.RunLeft,
-        //    LandMovementState.RunRight
-        //};
-
-        //currentMovementState = possibleStates[UnityEngine.Random.Range(0, possibleStates.Length)];
-
-        //if (assignedPlatform != null && assignedPlatform.showDebugInfo)
-        //{
-        //    Debug.Log($"{gameObject.name} chose action: {currentMovementState}");
-        //}
     }
 
     protected virtual void ChooseRandomActionExcluding(params LandMovementState[] excludedStates)

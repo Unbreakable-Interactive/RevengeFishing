@@ -3,7 +3,7 @@ using UnityEngine;
 public class HookSpawner : MonoBehaviour
 {
     [Header("Hook Settings")]
-    public GameObject hookPrefab;
+    public GameObject hookHandlerPrefab; // Changed from hookPrefab to hookHandlerPrefab
     public Transform spawnPoint;
     public float throwForce = 8f;
 
@@ -13,11 +13,21 @@ public class HookSpawner : MonoBehaviour
     [Header("Distance Control")]
     public float hookMaxDistance = 15f;
 
-    private GameObject currentHook;
+    // Store the original max distance
+    private float originalMaxDistance;
+
+    private GameObject currentHookHandler; // Changed from currentHook to currentHookHandler
+    private FishingProjectile currentHook; // Reference to the actual hook component
+
+    private void Awake()
+    {
+        // Store the original max distance on awake
+        originalMaxDistance = hookMaxDistance;
+    }
 
     public bool CanThrowHook()
     {
-        return hookPrefab != null &&
+        return hookHandlerPrefab != null &&
                spawnPoint != null &&
                currentHook == null;
     }
@@ -26,25 +36,64 @@ public class HookSpawner : MonoBehaviour
     {
         if (!CanThrowHook()) return;
 
-        currentHook = Instantiate(hookPrefab, spawnPoint.position, spawnPoint.rotation);
+        // Reset to original max distance before throwing
+        hookMaxDistance = originalMaxDistance;
 
-        FishingProjectile fishingProjectile = currentHook.GetComponent<FishingProjectile>();
-        if (fishingProjectile != null)
+        // Instantiate the hook handler (which contains both hook and waterline)
+        currentHookHandler = Instantiate(hookHandlerPrefab, spawnPoint.position, spawnPoint.rotation);
+
+        // Find the actual fishing hook within the handler
+        currentHook = currentHookHandler.GetComponentInChildren<FishingProjectile>();
+
+        if (currentHook != null)
         {
-            fishingProjectile.maxDistance = hookMaxDistance;
-            fishingProjectile.SetSpawner(this);
-            fishingProjectile.ThrowProjectile(throwDirection, throwForce);
-        }
+            currentHook.maxDistance = hookMaxDistance;
+            currentHook.SetSpawner(this);
+            currentHook.ThrowProjectile(throwDirection, throwForce);
 
-        Debug.Log($"Hook thrown by {gameObject.name}!");
+            // Setup water detection
+            SetupWaterDetection();
+
+            Debug.Log($"Hook handler thrown by {gameObject.name} with water detection!");
+        }
+        else
+        {
+            Debug.LogError($"No FishingProjectile found in {hookHandlerPrefab.name}!");
+            Destroy(currentHookHandler);
+            currentHookHandler = null;
+        }
+    }
+
+    private void SetupWaterDetection()
+    {
+        // Find the WaterLine component in the handler
+        WaterCheck waterCheck = currentHookHandler.GetComponentInChildren<WaterCheck>();
+
+        if (waterCheck != null && currentHook != null)
+        {
+            // Configure the water check to monitor our hook
+            waterCheck.targetCollider = currentHook.GetComponent<Collider2D>();
+
+            // If the hook has EntityMovement, connect it
+            EntityMovement hookMovement = currentHook.GetComponent<EntityMovement>();
+            if (hookMovement != null)
+            {
+                waterCheck.entityMovement = hookMovement;
+            }
+
+            Debug.Log("Water detection configured for fishing hook!");
+        }
+        else
+        {
+            Debug.LogWarning("WaterCheck component not found in hook handler!");
+        }
     }
 
     public void ThrowProjectile()
     {
-        FishingProjectile fishingProjectile = currentHook.GetComponent<FishingProjectile>();
-        if (fishingProjectile != null)
+        if (currentHook != null)
         {
-            fishingProjectile.ThrowProjectile(throwDirection, throwForce);
+            currentHook.ThrowProjectile(throwDirection, throwForce);
         }
     }
 
@@ -52,23 +101,15 @@ public class HookSpawner : MonoBehaviour
     {
         if (currentHook != null)
         {
-            FishingProjectile fishingProjectile = currentHook.GetComponent<FishingProjectile>();
-            if (fishingProjectile != null)
+            if (GetLineLength() > 0.1f)
             {
-                if (GetLineLength() > 0.1f)
-                {
-                    SetLineLength(GetLineLength() - newLength);
-                }
-                else
-                {
-                    fishingProjectile.RetractProjectile();
-                }
+                SetLineLength(GetLineLength() - newLength);
             }
-            
-            // Max length == 0 / destroy
-            // 
+            else
+            {
+                currentHook.RetractProjectile();
+            }
 
-            // currentHook = null;
             Debug.Log($"Hook retracted by {gameObject.name}!");
         }
     }
@@ -80,11 +121,7 @@ public class HookSpawner : MonoBehaviour
 
         if (currentHook != null)
         {
-            FishingProjectile fishingProjectile = currentHook.GetComponent<FishingProjectile>();
-            if (fishingProjectile != null)
-            {
-                fishingProjectile.maxDistance = newLength;
-            }
+            currentHook.maxDistance = newLength;
         }
     }
 
@@ -92,25 +129,30 @@ public class HookSpawner : MonoBehaviour
     {
         if (currentHook != null)
         {
-            FishingProjectile fishingProjectile = currentHook.GetComponent<FishingProjectile>();
-            if (fishingProjectile != null)
-            {
-                return fishingProjectile.maxDistance;
-            }
+            return currentHook.maxDistance;
         }
-        
+
         return 0;
     }
 
     public bool HasActiveHook()
     {
-        return currentHook != null;
+        return currentHookHandler != null;
     }
 
     public void OnHookDestroyed()
     {
         currentHook = null;
-        Debug.Log($"Hook reference cleared for {gameObject.name}");
+        if (currentHookHandler != null)
+        {
+            Destroy(currentHookHandler);
+            currentHookHandler = null;
+        }
+
+        // Reset max distance when hook is destroyed
+        hookMaxDistance = originalMaxDistance;
+
+        Debug.Log($"Hook handler and references cleared for {gameObject.name}");
     }
 
 }

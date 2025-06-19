@@ -58,7 +58,7 @@ public abstract class FishingProjectile : EntityMovement
             // Apply only tangential velocity (creates swinging motion)
             rb.velocity = tangentDirection * tangentVelocity;
 
-            Debug.Log($"Hook constrained to rope - swinging with tangent velocity: {tangentVelocity}");
+            //Debug.Log($"Hook constrained to rope - swinging with tangent velocity: {tangentVelocity}");
         }
     }
 

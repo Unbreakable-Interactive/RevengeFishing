@@ -34,7 +34,7 @@ public class FishermanScript : EnemyBase
         }
 
         base.Start(); // Call the base class Start method
-        hookTimer = (Random.value + 1) * 5;
+        hookTimer = (Random.value + 1) * 10;
     }
 
     // Update is called once per frame
@@ -82,7 +82,7 @@ public class FishermanScript : EnemyBase
         if (!hookSpawner.HasActiveHook())
         {
             hasThrownHook = false;
-            hookTimer = (Random.value + 1) * 5; // Reset timer for next hook
+            hookTimer = (Random.value + 1) * 10; // Reset timer for next hook
             return;
         }
 
@@ -108,7 +108,7 @@ public class FishermanScript : EnemyBase
         // WEIGHTED SELECTION
         float randomValue = UnityEngine.Random.value; // 0.0 to 1.0
 
-        if (randomValue < 0.1f) // 10% chance to put away
+        if (randomValue < 0.2f) // 20% chance to put away
         {
             TryUnequipFishingTool();
         }

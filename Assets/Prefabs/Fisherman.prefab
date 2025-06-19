@@ -106,8 +106,7 @@ Transform:
   m_LocalPosition: {x: 0.8299999, y: 0.5799999, z: 0}
   m_LocalScale: {x: 0.10000001, y: 2, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 3470367175335556429}
+  m_Children: []
   m_Father: {fileID: 3348643983329745823}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: -30}
 --- !u!212 &3033624813667994110
@@ -172,7 +171,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2444740548177980365}
   - component: {fileID: 3522423683038717205}
-  - component: {fileID: 1633933352196915432}
+  - component: {fileID: 910140621170360805}
   - component: {fileID: 2117141073483461364}
   m_Layer: 0
   m_Name: Fisherman
@@ -194,6 +193,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 3470367175335556429}
   - {fileID: 3348643983329745823}
   - {fileID: 4296805662065278111}
   m_Father: {fileID: 0}
@@ -225,7 +225,7 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 0
---- !u!114 &1633933352196915432
+--- !u!114 &910140621170360805
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -234,18 +234,14 @@ MonoBehaviour:
   m_GameObject: {fileID: 7667254095196824905}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4cd301563b4b88d419bb8bdb59a48461, type: 3}
+  m_Script: {fileID: 11500000, guid: 57a7ee0e523af8c4e8c5dad099f3e8a4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  isAboveWater: 1
-  airGravityScale: 2
-  underwaterGravityScale: 0
-  airDrag: 1.5
-  underwaterDrag: 0.5
-  airMaxSpeed: 3
-  underwaterMaxSpeed: 5
-  underwaterRotationSpeed: 10
-  maxSpeed: 5
+  hookHandlerPrefab: {fileID: 2202176723642426590, guid: 96755b07ec09907448fa89c168d540f4, type: 3}
+  spawnPoint: {fileID: 3470367175335556429}
+  throwForce: 8
+  throwDirection: {x: 1, y: 0.2}
+  hookMaxDistance: 8
 --- !u!114 &2117141073483461364
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -258,7 +254,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 74f210aa94814394cbc3a52e26206a1e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  isAboveWater: 1
+  airGravityScale: 2
+  underwaterGravityScale: 0
+  airDrag: 1.5
+  underwaterDrag: 0.5
+  airMaxSpeed: 3
+  underwaterMaxSpeed: 5
+  entityType: 0
   assignedPlatform: {fileID: 0}
+  toolDropPrefab: {fileID: 0}
+  hookThrowChance: 0.4
+  hookTimer: 0
+  isFishing: 0
+  multiplier: 0
 --- !u!1 &8143527860349171708
 GameObject:
   m_ObjectHideFlags: 0
@@ -283,12 +292,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8143527860349171708}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.4, y: 0.481, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0.258819, w: 0.9659259}
+  m_LocalPosition: {x: 1.3456411, y: 2.5831165, z: 0}
+  m_LocalScale: {x: 0.10000002, y: 2, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 4289201725534140788}
+  m_Father: {fileID: 2444740548177980365}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &8741494658121359265
 GameObject:
