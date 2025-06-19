@@ -6,7 +6,7 @@ public abstract class FishingProjectile : EntityMovement
     [Header("Distance Constraint")]
     public float maxDistance = 15f;
 
-    protected Vector3 spawnPoint;
+    public Vector3 spawnPoint;
     protected HookSpawner spawner;
 
     protected virtual void Awake()

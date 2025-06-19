@@ -74,7 +74,7 @@ public abstract class EnemyBase : EntityMovement
 
     // Fishing tool equip system
     protected bool hasFishingTool = false; // Can this enemy use a tool?
-    protected bool fishingToolEquipped = false; // Is tool currently out?
+    public bool fishingToolEquipped = false; // Is tool currently out?
 
     // For dropping tools when defeated
     [SerializeField] protected GameObject toolDropPrefab; // Tool to spawn when defeated
@@ -83,7 +83,7 @@ public abstract class EnemyBase : EntityMovement
     protected float minActionTime; //Minimum seconds enemy will do an action, like walk, idle, or run
     protected float maxActionTime; //Maximum seconds enemy will do an action, like walk, idle, or run
 
-    protected LandMovementState currentMovementState;
+    public LandMovementState currentMovementState;
     protected float nextActionTime;
     protected bool isGrounded;
 
@@ -333,50 +333,6 @@ public abstract class EnemyBase : EntityMovement
         isGrounded = hit.collider != null && hit.collider.gameObject == assignedPlatform?.gameObject;
     }
 
-    protected virtual void ExecuteLandMovementBehaviour()
-    {
-        if (!isGrounded || assignedPlatform == null) return;
-
-        Vector2 movement = Vector2.zero;
-
-        if (fishingToolEquipped)
-        {
-            currentMovementState = LandMovementState.Idle;
-            // No movement allowed
-        }
-        else
-        {
-            switch (currentMovementState)
-            {
-                case LandMovementState.Idle:
-                    // Do nothing, just stand still
-                    break;
-
-                case LandMovementState.WalkLeft:
-                    movement = Vector2.left * walkingSpeed;
-                    break;
-
-                case LandMovementState.WalkRight:
-                    movement = Vector2.right * walkingSpeed;
-                    break;
-
-                case LandMovementState.RunLeft:
-                    movement = Vector2.left * runningSpeed;
-                    break;
-
-                case LandMovementState.RunRight:
-                    movement = Vector2.right * runningSpeed;
-                    break;
-            }
-        }
-
-        // Apply movement while preserving Y velocity (gravity)
-        if (rb != null)
-        {
-            rb.velocity = new Vector2(movement.x, rb.velocity.y);
-        }
-    }
-
     protected virtual void CheckPlatformBounds()
     {
         float currentX = transform.position.x;
@@ -397,68 +353,48 @@ public abstract class EnemyBase : EntityMovement
         }
     }
 
-    // In EnemyBase.cs, replace ChooseRandomLandAction with:
+    // Simplified EnemyBase.cs - remove ALL fisherman-specific code
     protected virtual void ChooseRandomLandAction()
     {
-        // Get config if this is a fisherman
-        FishermanScript fisherman = this as FishermanScript;
+        // Only handle basic enemy movement - no fishing logic!
+        float randomValue = UnityEngine.Random.value;
 
-        if (fisherman != null)
-        {
-
-            // Use fisherman's config values
-            float random = UnityEngine.Random.value;
-
-            if (random < fisherman.config.idleProbability) // Use config value
-            {
-                currentMovementState = LandMovementState.Idle;
-
-                // Try to equip fishing tool when idle
-                if (hasFishingTool && !fishingToolEquipped &&
-                    UnityEngine.Random.value < fisherman.config.equipToolChance)
-                {
-                    TryEquipFishingTool();
-                }
-            }
-            else
-            {
-                float walkThreshold = fisherman.config.idleProbability + fisherman.config.walkProbability;
-                float runThreshold = walkThreshold + fisherman.config.runProbability;
-
-                if (random < walkThreshold)
-                {
-                    // Choose walk direction randomly
-                    currentMovementState = (UnityEngine.Random.value < 0.5f) ?
-                        LandMovementState.WalkLeft : LandMovementState.WalkRight;
-                }
-                else if (random < runThreshold)
-                {
-                    // Choose run direction randomly  
-                    currentMovementState = (UnityEngine.Random.value < 0.5f) ?
-                        LandMovementState.RunLeft : LandMovementState.RunRight;
-                }
-                else
-                {
-                    // Fallback to idle if probabilities don't add up properly
-                    currentMovementState = LandMovementState.Idle;
-                }
-            }
-        }
+        if (randomValue < 0.6f)
+            currentMovementState = LandMovementState.Idle;
+        else if (randomValue < 0.9f)
+            currentMovementState = (UnityEngine.Random.value < 0.5f) ?
+                LandMovementState.WalkLeft : LandMovementState.WalkRight;
         else
+            currentMovementState = (UnityEngine.Random.value < 0.5f) ?
+                LandMovementState.RunLeft : LandMovementState.RunRight;
+    }
+
+    protected virtual void ExecuteLandMovementBehaviour()
+    {
+        if (!isGrounded || assignedPlatform == null) return;
+
+        Vector2 movement = Vector2.zero;
+
+        // Simple movement - no fishing tool checks here!
+        switch (currentMovementState)
         {
-            // Fallback to original hardcoded logic for non-fisherman enemies
-            float randomValue = UnityEngine.Random.value;
-            if (randomValue < 0.7f)
-                currentMovementState = LandMovementState.Idle;
-            else if (randomValue < 0.825f)
-                currentMovementState = LandMovementState.WalkLeft;
-            else if (randomValue < 0.95f)
-                currentMovementState = LandMovementState.WalkRight;
-            else if (randomValue < 0.975f)
-                currentMovementState = LandMovementState.RunLeft;
-            else
-                currentMovementState = LandMovementState.RunRight;
+            case LandMovementState.Idle:
+                break;
+            case LandMovementState.WalkLeft:
+                movement = Vector2.left * walkingSpeed;
+                break;
+            case LandMovementState.WalkRight:
+                movement = Vector2.right * walkingSpeed;
+                break;
+            case LandMovementState.RunLeft:
+                movement = Vector2.left * runningSpeed;
+                break;
+            case LandMovementState.RunRight:
+                movement = Vector2.right * runningSpeed;
+                break;
         }
+
+        rb.velocity = new Vector2(movement.x, rb.velocity.y);
     }
 
     protected virtual void ChooseRandomActionExcluding(params LandMovementState[] excludedStates)

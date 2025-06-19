@@ -97,20 +97,32 @@ public class HookSpawner : MonoBehaviour
         }
     }
 
-    public void RetractHook(float newLength)
+    public void RetractHook(float retractionAmount)
     {
         if (currentHook != null)
         {
-            if (GetLineLength() > 0.1f)
+            float newLength = GetLineLength() - retractionAmount;
+
+            if (newLength > 0.05f)
             {
-                SetLineLength(GetLineLength() - newLength);
+                SetLineLength(newLength);
+
+                // MOVE HOOK TOWARD SPAWN POINT
+                Vector3 spawnPosition = currentHook.spawnPoint; // Access spawn point
+                Vector3 currentPosition = currentHook.transform.position;
+                Vector3 direction = (spawnPosition - currentPosition).normalized;
+
+                // Move hook slightly toward spawn point for visual effect
+                currentHook.transform.position += direction * retractionAmount * 0.5f;
+
+                Debug.Log($"Hook being retracted gradually - remaining length: {newLength:F1}");
             }
             else
             {
+                // When line is very short, start destruction
                 currentHook.RetractProjectile();
+                Debug.Log($"Hook retraction complete - destroying hook");
             }
-
-            Debug.Log($"Hook retracted by {gameObject.name}!");
         }
     }
 
@@ -142,12 +154,12 @@ public class HookSpawner : MonoBehaviour
 
     public void OnHookDestroyed()
     {
-        currentHook = null;
         if (currentHookHandler != null)
         {
             Destroy(currentHookHandler);
             currentHookHandler = null;
         }
+        currentHook = null;
 
         // Reset max distance when hook is destroyed
         hookMaxDistance = originalMaxDistance;

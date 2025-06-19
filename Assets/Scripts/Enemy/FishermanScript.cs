@@ -8,114 +8,133 @@ public class FishermanScript : EnemyBase
     public FishermanConfig config = new FishermanConfig();
 
     private HookSpawner hookSpawner;
-    private float hookTimer;
-    private float fishingBehaviorTimer;
+    private float decisionTimer = 0f;
     private bool hasThrownHook;
 
-    // ADD: Decision-making timer
-    private float fishingDecisionTimer = 0f;
-    private float decisionInterval = 2f; // Make fishing decisions every 2 seconds
+    private float hookTimer = 0f;
+    private float hookDuration = 8f; // Hook stays out for 8 seconds
 
     protected override void Start()
     {
         base.Start();
         _type = EnemyType.Land;
         hasFishingTool = true;
-
         hookSpawner = GetComponent<HookSpawner>() ?? gameObject.AddComponent<HookSpawner>();
-        ResetHookTimer();
-
-        // Initialize the fishing behavior timer
-        fishingBehaviorTimer = config.fishingBehaviorCheckInterval;
     }
 
     protected override void Update()
     {
         base.Update();
 
-        fishingDecisionTimer += Time.deltaTime;
-
-        // Make fishing decisions every 2 seconds instead of every frame
-        if (fishingDecisionTimer >= decisionInterval)
+        // SINGLE decision system - every 3 seconds
+        decisionTimer += Time.deltaTime;
+        if (decisionTimer >= 3f)
         {
-            MakeFishingDecision();
-            fishingDecisionTimer = 0f;
+            MakeAIDecision();
+            decisionTimer = 0f;
         }
 
-        HandleHookRetraction();
-        HandleFishingBehaviorCheck();
+        HandleActiveHook();
     }
 
-    private void MakeFishingDecision()
-    {
-        // Only make decisions when idle with fishing rod equipped
-        if (currentMovementState != LandMovementState.Idle || !fishingToolEquipped || hasThrownHook)
-            return;
-
-        // First, decide if we should UNEQUIP the fishing rod
-        float unequipChance = 0.3f; // 30% chance to unequip each decision
-        if (UnityEngine.Random.value < unequipChance)
-        {
-            TryUnequipFishingTool();
-            return; // Exit early if we unequip
-        }
-
-        // If we didn't unequip, then consider throwing the hook
-        if (hookSpawner?.CanThrowHook() == true && UnityEngine.Random.value < config.hookThrowChance)
-        {
-            hookSpawner.ThrowHook();
-            hasThrownHook = true;
-        }
-    }
-
-    // increase unequip chances
-    private void HandleHookRetraction()
+    private void HandleActiveHook()
     {
         if (!hasThrownHook) return;
 
+        // ADD HOOK TIMER LOGIC
+        hookTimer += Time.deltaTime;
+
+        // Retract hook after hookDuration seconds
+        if (hookTimer >= hookDuration)
+        {
+            if (hookSpawner.HasActiveHook())
+            {
+                // Start retracting the hook gradually
+                float retractionSpeed = 2f; // Units per second (adjustable)
+                hookSpawner.RetractHook(retractionSpeed * Time.deltaTime);
+            }
+        }
+
+        // Check if hook is gone
         if (!hookSpawner.HasActiveHook())
         {
             hasThrownHook = false;
-            ResetHookTimer();
+            hookTimer = 0f; // RESET TIMER
 
-            // 50% chance to unequip after fishing
-            if (UnityEngine.Random.value < 0.5f)
+            // 60% chance to put away rod after fishing
+            if (UnityEngine.Random.value < 0.6f)
             {
                 TryUnequipFishingTool();
             }
-            return;
-        }
-
-        hookTimer -= Time.deltaTime;
-        if (hookTimer <= 0)
-        {
-            hookSpawner.RetractHook(Time.deltaTime);
         }
     }
 
-    private void HandleFishingBehaviorCheck()
+    // RESET TIMER WHEN THROWING NEW HOOK
+    private void MakeAIDecision()
     {
-        fishingBehaviorTimer -= Time.deltaTime;
-        if (fishingBehaviorTimer <= 0)
+        // Override base movement decisions when we can fish
+        if (currentMovementState == LandMovementState.Idle && !hasThrownHook)
         {
-            ReverseFishingBehaviour();
-            fishingBehaviorTimer = config.fishingBehaviorCheckInterval;
+            if (!fishingToolEquipped)
+            {
+                // 60% chance to equip fishing tool when idle
+                if (UnityEngine.Random.value < 0.6f)
+                {
+                    TryEquipFishingTool();
+                    return;
+                }
+            }
+            else
+            {
+                // With fishing tool equipped, choose between fishing and unequipping
+                float random = UnityEngine.Random.value;
+                if (random < 0.5f)
+                {
+                    // Try to fish
+                    if (hookSpawner?.CanThrowHook() == true)
+                    {
+                        hookSpawner.ThrowHook();
+                        hasThrownHook = true;
+                        hookTimer = 0f; // RESET TIMER WHEN THROWING
+                    }
+                }
+                else
+                {
+                    // Put away fishing tool
+                    TryUnequipFishingTool();
+                }
+                return;
+            }
+        }
+
+        // If not fishing, use base movement AI
+        if (!fishingToolEquipped)
+        {
+            ChooseRandomLandAction();
+            ScheduleNextAction();
         }
     }
 
-    private void ResetHookTimer()
+
+    // Override movement to prevent movement when fishing
+    protected override void ExecuteLandMovementBehaviour()
     {
-        hookTimer = UnityEngine.Random.Range(config.minHookWaitTime, config.maxHookWaitTime);
+        if (fishingToolEquipped)
+        {
+            currentMovementState = LandMovementState.Idle;
+            // No movement when fishing
+            rb.velocity = new Vector2(0, rb.velocity.y);
+        }
+        else
+        {
+            base.ExecuteLandMovementBehaviour();
+        }
     }
 
     public override void ReverseFishingBehaviour()
     {
-        if (!fishingToolEquipped ||
-            (hookSpawner?.HasActiveHook() == true) ||
-            UnityEngine.Random.value >= config.unequipToolChance)
-            return;
-
-        TryUnequipFishingTool();
+        // This method can be removed or simplified
+        // since we have unified decision making
     }
 
     public override void WaterMovement()
