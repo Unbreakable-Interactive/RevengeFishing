@@ -114,7 +114,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dabed3281e442614d9ee2d7eb7ead20a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxDistance: 15
+  isAboveWater: 1
+  airGravityScale: 2
+  underwaterGravityScale: 0
+  airDrag: 1.5
+  underwaterDrag: 0.5
+  airMaxSpeed: 3
+  underwaterMaxSpeed: 5
+  entityType: 0
+  maxDistance: 8
 --- !u!50 &2356560897641432879
 Rigidbody2D:
   serializedVersion: 4

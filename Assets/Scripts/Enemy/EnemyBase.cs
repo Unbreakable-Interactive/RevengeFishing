@@ -397,43 +397,68 @@ public abstract class EnemyBase : EntityMovement
         }
     }
 
+    // In EnemyBase.cs, replace ChooseRandomLandAction with:
     protected virtual void ChooseRandomLandAction()
     {
-        if (fishingToolEquipped)
-        {
-            currentMovementState = LandMovementState.Idle;
-            return;
-        }
+        // Get config if this is a fisherman
+        FishermanScript fisherman = this as FishermanScript;
 
-        // WEIGHTED SELECTION - Bias toward idle
-        float randomValue = UnityEngine.Random.value; // 0.0 to 1.0
-
-        if (randomValue < 0.7f) // 70% chance for idle
+        if (fisherman != null)
         {
-            currentMovementState = LandMovementState.Idle;
-            if (hasFishingTool && !fishingToolEquipped && UnityEngine.Random.value < 0.7f) // 70% chance
+
+            // Use fisherman's config values
+            float random = UnityEngine.Random.value;
+
+            if (random < fisherman.config.idleProbability) // Use config value
             {
-                TryEquipFishingTool();
+                currentMovementState = LandMovementState.Idle;
+
+                // Try to equip fishing tool when idle
+                if (hasFishingTool && !fishingToolEquipped &&
+                    UnityEngine.Random.value < fisherman.config.equipToolChance)
+                {
+                    TryEquipFishingTool();
+                }
             }
+            else
+            {
+                float walkThreshold = fisherman.config.idleProbability + fisherman.config.walkProbability;
+                float runThreshold = walkThreshold + fisherman.config.runProbability;
 
+                if (random < walkThreshold)
+                {
+                    // Choose walk direction randomly
+                    currentMovementState = (UnityEngine.Random.value < 0.5f) ?
+                        LandMovementState.WalkLeft : LandMovementState.WalkRight;
+                }
+                else if (random < runThreshold)
+                {
+                    // Choose run direction randomly  
+                    currentMovementState = (UnityEngine.Random.value < 0.5f) ?
+                        LandMovementState.RunLeft : LandMovementState.RunRight;
+                }
+                else
+                {
+                    // Fallback to idle if probabilities don't add up properly
+                    currentMovementState = LandMovementState.Idle;
+                }
+            }
         }
-        else if (randomValue < 0.825f) // % chance for walk left
+        else
         {
-            currentMovementState = LandMovementState.WalkLeft;
+            // Fallback to original hardcoded logic for non-fisherman enemies
+            float randomValue = UnityEngine.Random.value;
+            if (randomValue < 0.7f)
+                currentMovementState = LandMovementState.Idle;
+            else if (randomValue < 0.825f)
+                currentMovementState = LandMovementState.WalkLeft;
+            else if (randomValue < 0.95f)
+                currentMovementState = LandMovementState.WalkRight;
+            else if (randomValue < 0.975f)
+                currentMovementState = LandMovementState.RunLeft;
+            else
+                currentMovementState = LandMovementState.RunRight;
         }
-        else if (randomValue < 0.95f) // % chance for walk right
-        {
-            currentMovementState = LandMovementState.WalkRight;
-        }
-        else if (randomValue < 0.975f) // 2.5% chance for run left
-        {
-            currentMovementState = LandMovementState.RunLeft;
-        }
-        else // 2.5% chance for run right
-        {
-            currentMovementState = LandMovementState.RunRight;
-        }
-
     }
 
     protected virtual void ChooseRandomActionExcluding(params LandMovementState[] excludedStates)
@@ -515,6 +540,9 @@ public abstract class EnemyBase : EntityMovement
 
         fishingToolEquipped = false;
         OnFishingToolUnequipped();
+
+        ChooseRandomLandAction();
+        ScheduleNextAction();
 
         if (assignedPlatform != null && assignedPlatform.showDebugInfo)
         {

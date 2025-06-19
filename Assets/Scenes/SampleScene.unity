@@ -2467,38 +2467,14 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 1838860775073050289, guid: a8a1f6cfed63bb145a560de9fc880833, type: 3}
-      propertyPath: hookHandlerPrefab
-      value: 
-      objectReference: {fileID: 2202176723642426590, guid: 96755b07ec09907448fa89c168d540f4, type: 3}
     - target: {fileID: 1963649820016990938, guid: a8a1f6cfed63bb145a560de9fc880833, type: 3}
       propertyPath: m_Name
       value: FishermanHandler
       objectReference: {fileID: 0}
     - target: {fileID: 6092571517471514807, guid: a8a1f6cfed63bb145a560de9fc880833, type: 3}
-      propertyPath: multiplier
-      value: 3
-      objectReference: {fileID: 0}
-    - target: {fileID: 6092571517471514807, guid: a8a1f6cfed63bb145a560de9fc880833, type: 3}
       propertyPath: assignedPlatform
       value: 
       objectReference: {fileID: 1130133055}
-    - target: {fileID: 8774570743886161678, guid: a8a1f6cfed63bb145a560de9fc880833, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 8774570743886161678, guid: a8a1f6cfed63bb145a560de9fc880833, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8774570743886161678, guid: a8a1f6cfed63bb145a560de9fc880833, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8774570743886161678, guid: a8a1f6cfed63bb145a560de9fc880833, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

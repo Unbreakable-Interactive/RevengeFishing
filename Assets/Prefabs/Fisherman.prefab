@@ -263,11 +263,19 @@ MonoBehaviour:
   underwaterMaxSpeed: 5
   entityType: 0
   assignedPlatform: {fileID: 0}
-  toolDropPrefab: {fileID: 0}
-  hookThrowChance: 0.4
-  hookTimer: 0
-  isFishing: 0
-  multiplier: 0
+  toolDropPrefab: {fileID: 2743509415465814910, guid: a106a3ba687ec00469ed0a6d34ab4fe9, type: 3}
+  config:
+    idleProbability: 0.7
+    walkProbability: 0.25
+    runProbability: 0.05
+    equipToolChance: 0.7
+    unequipToolChance: 0.2
+    hookThrowChance: 0.4
+    minHookWaitTime: 10
+    maxHookWaitTime: 20
+    fishingBehaviorCheckInterval: 10
+    minActionTime: 1
+    maxActionTime: 4
 --- !u!1 &8143527860349171708
 GameObject:
   m_ObjectHideFlags: 0
@@ -292,7 +300,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8143527860349171708}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0.258819, w: 0.9659259}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 1.3456411, y: 2.5831165, z: 0}
   m_LocalScale: {x: 0.10000002, y: 2, z: 1}
   m_ConstrainProportionsScale: 0

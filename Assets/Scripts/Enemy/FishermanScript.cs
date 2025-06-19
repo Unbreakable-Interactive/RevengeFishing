@@ -4,124 +4,122 @@ using UnityEngine;
 
 public class FishermanScript : EnemyBase
 {
-    [Header("Hook Throwing")]
+    [Header("Fisherman Configuration")]
+    public FishermanConfig config = new FishermanConfig();
+
     private HookSpawner hookSpawner;
-    public float hookThrowChance = 0.4f; // 40% chance per frame when idle
-
-    private int timer;
-
-    [SerializeField] private float hookTimer;
-
-    [SerializeField] private bool isFishing;
-    [SerializeField] private float multiplier;
-
+    private float hookTimer;
+    private float fishingBehaviorTimer;
     private bool hasThrownHook;
 
-    // Start is called before the first frame update
+    // ADD: Decision-making timer
+    private float fishingDecisionTimer = 0f;
+    private float decisionInterval = 2f; // Make fishing decisions every 2 seconds
+
     protected override void Start()
     {
-        timer = 0;
+        base.Start();
         _type = EnemyType.Land;
-
-        //enable fishing tool for fisherman
         hasFishingTool = true;
 
-        // Get or add hook spawner component
-        hookSpawner = GetComponent<HookSpawner>();
-        if (hookSpawner == null)
-        {
-            hookSpawner = gameObject.AddComponent<HookSpawner>();
-        }
+        hookSpawner = GetComponent<HookSpawner>() ?? gameObject.AddComponent<HookSpawner>();
+        ResetHookTimer();
 
-        base.Start(); // Call the base class Start method
-        hookTimer = (Random.value + 1) * 10;
+        // Initialize the fishing behavior timer
+        fishingBehaviorTimer = config.fishingBehaviorCheckInterval;
     }
 
-    // Update is called once per frame
     protected override void Update()
     {
-        timer++;
-
-        // Call base Update for movement handling
         base.Update();
 
-        // Check for hook throwing when idle and equipped
-        CheckHookThrowing();
+        fishingDecisionTimer += Time.deltaTime;
 
-        if (timer >= 600)
+        // Make fishing decisions every 2 seconds instead of every frame
+        if (fishingDecisionTimer >= decisionInterval)
         {
-            ReverseFishingBehaviour();
-            timer = 0; // Reset timer after 10 seconds (600 frames at 60 FPS)
+            MakeFishingDecision();
+            fishingDecisionTimer = 0f;
         }
-        
-        if(hasThrownHook)
-            RetractHook();
+
+        HandleHookRetraction();
+        HandleFishingBehaviorCheck();
     }
 
-    private void CheckHookThrowing()
+    private void MakeFishingDecision()
     {
-        // Only throw hook if:
-        // 1. Fisherman is in idle state
-        // 2. Has fishing tool equipped
-        // 3. Hook spawner can throw (cooldown passed)
-        // 4. Random chance passes
-        if (currentMovementState == LandMovementState.Idle &&
-            fishingToolEquipped &&
-            hookSpawner != null &&
-            hookSpawner.CanThrowHook() &&
-            Random.value < hookThrowChance * Time.deltaTime)
+        // Only make decisions when idle with fishing rod equipped
+        if (currentMovementState != LandMovementState.Idle || !fishingToolEquipped || hasThrownHook)
+            return;
+
+        // First, decide if we should UNEQUIP the fishing rod
+        float unequipChance = 0.3f; // 30% chance to unequip each decision
+        if (UnityEngine.Random.value < unequipChance)
+        {
+            TryUnequipFishingTool();
+            return; // Exit early if we unequip
+        }
+
+        // If we didn't unequip, then consider throwing the hook
+        if (hookSpawner?.CanThrowHook() == true && UnityEngine.Random.value < config.hookThrowChance)
         {
             hookSpawner.ThrowHook();
             hasThrownHook = true;
         }
     }
 
-    private void RetractHook()
+    // increase unequip chances
+    private void HandleHookRetraction()
     {
-        // Only retract if we actually have an active hook
+        if (!hasThrownHook) return;
+
         if (!hookSpawner.HasActiveHook())
         {
             hasThrownHook = false;
-            hookTimer = (Random.value + 1) * 10; // Reset timer for next hook
+            ResetHookTimer();
+
+            // 50% chance to unequip after fishing
+            if (UnityEngine.Random.value < 0.5f)
+            {
+                TryUnequipFishingTool();
+            }
             return;
         }
 
-        // between 5 - 10 secs - Common behaviour
         hookTimer -= Time.deltaTime;
         if (hookTimer <= 0)
         {
-            hookSpawner.RetractHook(Time.deltaTime*multiplier);
+            hookSpawner.RetractHook(Time.deltaTime);
         }
+    }
+
+    private void HandleFishingBehaviorCheck()
+    {
+        fishingBehaviorTimer -= Time.deltaTime;
+        if (fishingBehaviorTimer <= 0)
+        {
+            ReverseFishingBehaviour();
+            fishingBehaviorTimer = config.fishingBehaviorCheckInterval;
+        }
+    }
+
+    private void ResetHookTimer()
+    {
+        hookTimer = UnityEngine.Random.Range(config.minHookWaitTime, config.maxHookWaitTime);
     }
 
     public override void ReverseFishingBehaviour()
     {
-        if (!fishingToolEquipped) return;
+        if (!fishingToolEquipped ||
+            (hookSpawner?.HasActiveHook() == true) ||
+            UnityEngine.Random.value >= config.unequipToolChance)
+            return;
 
-        // Check if there's an active hook - cannot unequip while hook is out!
-        if (hookSpawner != null && hookSpawner.HasActiveHook())
-        {
-            Debug.Log($"{gameObject.name} cannot put away fishing rod - hook is still out!");
-            return; // Cannot unequip while hook is active
-        }
-
-        // WEIGHTED SELECTION
-        float randomValue = UnityEngine.Random.value; // 0.0 to 1.0
-
-        if (randomValue < 0.2f) // 20% chance to put away
-        {
-            TryUnequipFishingTool();
-        }
+        TryUnequipFishingTool();
     }
-
-    //public override void LandMovement()
-    //{
-    //    //throw new System.NotImplementedException();
-    //}
 
     public override void WaterMovement()
     {
-        //throw new System.NotImplementedException();
+        // Implementation for water movement
     }
-
 }
