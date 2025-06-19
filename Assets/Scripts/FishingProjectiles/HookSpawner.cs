@@ -106,4 +106,11 @@ public class HookSpawner : MonoBehaviour
     {
         return currentHook != null;
     }
+
+    public void OnHookDestroyed()
+    {
+        currentHook = null;
+        Debug.Log($"Hook reference cleared for {gameObject.name}");
+    }
+
 }

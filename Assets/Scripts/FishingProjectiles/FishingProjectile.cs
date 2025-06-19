@@ -76,6 +76,11 @@ public abstract class FishingProjectile : EntityMovement
     protected IEnumerator IProjectileRetracted()
     {
         yield return new WaitUntil(() => maxDistance <= 0.1f);
+        // Notify the spawner before destroying
+        if (spawner != null)
+        {
+            spawner.OnHookDestroyed();
+        }
         Destroy(gameObject);
     }
 
