@@ -14,6 +14,8 @@ public class FishermanScript : EnemyBase
     private float hookTimer = 0f;
     private float hookDuration = 8f; // Hook stays out for 8 seconds
 
+    private FishingHook subscribedHook;
+
     protected override void Start()
     {
         base.Start();
@@ -45,7 +47,9 @@ public class FishermanScript : EnemyBase
         hookTimer += Time.deltaTime;
 
         // Retract hook after hookDuration seconds
-        if (hookTimer >= hookDuration && !hookSpawner.currentHook.isBeingHeld)
+        if (hookSpawner.currentHook != null &&
+            hookTimer >= hookDuration &&
+            !hookSpawner.currentHook.isBeingHeld)
         {
             if (hookSpawner.HasActiveHook())
             {
@@ -58,6 +62,8 @@ public class FishermanScript : EnemyBase
         // Check if hook is gone
         if (!hookSpawner.HasActiveHook())
         {
+            CleanupHookSubscription();
+
             hasThrownHook = false;
             hookTimer = 0f; // RESET TIMER
 
@@ -124,17 +130,32 @@ public class FishermanScript : EnemyBase
 
     private void SubscribeToHookEvents()
     {
+        CleanupHookSubscription();
+
         // Get current hook from spawner
         if (hookSpawner.currentHook is FishingHook fishingHook)
         {
+            subscribedHook = fishingHook;
             fishingHook.OnPlayerInteraction += OnHookPlayerInteraction;
+        }
+    }
+
+    private void CleanupHookSubscription()
+    {
+        if (subscribedHook != null)
+        {
+            subscribedHook.OnPlayerInteraction -= OnHookPlayerInteraction;
+            subscribedHook = null;
         }
     }
 
     private void OnHookPlayerInteraction(bool isBeingHeld)
     {
-        hookSpawner.currentHook.isBeingHeld = isBeingHeld;
-        Debug.Log($"Fisherman: Hook is being held: {isBeingHeld}");
+        if (hookSpawner.currentHook != null)
+        {
+            hookSpawner.currentHook.isBeingHeld = isBeingHeld;
+            Debug.Log($"Fisherman: Hook is being held: {isBeingHeld}");
+        }
     }
 
     // Override movement to prevent movement when fishing
@@ -162,4 +183,10 @@ public class FishermanScript : EnemyBase
     {
         // Implementation for water movement
     }
+
+    private void OnDestroy()
+    {
+        CleanupHookSubscription();
+    }
+
 }

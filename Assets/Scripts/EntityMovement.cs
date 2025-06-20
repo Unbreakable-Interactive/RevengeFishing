@@ -5,6 +5,11 @@ public abstract class EntityMovement : MonoBehaviour
 {
     protected Rigidbody2D rb;
 
+    [Header("Character Stats")]
+    [SerializeField] protected int _powerLevel;
+    [SerializeField] protected int _fatigue;
+    [SerializeField] protected int _maxFatigue;
+
     [Header("Water/Air Movement Settings")]
     public bool isAboveWater = true;
     public float airGravityScale = 2f;
@@ -16,6 +21,12 @@ public abstract class EntityMovement : MonoBehaviour
 
     [Header("Entity Type")]
     public EntityType entityType = EntityType.Generic;
+
+    // Add this property after the existing fields
+    public int PowerLevel
+    {
+        get => _powerLevel;
+    }
 
     public enum EntityType
     {
@@ -37,6 +48,15 @@ public abstract class EntityMovement : MonoBehaviour
         if (rb == null)
         {
             rb = gameObject.AddComponent<Rigidbody2D>();
+        }
+
+        if (GetComponent<PlayerMovement>() != null)
+        {
+            _powerLevel = 100;
+        }
+        else
+        {
+            //_powerLevel = 100; //change this to scale with the player later
         }
 
         SetMovementMode(isAboveWater);

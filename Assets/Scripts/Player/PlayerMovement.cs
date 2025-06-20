@@ -10,7 +10,6 @@ public class PlayerMovement : EntityMovement
     private bool isRotatingToTarget = false;
     private bool shouldApplyForceAfterRotation = false;
     private bool hasAppliedBoost = false; // Track if boost was already applied
-    private bool isMoving = false;
 
     [Header("Rotation Settings")]
     public float rotationSpeed = 10f;
@@ -62,6 +61,9 @@ public class PlayerMovement : EntityMovement
     private float constraintRadius;
     private System.Action<Vector3> onConstraintViolation;
 
+    [Header("Fishing Hook Interaction")]
+    private List<FishingProjectile> activeBitingHooks = new List<FishingProjectile>();
+
     [Header("Debug")]
     public bool enableDebugLogs = false;
 
@@ -73,6 +75,9 @@ public class PlayerMovement : EntityMovement
         base.Start(); // Call base Start to initialize Rigidbody2D and movement mode
 
         mainCamera = Camera.main ?? FindObjectOfType<Camera>();
+
+        _fatigue = 0;
+        _maxFatigue = _powerLevel;
 
         //rb = GetComponent<Rigidbody2D>();
 
@@ -128,27 +133,6 @@ public class PlayerMovement : EntityMovement
             DebugLog("Player switched to UNDERWATER mode");
         }
 
-        //isAboveWater = aboveWater;
-
-        //if (isAboveWater)
-        //{
-        //    // Airborne mode - fish is out of water
-        //    currentGravityScale = airGravityScale; // Initialize current gravity
-        //    rb.gravityScale = currentGravityScale;
-        //    rb.drag = airDrag;
-        //    maxSpeed = airMaxSpeed;
-        //    rotationSpeed = airRotationSpeed;
-        //    DebugLog("Switched to AIRBORNE mode");
-        //}
-        //else
-        //{
-        //    // Underwater mode - fish is in water
-        //    rb.gravityScale = underwaterGravityScale;
-        //    rb.drag = underwaterDrag;
-        //    maxSpeed = underwaterMaxSpeed;
-        //    rotationSpeed = underwaterRotationSpeed;
-        //    DebugLog("Switched to UNDERWATER mode");
-        //}
     }
 
     void HandleMouseInput()
@@ -188,9 +172,53 @@ public class PlayerMovement : EntityMovement
         // 1. Object is moving
         // 2. Mouse is being held (for steering input)
         // 3. Not currently doing initial rotation
-        if (isMoving && Input.GetMouseButton(0) && !shouldApplyForceAfterRotation)
+        if (Input.GetMouseButton(0) && !shouldApplyForceAfterRotation)
         {
             ApplySteering(GetMouseWorldPosition());
+        }
+    }
+
+    // Method for hooks to register when they bite
+    public void AddBitingHook(FishingProjectile hook)
+    {
+        if (!activeBitingHooks.Contains(hook))
+        {
+            activeBitingHooks.Add(hook);
+            DebugLog($"Hook {hook.name} is now biting player. Total hooks: {activeBitingHooks.Count}");
+        }
+    }
+
+    // Method for hooks to unregister when they release
+    public void RemoveBitingHook(FishingProjectile hook)
+    {
+        if (activeBitingHooks.Contains(hook))
+        {
+            activeBitingHooks.Remove(hook);
+            DebugLog($"Hook {hook.name} released player. Total hooks: {activeBitingHooks.Count}");
+        }
+    }
+
+    // Efficient tug-of-war method using only active hooks
+    private void TryTugOfWarPull()
+    {
+        // Check if player is constrained by any hooks
+        if (activeBitingHooks.Count > 0)
+        {
+            // Only check hooks that are currently biting the player
+            foreach (FishingProjectile hook in activeBitingHooks)
+            {
+                // Check if this hook is stretching (player is pulling against it)
+                if (hook.isBeingHeld && hook.IsLineStretching())
+                {
+                    // Player is pulling against this fishing line!
+                    FishermanScript fisherman = hook.spawner?.GetComponent<FishermanScript>();
+                    if (fisherman != null)
+                    {
+                        fisherman.TakeFatigue(PowerLevel);
+                        DebugLog($"Player pulls against {fisherman.name}'s fishing line - fisherman suffers fatigue!");
+                    }
+                }
+            }
         }
     }
 
@@ -200,6 +228,9 @@ public class PlayerMovement : EntityMovement
         Vector2 mousePosition = GetMouseWorldPosition();
         SetTargetRotation(mousePosition);
         shouldApplyForceAfterRotation = true; // Flag to apply force when rotation completes
+
+        // NEW: Check for tug-of-war pulling
+        TryTugOfWarPull();
 
         DebugLog("Mouse clicked - rotating to point at: " + mousePosition);
         hasAppliedBoost = false;

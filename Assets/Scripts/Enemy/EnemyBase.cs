@@ -39,9 +39,6 @@ public abstract class EnemyBase : EntityMovement
         RunRight
     }
 
-    protected float _powerLevel;
-    protected float _fatigue;
-    protected float _maxFatigue;
     protected Tier _tier;
     protected EnemyState _state;
     protected EnemyType _type;
@@ -119,7 +116,7 @@ public abstract class EnemyBase : EntityMovement
         base.Start();
 
         // Enemy-specific initialization
-        Initialize(100f);
+        Initialize(100);
     }
 
     protected override void Update()
@@ -185,7 +182,7 @@ public abstract class EnemyBase : EntityMovement
         }
     }
 
-    public virtual void Initialize(float powerLevel)
+    public virtual void Initialize(int powerLevel)
     {
         _powerLevel = powerLevel;
         
@@ -227,10 +224,10 @@ public abstract class EnemyBase : EntityMovement
         _tier = Tier.Tier1;
     }
 
-    protected float TakeFatigue(float playerPowerLevel)
+    public float TakeFatigue(int playerPowerLevel)
     {
         // 5% more fatigue
-        _fatigue += playerPowerLevel * .05f;
+        _fatigue += (int)((float)playerPowerLevel * .05f);
         return Mathf.Clamp(_fatigue, 0, _maxFatigue);
     }
 

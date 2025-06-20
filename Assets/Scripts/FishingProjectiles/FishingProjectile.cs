@@ -7,7 +7,7 @@ public abstract class FishingProjectile : EntityMovement
     public float maxDistance = 15f;
 
     public Vector3 spawnPoint;
-    protected HookSpawner spawner;
+    public HookSpawner spawner;
 
     [Header("Player Interaction")]
     [SerializeField] public bool isBeingHeld = false; 
@@ -77,17 +77,43 @@ public abstract class FishingProjectile : EntityMovement
         }
     }
 
-    private void StartHolding(Transform player)
+    private void StartHolding(Transform playerTransform)
     {
         isBeingHeld = true;
 
         // Disable physics while held
         if (rb != null) rb.isKinematic = true;
 
+        // Register this hook with the player
+        if (player != null)
+        {
+            player.AddBitingHook(this);
+        }
+
         // Notify fisherman
         OnPlayerInteraction?.Invoke(true);
 
         Debug.Log("Player is holding the fishing hook!");
+    }
+
+    // Add this method to handle when hook releases
+    public void ReleasePlayer()
+    {
+        if (isBeingHeld && player != null)
+        {
+            // NEW: Unregister this hook from the player
+            player.RemoveBitingHook(this);
+
+            isBeingHeld = false;
+
+            // Re-enable physics
+            if (rb != null) rb.isKinematic = false;
+
+            // Notify fisherman
+            OnPlayerInteraction?.Invoke(false);
+
+            Debug.Log("Hook released player!");
+        }
     }
 
     protected virtual void InitializeProjectile()
@@ -152,6 +178,7 @@ public abstract class FishingProjectile : EntityMovement
         Destroy(gameObject);
     }
 
+    
     private void ConstrainPlayerToMaxDistance()
     {
         if (player == null) return;
