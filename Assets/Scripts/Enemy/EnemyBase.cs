@@ -228,13 +228,83 @@ public abstract class EnemyBase : EntityMovement
     {
         // 5% more fatigue
         _fatigue += (int)((float)playerPowerLevel * .05f);
+
+        // Check if enemy should be defeated
+        if (_fatigue >= _maxFatigue && _state == EnemyState.Alive)
+        {
+            TriggerDefeat();
+        }
+
         return Mathf.Clamp(_fatigue, 0, _maxFatigue);
+    }
+
+    protected virtual void TriggerDefeat()
+    {
+        Debug.Log($"{gameObject.name} has been defeated!");
+
+        // Change state to defeated
+        ChangeState_Defeated();
+
+        // Interrupt all current actions
+        InterruptAllActions();
+
+        // Start defeat behaviors
+        StartDefeatBehaviors();
+    }
+
+    protected virtual void InterruptAllActions()
+    {
+        // Stop any movement
+        currentMovementState = LandMovementState.Idle;
+        if (rb != null)
+        {
+            rb.velocity = Vector2.zero;
+        }
+
+        // Clear any scheduled actions
+        nextActionTime = float.MaxValue; // Prevent further AI decisions
+
+        Debug.Log($"{gameObject.name} - All actions interrupted due to defeat");
+    }
+
+    protected virtual void StartDefeatBehaviors()
+    {
+        // Make enemy phase through platforms by turning collider into trigger
+        Collider2D enemyCollider = GetComponent<Collider2D>();
+
+        // If not found, look for collider in children (like your setup)
+        if (enemyCollider == null)
+        {
+            enemyCollider = GetComponentInChildren<Collider2D>();
+        }
+
+        if (enemyCollider != null)
+        {
+            enemyCollider.isTrigger = true;
+            Debug.Log($"{gameObject.name} - Collider set to trigger (phasing through platforms)");
+        }
+
+        // If this enemy has fishing tools, clean them up
+        CleanupFishingTools();
+
+        // Drop any tools they were carrying
+        DropTool();
+    }
+
+    protected virtual void CleanupFishingTools()
+    {
+        // This will be overridden in FishermanScript for specific cleanup
+        if (fishingToolEquipped)
+        {
+            fishingToolEquipped = false;
+            Debug.Log($"{gameObject.name} - Fishing tool cleaned up due to defeat");
+        }
     }
 
     #endregion
 
     #region State Management
-    
+
     // Make sure your GetState() method is public
     public EnemyState GetState()
     {

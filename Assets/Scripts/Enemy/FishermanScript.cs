@@ -78,6 +78,11 @@ public class FishermanScript : EnemyBase
     // RESET TIMER WHEN THROWING NEW HOOK
     protected override void MakeAIDecision()
     {
+        if (_state == EnemyState.Defeated)
+        {
+            return;
+        }
+
         // Override base movement decisions when we can fish
         if (currentMovementState == LandMovementState.Idle && !hasThrownHook)
         {
@@ -158,9 +163,37 @@ public class FishermanScript : EnemyBase
         }
     }
 
+    protected override void CleanupFishingTools()
+    {
+        base.CleanupFishingTools();
+
+        // Destroy the fishing hook handler immediately when defeated
+        if (hookSpawner != null && hookSpawner.HasActiveHook())
+        {
+            // Clean up hook subscription first
+            CleanupHookSubscription();
+
+            // Destroy the hook handler (same as when putting it away)
+            hookSpawner.OnHookDestroyed();
+
+            // Reset fishing state
+            hasThrownHook = false;
+            hookTimer = 0f;
+
+            Debug.Log($"Fisherman {gameObject.name} - Hook handler destroyed due to defeat");
+        }
+    }
+
+
     // Override movement to prevent movement when fishing
     protected override void ExecuteLandMovementBehaviour()
     {
+        if (_state == EnemyState.Defeated)
+        {
+            rb.velocity = new Vector2(0, rb.velocity.y);
+            return;
+        }
+
         if (fishingToolEquipped || hasThrownHook)
         {
             currentMovementState = LandMovementState.Idle;
