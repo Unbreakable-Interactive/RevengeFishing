@@ -17,6 +17,25 @@ public abstract class FishingProjectile : EntityMovement
     // Event to notify fisherman
     public System.Action<bool> OnPlayerInteraction;
 
+    [Header("Elastic Line Behavior")]
+    [SerializeField] private float maxStretchDistance = 3f;     // How far beyond maxDistance player can stretch
+    [SerializeField] private float stretchResistance = 15f;    // Resistance force when stretching
+    [SerializeField] private float snapBackForce = 20f;        // Force applied when snapping back
+    [SerializeField] private float maxStretchTime = 0.8f;      // Max time allowed in stretch zone
+    [SerializeField] private AnimationCurve stretchCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
+
+    // Stretch state tracking
+    private bool isStretching = false;
+    private float stretchTimer = 0f;
+    private float currentStretchAmount = 0f;
+
+    [Header("Visual Events")]
+    public System.Action<float, float, float> OnStretchChanged; // stretchAmount, stretchTimer, maxTime
+    public System.Action<float> OnSnapBack; // snapStrength
+    public System.Action OnStretchStarted;
+    public System.Action OnStretchEnded;
+
+
     protected virtual void Awake()
     {
         // Call parent Start() to initialize EntityMovement
@@ -67,34 +86,6 @@ public abstract class FishingProjectile : EntityMovement
         OnPlayerInteraction?.Invoke(true);
 
         Debug.Log("Player is holding the fishing hook!");
-    }
-
-    private void ConstrainPlayerToMaxDistance()
-    {
-        if (player == null) return;
-
-        float currentDistance = Vector3.Distance(player.transform.position, spawnPoint);
-
-        if (currentDistance > maxDistance)
-        {
-            // Same rope physics but applied to player
-            Vector3 direction = (player.transform.position - spawnPoint).normalized;
-            Vector3 constrainedPosition = spawnPoint + direction * maxDistance;
-
-            player.transform.position = constrainedPosition;
-
-            // Apply rope physics to player if they have rigidbody
-            Rigidbody2D playerRb = player.transform.GetComponent<Rigidbody2D>();
-            if (playerRb != null)
-            {
-                Vector2 currentVelocity = playerRb.velocity;
-                Vector2 radialDirection = direction;
-                Vector2 tangentDirection = new Vector2(-radialDirection.y, radialDirection.x);
-
-                float tangentVelocity = Vector2.Dot(currentVelocity, tangentDirection);
-                playerRb.velocity = tangentDirection * tangentVelocity;
-            }
-        }
     }
 
     protected virtual void InitializeProjectile()
@@ -157,6 +148,164 @@ public abstract class FishingProjectile : EntityMovement
             spawner.OnHookDestroyed();
         }
         Destroy(gameObject);
+    }
+
+    private void ConstrainPlayerToMaxDistance()
+    {
+        if (player == null) return;
+
+        float currentDistance = Vector3.Distance(player.transform.position, spawnPoint);
+        float totalMaxDistance = maxDistance + maxStretchDistance;
+
+        Rigidbody2D playerRb = player.GetComponent<Rigidbody2D>();
+        if (playerRb == null) return;
+
+        // Normal range - no constraint needed
+        if (currentDistance <= maxDistance)
+        {
+            // Reset stretch state if returning to normal range
+            if (isStretching)
+            {
+                isStretching = false;
+                stretchTimer = 0f;
+                currentStretchAmount = 0f;
+                Debug.Log("Fishing line relaxed");
+            }
+            return;
+        }
+
+        // Stretch zone - beyond normal max distance but within stretch limit
+        if (currentDistance > maxDistance && currentDistance <= totalMaxDistance)
+        {
+            HandleStretchZone(currentDistance, playerRb);
+        }
+
+        // Hard limit - force snap back if too far or stretched too long
+        if (currentDistance > totalMaxDistance || (isStretching && stretchTimer > maxStretchTime))
+        {
+            SnapPlayerBack(playerRb);
+        }
+    }
+
+    private void HandleStretchZone(float currentDistance, Rigidbody2D playerRb)
+    {
+        currentStretchAmount = (currentDistance - maxDistance) / maxStretchDistance;
+        currentStretchAmount = Mathf.Clamp01(currentStretchAmount);
+
+        if (!isStretching)
+        {
+            isStretching = true;
+            stretchTimer = 0f;
+            OnStretchStarted?.Invoke(); // Notify visual system
+            Debug.Log("Fishing line is stretching!");
+        }
+
+        stretchTimer += Time.deltaTime;
+
+        // Notify visual system of stretch changes
+        OnStretchChanged?.Invoke(currentStretchAmount, stretchTimer, maxStretchTime);
+
+        // Apply increasing resistance force as stretch increases
+        Vector3 directionToSpawn = (spawnPoint - player.transform.position).normalized;
+        float resistanceMultiplier = stretchCurve.Evaluate(currentStretchAmount);
+        Vector2 resistanceForce = directionToSpawn * stretchResistance * resistanceMultiplier;
+
+        playerRb.AddForce(resistanceForce, ForceMode2D.Force);
+
+        // Visual/audio feedback for stretching
+        OnLineStretching(currentStretchAmount);
+
+        Debug.Log($"Line stretch: {currentStretchAmount:F2} | Timer: {stretchTimer:F2} | Resistance: {resistanceMultiplier:F2}");
+    }
+
+    private void SnapPlayerBack(Rigidbody2D playerRb)
+    {
+        Vector3 directionToSpawn = (spawnPoint - player.transform.position).normalized;
+
+        // Calculate snap force based on how much the line was stretched
+        float snapMultiplier = Mathf.Lerp(1f, 2f, currentStretchAmount);
+        Vector2 snapForce = directionToSpawn * snapBackForce * snapMultiplier;
+
+        // Apply snap-back force
+        playerRb.velocity = Vector2.zero; // Stop current movement
+        playerRb.AddForce(snapForce, ForceMode2D.Impulse);
+
+        // Position player at max allowed distance
+        Vector3 allowedPosition = spawnPoint + (player.transform.position - spawnPoint).normalized * maxDistance;
+        player.transform.position = allowedPosition;
+
+        // Reset stretch state
+        isStretching = false;
+        stretchTimer = 0f;
+
+        // Visual/audio feedback for snap
+        // Notify visual system
+        OnSnapBack?.Invoke(currentStretchAmount);
+        OnStretchEnded?.Invoke();
+
+        currentStretchAmount = 0f;
+
+        Debug.Log($"SNAP! Player pulled back with force: {snapForce}");
+    }
+
+    // Visual and audio feedback methods
+    private void OnLineStretching(float stretchAmount)
+    {
+        // Gradually increase tension effects
+        if (stretchAmount > 0.5f)
+        {
+            // High tension - could add:
+            // - Screen distortion
+            // - Tension sound effects
+            // - Line renderer color change
+            // - Particle effects
+            Debug.Log($"High line tension: {stretchAmount:F2}");
+        }
+    }
+
+    private void OnLineSnapBack(float wasStretchAmount)
+    {
+        // Snap-back effects:
+        // - Screen shake
+        // - Snap sound effect
+        // - Particle burst
+        // - Visual impact
+
+        Debug.Log($"SNAP BACK! Was stretched: {wasStretchAmount:F2}");
+
+        // Example effects you could add:
+        // CameraShake.Instance?.Shake(0.3f * wasStretchAmount, 0.5f);
+        // AudioSource.PlayClipAtPoint(snapSound, player.transform.position);
+        // snapEffect?.Play();
+    }
+
+    // Public methods to check stretch state (useful for UI or other systems)
+    public bool IsLineStretching()
+    {
+        return isStretching;
+    }
+
+    public float GetStretchAmount()
+    {
+        return currentStretchAmount;
+    }
+
+    public float GetStretchTimer()
+    {
+        return stretchTimer;
+    }
+
+    // Reset stretch state method update
+    private void ResetStretchState()
+    {
+        if (isStretching)
+        {
+            isStretching = false;
+            stretchTimer = 0f;
+            currentStretchAmount = 0f;
+            OnStretchEnded?.Invoke(); // Notify visual system
+            Debug.Log("Fishing line relaxed");
+        }
     }
 
     public void SetSpawner(HookSpawner hookSpawner)

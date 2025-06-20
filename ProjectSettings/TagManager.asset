@@ -6,6 +6,7 @@ TagManager:
   tags:
   - Enemy
   - PlayerCollider
+  - FishingRod
   layers:
   - Default
   - TransparentFX
