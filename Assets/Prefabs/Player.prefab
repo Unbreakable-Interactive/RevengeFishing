@@ -130,6 +130,73 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   powerLevel: 100
   phase: 0
+--- !u!1 &5736262942231147453
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3204486526590883613}
+  - component: {fileID: 8669323668924391647}
+  m_Layer: 0
+  m_Name: Magnet
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3204486526590883613
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5736262942231147453}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4283144278362533936}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!58 &8669323668924391647
+CircleCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5736262942231147453}
+  m_Enabled: 1
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 1
+  m_UsedByEffector: 0
+  m_UsedByComposite: 0
+  m_Offset: {x: -0.1, y: 0}
+  serializedVersion: 2
+  m_Radius: 0.7
 --- !u!1 &6436991216858690687
 GameObject:
   m_ObjectHideFlags: 0
@@ -194,9 +261,9 @@ CircleCollider2D:
   m_IsTrigger: 1
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: -0.2, y: 0}
+  m_Offset: {x: -0.1, y: 0}
   serializedVersion: 2
-  m_Radius: 0.5
+  m_Radius: 0.3
 --- !u!1 &6728867108004361845
 GameObject:
   m_ObjectHideFlags: 0
@@ -224,12 +291,13 @@ Transform:
   m_GameObject: {fileID: 6728867108004361845}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: -2.5827727, y: 2.8505163, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 4480840211297593226}
   - {fileID: 5719622611857122817}
+  - {fileID: 3204486526590883613}
   - {fileID: 8269348812475954983}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -245,9 +313,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b9bcfd86bcd5c484b8431f1476613680, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  rotationSpeed: 15
-  rotationThreshold: 10
-  boostThreshold: 15
   isAboveWater: 0
   airGravityScale: 1
   underwaterGravityScale: 0
@@ -255,6 +320,10 @@ MonoBehaviour:
   underwaterDrag: 0.6
   airMaxSpeed: 10
   underwaterMaxSpeed: 15
+  entityType: 0
+  rotationSpeed: 15
+  rotationThreshold: 10
+  boostThreshold: 15
   underwaterRotationSpeed: 10
   airGravityAscending: 1.5
   airGravityDescending: 4
@@ -273,8 +342,8 @@ MonoBehaviour:
   minForwardVelocity: 1.5
   sidewaysDrag: 2
   steeringForce: 10
-  minVelocityForSteering: 0.5
   steeringDamping: 0.98
+  isConstrainedByExternalForce: 0
   enableDebugLogs: 0
 --- !u!50 &5374213318811793880
 Rigidbody2D:

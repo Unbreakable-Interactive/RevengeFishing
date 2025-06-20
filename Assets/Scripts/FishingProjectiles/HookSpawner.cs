@@ -17,7 +17,7 @@ public class HookSpawner : MonoBehaviour
     private float originalMaxDistance;
 
     private GameObject currentHookHandler; // Changed from currentHook to currentHookHandler
-    private FishingProjectile currentHook; // Reference to the actual hook component
+    public FishingProjectile currentHook; // Reference to the actual hook component
 
     private void Awake()
     {

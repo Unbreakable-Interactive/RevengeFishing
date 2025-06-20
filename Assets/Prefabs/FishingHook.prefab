@@ -121,8 +121,11 @@ MonoBehaviour:
   underwaterDrag: 0.5
   airMaxSpeed: 3
   underwaterMaxSpeed: 5
-  entityType: 0
+  entityType: 3
   maxDistance: 8
+  spawnPoint: {x: 0, y: 0, z: 0}
+  isBeingHeld: 0
+  player: {fileID: 0}
 --- !u!50 &2356560897641432879
 Rigidbody2D:
   serializedVersion: 4

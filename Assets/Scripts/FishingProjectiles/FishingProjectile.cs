@@ -9,6 +9,14 @@ public abstract class FishingProjectile : EntityMovement
     public Vector3 spawnPoint;
     protected HookSpawner spawner;
 
+    [Header("Player Interaction")]
+    [SerializeField] public bool isBeingHeld = false; 
+    [SerializeField] protected PlayerMovement player;
+    protected CircleCollider2D hookCollider;
+
+    // Event to notify fisherman
+    public System.Action<bool> OnPlayerInteraction;
+
     protected virtual void Awake()
     {
         // Call parent Start() to initialize EntityMovement
@@ -16,19 +24,86 @@ public abstract class FishingProjectile : EntityMovement
 
         // Set entity type to Hook
         entityType = EntityType.Hook;
+        player = FindObjectOfType<PlayerMovement>(); // Find player in the scene
 
         InitializeProjectile();
     }
 
     protected override void Update()
     {
-        base.Update();
+        if (isBeingHeld && player != null)
+        {
+            // Position hook at player center
+            transform.position = player.transform.position;
+
+            // Apply same distance constraint but to player position
+            ConstrainPlayerToMaxDistance();
+        }
+        else
+        {
+            // Normal behavior
+            base.Update();
+        }
 
         ConstrainToMaxDistance();
     }
 
+    private void OnTriggerEnter2D(Collider2D other)
+    {
+        if (other.CompareTag("PlayerCollider") && !isBeingHeld)
+        {
+            StartHolding(player.transform);
+        }
+    }
+
+    private void StartHolding(Transform player)
+    {
+        isBeingHeld = true;
+
+        // Disable physics while held
+        if (rb != null) rb.isKinematic = true;
+
+        // Notify fisherman
+        OnPlayerInteraction?.Invoke(true);
+
+        Debug.Log("Player is holding the fishing hook!");
+    }
+
+    private void ConstrainPlayerToMaxDistance()
+    {
+        if (player == null) return;
+
+        float currentDistance = Vector3.Distance(player.transform.position, spawnPoint);
+
+        if (currentDistance > maxDistance)
+        {
+            // Same rope physics but applied to player
+            Vector3 direction = (player.transform.position - spawnPoint).normalized;
+            Vector3 constrainedPosition = spawnPoint + direction * maxDistance;
+
+            player.transform.position = constrainedPosition;
+
+            // Apply rope physics to player if they have rigidbody
+            Rigidbody2D playerRb = player.transform.GetComponent<Rigidbody2D>();
+            if (playerRb != null)
+            {
+                Vector2 currentVelocity = playerRb.velocity;
+                Vector2 radialDirection = direction;
+                Vector2 tangentDirection = new Vector2(-radialDirection.y, radialDirection.x);
+
+                float tangentVelocity = Vector2.Dot(currentVelocity, tangentDirection);
+                playerRb.velocity = tangentDirection * tangentVelocity;
+            }
+        }
+    }
+
     protected virtual void InitializeProjectile()
     {
+        hookCollider = GetComponent<CircleCollider2D>();
+        if (hookCollider != null)
+        {
+            hookCollider.isTrigger = true;
+        }
 
         spawnPoint = transform.position;
         OnProjectileSpawned();

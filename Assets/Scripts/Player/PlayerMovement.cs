@@ -54,8 +54,13 @@ public class PlayerMovement : EntityMovement
 
     [Header("Steering Settings")]
     public float steeringForce = 5f;
-    public float minVelocityForSteering = 0.5f; // Minimum speed needed to steer
     public float steeringDamping = 0.98f; // Reduces velocity over time when steering
+
+    [Header("External Constraints")]
+    public bool isConstrainedByExternalForce = false;
+    private Vector3 constraintCenter;
+    private float constraintRadius;
+    private System.Action<Vector3> onConstraintViolation;
 
     [Header("Debug")]
     public bool enableDebugLogs = false;
@@ -91,7 +96,6 @@ public class PlayerMovement : EntityMovement
     protected override void UnderwaterBehavior()
     {
         HandleMouseInput();
-        UpdateMovementState();
         UpdateRotation();
         HandleSteering();
         ApplyConstantAccel();
@@ -165,12 +169,6 @@ public class PlayerMovement : EntityMovement
         {
             WhileMouseUnheld(lastMousePosition);
         }
-    }
-
-    void UpdateMovementState()
-    {
-        // Consider the object moving if it has significant velocity
-        isMoving = rb.velocity.magnitude > minVelocityForSteering;
     }
 
     void UpdateRotation()
@@ -362,6 +360,52 @@ public class PlayerMovement : EntityMovement
         if (rb.velocity.magnitude > maxSpeed)
         {
             rb.velocity = rb.velocity.normalized * maxSpeed;
+        }
+        ApplyExternalConstraints();
+    }
+
+    public void SetPositionConstraint(Vector3 center, float radius, System.Action<Vector3> violationCallback = null)
+    {
+        isConstrainedByExternalForce = true;
+        constraintCenter = center;
+        constraintRadius = radius;
+        onConstraintViolation = violationCallback;
+        DebugLog($"Player constraint set: Center={center}, Radius={radius}");
+    }
+
+    public void RemovePositionConstraint()
+    {
+        isConstrainedByExternalForce = false;
+        onConstraintViolation = null;
+        DebugLog("Player constraint removed");
+    }
+
+    private void ApplyExternalConstraints()
+    {
+        if (!isConstrainedByExternalForce) return;
+
+        float currentDistance = Vector3.Distance(transform.position, constraintCenter);
+
+        if (currentDistance > constraintRadius)
+        {
+            // Constrain position to circle boundary
+            Vector3 direction = (transform.position - constraintCenter).normalized;
+            Vector3 constrainedPosition = constraintCenter + direction * constraintRadius;
+            transform.position = constrainedPosition;
+
+            // Apply rope-like physics to velocity
+            Vector2 currentVelocity = rb.velocity;
+            Vector2 radialDirection = direction;
+            Vector2 tangentDirection = new Vector2(-radialDirection.y, radialDirection.x);
+
+            // Remove radial velocity component (can't move away from center)
+            float tangentVelocity = Vector2.Dot(currentVelocity, tangentDirection);
+            rb.velocity = tangentDirection * tangentVelocity;
+
+            // Notify the constraining object about the violation
+            onConstraintViolation?.Invoke(constrainedPosition);
+
+            DebugLog($"Player constrained to radius {constraintRadius} at position {constrainedPosition}");
         }
     }
 

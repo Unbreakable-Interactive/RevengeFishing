@@ -45,7 +45,7 @@ public class FishermanScript : EnemyBase
         hookTimer += Time.deltaTime;
 
         // Retract hook after hookDuration seconds
-        if (hookTimer >= hookDuration)
+        if (hookTimer >= hookDuration && !hookSpawner.currentHook.isBeingHeld)
         {
             if (hookSpawner.HasActiveHook())
             {
@@ -61,8 +61,8 @@ public class FishermanScript : EnemyBase
             hasThrownHook = false;
             hookTimer = 0f; // RESET TIMER
 
-            // 60% chance to put away rod after fishing
-            if (UnityEngine.Random.value < 0.6f)
+            // 80% chance to put away rod after fishing
+            if (UnityEngine.Random.value < 0.8f)
             {
                 TryUnequipFishingTool();
             }
@@ -97,6 +97,9 @@ public class FishermanScript : EnemyBase
                         hookSpawner.ThrowHook();
                         hasThrownHook = true;
                         hookTimer = 0f; // RESET TIMER WHEN THROWING
+
+                        SubscribeToHookEvents();
+
                     }
                 }
                 else
@@ -119,6 +122,20 @@ public class FishermanScript : EnemyBase
         base.MakeAIDecision();
     }
 
+    private void SubscribeToHookEvents()
+    {
+        // Get current hook from spawner
+        if (hookSpawner.currentHook is FishingHook fishingHook)
+        {
+            fishingHook.OnPlayerInteraction += OnHookPlayerInteraction;
+        }
+    }
+
+    private void OnHookPlayerInteraction(bool isBeingHeld)
+    {
+        hookSpawner.currentHook.isBeingHeld = isBeingHeld;
+        Debug.Log($"Fisherman: Hook is being held: {isBeingHeld}");
+    }
 
     // Override movement to prevent movement when fishing
     protected override void ExecuteLandMovementBehaviour()
