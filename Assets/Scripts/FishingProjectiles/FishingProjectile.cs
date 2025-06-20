@@ -18,7 +18,7 @@ public abstract class FishingProjectile : EntityMovement
     public System.Action<bool> OnPlayerInteraction;
 
     [Header("Elastic Line Behavior")]
-    [SerializeField] private float maxStretchDistance = 3f;     // How far beyond maxDistance player can stretch
+    [SerializeField] private float maxStretchDistance = 3f;    // How far beyond maxDistance player can stretch
     [SerializeField] private float stretchResistance = 15f;    // Resistance force when stretching
     [SerializeField] private float snapBackForce = 20f;        // Force applied when snapping back
     [SerializeField] private float maxStretchTime = 0.8f;      // Max time allowed in stretch zone
@@ -50,6 +50,7 @@ public abstract class FishingProjectile : EntityMovement
 
     protected override void Update()
     {
+
         if (isBeingHeld && player != null)
         {
             // Position hook at player center
@@ -62,9 +63,10 @@ public abstract class FishingProjectile : EntityMovement
         {
             // Normal behavior
             base.Update();
+            ConstrainToMaxDistance();
+
         }
 
-        ConstrainToMaxDistance();
     }
 
     private void OnTriggerEnter2D(Collider2D other)
@@ -169,21 +171,35 @@ public abstract class FishingProjectile : EntityMovement
                 isStretching = false;
                 stretchTimer = 0f;
                 currentStretchAmount = 0f;
+                OnStretchEnded?.Invoke();
                 Debug.Log("Fishing line relaxed");
             }
             return;
         }
 
-        // Stretch zone - beyond normal max distance but within stretch limit
+        // Beyond max distance - BOTH constrain player AND move hook
         if (currentDistance > maxDistance && currentDistance <= totalMaxDistance)
         {
             HandleStretchZone(currentDistance, playerRb);
+            MoveHookToFollowPlayer(); // Hook follows player
         }
 
-        // Hard limit - force snap back if too far or stretched too long
-        if (currentDistance > totalMaxDistance || (isStretching && stretchTimer > maxStretchTime))
+        //// Hard limit - force snap back if too far or stretched too long
+        //if (currentDistance > totalMaxDistance || (isStretching && stretchTimer > maxStretchTime))
+        //{
+        //    SnapPlayerBack(playerRb);
+        //}
+    }
+
+    private void MoveHookToFollowPlayer()
+    {
+        if (player == null) return;
+
+        // Hook always follows player position when being held, regardless of distance
+        if (isBeingHeld)
         {
-            SnapPlayerBack(playerRb);
+            transform.position = player.transform.position;
+            Debug.Log($"Hook following player to position: {player.transform.position}");
         }
     }
 
