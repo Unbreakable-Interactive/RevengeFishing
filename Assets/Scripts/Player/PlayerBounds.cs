@@ -33,10 +33,9 @@ public class PlayerBounds : MonoBehaviour
     void OnTriggerExit2D(Collider2D other)
     {
         // Check if it's the player's collider (either direct or child)
-        Transform colliderTransform = other.transform;
         bool isPlayer = false;
 
-        if (colliderTransform == player || colliderTransform.IsChildOf(player))
+        if (player != null && (other.transform == player || other.transform.IsChildOf(player)))
         {
             isPlayer = true;
         }

@@ -24,7 +24,7 @@ public abstract class FishingProjectile : EntityMovement
 
         // Set entity type to Hook
         entityType = EntityType.Hook;
-        player = FindObjectOfType<PlayerMovement>(); // Find player in the scene
+        player = GameObject.FindGameObjectWithTag("Player")?.GetComponent<PlayerMovement>();
 
         InitializeProjectile();
     }
