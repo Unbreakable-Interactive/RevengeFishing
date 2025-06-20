@@ -26,13 +26,13 @@ public class FishermanScript : EnemyBase
     {
         base.Update();
 
-        // SINGLE decision system - every 3 seconds
-        decisionTimer += Time.deltaTime;
-        if (decisionTimer >= 3f)
-        {
-            MakeAIDecision();
-            decisionTimer = 0f;
-        }
+        //// SINGLE decision system - every 3 seconds
+        //decisionTimer += Time.deltaTime;
+        //if (decisionTimer >= 3f)
+        //{
+        //    MakeAIDecision();
+        //    decisionTimer = 0f;
+        //}
 
         HandleActiveHook();
     }
@@ -70,7 +70,7 @@ public class FishermanScript : EnemyBase
     }
 
     // RESET TIMER WHEN THROWING NEW HOOK
-    private void MakeAIDecision()
+    protected override void MakeAIDecision()
     {
         // Override base movement decisions when we can fish
         if (currentMovementState == LandMovementState.Idle && !hasThrownHook)
@@ -81,6 +81,7 @@ public class FishermanScript : EnemyBase
                 if (UnityEngine.Random.value < 0.6f)
                 {
                     TryEquipFishingTool();
+                    ScheduleNextAction();
                     return;
                 }
             }
@@ -102,24 +103,27 @@ public class FishermanScript : EnemyBase
                 {
                     // Put away fishing tool
                     TryUnequipFishingTool();
+                    return;
                 }
+                ScheduleNextAction();
                 return;
             }
         }
 
-        // If not fishing, use base movement AI
-        if (!fishingToolEquipped)
-        {
-            ChooseRandomLandAction();
-            ScheduleNextAction();
-        }
+        //// If not fishing, use base movement AI
+        //if (!fishingToolEquipped)
+        //{
+        //    ChooseRandomLandAction();
+        //    ScheduleNextAction();
+        //}
+        base.MakeAIDecision();
     }
 
 
     // Override movement to prevent movement when fishing
     protected override void ExecuteLandMovementBehaviour()
     {
-        if (fishingToolEquipped)
+        if (fishingToolEquipped || hasThrownHook)
         {
             currentMovementState = LandMovementState.Idle;
             // No movement when fishing

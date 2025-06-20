@@ -281,30 +281,31 @@ public abstract class EnemyBase : EntityMovement
     {
         if (_type != EnemyType.Land) return;
 
-        //Check if we have an assigned platform
         CheckGroundedStatus();
-
-        // Calculate platform bounds once we have an assigned platform
         if (assignedPlatform != null && !platformBoundsCalculated)
         {
             CalculatePlatformBounds();
         }
 
-        // Execute current movement behavior
         ExecuteLandMovementBehaviour();
 
-        // Check if it's time to change behavior
+        // Use virtual AI decision method
         if (Time.time >= nextActionTime)
         {
-            ChooseRandomLandAction();
-            ScheduleNextAction();
+            MakeAIDecision(); // Virtual method that derived classes can override
         }
 
-        // Safety check - don't fall off platform
         if (platformBoundsCalculated)
         {
             CheckPlatformBounds();
         }
+    }
+
+    protected virtual void MakeAIDecision()
+    {
+        // Base enemy AI: simple random movement
+        ChooseRandomLandAction();
+        ScheduleNextAction();
     }
 
     protected virtual void CalculatePlatformBounds()
