@@ -178,6 +178,9 @@ public abstract class EnemyBase : EntityMovement
         }
         else
         {
+            rb.gravityScale = -0.2f; // Negative gravity for upward flotation
+            rb.drag = 1f; // Increased drag for realistic floating
+
             Debug.Log($"{gameObject.name} enemy switched to UNDERWATER mode");
         }
     }
