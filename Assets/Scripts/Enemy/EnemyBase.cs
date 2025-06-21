@@ -111,13 +111,13 @@ public abstract class EnemyBase : EntityMovement
 
     #region Base Behaviours
 
-    protected override void Start()
+    public override void Initialize()
     {
         // Set entity type for water detection
         entityType = EntityType.Enemy;
 
         // Call base initialization (handles Rigidbody2D and water detection)
-        base.Start();
+        base.Initialize();
 
         // Enemy-specific initialization
         Initialize(100);
@@ -129,6 +129,27 @@ public abstract class EnemyBase : EntityMovement
         base.Update();
     }
 
+    public virtual void ChangeState_Alive() 
+    {
+        _state = EnemyState.Alive;
+        _fatigue = 0;
+    
+        // Reset physics and movement
+        if (rb != null)
+        {
+            rb.velocity = Vector2.zero;
+            rb.gravityScale = 1f; // Reset to normal gravity
+        }
+    
+        // Reset collider
+        Collider2D col = GetComponent<Collider2D>();
+        if (col != null)
+        {
+            col.isTrigger = false;
+        }
+    
+        Debug.Log($"{gameObject.name} state reset to Alive");
+    }
 
     // How enemy behaves when interacts with player
     public abstract void ReverseFishingBehaviour();

@@ -9,7 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6936546192436389837}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: FishingHookHandler
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -97,6 +97,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: WaterLine
       objectReference: {fileID: 0}
+    - target: {fileID: 8258166059126711420, guid: d864e1d7d3d7d86458db1be6c7ac35ab, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -115,9 +119,25 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 6936546192436389837}
     m_Modifications:
+    - target: {fileID: 772016937162643826, guid: ce012608d650bc94d9ed1fde3e90d2cb, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 772016937162643826, guid: ce012608d650bc94d9ed1fde3e90d2cb, type: 3}
+      propertyPath: m_TagString
+      value: Hook
+      objectReference: {fileID: 0}
     - target: {fileID: 3932039236167525111, guid: ce012608d650bc94d9ed1fde3e90d2cb, type: 3}
       propertyPath: m_Name
       value: FishingHook
+      objectReference: {fileID: 0}
+    - target: {fileID: 3932039236167525111, guid: ce012608d650bc94d9ed1fde3e90d2cb, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 9054268069914657743, guid: ce012608d650bc94d9ed1fde3e90d2cb, type: 3}
+      propertyPath: m_Layer
+      value: 6
       objectReference: {fileID: 0}
     - target: {fileID: 9079909360616689597, guid: ce012608d650bc94d9ed1fde3e90d2cb, type: 3}
       propertyPath: m_LocalPosition.x

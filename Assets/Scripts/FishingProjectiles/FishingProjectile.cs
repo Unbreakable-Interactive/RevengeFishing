@@ -36,10 +36,10 @@ public abstract class FishingProjectile : EntityMovement
     public System.Action OnStretchEnded;
 
 
-    protected virtual void Awake()
+    public virtual void Initialize()
     {
         // Call parent Start() to initialize EntityMovement
-        base.Start();
+        base.Initialize();
 
         // Set entity type to Hook
         entityType = EntityType.Hook;

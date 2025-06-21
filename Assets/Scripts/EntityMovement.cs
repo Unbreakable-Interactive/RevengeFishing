@@ -36,7 +36,7 @@ public abstract class EntityMovement : MonoBehaviour
         Hook
     }
 
-    protected virtual void Start()
+    public virtual void Initialize()
     {
         rb = GetComponent<Rigidbody2D>();
         if (rb == null)

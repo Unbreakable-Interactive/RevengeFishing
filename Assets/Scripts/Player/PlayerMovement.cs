@@ -68,11 +68,11 @@ public class PlayerMovement : EntityMovement
     public bool enableDebugLogs = false;
 
     // Start is called before the first frame update
-    protected override void Start()
+    public override void Initialize()
     {
         entityType = EntityType.Player; // Set entity type to Player
 
-        base.Start(); // Call base Start to initialize Rigidbody2D and movement mode
+        base.Initialize(); // Call base Start to initialize Rigidbody2D and movement mode
 
         mainCamera = Camera.main ?? FindObjectOfType<Camera>();
 

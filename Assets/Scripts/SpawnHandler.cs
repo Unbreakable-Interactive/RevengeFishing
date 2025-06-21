@@ -27,8 +27,15 @@ public class SpawnHandler : MonoBehaviour
 
     void Start()
     {
-        // Find all existing platforms
+        // Basic setup - platform scanning will be done by GameBootstrap
+        Debug.Log("SpawnHandler ready for initialization");
+    }
+
+    // Called by GameBootstrap to initialize properly
+    public void Initialize()
+    {
         RefreshPlatformList();
+        Debug.Log("SpawnHandler initialized - platforms scanned");
     }
 
     public void RefreshPlatformList()

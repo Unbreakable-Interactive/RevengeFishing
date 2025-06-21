@@ -26,6 +26,16 @@
 # Visual Studio cache directory
 .vs/
 
+# JetBrains IDEs (IntelliJ IDEA, Rider, etc.)
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+
+# Visual Studio Code
+.vscode/
+
 # Gradle cache directory
 .gradle/
 

@@ -25,6 +25,40 @@ public class HookSpawner : MonoBehaviour
         originalMaxDistance = hookMaxDistance;
     }
 
+    // Called by GameBootstrap to initialize properly
+    public void Initialize()
+    {
+        // Validate required components
+        if (hookHandlerPrefab == null)
+        {
+            Debug.LogError("HookSpawner: hookHandlerPrefab is not assigned!");
+            return;
+        }
+        
+        if (spawnPoint == null)
+        {
+            Debug.LogError("HookSpawner: spawnPoint is not assigned!");
+            return;
+        }
+        
+        // Validate the prefab has required components
+        FishingProjectile prefabHook = hookHandlerPrefab.GetComponentInChildren<FishingProjectile>();
+        WaterCheck prefabWaterCheck = hookHandlerPrefab.GetComponentInChildren<WaterCheck>();
+        
+        if (prefabHook == null)
+        {
+            Debug.LogError("HookSpawner: hookHandlerPrefab doesn't contain FishingProjectile component!");
+            return;
+        }
+        
+        if (prefabWaterCheck == null)
+        {
+            Debug.LogWarning("HookSpawner: hookHandlerPrefab doesn't contain WaterCheck component!");
+        }
+        
+        Debug.Log("HookSpawner initialized successfully");
+    }
+
     public bool CanThrowHook()
     {
         return hookHandlerPrefab != null &&
@@ -166,5 +200,4 @@ public class HookSpawner : MonoBehaviour
 
         Debug.Log($"Hook handler and references cleared for {gameObject.name}");
     }
-
 }

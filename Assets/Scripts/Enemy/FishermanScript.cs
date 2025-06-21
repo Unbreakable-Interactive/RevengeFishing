@@ -15,9 +15,9 @@ public class FishermanScript : EnemyBase
 
     private FishingHook subscribedHook;
 
-    protected override void Start()
+    public override void Initialize()
     {
-        base.Start();
+        base.Initialize();
         _type = EnemyType.Land;
         hasFishingTool = true;
         hookSpawner = GetComponent<HookSpawner>() ?? gameObject.AddComponent<HookSpawner>();

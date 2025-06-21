@@ -9,7 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 665198961168709930}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: FishermanHandler
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -97,6 +97,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: WaterLine
       objectReference: {fileID: 0}
+    - target: {fileID: 8258166059126711420, guid: d864e1d7d3d7d86458db1be6c7ac35ab, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -171,9 +175,33 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5447348849166640242, guid: 29c863f917d5e8846acde5d4d6a4ca7e, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 5447348849166640242, guid: 29c863f917d5e8846acde5d4d6a4ca7e, type: 3}
+      propertyPath: m_TagString
+      value: Enemy
+      objectReference: {fileID: 0}
+    - target: {fileID: 5610486745833245567, guid: 29c863f917d5e8846acde5d4d6a4ca7e, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
     - target: {fileID: 7667254095196824905, guid: 29c863f917d5e8846acde5d4d6a4ca7e, type: 3}
       propertyPath: m_Name
       value: Fisherman
+      objectReference: {fileID: 0}
+    - target: {fileID: 7667254095196824905, guid: 29c863f917d5e8846acde5d4d6a4ca7e, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 8143527860349171708, guid: 29c863f917d5e8846acde5d4d6a4ca7e, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 8741494658121359265, guid: 29c863f917d5e8846acde5d4d6a4ca7e, type: 3}
+      propertyPath: m_Layer
+      value: 6
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

@@ -19,26 +19,27 @@ public class PlayerBounds : MonoBehaviour
             boundsCollider = gameObject.AddComponent<BoxCollider2D>();
         }
         boundsCollider.isTrigger = true;
+    }
 
-        // Find player components
-        PlayerMovement playerMovementScript = FindObjectOfType<PlayerMovement>();
+    public void Initialize(PlayerMovement playerMovementScript)
+    {
         if (playerMovementScript != null)
         {
             player = playerMovementScript.transform;
             playerRb = player.GetComponent<Rigidbody2D>();
             playerMovement = playerMovementScript;
+            Debug.Log("PlayerBounds initialized with player reference");
+        }
+        else
+        {
+            Debug.LogError("PlayerBounds: No PlayerMovement provided!");
         }
     }
 
     void OnTriggerExit2D(Collider2D other)
     {
         // Check if it's the player's collider (either direct or child)
-        bool isPlayer = false;
-
-        if (player != null && (other.transform == player || other.transform.IsChildOf(player)))
-        {
-            isPlayer = true;
-        }
+        bool isPlayer = player != null && (other.transform == player || other.transform.IsChildOf(player));
 
         if (isPlayer && player != null && playerRb != null)
         {
@@ -100,9 +101,8 @@ public class PlayerBounds : MonoBehaviour
             {
                 float angle = Mathf.Atan2(newVelocity.y, newVelocity.x) * Mathf.Rad2Deg;
                 player.rotation = Quaternion.AngleAxis(angle, Vector3.forward);
-                Debug.Log($"Underwater bounce - rotated to face: {angle:F1}°");
+                Debug.Log($"Underwater bounce - rotated to face: {angle:F1}Â°");
             }
         }
     }
-
 }
