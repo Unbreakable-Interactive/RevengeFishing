@@ -18,13 +18,10 @@ public class WaterCheck : MonoBehaviour
         if (other != targetCollider) return;
 
         // Determine if object is above or below the water line
-        bool isAboveWater = other.transform.position.y > transform.position.y;
+        bool aboveWater = other.transform.position.y > transform.position.y;
 
-        // Update the object's water state
-        entityMovement.IsAboveWater = isAboveWater;
+        entityMovement.SetMovementMode(aboveWater);
 
-        entityMovement.SetMovementMode(isAboveWater);
-
-        Debug.Log($"{other.name} {(isAboveWater ? "exited" : "entered")} water!");
+        Debug.Log($"{other.name} {(aboveWater ? "exited" : "entered")} water!");
     }
 }

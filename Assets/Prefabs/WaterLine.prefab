@@ -77,7 +77,7 @@ BoxCollider2D:
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 2, y: 0.5}
+  m_Size: {x: 2, y: 0.3}
   m_EdgeRadius: 0
 --- !u!114 &239239663148630835
 MonoBehaviour:
@@ -91,11 +91,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8cfe11e371c05b849ba85b8d2c30f40b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playerLayerMask:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  playerMovement: {fileID: 0}
-  enemyLandMovement: {fileID: 0}
+  entityMovement: {fileID: 0}
+  targetCollider: {fileID: 0}
 --- !u!114 &7442979135199402340
 MonoBehaviour:
   m_ObjectHideFlags: 0

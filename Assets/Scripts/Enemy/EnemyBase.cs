@@ -175,13 +175,21 @@ public abstract class EnemyBase : EntityMovement
     {
         base.SetMovementMode(aboveWater); // Call base implementation
 
+        Debug.Log($"{gameObject.name} SetMovementMode called: aboveWater={aboveWater}, state={_state}, hasStartedFloating={hasStartedFloating}, canEscape={canEscape}");
+
         if (aboveWater)
         {
             // If defeated enemy reaches surface while floating, they escape
             if (_state == EnemyState.Defeated && hasStartedFloating && canEscape)
             {
+                Debug.Log($"{gameObject.name} - ESCAPE CONDITIONS MET! Triggering escape.");
+
                 TriggerEscape();
                 return; // Exit early since enemy will be destroyed
+            }
+            else if (_state == EnemyState.Defeated)
+            {
+                Debug.Log($"{gameObject.name} - Defeated but escape conditions not met: hasStartedFloating={hasStartedFloating}, canEscape={canEscape}");
             }
 
             hasStartedFloating = false; // Reset floating flag when above water
@@ -470,14 +478,24 @@ public abstract class EnemyBase : EntityMovement
         // Only handle basic enemy movement - no fishing logic!
         float randomValue = UnityEngine.Random.value;
 
+        Debug.Log($"Choosing random land action for {gameObject.name}. Random value = {randomValue}");
         if (randomValue < 0.6f)
+        {
+            Debug.Log($"{gameObject.name} is idle");
             currentMovementState = LandMovementState.Idle;
+        }
         else if (randomValue < 0.9f)
-            currentMovementState = (UnityEngine.Random.value < 0.5f) ?
-                LandMovementState.WalkLeft : LandMovementState.WalkRight;
+        {
+            Debug.Log($"{gameObject.name} is walking");
+            currentMovementState = (UnityEngine.Random.value < 0.5f) ? LandMovementState.WalkLeft : LandMovementState.WalkRight;
+        }
         else
-            currentMovementState = (UnityEngine.Random.value < 0.5f) ?
-                LandMovementState.RunLeft : LandMovementState.RunRight;
+        {
+            Debug.Log($"{gameObject.name} is running");
+            currentMovementState = (UnityEngine.Random.value < 0.5f) ? LandMovementState.RunLeft : LandMovementState.RunRight;
+        }
+
+        ExecuteLandMovementBehaviour();
     }
 
     protected virtual void ExecuteLandMovementBehaviour()

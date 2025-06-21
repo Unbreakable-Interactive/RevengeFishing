@@ -382,4 +382,14 @@ public abstract class FishingProjectile : EntityMovement
     // New abstract methods for environment behavior
     protected abstract void OnAirborneBehavior();
     protected abstract void OnUnderwaterBehavior();
+
+    private void OnDestroy()
+    {
+        // Clean up player reference when hook is destroyed
+        if (player != null && isBeingHeld)
+        {
+            player.RemoveBitingHook(this);
+        }
+    }
+
 }

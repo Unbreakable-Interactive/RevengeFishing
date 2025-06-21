@@ -8,7 +8,6 @@ public class FishermanScript : EnemyBase
     public FishermanConfig config = new FishermanConfig();
 
     private HookSpawner hookSpawner;
-    private float decisionTimer = 0f;
     private bool hasThrownHook;
 
     private float hookTimer = 0f;
@@ -27,14 +26,6 @@ public class FishermanScript : EnemyBase
     protected override void Update()
     {
         base.Update();
-
-        //// SINGLE decision system - every 3 seconds
-        //decisionTimer += Time.deltaTime;
-        //if (decisionTimer >= 3f)
-        //{
-        //    MakeAIDecision();
-        //    decisionTimer = 0f;
-        //}
 
         HandleActiveHook();
     }

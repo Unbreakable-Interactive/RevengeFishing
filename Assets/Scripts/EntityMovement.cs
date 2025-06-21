@@ -36,12 +36,6 @@ public abstract class EntityMovement : MonoBehaviour
         Hook
     }
 
-    public bool IsAboveWater
-    {
-        get => isAboveWater;
-        set => isAboveWater = value;
-    }
-
     protected virtual void Start()
     {
         rb = GetComponent<Rigidbody2D>();
@@ -90,7 +84,7 @@ public abstract class EntityMovement : MonoBehaviour
     {
         isAboveWater = aboveWater;
 
-        if (isAboveWater)
+        if (aboveWater)
         {
             ApplyAirbornePhysics();
         }
