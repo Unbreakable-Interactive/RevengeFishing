@@ -44,6 +44,10 @@ public abstract class EnemyBase : EntityMovement
     protected EnemyType _type;
     protected LandMovementState _landMovementState;
 
+    [Header("Escape System")]
+    public bool canEscape = true; // Allow this enemy type to escape
+    private bool hasStartedFloating = false; // Track if enemy is floating upward
+
     #region Platform Assignment
     [Header("Platform Assignment")]
     public Platform assignedPlatform; // For land enemies only
@@ -171,15 +175,28 @@ public abstract class EnemyBase : EntityMovement
     {
         base.SetMovementMode(aboveWater); // Call base implementation
 
-        // Enemy-specific mode changes
         if (aboveWater)
         {
+            // If defeated enemy reaches surface while floating, they escape
+            if (_state == EnemyState.Defeated && hasStartedFloating && canEscape)
+            {
+                TriggerEscape();
+                return; // Exit early since enemy will be destroyed
+            }
+
+            hasStartedFloating = false; // Reset floating flag when above water
             Debug.Log($"{gameObject.name} enemy switched to AIRBORNE mode");
         }
         else
         {
-            rb.gravityScale = -0.2f; // Negative gravity for upward flotation
-            rb.drag = 1f; // Increased drag for realistic floating
+            // When defeated enemy enters water, mark as floating
+            if (_state == EnemyState.Defeated)
+            {
+                hasStartedFloating = true;
+            }
+
+            rb.gravityScale = -0.2f; // Your adjusted negative gravity value
+            rb.drag = 1f; // Your adjusted drag value
 
             Debug.Log($"{gameObject.name} enemy switched to UNDERWATER mode");
         }
@@ -253,6 +270,29 @@ public abstract class EnemyBase : EntityMovement
 
         // Start defeat behaviors
         StartDefeatBehaviors();
+    }
+
+    protected virtual void TriggerEscape()
+    {
+        Debug.Log($"{gameObject.name} has ESCAPED! The player can no longer catch this enemy.");
+
+        // Call escape effects before destruction
+        OnEnemyEscaped();
+
+        // Destroy the parent FishermanHandler (or this object if no parent)
+        GameObject objectToDestroy = transform.parent != null ? transform.parent.gameObject : gameObject;
+        Destroy(objectToDestroy);
+    }
+
+    // Override this in derived classes for specific escape effects
+    protected virtual void OnEnemyEscaped()
+    {
+        // Base class does nothing
+        // Override in FishermanScript for:
+        // - Play escape sound effects
+        // - Show escape particle effects  
+        // - Update player score/statistics
+        // - Show UI notifications
     }
 
     protected virtual void InterruptAllActions()
