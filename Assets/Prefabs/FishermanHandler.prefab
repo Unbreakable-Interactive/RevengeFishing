@@ -119,22 +119,6 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 665198961168709930}
     m_Modifications:
-    - target: {fileID: 2117141073483461364, guid: 29c863f917d5e8846acde5d4d6a4ca7e, type: 3}
-      propertyPath: config.equipToolChance
-      value: 0.6
-      objectReference: {fileID: 0}
-    - target: {fileID: 2117141073483461364, guid: 29c863f917d5e8846acde5d4d6a4ca7e, type: 3}
-      propertyPath: config.idleProbability
-      value: 0.6
-      objectReference: {fileID: 0}
-    - target: {fileID: 2117141073483461364, guid: 29c863f917d5e8846acde5d4d6a4ca7e, type: 3}
-      propertyPath: config.walkProbability
-      value: 0.15
-      objectReference: {fileID: 0}
-    - target: {fileID: 2117141073483461364, guid: 29c863f917d5e8846acde5d4d6a4ca7e, type: 3}
-      propertyPath: config.unequipToolChance
-      value: 0.6
-      objectReference: {fileID: 0}
     - target: {fileID: 2444740548177980365, guid: 29c863f917d5e8846acde5d4d6a4ca7e, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -175,33 +159,9 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5447348849166640242, guid: 29c863f917d5e8846acde5d4d6a4ca7e, type: 3}
-      propertyPath: m_Layer
-      value: 6
-      objectReference: {fileID: 0}
-    - target: {fileID: 5447348849166640242, guid: 29c863f917d5e8846acde5d4d6a4ca7e, type: 3}
-      propertyPath: m_TagString
-      value: Enemy
-      objectReference: {fileID: 0}
-    - target: {fileID: 5610486745833245567, guid: 29c863f917d5e8846acde5d4d6a4ca7e, type: 3}
-      propertyPath: m_Layer
-      value: 6
-      objectReference: {fileID: 0}
     - target: {fileID: 7667254095196824905, guid: 29c863f917d5e8846acde5d4d6a4ca7e, type: 3}
       propertyPath: m_Name
       value: Fisherman
-      objectReference: {fileID: 0}
-    - target: {fileID: 7667254095196824905, guid: 29c863f917d5e8846acde5d4d6a4ca7e, type: 3}
-      propertyPath: m_Layer
-      value: 6
-      objectReference: {fileID: 0}
-    - target: {fileID: 8143527860349171708, guid: 29c863f917d5e8846acde5d4d6a4ca7e, type: 3}
-      propertyPath: m_Layer
-      value: 6
-      objectReference: {fileID: 0}
-    - target: {fileID: 8741494658121359265, guid: 29c863f917d5e8846acde5d4d6a4ca7e, type: 3}
-      propertyPath: m_Layer
-      value: 6
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

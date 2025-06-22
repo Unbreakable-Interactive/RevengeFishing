@@ -3,7 +3,7 @@ using UnityEngine;
 [RequireComponent(typeof(Rigidbody2D))]
 public abstract class EntityMovement : MonoBehaviour
 {
-    protected Rigidbody2D rb;
+    [SerializeField] protected Rigidbody2D rb;
 
     [Header("Character Stats")]
     [SerializeField] protected int _powerLevel;
@@ -22,7 +22,8 @@ public abstract class EntityMovement : MonoBehaviour
     [Header("Entity Type")]
     public EntityType entityType = EntityType.Generic;
 
-    // Add this property after the existing fields
+    private bool isInitialized = false;
+
     public int PowerLevel
     {
         get => _powerLevel;
@@ -36,28 +37,52 @@ public abstract class EntityMovement : MonoBehaviour
         Hook
     }
 
+    protected virtual void Awake()
+    {
+        // ENSURE RIGIDBODY2D IS ALWAYS AVAILABLE
+        EnsureRigidbody2D();
+    }
+
     public virtual void Initialize()
     {
-        rb = GetComponent<Rigidbody2D>();
-        if (rb == null)
-        {
-            rb = gameObject.AddComponent<Rigidbody2D>();
-        }
+        EnsureRigidbody2D();
 
         if (GetComponent<PlayerMovement>() != null)
         {
             _powerLevel = 100;
         }
-        else
-        {
-            //_powerLevel = 100; //change this to scale with the player later
-        }
 
         SetMovementMode(isAboveWater);
+        isInitialized = true;
+
+        Debug.Log($"{gameObject.name} - EntityMovement initialized successfully");
+    }
+
+    private void EnsureRigidbody2D()
+    {
+        if (rb == null)
+        {
+            rb = GetComponent<Rigidbody2D>();
+            if (rb == null)
+            {
+                rb = gameObject.AddComponent<Rigidbody2D>();
+                Debug.Log($"{gameObject.name} - Added missing Rigidbody2D component");
+            }
+            else
+            {
+                Debug.Log($"{gameObject.name} - Found existing Rigidbody2D component");
+            }
+        }
     }
 
     protected virtual void Update()
     {
+        // SAFETY CHECK: Don't do anything if not initialized
+        if (!isInitialized || rb == null)
+        {
+            return;
+        }
+
         if (isAboveWater)
         {
             AirborneBehavior();

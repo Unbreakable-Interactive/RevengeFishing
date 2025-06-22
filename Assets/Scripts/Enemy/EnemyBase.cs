@@ -29,7 +29,6 @@ public abstract class EnemyBase : EntityMovement
         Water
     }
 
-    // Movement states for land enemies
     public enum LandMovementState
     {
         Idle,
@@ -45,14 +44,13 @@ public abstract class EnemyBase : EntityMovement
     protected LandMovementState _landMovementState;
 
     [Header("Escape System")]
-    public bool canEscape = true; // Allow this enemy type to escape
-    private bool hasStartedFloating = false; // Track if enemy is floating upward
+    public bool canEscape = true;
+    private bool hasStartedFloating = false;
 
     #region Platform Assignment
     [Header("Platform Assignment")]
-    public Platform assignedPlatform; // For land enemies only
+    public Platform assignedPlatform;
 
-    // Method called by Platform when assigning this enemy
     public virtual void SetAssignedPlatform(Platform platform)
     {
         assignedPlatform = platform;
@@ -63,6 +61,21 @@ public abstract class EnemyBase : EntityMovement
         return assignedPlatform;
     }
 
+    public void ClearPlatformAssignment()
+    {
+        if (assignedPlatform != null)
+        {
+            assignedPlatform.UnregisterEnemy(this);
+            assignedPlatform = null;
+        }
+        
+        platformBoundsCalculated = false;
+        platformLeftEdge = 0f;
+        platformRightEdge = 0f;
+        isGrounded = false;
+        
+        Debug.Log($"{gameObject.name} platform assignment cleared");
+    }
 
     #endregion
 
@@ -70,34 +83,29 @@ public abstract class EnemyBase : EntityMovement
 
     protected float walkingSpeed;
     protected float runningSpeed;
-    protected float edgeBuffer; // Distance from platform edge to change direction
-    // assigned platform was set previously in Platform Assignment region
+    protected float edgeBuffer;
 
-    // Fishing tool equip system
-    protected bool hasFishingTool = false; // Can this enemy use a tool?
-    public bool fishingToolEquipped = false; // Is tool currently out?
+    protected bool hasFishingTool = false;
+    public bool fishingToolEquipped = false;
 
-    // For dropping tools when defeated
-    [SerializeField] protected GameObject toolDropPrefab; // Tool to spawn when defeated
+    [SerializeField] protected GameObject toolDropPrefab;
 
-    // AI state for land movement
-    protected float minActionTime; //Minimum seconds enemy will do an action, like walk, idle, or run
-    protected float maxActionTime; //Maximum seconds enemy will do an action, like walk, idle, or run
+    protected float minActionTime;
+    protected float maxActionTime;
 
     public LandMovementState currentMovementState;
     protected float nextActionTime;
-    protected bool isGrounded;
 
-    // Platform bounds
-    protected float platformLeftEdge;
-    protected float platformRightEdge;
-    protected bool platformBoundsCalculated;
-
+    [Header("Platform Bounds")]
+    public float platformLeftEdge;
+    public float platformRightEdge;
+    public bool platformBoundsCalculated;
+    public bool isGrounded;
 
     protected float floatingForce;
-    protected float maxUpwardVelocity; // For when they swim upward
+    protected float maxUpwardVelocity;
 
-    protected float weight; // How much the enemy sinks in water; varies between 60 and 100 kg
+    protected float weight;
     
     #endregion
 
@@ -113,19 +121,13 @@ public abstract class EnemyBase : EntityMovement
 
     public override void Initialize()
     {
-        // Set entity type for water detection
         entityType = EntityType.Enemy;
-
-        // Call base initialization (handles Rigidbody2D and water detection)
         base.Initialize();
-
-        // Enemy-specific initialization
-        Initialize(100);
+        EnemySetup(100);
     }
 
     protected override void Update()
     {
-        // Call base Update for water detection logic
         base.Update();
     }
 
@@ -134,14 +136,12 @@ public abstract class EnemyBase : EntityMovement
         _state = EnemyState.Alive;
         _fatigue = 0;
     
-        // Reset physics and movement
         if (rb != null)
         {
             rb.velocity = Vector2.zero;
-            rb.gravityScale = 1f; // Reset to normal gravity
+            rb.gravityScale = 1f;
         }
     
-        // Reset collider
         Collider2D col = GetComponent<Collider2D>();
         if (col != null)
         {
@@ -151,7 +151,6 @@ public abstract class EnemyBase : EntityMovement
         Debug.Log($"{gameObject.name} state reset to Alive");
     }
 
-    // How enemy behaves when interacts with player
     public abstract void ReverseFishingBehaviour();
 
     public virtual void LandMovement()
@@ -175,7 +174,6 @@ public abstract class EnemyBase : EntityMovement
 
     protected override void AirborneBehavior()
     {
-        // Override in derived classes for airborne behavior
         if (_type == EnemyType.Land)
         {
             LandMovement();
@@ -184,54 +182,50 @@ public abstract class EnemyBase : EntityMovement
 
     protected override void UnderwaterBehavior()
     {
-        // Override in derived classes for underwater behavior
         if (_type == EnemyType.Water)
         {
             WaterMovement();
         }
     }
 
-    // Override SetMovementMode to add enemy-specific behavior
     public override void SetMovementMode(bool aboveWater)
     {
-        base.SetMovementMode(aboveWater); // Call base implementation
+        base.SetMovementMode(aboveWater);
 
         Debug.Log($"{gameObject.name} SetMovementMode called: aboveWater={aboveWater}, state={_state}, hasStartedFloating={hasStartedFloating}, canEscape={canEscape}");
 
         if (aboveWater)
         {
-            // If defeated enemy reaches surface while floating, they escape
             if (_state == EnemyState.Defeated && hasStartedFloating && canEscape)
             {
                 Debug.Log($"{gameObject.name} - ESCAPE CONDITIONS MET! Triggering escape.");
 
                 TriggerEscape();
-                return; // Exit early since enemy will be destroyed
+                return;
             }
             else if (_state == EnemyState.Defeated)
             {
                 Debug.Log($"{gameObject.name} - Defeated but escape conditions not met: hasStartedFloating={hasStartedFloating}, canEscape={canEscape}");
             }
 
-            hasStartedFloating = false; // Reset floating flag when above water
+            hasStartedFloating = false;
             Debug.Log($"{gameObject.name} enemy switched to AIRBORNE mode");
         }
         else
         {
-            // When defeated enemy enters water, mark as floating
             if (_state == EnemyState.Defeated)
             {
                 hasStartedFloating = true;
             }
 
-            rb.gravityScale = -0.2f; // Your adjusted negative gravity value
-            rb.drag = 1f; // Your adjusted drag value
+            rb.gravityScale = -0.2f;
+            rb.drag = 1f;
 
             Debug.Log($"{gameObject.name} enemy switched to UNDERWATER mode");
         }
     }
 
-    public virtual void Initialize(int powerLevel)
+    public void EnemySetup(int powerLevel)
     {
         _powerLevel = powerLevel;
         
@@ -244,41 +238,30 @@ public abstract class EnemyBase : EntityMovement
 
         walkingSpeed = 2f;
         runningSpeed = 4f;
-        edgeBuffer = .5f; // Distance from platform edge to change direction
-        // assigned platform was set previously in Platform Assignment region
+        edgeBuffer = .5f;
 
-        // AI state for land movement
-        minActionTime = 1f; //Minimum seconds enemy will do an action, like walk, idle, or run
-        maxActionTime = 4f; //Maximum seconds enemy will do an action, like walk, idle, or run
+        minActionTime = 1f;
+        maxActionTime = 4f;
 
         currentMovementState = LandMovementState.Idle;
         isGrounded = false;
 
         platformBoundsCalculated = false;
 
-        // weight must be a random value between x and y. Set to default 6f for now
-        weight = 6f; // How much the enemy sinks in water; varies between 60 and 100 kg
+        weight = 6f;
 
-        // Set initial movement mode
         SetMovementMode(isAboveWater);
     }
 
     private void CalculateTier()
     {
-        // if (_powerLevel is > 100 and < 500)
-        // {
-        //     _tier = Tier.Tier1;
-        // }
-
         _tier = Tier.Tier1;
     }
 
     public float TakeFatigue(int playerPowerLevel)
     {
-        // 5% more fatigue
         _fatigue += (int)((float)playerPowerLevel * .05f);
 
-        // Check if enemy should be defeated
         if (_fatigue >= _maxFatigue && _state == EnemyState.Alive)
         {
             TriggerDefeat();
@@ -291,13 +274,8 @@ public abstract class EnemyBase : EntityMovement
     {
         Debug.Log($"{gameObject.name} has been defeated!");
 
-        // Change state to defeated
         ChangeState_Defeated();
-
-        // Interrupt all current actions
         InterruptAllActions();
-
-        // Start defeat behaviors
         StartDefeatBehaviors();
     }
 
@@ -305,46 +283,35 @@ public abstract class EnemyBase : EntityMovement
     {
         Debug.Log($"{gameObject.name} has ESCAPED! The player can no longer catch this enemy.");
 
-        // Call escape effects before destruction
         OnEnemyEscaped();
 
-        // Destroy the parent FishermanHandler (or this object if no parent)
         GameObject objectToDestroy = transform.parent != null ? transform.parent.gameObject : gameObject;
         Destroy(objectToDestroy);
     }
 
-    // Override this in derived classes for specific escape effects
     protected virtual void OnEnemyEscaped()
     {
-        // Base class does nothing
-        // Override in FishermanScript for:
-        // - Play escape sound effects
-        // - Show escape particle effects  
-        // - Update player score/statistics
-        // - Show UI notifications
     }
 
+    
     protected virtual void InterruptAllActions()
     {
-        // Stop any movement
         currentMovementState = LandMovementState.Idle;
         if (rb != null)
         {
             rb.velocity = Vector2.zero;
         }
 
-        // Clear any scheduled actions
-        nextActionTime = float.MaxValue; // Prevent further AI decisions
+        // FIXED: Don't permanently disable AI - just delay it briefly
+        nextActionTime = Time.time + 1f; // 1 second delay instead of float.MaxValue
 
-        Debug.Log($"{gameObject.name} - All actions interrupted due to defeat");
+        Debug.Log($"{gameObject.name} - Actions interrupted, resuming AI in 1 second");
     }
 
     protected virtual void StartDefeatBehaviors()
     {
-        // Make enemy phase through platforms by turning collider into trigger
         Collider2D enemyCollider = GetComponent<Collider2D>();
 
-        // If not found, look for collider in children (like your setup)
         if (enemyCollider == null)
         {
             enemyCollider = GetComponentInChildren<Collider2D>();
@@ -356,16 +323,12 @@ public abstract class EnemyBase : EntityMovement
             Debug.Log($"{gameObject.name} - Collider set to trigger (phasing through platforms)");
         }
 
-        // If this enemy has fishing tools, clean them up
         CleanupFishingTools();
-
-        // Drop any tools they were carrying
         DropTool();
     }
 
     protected virtual void CleanupFishingTools()
     {
-        // This will be overridden in FishermanScript for specific cleanup
         if (fishingToolEquipped)
         {
             fishingToolEquipped = false;
@@ -377,7 +340,6 @@ public abstract class EnemyBase : EntityMovement
 
     #region State Management
 
-    // Make sure your GetState() method is public
     public EnemyState GetState()
     {
         return _state;
@@ -388,7 +350,6 @@ public abstract class EnemyBase : EntityMovement
     public virtual void ChangeState_Dead() => _state = EnemyState.Dead;
 
     #endregion
-
 
     #region Actions
 
@@ -402,16 +363,10 @@ public abstract class EnemyBase : EntityMovement
 
     public virtual void EnemyDie() { }
 
-    // In your enemy defeat/health system (wherever you handle enemy death)
     public void OnEnemyDefeated()
     {
-        // Drop tool if enemy has one
         DropTool();
-
-        // Handle other defeat logic (destroy enemy, play effects, etc.)
-        // ...
     }
-
 
     #endregion
 
@@ -421,6 +376,7 @@ public abstract class EnemyBase : EntityMovement
         if (_type != EnemyType.Land) return;
 
         CheckGroundedStatus();
+        
         if (assignedPlatform != null && !platformBoundsCalculated)
         {
             CalculatePlatformBounds();
@@ -428,10 +384,9 @@ public abstract class EnemyBase : EntityMovement
 
         ExecuteLandMovementBehaviour();
 
-        // Use virtual AI decision method
         if (Time.time >= nextActionTime)
         {
-            MakeAIDecision(); // Virtual method that derived classes can override
+            MakeAIDecision();
         }
 
         if (platformBoundsCalculated)
@@ -442,7 +397,6 @@ public abstract class EnemyBase : EntityMovement
 
     protected virtual void MakeAIDecision()
     {
-        // Base enemy AI: simple random movement
         ChooseRandomLandAction();
         ScheduleNextAction();
     }
@@ -468,7 +422,6 @@ public abstract class EnemyBase : EntityMovement
 
     protected virtual void CheckGroundedStatus()
     {
-        // Simple ground check - raycast down
         RaycastHit2D hit = Physics2D.Raycast(transform.position, Vector2.down, 1f);
         isGrounded = hit.collider != null && hit.collider.gameObject == assignedPlatform?.gameObject;
     }
@@ -477,26 +430,20 @@ public abstract class EnemyBase : EntityMovement
     {
         float currentX = transform.position.x;
 
-        // If we're near the left edge and moving left, stop or turn around
         if (currentX <= platformLeftEdge && (currentMovementState == LandMovementState.WalkLeft || currentMovementState == LandMovementState.RunLeft))
         {
-            // Choose a new action that doesn't involve going left
             ChooseRandomActionExcluding(LandMovementState.WalkLeft, LandMovementState.RunLeft);
             ScheduleNextAction();
         }
-        // If we're near the right edge and moving right, stop or turn around
         else if (currentX >= platformRightEdge && (currentMovementState == LandMovementState.WalkRight || currentMovementState == LandMovementState.RunRight))
         {
-            // Choose a new action that doesn't involve going right
             ChooseRandomActionExcluding(LandMovementState.WalkRight, LandMovementState.RunRight);
             ScheduleNextAction();
         }
     }
 
-    // Simplified EnemyBase.cs - remove ALL fisherman-specific code
     protected virtual void ChooseRandomLandAction()
     {
-        // Only handle basic enemy movement - no fishing logic!
         float randomValue = UnityEngine.Random.value;
 
         Debug.Log($"Choosing random land action for {gameObject.name}. Random value = {randomValue}");
@@ -521,30 +468,50 @@ public abstract class EnemyBase : EntityMovement
 
     protected virtual void ExecuteLandMovementBehaviour()
     {
-        if (!isGrounded || assignedPlatform == null) return;
+        if (rb == null)
+        {
+            rb = GetComponent<Rigidbody2D>();
+            if (rb == null)
+            {
+                Debug.LogError($"{gameObject.name} - NO RIGIDBODY2D FOUND! Adding one now.");
+                rb = gameObject.AddComponent<Rigidbody2D>();
+            }
+        }
 
         Vector2 movement = Vector2.zero;
 
-        // Simple movement - no fishing tool checks here!
         switch (currentMovementState)
         {
             case LandMovementState.Idle:
+                Debug.Log($"{gameObject.name} - IDLE: No movement");
                 break;
             case LandMovementState.WalkLeft:
                 movement = Vector2.left * walkingSpeed;
+                Debug.Log($"{gameObject.name} - WALKING LEFT at speed {walkingSpeed}");
                 break;
             case LandMovementState.WalkRight:
                 movement = Vector2.right * walkingSpeed;
+                Debug.Log($"{gameObject.name} - WALKING RIGHT at speed {walkingSpeed}");
                 break;
             case LandMovementState.RunLeft:
                 movement = Vector2.left * runningSpeed;
+                Debug.Log($"{gameObject.name} - RUNNING LEFT at speed {runningSpeed}");
                 break;
             case LandMovementState.RunRight:
                 movement = Vector2.right * runningSpeed;
+                Debug.Log($"{gameObject.name} - RUNNING RIGHT at speed {runningSpeed}");
                 break;
         }
 
-        rb.velocity = new Vector2(movement.x, rb.velocity.y);
+        if (rb != null)
+        {
+            rb.velocity = new Vector2(movement.x, rb.velocity.y);
+            Debug.Log($"{gameObject.name} - Applied velocity: {rb.velocity}");
+        }
+        else
+        {
+            Debug.LogError($"{gameObject.name} - STILL NO RIGIDBODY2D AFTER ATTEMPTS!");
+        }
     }
 
     protected virtual void ChooseRandomActionExcluding(params LandMovementState[] excludedStates)
@@ -583,7 +550,7 @@ public abstract class EnemyBase : EntityMovement
         }
         else
         {
-            currentMovementState = LandMovementState.Idle; // Fallback
+            currentMovementState = LandMovementState.Idle;
         }
     }
 
@@ -597,9 +564,6 @@ public abstract class EnemyBase : EntityMovement
 
     #region Fishing Tool System
 
-    /// <summary>
-    /// Attempt to equip fishing tool. Only works when idle.
-    /// </summary>
     public virtual bool TryEquipFishingTool()
     {
         if (!hasFishingTool) return false;
@@ -617,9 +581,6 @@ public abstract class EnemyBase : EntityMovement
         return true;
     }
 
-    /// <summary>
-    /// Put away the fishing tool. Can only be done when tool is equipped.
-    /// </summary>
     public virtual bool TryUnequipFishingTool()
     {
         if (!fishingToolEquipped) return false;
@@ -638,43 +599,26 @@ public abstract class EnemyBase : EntityMovement
         return true;
     }
 
-    /// <summary>
-    /// Called when fishing tool is equipped. Override in derived classes.
-    /// </summary>
     protected virtual void OnFishingToolEquipped()
     {
-        // Override in derived classes:
-        // - Play "equip tool" animation
-        // - Set up internal tool object (inactive, for dropping later)
     }
 
-    /// <summary>
-    /// Called when fishing tool is unequipped. Override in derived classes.
-    /// </summary>
     protected virtual void OnFishingToolUnequipped()
     {
-        // Override in derived classes:
-        // - Play "put away tool" animation
     }
 
-    /// <summary>
-    /// Called when enemy is defeated. Drops the tool if equipped.
-    /// </summary>
     public virtual void DropTool()
     {
         if (toolDropPrefab != null)
         {
-            // Instantiate tool only when needed
             GameObject droppedTool = Instantiate(toolDropPrefab, transform.position, transform.rotation);
 
-            // Add physics for dropping effect
             Rigidbody2D toolRb = droppedTool.GetComponent<Rigidbody2D>();
             if (toolRb == null)
             {
                 toolRb = droppedTool.AddComponent<Rigidbody2D>();
             }
 
-            // Apply random force for "flying" effect
             Vector2 dropForce = new Vector2(
                 UnityEngine.Random.Range(-5f, 5f),
                 UnityEngine.Random.Range(2f, 6f)
@@ -688,7 +632,5 @@ public abstract class EnemyBase : EntityMovement
         }
     }
 
-
     #endregion
-
 }
