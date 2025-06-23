@@ -21,7 +21,7 @@ public class IdleState : EnemyAIState
 
     public override void EnterState()
     {
-        enemy.currentMovementState = EnemyBase.LandMovementState.Idle;
+        enemy.MovementStateLand = EnemyBase.LandMovementState.Idle;
     }
 
     public override void UpdateState()
@@ -41,7 +41,7 @@ public class WalkingState : EnemyAIState
     public override void EnterState()
     {
         // Choose random walking direction
-        enemy.currentMovementState = (UnityEngine.Random.value < 0.5f) ?
+        enemy.MovementStateLand = (UnityEngine.Random.value < 0.5f) ?
             EnemyBase.LandMovementState.WalkLeft : EnemyBase.LandMovementState.WalkRight;
     }
 
@@ -61,7 +61,7 @@ public class FishingState : EnemyAIState
 
     public override void EnterState()
     {
-        enemy.currentMovementState = EnemyBase.LandMovementState.Idle;
+        enemy.MovementStateLand = EnemyBase.LandMovementState.Idle;
         enemy.TryEquipFishingTool();
     }
 

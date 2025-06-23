@@ -242,6 +242,7 @@ MonoBehaviour:
   throwForce: 8
   throwDirection: {x: 1, y: 0.2}
   hookMaxDistance: 8
+  currentHook: {fileID: 0}
 --- !u!114 &2117141073483461364
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -254,6 +255,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 74f210aa94814394cbc3a52e26206a1e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _powerLevel: 0
+  _fatigue: 0
+  _maxFatigue: 0
   isAboveWater: 1
   airGravityScale: 2
   underwaterGravityScale: 0
@@ -261,9 +265,27 @@ MonoBehaviour:
   underwaterDrag: 0.5
   airMaxSpeed: 3
   underwaterMaxSpeed: 5
-  entityType: 0
+  entityType: 2
+  _tier: 0
+  _state: 0
+  _type: 0
+  _landMovementState: 0
+  player: {fileID: 0}
+  hasStartedFloating: 0
+  minActionTime: 1
+  maxActionTime: 4
+  nextActionTime: 0
   assignedPlatform: {fileID: 0}
+  walkingSpeed: 1
+  runningSpeed: 3
+  edgeBuffer: 0.5
+  fishingToolEquipped: 0
   toolDropPrefab: {fileID: 2743509415465814910, guid: a106a3ba687ec00469ed0a6d34ab4fe9, type: 3}
+  floatingForce: 0.2
+  maxUpwardVelocity: 5
+  weight: 6
+  swimForce: 0
+  minSwimSpeed: 0
   config:
     idleProbability: 0.7
     walkProbability: 0.25

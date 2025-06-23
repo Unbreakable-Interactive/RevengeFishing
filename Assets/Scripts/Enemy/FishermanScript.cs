@@ -19,7 +19,6 @@ public class FishermanScript : EnemyBase
     {
         base.Start();
         _type = EnemyType.Land;
-        hasFishingTool = true;
         hookSpawner = GetComponent<HookSpawner>() ?? gameObject.AddComponent<HookSpawner>();
     }
 
@@ -75,7 +74,7 @@ public class FishermanScript : EnemyBase
         }
 
         // Override base movement decisions when we can fish
-        if (currentMovementState == LandMovementState.Idle && !hasThrownHook)
+        if (_landMovementState == LandMovementState.Idle && !hasThrownHook)
         {
             if (!fishingToolEquipped)
             {
@@ -187,7 +186,7 @@ public class FishermanScript : EnemyBase
 
         if (fishingToolEquipped || hasThrownHook)
         {
-            currentMovementState = LandMovementState.Idle;
+            _landMovementState = LandMovementState.Idle;
             // No movement when fishing
             rb.velocity = new Vector2(0, rb.velocity.y);
         }
