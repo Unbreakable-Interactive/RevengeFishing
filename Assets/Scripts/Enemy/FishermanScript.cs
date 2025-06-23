@@ -5,28 +5,19 @@ using UnityEngine;
 public class FishermanScript : EnemyBase
 {
     [Header("Fisherman Configuration")]
-    public FishermanConfig config = new FishermanConfig();
-
-    private HookSpawner hookSpawner;
-    private bool hasThrownHook;
-
-    private float hookTimer = 0f;
-    private float hookDuration = 8f; // Hook stays out for 8 seconds
-
-    private FishingHook subscribedHook;
+    public FishermanConfig fishermanConfig = new FishermanConfig();
 
     protected override void Start()
     {
         base.Start();
         _type = EnemyType.Land;
-        hookSpawner = GetComponent<HookSpawner>() ?? gameObject.AddComponent<HookSpawner>();
     }
 
     protected override void Update()
     {
         base.Update();
 
-        HandleActiveHook();
+        if (hasThrownHook) HandleActiveHook();
     }
 
     private void HandleActiveHook()
@@ -79,7 +70,7 @@ public class FishermanScript : EnemyBase
             if (!fishingToolEquipped)
             {
                 // 60% chance to equip fishing tool when idle
-                if (UnityEngine.Random.value < 0.6f)
+                if (UnityEngine.Random.value < fishermanConfig.equipToolChance)
                 {
                     TryEquipFishingTool();
                     ScheduleNextAction();
@@ -90,7 +81,7 @@ public class FishermanScript : EnemyBase
             {
                 // With fishing tool equipped, choose between fishing and unequipping
                 float random = UnityEngine.Random.value;
-                if (random < 0.5f)
+                if (random < fishermanConfig.hookThrowChance)
                 {
                     // Try to fish
                     if (hookSpawner?.CanThrowHook() == true)
@@ -100,26 +91,20 @@ public class FishermanScript : EnemyBase
                         hookTimer = 0f; // RESET TIMER WHEN THROWING
 
                         SubscribeToHookEvents();
-
                     }
                 }
-                else
+                else if (random < (fishermanConfig.hookThrowChance + fishermanConfig.unequipToolChance))
                 {
                     // Put away fishing tool
                     TryUnequipFishingTool();
                     return;
                 }
-                ScheduleNextAction();
-                return;
             }
+            ScheduleNextAction();
+            return;
         }
 
         //// If not fishing, use base movement AI
-        //if (!fishingToolEquipped)
-        //{
-        //    ChooseRandomLandAction();
-        //    ScheduleNextAction();
-        //}
         base.MakeAIDecision();
     }
 
@@ -132,24 +117,6 @@ public class FishermanScript : EnemyBase
         {
             subscribedHook = fishingHook;
             fishingHook.OnPlayerInteraction += OnHookPlayerInteraction;
-        }
-    }
-
-    private void CleanupHookSubscription()
-    {
-        if (subscribedHook != null)
-        {
-            subscribedHook.OnPlayerInteraction -= OnHookPlayerInteraction;
-            subscribedHook = null;
-        }
-    }
-
-    private void OnHookPlayerInteraction(bool isBeingHeld)
-    {
-        if (hookSpawner.currentHook != null)
-        {
-            hookSpawner.currentHook.isBeingHeld = isBeingHeld;
-            Debug.Log($"Fisherman: Hook is being held: {isBeingHeld}");
         }
     }
 
@@ -174,42 +141,9 @@ public class FishermanScript : EnemyBase
         }
     }
 
-
-    // Override movement to prevent movement when fishing
-    protected override void ExecuteLandMovementBehaviour()
-    {
-        if (_state == EnemyState.Defeated)
-        {
-            rb.velocity = new Vector2(0, rb.velocity.y);
-            return;
-        }
-
-        if (fishingToolEquipped || hasThrownHook)
-        {
-            _landMovementState = LandMovementState.Idle;
-            // No movement when fishing
-            rb.velocity = new Vector2(0, rb.velocity.y);
-        }
-        else
-        {
-            base.ExecuteLandMovementBehaviour();
-        }
-    }
-
-    public override void ReverseFishingBehaviour()
-    {
-        // This method can be removed or simplified
-        // since we have unified decision making
-    }
-
     public override void WaterMovement()
     {
         // Implementation for water movement
-    }
-
-    private void OnDestroy()
-    {
-        CleanupHookSubscription();
     }
 
 }

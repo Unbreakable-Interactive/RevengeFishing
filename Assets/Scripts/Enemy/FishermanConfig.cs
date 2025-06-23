@@ -3,11 +3,6 @@ using UnityEngine;
 [System.Serializable]
 public class FishermanConfig
 {
-    [Header("Movement Probabilities")]
-    [Range(0f, 1f)] public float idleProbability = 0.6f;
-    [Range(0f, 1f)] public float walkProbability = 0.15f;
-    [Range(0f, 1f)] public float runProbability = 0.05f;
-
     [Header("Fishing Behavior")]
     [Range(0f, 1f)] public float equipToolChance = 0.7f;
     [Range(0f, 1f)] public float unequipToolChance = 0.4f;

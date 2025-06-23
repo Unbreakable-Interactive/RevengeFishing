@@ -260,12 +260,16 @@ MonoBehaviour:
   _maxFatigue: 0
   isAboveWater: 1
   airGravityScale: 2
-  underwaterGravityScale: 0
+  underwaterGravityScale: -0.2
   airDrag: 1.5
-  underwaterDrag: 0.5
+  underwaterDrag: 1
   airMaxSpeed: 3
   underwaterMaxSpeed: 5
   entityType: 2
+  landEnemyConfig:
+    idleProbability: 0.6
+    walkProbability: 0.3
+    runProbability: 0.1
   _tier: 0
   _state: 0
   _type: 0
@@ -275,23 +279,21 @@ MonoBehaviour:
   minActionTime: 1
   maxActionTime: 4
   nextActionTime: 0
+  hookTimer: 1
+  hookDuration: 8
   assignedPlatform: {fileID: 0}
-  walkingSpeed: 1
+  walkingSpeed: 1.5
   runningSpeed: 3
   edgeBuffer: 0.5
   fishingToolEquipped: 0
   toolDropPrefab: {fileID: 2743509415465814910, guid: a106a3ba687ec00469ed0a6d34ab4fe9, type: 3}
-  floatingForce: 0.2
   maxUpwardVelocity: 5
   weight: 6
   swimForce: 0
   minSwimSpeed: 0
-  config:
-    idleProbability: 0.7
-    walkProbability: 0.25
-    runProbability: 0.05
-    equipToolChance: 0.7
-    unequipToolChance: 0.2
+  fishermanConfig:
+    equipToolChance: 0.6
+    unequipToolChance: 0.4
     hookThrowChance: 0.4
     minHookWaitTime: 10
     maxHookWaitTime: 20

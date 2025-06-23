@@ -5,6 +5,9 @@ using UnityEngine;
 
 public abstract class EnemyBase : EntityMovement
 {
+    [Header("Land Enemy Configuration")]
+    public LandEnemyConfig landEnemyConfig = new LandEnemyConfig();
+
     public enum Tier
     {
         Tier1=0,
@@ -61,6 +64,14 @@ public abstract class EnemyBase : EntityMovement
     [SerializeField] protected float maxActionTime; //Maximum seconds enemy will do an action, like walk, idle, or run
     [SerializeField] protected float nextActionTime; //actual seconds until next action decision
 
+    protected HookSpawner hookSpawner;
+    protected bool hasThrownHook;
+    [SerializeField] protected float hookTimer;
+    [SerializeField] protected float hookDuration;
+
+    protected FishingHook subscribedHook;
+
+
     #region Platform Assignment
     [Header("Platform Assignment")]
     public Platform assignedPlatform; // For land enemies only
@@ -99,7 +110,6 @@ public abstract class EnemyBase : EntityMovement
     protected float platformRightEdge;
     protected bool platformBoundsCalculated;
 
-    [SerializeField] protected float floatingForce;
     [SerializeField] protected float maxUpwardVelocity; // For when they swim upward
 
     [SerializeField] protected float weight; // How much the enemy sinks in water; varies between 60 and 100 kg
@@ -149,10 +159,27 @@ public abstract class EnemyBase : EntityMovement
         //// weight must be a random value between x and y. Set to default 6f for now
         //weight = 6f; // How much the enemy sinks in water; varies between 60 and 100 kg
 
+        hookSpawner = GetComponent<HookSpawner>() ?? gameObject.AddComponent<HookSpawner>();
+
         // Set initial movement mode
         SetMovementMode(isAboveWater);
+
+        if (assignedPlatform != null && !platformBoundsCalculated)
+        {
+            CalculatePlatformBounds();
+        }
+
     }
 
+    private void CalculateTier()
+    {
+        if (_powerLevel > 10000000) _tier = Tier.Tier6;
+        else if (_powerLevel > 1000000) _tier = Tier.Tier5;
+        else if (_powerLevel > 100000) _tier = Tier.Tier4;
+        else if (_powerLevel > 10000) _tier = Tier.Tier3;
+        else if (_powerLevel > 1000) _tier = Tier.Tier2;
+        else _tier = Tier.Tier1;
+    }
 
     protected override void Update()
     {
@@ -161,8 +188,8 @@ public abstract class EnemyBase : EntityMovement
     }
 
 
-    // How enemy behaves when interacts with player
-    public abstract void ReverseFishingBehaviour();
+    // How enemy behaves when it interacts with player
+    //public abstract void ReverseFishingBehaviour();
 
     public virtual void LandMovement()
     {
@@ -199,6 +226,10 @@ public abstract class EnemyBase : EntityMovement
         {
             WaterMovement();
         }
+        if (_type == EnemyType.Land)
+        {
+
+        }
     }
 
     // Override SetMovementMode to add enemy-specific behavior
@@ -206,49 +237,37 @@ public abstract class EnemyBase : EntityMovement
     {
         base.SetMovementMode(aboveWater); // Call base implementation
 
-        Debug.Log($"{gameObject.name} SetMovementMode called: aboveWater={aboveWater}, state={_state}, hasStartedFloating={hasStartedFloating}");
-
-        if (aboveWater)
+        if (_type == EnemyType.Land)
         {
-            // If defeated enemy reaches surface while floating, they escape
-            if (_state == EnemyState.Defeated && hasStartedFloating)
-            {
-                Debug.Log($"{gameObject.name} - ESCAPE CONDITIONS MET! Triggering escape.");
+            Debug.Log($"{gameObject.name} SetMovementMode called: aboveWater={aboveWater}, state={_state}, hasStartedFloating={hasStartedFloating}");
 
-                TriggerEscape();
-                return; // Exit early since enemy will be destroyed
-            }
-            else if (_state == EnemyState.Defeated)
+            if (aboveWater)
             {
-                Debug.Log($"{gameObject.name} - Defeated but escape conditions not met: hasStartedFloating={hasStartedFloating}");
-            }
+                // If defeated enemy reaches surface while floating, they escape
+                if (_state == EnemyState.Defeated && hasStartedFloating)
+                {
+                    Debug.Log($"{gameObject.name} - ESCAPE CONDITIONS MET! Triggering escape.");
 
-            hasStartedFloating = false; // Reset floating flag when above water
-            Debug.Log($"{gameObject.name} enemy switched to AIRBORNE mode");
-        }
-        else
-        {
-            // When defeated enemy enters water, mark as floating
-            if (_state == EnemyState.Defeated)
+                    TriggerEscape();
+                    return; // Exit early since enemy will be destroyed
+                }
+                else if (_state == EnemyState.Defeated)
+                {
+                    Debug.Log($"{gameObject.name} - Defeated but escape conditions not met: hasStartedFloating={hasStartedFloating}");
+                }
+
+                hasStartedFloating = false; // Reset floating flag when above water
+                Debug.Log($"{gameObject.name} enemy switched to AIRBORNE mode");
+            }
+            else
             {
+                // When defeated enemy enters water, mark as floating
                 hasStartedFloating = true;
+
+                Debug.Log($"{gameObject.name} enemy switched to UNDERWATER mode");
             }
 
-            rb.gravityScale = -floatingForce; // Your adjusted negative gravity value
-            rb.drag = 1f; // Your adjusted drag value
-
-            Debug.Log($"{gameObject.name} enemy switched to UNDERWATER mode");
         }
-    }
-
-    private void CalculateTier()
-    {
-        if (_powerLevel > 10000000) _tier = Tier.Tier6;
-        else if (_powerLevel > 1000000) _tier = Tier.Tier5;
-        else if (_powerLevel > 100000) _tier = Tier.Tier4;
-        else if (_powerLevel > 10000) _tier = Tier.Tier3;
-        else if (_powerLevel > 1000) _tier = Tier.Tier2;
-        else _tier = Tier.Tier1;
     }
 
     public float TakeFatigue(int playerPowerLevel)
@@ -279,36 +298,48 @@ public abstract class EnemyBase : EntityMovement
         StartDefeatBehaviors();
     }
 
+    protected virtual void TriggerEaten()
+    {
+        Debug.Log($"{gameObject.name} has been EATEN!");
+        // Change state to eaten
+        ChangeState_Eaten();
+        // Interrupt all current actions
+        InterruptAllActions();
+        // Handle any specific eaten logic (like cleanup)
+        TriggerDead(); 
+        //this will be changed later after TriggerDead() is implemented
+    }
+
+    protected virtual void TriggerDead()
+    {
+        Debug.Log($"{gameObject.name} has DIED!");
+        // Change state to dead
+        ChangeState_Dead();
+        // Interrupt all current actions
+        InterruptAllActions();
+        // Handle any specific death logic (like cleanup)
+        EnemyDie();
+    }
+
     protected virtual void TriggerEscape()
     {
         Debug.Log($"{gameObject.name} has ESCAPED! The player can no longer catch this enemy.");
-
-        // Call escape effects before destruction
-        OnEnemyEscaped();
 
         // Destroy the parent FishermanHandler (or this object if no parent)
         GameObject objectToDestroy = transform.parent != null ? transform.parent.gameObject : gameObject;
         Destroy(objectToDestroy);
     }
 
-    // Override this in derived classes for specific escape effects
-    protected virtual void OnEnemyEscaped()
-    {
-        // Base class does nothing
-        // Override in FishermanScript for:
-        // - Play escape sound effects
-        // - Show escape particle effects  
-        // - Update player score/statistics
-        // - Show UI notifications
-    }
-
     protected virtual void InterruptAllActions()
     {
-        // Stop any movement
-        _landMovementState = LandMovementState.Idle;
-        if (rb != null)
+        if (_type == EnemyType.Land)
         {
-            rb.velocity = Vector2.zero;
+            // Stop any movement
+            _landMovementState = LandMovementState.Idle;
+            if (rb != null)
+            {
+                rb.velocity = Vector2.zero;
+            }
         }
 
         // Clear any scheduled actions
@@ -334,11 +365,14 @@ public abstract class EnemyBase : EntityMovement
             Debug.Log($"{gameObject.name} - Collider set to trigger (phasing through platforms)");
         }
 
-        // If this enemy has fishing tools, clean them up
-        CleanupFishingTools();
+        if (_type == EnemyType.Land)
+        {
+            // If this enemy has fishing tools, clean them up
+            CleanupFishingTools();
 
-        // Drop any tools they were carrying
-        DropTool();
+            // Drop any tools they were carrying
+            DropTool();
+        }
     }
 
     protected virtual void CleanupFishingTools()
@@ -348,6 +382,34 @@ public abstract class EnemyBase : EntityMovement
         {
             fishingToolEquipped = false;
             Debug.Log($"{gameObject.name} - Fishing tool cleaned up due to defeat");
+        }
+    }
+
+    protected virtual void EnemyDie()
+    {
+        Debug.Log($"{gameObject.name} has been REVERSE FISHED!");
+
+        // Destroy the parent FishermanHandler (or this object if no parent)
+        GameObject objectToDestroy = transform.parent != null ? transform.parent.gameObject : gameObject;
+        Destroy(objectToDestroy);
+
+    }
+
+    protected virtual void CleanupHookSubscription()
+    {
+        if (subscribedHook != null)
+        {
+            subscribedHook.OnPlayerInteraction -= OnHookPlayerInteraction;
+            subscribedHook = null;
+        }
+    }
+
+    protected virtual void OnHookPlayerInteraction(bool isBeingHeld)
+    {
+        if (hookSpawner.currentHook != null)
+        {
+            hookSpawner.currentHook.isBeingHeld = isBeingHeld;
+            Debug.Log($"Fisherman: Hook is being held: {isBeingHeld}");
         }
     }
 
@@ -370,27 +432,23 @@ public abstract class EnemyBase : EntityMovement
 
     #region Actions
 
-    public virtual void OnTriggerEnter2D(Collider2D other)
+    protected virtual void OnTriggerEnter2D(Collider2D other)
     {
         if (_state == EnemyState.Defeated && other.CompareTag("PlayerCollider"))
         {
             ChangeState_Eaten();
+            TriggerEaten();
         }
     }
 
-    public virtual void EnemyDie() { }
-
-    // In your enemy defeat/health system (wherever you handle enemy death)
-    public void OnEnemyDefeated()
+    protected virtual void OnDestroy()
     {
-        // Drop tool if enemy has one
-        DropTool();
-
-        // Handle other defeat logic (destroy enemy, play effects, etc.)
-        // ...
+        // Cleanup any references to player or platform
+        player = null;
+        assignedPlatform = null;
+        // Cleanup hook subscription
+        CleanupHookSubscription();
     }
-
-
     #endregion
 
     #region Land Movement Logic
@@ -399,12 +457,8 @@ public abstract class EnemyBase : EntityMovement
         if (_type != EnemyType.Land) return;
 
         CheckGroundedStatus();
-        if (assignedPlatform != null && !platformBoundsCalculated)
-        {
-            CalculatePlatformBounds();
-        }
 
-        ExecuteLandMovementBehaviour();
+        //ExecuteLandMovementBehaviour();
 
         // Use virtual AI decision method
         if (Time.time >= nextActionTime)
@@ -422,6 +476,10 @@ public abstract class EnemyBase : EntityMovement
     {
         // Base enemy AI: simple random movement
         ChooseRandomLandAction();
+        if (_landMovementState == LandMovementState.Idle)
+        {
+
+        }
         ScheduleNextAction();
     }
 
@@ -478,12 +536,12 @@ public abstract class EnemyBase : EntityMovement
         float randomValue = UnityEngine.Random.value;
 
         Debug.Log($"Choosing random land action for {gameObject.name}. Random value = {randomValue}");
-        if (randomValue < 0.6f)
+        if (randomValue < landEnemyConfig.idleProbability)
         {
             Debug.Log($"{gameObject.name} is idle");
             _landMovementState = LandMovementState.Idle;
         }
-        else if (randomValue < 0.9f)
+        else if (randomValue < (landEnemyConfig.idleProbability + landEnemyConfig.walkProbability))
         {
             Debug.Log($"{gameObject.name} is walking");
             _landMovementState = (UnityEngine.Random.value < 0.5f) ? LandMovementState.WalkLeft : LandMovementState.WalkRight;
@@ -497,6 +555,7 @@ public abstract class EnemyBase : EntityMovement
         ExecuteLandMovementBehaviour();
     }
 
+    //actually executes the action chosen by ChooseRandomLandAction
     protected virtual void ExecuteLandMovementBehaviour()
     {
         if (!isGrounded || assignedPlatform == null) return;
@@ -525,6 +584,7 @@ public abstract class EnemyBase : EntityMovement
         rb.velocity = new Vector2(movement.x, rb.velocity.y);
     }
 
+    //used to choose a random action when at the edge of the platform
     protected virtual void ChooseRandomActionExcluding(params LandMovementState[] excludedStates)
     {
         LandMovementState[] allStates = {
@@ -657,6 +717,7 @@ public abstract class EnemyBase : EntityMovement
                 UnityEngine.Random.Range(2f, 6f)
             );
             toolRb.AddForce(dropForce, ForceMode2D.Impulse);
+            toolRb.AddTorque(-dropForce.x * 4, ForceMode2D.Impulse);
 
             if (assignedPlatform != null && assignedPlatform.showDebugInfo)
             {
