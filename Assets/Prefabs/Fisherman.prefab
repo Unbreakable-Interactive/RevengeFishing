@@ -267,8 +267,8 @@ MonoBehaviour:
   underwaterMaxSpeed: 5
   entityType: 2
   landEnemyConfig:
-    idleProbability: 0.6
-    walkProbability: 0.3
+    idleProbability: 0.3
+    walkProbability: 0.6
     runProbability: 0.1
   _tier: 0
   _state: 0
@@ -292,8 +292,8 @@ MonoBehaviour:
   swimForce: 0
   minSwimSpeed: 0
   fishermanConfig:
-    equipToolChance: 0.6
-    unequipToolChance: 0.4
+    equipToolChance: 0.4
+    unequipToolChance: 0.8
     hookThrowChance: 0.4
     minHookWaitTime: 10
     maxHookWaitTime: 20

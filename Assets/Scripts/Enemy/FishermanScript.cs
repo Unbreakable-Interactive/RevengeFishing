@@ -59,10 +59,7 @@ public class FishermanScript : EnemyBase
     // RESET TIMER WHEN THROWING NEW HOOK
     protected override void MakeAIDecision()
     {
-        if (_state == EnemyState.Defeated)
-        {
-            return;
-        }
+        if (_state == EnemyState.Defeated)  return;
 
         // Override base movement decisions when we can fish
         if (_landMovementState == LandMovementState.Idle && !hasThrownHook)
@@ -104,7 +101,7 @@ public class FishermanScript : EnemyBase
             return;
         }
 
-        //// If not fishing, use base movement AI
+        //If not fishing, use base movement AI
         base.MakeAIDecision();
     }
 

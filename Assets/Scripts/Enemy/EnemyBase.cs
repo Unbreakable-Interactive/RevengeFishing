@@ -458,13 +458,13 @@ public abstract class EnemyBase : EntityMovement
 
         CheckGroundedStatus();
 
-        //ExecuteLandMovementBehaviour();
-
         // Use virtual AI decision method
         if (Time.time >= nextActionTime)
         {
             MakeAIDecision(); // Virtual method that derived classes can override
         }
+
+        ExecuteLandMovementBehaviour();
 
         if (platformBoundsCalculated)
         {
@@ -476,10 +476,6 @@ public abstract class EnemyBase : EntityMovement
     {
         // Base enemy AI: simple random movement
         ChooseRandomLandAction();
-        if (_landMovementState == LandMovementState.Idle)
-        {
-
-        }
         ScheduleNextAction();
     }
 
@@ -551,8 +547,6 @@ public abstract class EnemyBase : EntityMovement
             Debug.Log($"{gameObject.name} is running");
             _landMovementState = (UnityEngine.Random.value < 0.5f) ? LandMovementState.RunLeft : LandMovementState.RunRight;
         }
-
-        ExecuteLandMovementBehaviour();
     }
 
     //actually executes the action chosen by ChooseRandomLandAction
