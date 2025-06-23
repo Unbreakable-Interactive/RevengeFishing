@@ -45,7 +45,19 @@ public abstract class FishingProjectile : EntityMovement
         entityType = EntityType.Hook;
         player = GameObject.FindGameObjectWithTag("Player")?.GetComponent<PlayerMovement>();
 
-        InitializeProjectile();
+        Initialize(0);
+    }
+
+    protected override void Initialize(int powerLevel)
+    {
+        hookCollider = GetComponent<CircleCollider2D>();
+        if (hookCollider != null)
+        {
+            hookCollider.isTrigger = true;
+        }
+
+        spawnPoint = transform.position;
+        OnProjectileSpawned();
     }
 
     protected override void Update()
@@ -114,18 +126,6 @@ public abstract class FishingProjectile : EntityMovement
 
             Debug.Log("Hook released player!");
         }
-    }
-
-    protected virtual void InitializeProjectile()
-    {
-        hookCollider = GetComponent<CircleCollider2D>();
-        if (hookCollider != null)
-        {
-            hookCollider.isTrigger = true;
-        }
-
-        spawnPoint = transform.position;
-        OnProjectileSpawned();
     }
 
     protected virtual void ConstrainToMaxDistance()

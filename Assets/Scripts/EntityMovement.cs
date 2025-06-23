@@ -11,21 +11,26 @@ public abstract class EntityMovement : MonoBehaviour
     [SerializeField] protected int _maxFatigue;
 
     [Header("Water/Air Movement Settings")]
-    public bool isAboveWater = true;
-    public float airGravityScale = 2f;
-    public float underwaterGravityScale = 0f;
-    public float airDrag = 1.5f;
-    public float underwaterDrag = 0.5f;
-    public float airMaxSpeed = 3f;
-    public float underwaterMaxSpeed = 5f;
+    [SerializeField] protected bool isAboveWater = true;
+    [SerializeField] protected float airGravityScale = 2f;
+    [SerializeField] protected float underwaterGravityScale = 0f;
+    [SerializeField] protected float airDrag = 1.5f;
+    [SerializeField] protected float underwaterDrag = 0.5f;
+    [SerializeField] protected float airMaxSpeed = 3f;
+    [SerializeField] protected float underwaterMaxSpeed = 5f;
 
     [Header("Entity Type")]
-    public EntityType entityType = EntityType.Generic;
+    [SerializeField] protected EntityType entityType = EntityType.Generic;
 
     // Add this property after the existing fields
     public int PowerLevel
     {
         get => _powerLevel;
+    }
+
+    public bool IsAboveWater
+    {
+        get => isAboveWater;
     }
 
     public enum EntityType
@@ -44,17 +49,10 @@ public abstract class EntityMovement : MonoBehaviour
             rb = gameObject.AddComponent<Rigidbody2D>();
         }
 
-        if (GetComponent<PlayerMovement>() != null)
-        {
-            _powerLevel = 100;
-        }
-        else
-        {
-            //_powerLevel = 100; //change this to scale with the player later
-        }
-
-        SetMovementMode(isAboveWater);
+        //SetMovementMode(isAboveWater);
     }
+
+    protected abstract void Initialize(int powerLevel);
 
     protected virtual void Update()
     {
@@ -68,13 +66,13 @@ public abstract class EntityMovement : MonoBehaviour
         }
     }
 
-    public virtual void OnEnterWater()
+    protected virtual void OnEnterWater()
     {
         Debug.Log($"{gameObject.name} entered water");
         SetMovementMode(false);
     }
 
-    public virtual void OnExitWater()
+    protected virtual void OnExitWater()
     {
         Debug.Log($"{gameObject.name} exited water");
         SetMovementMode(true);

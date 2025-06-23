@@ -123,6 +123,39 @@ public abstract class EnemyBase : EntityMovement
         Initialize(100);
     }
 
+    protected override void Initialize(int powerLevel)
+    {
+        _powerLevel = powerLevel;
+
+        _fatigue = 0;
+        _maxFatigue = _powerLevel;
+
+        _state = EnemyState.Alive;
+
+        CalculateTier();
+
+        walkingSpeed = 1f;
+        runningSpeed = 3f;
+        edgeBuffer = .5f; // Distance from platform edge to change direction
+        // assigned platform was set previously in Platform Assignment region
+
+        // AI state for land movement
+        minActionTime = 1f; //Minimum seconds enemy will do an action, like walk, idle, or run
+        maxActionTime = 4f; //Maximum seconds enemy will do an action, like walk, idle, or run
+
+        currentMovementState = LandMovementState.Idle;
+        isGrounded = false;
+
+        platformBoundsCalculated = false;
+
+        // weight must be a random value between x and y. Set to default 6f for now
+        weight = 6f; // How much the enemy sinks in water; varies between 60 and 100 kg
+
+        // Set initial movement mode
+        SetMovementMode(isAboveWater);
+    }
+
+
     protected override void Update()
     {
         // Call base Update for water detection logic
@@ -208,38 +241,6 @@ public abstract class EnemyBase : EntityMovement
 
             Debug.Log($"{gameObject.name} enemy switched to UNDERWATER mode");
         }
-    }
-
-    public virtual void Initialize(int powerLevel)
-    {
-        _powerLevel = powerLevel;
-        
-        _fatigue = 0;
-        _maxFatigue = _powerLevel;
-
-        _state = EnemyState.Alive;
-
-        CalculateTier();
-
-        walkingSpeed = 2f;
-        runningSpeed = 4f;
-        edgeBuffer = .5f; // Distance from platform edge to change direction
-        // assigned platform was set previously in Platform Assignment region
-
-        // AI state for land movement
-        minActionTime = 1f; //Minimum seconds enemy will do an action, like walk, idle, or run
-        maxActionTime = 4f; //Maximum seconds enemy will do an action, like walk, idle, or run
-
-        currentMovementState = LandMovementState.Idle;
-        isGrounded = false;
-
-        platformBoundsCalculated = false;
-
-        // weight must be a random value between x and y. Set to default 6f for now
-        weight = 6f; // How much the enemy sinks in water; varies between 60 and 100 kg
-
-        // Set initial movement mode
-        SetMovementMode(isAboveWater);
     }
 
     private void CalculateTier()

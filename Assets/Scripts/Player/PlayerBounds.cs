@@ -87,7 +87,7 @@ public class PlayerBounds : MonoBehaviour
 
     void HandleBounceRotation(Vector2 newVelocity)
     {
-        if (playerMovement.isAboveWater)
+        if (playerMovement.IsAboveWater)
         {
             // In air: The HandleAirborneRotation() will automatically rotate to face velocity
             // No need to override - it will happen automatically next frame
