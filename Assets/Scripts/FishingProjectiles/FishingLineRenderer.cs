@@ -93,6 +93,8 @@ public class FishingLineRenderer : MonoBehaviour
 
     private void UpdateLinePositions()
     {
+        startPoint = fishingProjectile.spawnPoint;
+
         if (endPoint == null)
         {
             Debug.LogWarning("FishingLineRenderer: Missing end point!");

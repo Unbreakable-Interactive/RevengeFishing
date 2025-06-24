@@ -28,9 +28,9 @@ public class FishermanScript : EnemyBase
         hookTimer += Time.deltaTime;
 
         // Retract hook after hookDuration seconds
-        if (hookSpawner.currentHook != null &&
+        if (hookSpawner.CurrentHook != null &&
             hookTimer >= hookDuration &&
-            !hookSpawner.currentHook.isBeingHeld)
+            !hookSpawner.CurrentHook.isBeingHeld)
         {
             if (hookSpawner.HasActiveHook())
             {
@@ -48,8 +48,8 @@ public class FishermanScript : EnemyBase
             hasThrownHook = false;
             hookTimer = 0f; // RESET TIMER
 
-            // 80% chance to put away rod after fishing
-            if (UnityEngine.Random.value < 0.8f)
+            // chance to put away rod after fishing
+            if (UnityEngine.Random.value < fishermanConfig.unequipToolChance)
             {
                 TryUnequipFishingTool();
             }
@@ -66,7 +66,7 @@ public class FishermanScript : EnemyBase
         {
             if (!fishingToolEquipped)
             {
-                // 60% chance to equip fishing tool when idle
+                // chance to equip fishing tool when idle
                 if (UnityEngine.Random.value < fishermanConfig.equipToolChance)
                 {
                     TryEquipFishingTool();
@@ -110,7 +110,7 @@ public class FishermanScript : EnemyBase
         CleanupHookSubscription();
 
         // Get current hook from spawner
-        if (hookSpawner.currentHook is FishingHook fishingHook)
+        if (hookSpawner.CurrentHook is FishingHook fishingHook)
         {
             subscribedHook = fishingHook;
             fishingHook.OnPlayerInteraction += OnHookPlayerInteraction;

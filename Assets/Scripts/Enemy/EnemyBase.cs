@@ -32,6 +32,21 @@ public abstract class EnemyBase : EntityMovement
         Water
     }
 
+    [SerializeField] protected Tier _tier;
+    [SerializeField] protected EnemyState _state;
+    [SerializeField] protected EnemyType _type;
+
+    [Header("Player Reference")]
+    [SerializeField] protected PlayerMovement player; // Reference to the player object
+
+    // time parameters for AI decisions
+    [SerializeField] protected float minActionTime; //Minimum seconds enemy will do an action, like walk, idle, or run
+    [SerializeField] protected float maxActionTime; //Maximum seconds enemy will do an action, like walk, idle, or run
+    [SerializeField] protected float nextActionTime; //actual seconds until next action decision
+
+
+    #region Land Enemy Variables
+    
     // Movement states for land enemies
     public enum LandMovementState
     {
@@ -41,10 +56,7 @@ public abstract class EnemyBase : EntityMovement
         RunLeft,
         RunRight
     }
-
-    [SerializeField] protected Tier _tier;
-    [SerializeField] protected EnemyState _state;
-    [SerializeField] protected EnemyType _type;
+    
     [SerializeField] protected LandMovementState _landMovementState;
 
     public LandMovementState MovementStateLand
@@ -52,45 +64,6 @@ public abstract class EnemyBase : EntityMovement
         get { return _landMovementState; }
         set { _landMovementState = value; }
     }
-
-    [Header("Player Reference")]
-    [SerializeField] protected PlayerMovement player; // Reference to the player object
-
-    [Header("Escape System")]
-    [SerializeField] protected bool hasStartedFloating = false; // Track if enemy is floating upward
-
-    // time parameters for AI decisions
-    [SerializeField] protected float minActionTime; //Minimum seconds enemy will do an action, like walk, idle, or run
-    [SerializeField] protected float maxActionTime; //Maximum seconds enemy will do an action, like walk, idle, or run
-    [SerializeField] protected float nextActionTime; //actual seconds until next action decision
-
-    protected HookSpawner hookSpawner;
-    protected bool hasThrownHook;
-    [SerializeField] protected float hookTimer;
-    [SerializeField] protected float hookDuration;
-
-    protected FishingHook subscribedHook;
-
-
-    #region Platform Assignment
-    [Header("Platform Assignment")]
-    public Platform assignedPlatform; // For land enemies only
-
-    // Method called by Platform when assigning this enemy
-    public virtual void SetAssignedPlatform(Platform platform)
-    {
-        assignedPlatform = platform;
-    }
-
-    public Platform GetAssignedPlatform()
-    {
-        return assignedPlatform;
-    }
-
-
-    #endregion
-
-    #region Land Enemy Variables
 
     [Header("Land Enemy Variables")]
     [SerializeField] protected float walkingSpeed;
@@ -113,7 +86,34 @@ public abstract class EnemyBase : EntityMovement
     [SerializeField] protected float maxUpwardVelocity; // For when they swim upward
 
     [SerializeField] protected float weight; // How much the enemy sinks in water; varies between 60 and 100 kg
-    
+
+    [Header("Escape System")]
+    [SerializeField] protected bool hasStartedFloating = false; // Track if enemy is floating upward
+
+    protected HookSpawner hookSpawner;
+    protected bool hasThrownHook;
+    [SerializeField] protected float hookTimer;
+    [SerializeField] protected float hookDuration;
+
+    protected FishingHook subscribedHook;
+
+    #endregion
+
+    #region Platform Assignment
+    [Header("Platform Assignment")]
+    public Platform assignedPlatform; // For land enemies only
+
+    // Method called by Platform when assigning this enemy
+    public virtual void SetAssignedPlatform(Platform platform)
+    {
+        assignedPlatform = platform;
+    }
+
+    public Platform GetAssignedPlatform()
+    {
+        return assignedPlatform;
+    }
+
     #endregion
 
     #region Water Enemy Variables
@@ -406,9 +406,9 @@ public abstract class EnemyBase : EntityMovement
 
     protected virtual void OnHookPlayerInteraction(bool isBeingHeld)
     {
-        if (hookSpawner.currentHook != null)
+        if (hookSpawner.CurrentHook != null)
         {
-            hookSpawner.currentHook.isBeingHeld = isBeingHeld;
+            hookSpawner.CurrentHook.isBeingHeld = isBeingHeld;
             Debug.Log($"Fisherman: Hook is being held: {isBeingHeld}");
         }
     }
@@ -428,7 +428,6 @@ public abstract class EnemyBase : EntityMovement
     public virtual void ChangeState_Dead() => _state = EnemyState.Dead;
 
     #endregion
-
 
     #region Actions
 

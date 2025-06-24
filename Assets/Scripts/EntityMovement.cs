@@ -41,15 +41,19 @@ public abstract class EntityMovement : MonoBehaviour
         Hook
     }
 
-    protected virtual void Start()
+    protected virtual void Awake()
     {
-        rb = GetComponent<Rigidbody2D>();
+        rb = GetComponentInChildren<Rigidbody2D>();
         if (rb == null)
         {
             rb = gameObject.AddComponent<Rigidbody2D>();
         }
+    }
 
-        //SetMovementMode(isAboveWater);
+    protected virtual void Start()
+    {
+        Initialize(_powerLevel);
+        SetMovementMode(isAboveWater);
     }
 
     protected abstract void Initialize(int powerLevel);

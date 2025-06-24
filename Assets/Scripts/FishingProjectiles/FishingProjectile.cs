@@ -4,14 +4,14 @@ using UnityEngine;
 public abstract class FishingProjectile : EntityMovement
 {
     [Header("Distance Constraint")]
-    public float maxDistance = 15f;
+    public float maxDistance;
 
     public Vector3 spawnPoint;
     public HookSpawner spawner;
 
     [Header("Player Interaction")]
-    [SerializeField] public bool isBeingHeld = false; 
-    [SerializeField] protected PlayerMovement player;
+    [SerializeField] public bool isBeingHeld = false; //is a player biting the hook?
+    [SerializeField] protected PlayerMovement player; //reference to player
     protected CircleCollider2D hookCollider;
 
     // Event to notify fisherman
@@ -20,7 +20,7 @@ public abstract class FishingProjectile : EntityMovement
     [Header("Elastic Line Behavior")]
     [SerializeField] private float maxStretchDistance = 3f;    // How far beyond maxDistance player can stretch
     [SerializeField] private float stretchResistance = 15f;    // Resistance force when stretching
-    [SerializeField] private float snapBackForce = 20f;        // Force applied when snapping back
+    [SerializeField] private float snapBackForce = 10f;        // Force applied when snapping back
     [SerializeField] private float maxStretchTime = 0.8f;      // Max time allowed in stretch zone
     [SerializeField] private AnimationCurve stretchCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
 
@@ -36,7 +36,7 @@ public abstract class FishingProjectile : EntityMovement
     public System.Action OnStretchEnded;
 
 
-    protected virtual void Awake()
+    protected override void Start()
     {
         // Call parent Start() to initialize EntityMovement
         base.Start();
@@ -113,7 +113,7 @@ public abstract class FishingProjectile : EntityMovement
     {
         if (isBeingHeld && player != null)
         {
-            // NEW: Unregister this hook from the player
+            // Unregister this hook from the player
             player.RemoveBitingHook(this);
 
             isBeingHeld = false;
@@ -158,6 +158,7 @@ public abstract class FishingProjectile : EntityMovement
 
     public virtual void ThrowProjectile(Vector2 throwDirection, float throwForce)
     {
+        if (rb == null) Debug.LogError("Rigidbody2D is not assigned!");
         rb.AddForce(throwDirection.normalized * throwForce, ForceMode2D.Impulse);
         OnProjectileThrown();
     }
@@ -379,7 +380,6 @@ public abstract class FishingProjectile : EntityMovement
     protected abstract void OnProjectileThrown();
     protected abstract void OnProjectileRetracted();
 
-    // New abstract methods for environment behavior
     protected abstract void OnAirborneBehavior();
     protected abstract void OnUnderwaterBehavior();
 

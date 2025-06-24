@@ -3,26 +3,34 @@ using UnityEngine;
 public class HookSpawner : MonoBehaviour
 {
     [Header("Hook Settings")]
-    public GameObject hookHandlerPrefab; // Changed from hookPrefab to hookHandlerPrefab
-    public Transform spawnPoint;
+    public GameObject hookHandlerPrefab; // reference to hookHandlerPrefab with water detection
+    public Transform spawnPoint; //reference to the original spawn point at the tip of the fishing rod.
     public float throwForce = 8f;
 
-    [Header("Throw Direction")]
-    public Vector2 throwDirection = new Vector2(1f, 0.2f);
-
     [Header("Distance Control")]
-    public float hookMaxDistance = 15f;
+    public float hookMaxDistance = 8f;
 
     // Store the original max distance
     private float originalMaxDistance;
 
     private GameObject currentHookHandler; // Changed from currentHook to currentHookHandler
-    public FishingProjectile currentHook; // Reference to the actual hook component
+    private FishingProjectile currentHook; // Reference to the actual hook component
 
-    private void Awake()
+    public FishingProjectile CurrentHook
+    {
+        get { return currentHook; }
+    }
+
+    private void Start()
     {
         // Store the original max distance on awake
         originalMaxDistance = hookMaxDistance;
+    }
+
+    private void Update()
+    {
+        //Check if spawn point has moved
+
     }
 
     public bool CanThrowHook()
@@ -36,8 +44,13 @@ public class HookSpawner : MonoBehaviour
     {
         if (!CanThrowHook()) return;
 
-        // Reset to original max distance before throwing
-        hookMaxDistance = originalMaxDistance;
+        Vector2 throwDirection = new Vector2(
+                UnityEngine.Random.Range(0.2f, 1f),
+                UnityEngine.Random.Range(0.2f, 1f)
+            );
+
+        // Set to original max distance before throwing, plus some variety
+        hookMaxDistance = originalMaxDistance + (UnityEngine.Random.Range(-2f, 2f));
 
         // Instantiate the hook handler (which contains both hook and waterline)
         currentHookHandler = Instantiate(hookHandlerPrefab, spawnPoint.position, spawnPoint.rotation);
@@ -54,7 +67,7 @@ public class HookSpawner : MonoBehaviour
             // Setup water detection
             SetupWaterDetection();
 
-            Debug.Log($"Hook handler thrown by {gameObject.name} with water detection!");
+            Debug.Log($"Hook handler thrown by {gameObject.name}!");
         }
         else
         {
@@ -86,14 +99,6 @@ public class HookSpawner : MonoBehaviour
         else
         {
             Debug.LogWarning("WaterCheck component not found in hook handler!");
-        }
-    }
-
-    public void ThrowProjectile()
-    {
-        if (currentHook != null)
-        {
-            currentHook.ThrowProjectile(throwDirection, throwForce);
         }
     }
 
