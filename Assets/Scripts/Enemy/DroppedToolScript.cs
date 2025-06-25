@@ -26,7 +26,6 @@ public class DroppedToolScript : EntityMovement
 
     protected override void Initialize(int powerLevel)
     {
-        //rb.AddForce(new Vector2 (0, 1) * 20, ForceMode2D.Impulse);
         rb.AddForce(dropForce * 20, ForceMode2D.Impulse);
         rb.AddTorque(-dropForce.x * 8, ForceMode2D.Impulse);
         Debug.Log($"Tool dropped in direction {dropForce}");
@@ -43,6 +42,12 @@ public class DroppedToolScript : EntityMovement
         {
             rb.AddTorque(dropForce.x * 8, ForceMode2D.Impulse);
             hasAntiRotated = true; // Prevents continuous anti-rotation
+        }
+
+        if (rb.velocity.magnitude < 0.1f)
+        {
+            GameObject parent = transform.parent?.gameObject;
+            Destroy(parent); // Destroy if nearly stationary
         }
     }
 
