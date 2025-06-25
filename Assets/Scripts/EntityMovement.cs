@@ -3,7 +3,7 @@ using UnityEngine;
 [RequireComponent(typeof(Rigidbody2D))]
 public abstract class EntityMovement : MonoBehaviour
 {
-    protected Rigidbody2D rb;
+    [SerializeField] protected Rigidbody2D rb;
 
     [Header("Character Stats")]
     [SerializeField] protected int _powerLevel;
@@ -23,15 +23,9 @@ public abstract class EntityMovement : MonoBehaviour
     [SerializeField] protected EntityType entityType = EntityType.Generic;
 
     // Add this property after the existing fields
-    public int PowerLevel
-    {
-        get => _powerLevel;
-    }
+    public int PowerLevel => _powerLevel;
 
-    public bool IsAboveWater
-    {
-        get => isAboveWater;
-    }
+    public bool IsAboveWater => isAboveWater;
 
     public enum EntityType
     {

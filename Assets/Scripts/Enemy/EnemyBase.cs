@@ -213,11 +213,8 @@ public abstract class EnemyBase : EntityMovement
     #region State Management
 
     // Make sure your GetState() method is public
-    public EnemyState GetState()
-    {
-        return _state;
-    }
-
+    public EnemyState GetState() => _state;
+    
     public virtual void ChangeState_Defeated() => _state = EnemyState.Defeated;
     public virtual void ChangeState_Eaten() => _state = EnemyState.Eaten;
     public virtual void ChangeState_Dead() => _state = EnemyState.Dead;
