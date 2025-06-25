@@ -116,6 +116,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dabed3281e442614d9ee2d7eb7ead20a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  rb: {fileID: 0}
   _powerLevel: 0
   _fatigue: 0
   _maxFatigue: 0
@@ -133,7 +134,7 @@ MonoBehaviour:
   isBeingHeld: 0
   player: {fileID: 0}
   maxStretchDistance: 50
-  stretchResistance: 25
+  stretchResistance: 500
   snapBackForce: 1
   maxStretchTime: 0.3
   stretchCurve:

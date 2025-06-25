@@ -249,13 +249,16 @@ public abstract class FishingProjectile : EntityMovement
 
         // Apply resistance force back to spawn point
         Vector3 directionToSpawn = (spawnPoint - player.transform.position).normalized;
-        float resistanceMultiplier = stretchCurve.Evaluate(currentStretchAmount);
-        Vector2 resistanceForce = directionToSpawn * stretchResistance * resistanceMultiplier;
+        // float resistanceMultiplier = stretchCurve.Evaluate(currentStretchAmount);
+        // Vector2 resistanceForce = directionToSpawn * (stretchResistance * resistanceMultiplier);
+        float stretchValue = stretchResistance * Time.deltaTime;
+        Vector2 resistanceForce = directionToSpawn * (stretchValue);
 
         playerRb.AddForce(resistanceForce, ForceMode2D.Impulse);
 
         OnLineStretching(currentStretchAmount);
-        Debug.Log($"Line stretch: {currentStretchAmount:F2} | Resistance: {stretchResistance * resistanceMultiplier:F2}");
+        // Debug.Log($"Line stretch: {currentStretchAmount:F2} | Resistance: {stretchResistance} | Resistance Multiplier: {resistanceMultiplier:F2} | Multiplier Value: {stretchResistance * resistanceMultiplier:F2}");
+        Debug.Log($"Line stretch: {currentStretchAmount:F2} | Resistance: {stretchResistance} | Stretch Value: {stretchValue:F2}");
     }
 
     private void SnapPlayerBack(Rigidbody2D playerRb)

@@ -186,6 +186,9 @@ public class LandEnemyScript : EnemyBase
 
     }
 
+    /// <summary>
+    /// Clean hookSpawner and reset variables like finishingToolEquipped, hasThrownHook, hookTimer
+    /// </summary>
     protected virtual void CleanupFishingTools()
     {
         // This will be overridden in FishermanScript for specific cleanup

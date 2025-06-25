@@ -16,10 +16,8 @@ public class HookSpawner : MonoBehaviour
     private GameObject currentHookHandler; // Changed from currentHook to currentHookHandler
     private FishingProjectile currentHook; // Reference to the actual hook component
 
-    public FishingProjectile CurrentHook
-    {
-        get { return currentHook; }
-    }
+    public FishingProjectile CurrentHook => currentHook;
+   
 
     private void Start()
     {
@@ -30,15 +28,9 @@ public class HookSpawner : MonoBehaviour
     private void Update()
     {
         //Check if spawn point has moved
-
     }
 
-    public bool CanThrowHook()
-    {
-        return hookHandlerPrefab != null &&
-               spawnPoint != null &&
-               currentHook == null;
-    }
+    public bool CanThrowHook() => hookHandlerPrefab != null && spawnPoint != null && currentHook == null;
 
     public void ThrowHook()
     {
@@ -118,7 +110,7 @@ public class HookSpawner : MonoBehaviour
                 Vector3 direction = (spawnPosition - currentPosition).normalized;
 
                 // Move hook slightly toward spawn point for visual effect
-                currentHook.transform.position += direction * retractionAmount * 0.5f;
+                currentHook.transform.position += direction * (retractionAmount * 0.5f);
 
                 Debug.Log($"Hook being retracted gradually - remaining length: {newLength:F1}");
             }
@@ -152,11 +144,13 @@ public class HookSpawner : MonoBehaviour
         return 0;
     }
 
-    public bool HasActiveHook()
-    {
-        return currentHookHandler != null;
-    }
+    
+    public bool HasActiveHook() => currentHookHandler != null;
 
+    /// <summary>
+    /// Destroys currentHookHandler and clean it's value
+    /// Also clean currentHook and reset hookMaxDistance
+    /// </summary>
     public void OnHookDestroyed()
     {
         if (currentHookHandler != null)
@@ -171,5 +165,4 @@ public class HookSpawner : MonoBehaviour
 
         Debug.Log($"Hook handler and references cleared for {gameObject.name}");
     }
-
 }

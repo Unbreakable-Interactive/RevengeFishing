@@ -102,10 +102,9 @@ public abstract class EnemyBase : EntityMovement
     public override void SetMovementMode(bool aboveWater)
     {
         base.SetMovementMode(aboveWater); // Call base implementation
-
     }
 
-    public float TakeFatigue(int playerPowerLevel)
+    public void TakeFatigue(int playerPowerLevel)
     {
         // 5% more fatigue
         _fatigue += (int)((float)playerPowerLevel * .05f);
@@ -116,7 +115,7 @@ public abstract class EnemyBase : EntityMovement
             TriggerDefeat();
         }
 
-        return Mathf.Clamp(_fatigue, 0, _maxFatigue);
+        // return Mathf.Clamp(_fatigue, 0, _maxFatigue);
     }
 
     protected virtual void TriggerDefeat()
@@ -156,6 +155,9 @@ public abstract class EnemyBase : EntityMovement
         EnemyDie();
     }
 
+    /// <summary>
+    /// Destroy FishermanHandler (that is the father who contains fisherman and waterline)
+    /// </summary>
     protected virtual void TriggerEscape()
     {
         Debug.Log($"{gameObject.name} has ESCAPED! The player can no longer catch this enemy.");
@@ -164,6 +166,10 @@ public abstract class EnemyBase : EntityMovement
         GameObject objectToDestroy = transform.parent != null ? transform.parent.gameObject : gameObject;
         Destroy(objectToDestroy);
     }
+    
+    /// <summary>
+    /// Set time to next action
+    /// </summary>
     protected virtual void ScheduleNextAction()
     {
         float actionDuration = UnityEngine.Random.Range(minActionTime, maxActionTime);
@@ -204,9 +210,7 @@ public abstract class EnemyBase : EntityMovement
         // Destroy the parent FishermanHandler (or this object if no parent)
         GameObject objectToDestroy = transform.parent != null ? transform.parent.gameObject : gameObject;
         Destroy(objectToDestroy);
-
     }
-
 
     #endregion
 
