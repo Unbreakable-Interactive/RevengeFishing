@@ -2475,6 +2475,18 @@ PrefabInstance:
       propertyPath: assignedPlatform
       value: 
       objectReference: {fileID: 1130133055}
+    - target: {fileID: 8244682631085026103, guid: a8a1f6cfed63bb145a560de9fc880833, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 1.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 8774570743886161678, guid: a8a1f6cfed63bb145a560de9fc880833, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 1.21
+      objectReference: {fileID: 0}
+    - target: {fileID: 8774570743886161678, guid: a8a1f6cfed63bb145a560de9fc880833, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 2.38
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

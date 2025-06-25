@@ -46,7 +46,7 @@ public class HookSpawner : MonoBehaviour
 
         Vector2 throwDirection = new Vector2(
                 UnityEngine.Random.Range(0.2f, 1f),
-                UnityEngine.Random.Range(0.2f, 1f)
+                UnityEngine.Random.Range(0.2f, 0.5f)
             );
 
         // Set to original max distance before throwing, plus some variety

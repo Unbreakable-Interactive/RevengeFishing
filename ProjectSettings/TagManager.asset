@@ -7,6 +7,7 @@ TagManager:
   - Enemy
   - PlayerCollider
   - FishingRod
+  - DropTool
   layers:
   - Default
   - TransparentFX

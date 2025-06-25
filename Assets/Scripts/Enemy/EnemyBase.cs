@@ -695,22 +695,7 @@ public abstract class EnemyBase : EntityMovement
         if (toolDropPrefab != null)
         {
             // Instantiate tool only when needed
-            GameObject droppedTool = Instantiate(toolDropPrefab, transform.position, transform.rotation);
-
-            // Add physics for dropping effect
-            Rigidbody2D toolRb = droppedTool.GetComponent<Rigidbody2D>();
-            if (toolRb == null)
-            {
-                toolRb = droppedTool.AddComponent<Rigidbody2D>();
-            }
-
-            // Apply random force for "flying" effect
-            Vector2 dropForce = new Vector2(
-                UnityEngine.Random.Range(-5f, 5f),
-                UnityEngine.Random.Range(2f, 6f)
-            );
-            toolRb.AddForce(dropForce, ForceMode2D.Impulse);
-            toolRb.AddTorque(-dropForce.x * 4, ForceMode2D.Impulse);
+            GameObject droppedToolHandler = Instantiate(toolDropPrefab, transform.position, transform.rotation);
 
             if (assignedPlatform != null && assignedPlatform.showDebugInfo)
             {

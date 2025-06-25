@@ -1,4 +1,5 @@
 using UnityEngine;
+using static EnemyBase;
 
 public class WaterCheck : MonoBehaviour
 {
@@ -24,4 +25,15 @@ public class WaterCheck : MonoBehaviour
 
         Debug.Log($"{other.name} {(aboveWater ? "exited" : "entered")} water!");
     }
+
+    //private void OnTriggerEnter2D(Collider2D collision)
+    //{
+    //    if (collision.CompareTag("DropTool"))
+    //    {
+    //        bool aboveWater = collision.transform.position.y > transform.position.y;
+
+    //        entityMovement.SetMovementMode(aboveWater);
+
+    //    }
+    //}
 }
