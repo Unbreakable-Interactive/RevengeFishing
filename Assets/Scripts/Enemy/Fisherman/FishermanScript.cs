@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class FishermanScript : EnemyBase
+public class FishermanScript : LandEnemyScript
 {
     [Header("Fisherman Configuration")]
     public FishermanConfig fishermanConfig = new FishermanConfig();
@@ -10,7 +10,6 @@ public class FishermanScript : EnemyBase
     protected override void Start()
     {
         base.Start();
-        _type = EnemyType.Land;
     }
 
     protected override void Update()
