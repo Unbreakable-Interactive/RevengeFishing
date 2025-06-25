@@ -41,6 +41,7 @@ public class DroppedToolScript : EntityMovement
         if (!hasAntiRotated)
         {
             rb.AddTorque(dropForce.x * 8, ForceMode2D.Impulse);
+            rb.drag = 2f;
             hasAntiRotated = true; // Prevents continuous anti-rotation
         }
 

@@ -68,8 +68,8 @@ public class FishermanScript : LandEnemyScript
                 // chance to equip fishing tool when idle
                 if (UnityEngine.Random.value < fishermanConfig.equipToolChance)
                 {
-                    TryEquipFishingTool();
                     ScheduleNextAction();
+                    TryEquipFishingTool();
                     return;
                 }
             }
@@ -92,6 +92,7 @@ public class FishermanScript : LandEnemyScript
                 else if (random < (fishermanConfig.hookThrowChance + fishermanConfig.unequipToolChance))
                 {
                     // Put away fishing tool
+                    ScheduleNextAction();
                     TryUnequipFishingTool();
                     return;
                 }

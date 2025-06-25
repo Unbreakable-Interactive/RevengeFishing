@@ -97,18 +97,6 @@ public abstract class EnemyBase : EntityMovement
 
     public abstract void WaterMovement();
 
-    protected virtual void HandleEnemyMovement()
-    {
-        if (isAboveWater)
-        {
-            AirborneBehavior();
-        }
-        else
-        {
-            UnderwaterBehavior();
-        }
-    }
-
 
     // Override SetMovementMode to add enemy-specific behavior
     public override void SetMovementMode(bool aboveWater)
@@ -176,11 +164,16 @@ public abstract class EnemyBase : EntityMovement
         GameObject objectToDestroy = transform.parent != null ? transform.parent.gameObject : gameObject;
         Destroy(objectToDestroy);
     }
+    protected virtual void ScheduleNextAction()
+    {
+        float actionDuration = UnityEngine.Random.Range(minActionTime, maxActionTime);
+        nextActionTime = Time.time + actionDuration;
+    }
 
     protected virtual void InterruptAllActions()
     {
         // Clear any scheduled actions
-        nextActionTime = float.MaxValue; // Prevent further AI decisions
+        ScheduleNextAction(); // Prevent further AI decisions
 
         Debug.Log($"{gameObject.name} - All actions interrupted due to defeat");
     }

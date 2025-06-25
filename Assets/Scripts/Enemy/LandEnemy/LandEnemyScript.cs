@@ -299,6 +299,8 @@ public class LandEnemyScript : EnemyBase
     // Simplified LandEnemyScript.cs - remove ALL fisherman-specific code
     protected virtual void ChooseRandomLandAction()
     {
+        if (fishingToolEquipped) return;
+
         // Only handle basic enemy movement - no fishing logic!
         float randomValue = UnityEngine.Random.value;
 
@@ -323,7 +325,7 @@ public class LandEnemyScript : EnemyBase
     //actually executes the action chosen by ChooseRandomLandAction
     protected virtual void ExecuteLandMovementBehaviour()
     {
-        if (!isGrounded || assignedPlatform == null) return;
+        if (fishingToolEquipped) return;
 
         Vector2 movement = Vector2.zero;
 
@@ -331,17 +333,22 @@ public class LandEnemyScript : EnemyBase
         switch (_landMovementState)
         {
             case LandMovementState.Idle:
+                Debug.Log("Idle state, no movement");
                 break;
             case LandMovementState.WalkLeft:
+                Debug.Log("Walking left");
                 movement = Vector2.left * walkingSpeed;
                 break;
             case LandMovementState.WalkRight:
+                Debug.Log("Walking right");
                 movement = Vector2.right * walkingSpeed;
                 break;
             case LandMovementState.RunLeft:
+                Debug.Log("Running left");
                 movement = Vector2.left * runningSpeed;
                 break;
             case LandMovementState.RunRight:
+                Debug.Log("Running right");
                 movement = Vector2.right * runningSpeed;
                 break;
         }
@@ -389,13 +396,6 @@ public class LandEnemyScript : EnemyBase
             _landMovementState = LandMovementState.Idle; // Fallback
         }
     }
-
-    protected virtual void ScheduleNextAction()
-    {
-        float actionDuration = UnityEngine.Random.Range(minActionTime, maxActionTime);
-        nextActionTime = Time.time + actionDuration;
-    }
-
     #endregion
 
     #region Fishing Tool System
