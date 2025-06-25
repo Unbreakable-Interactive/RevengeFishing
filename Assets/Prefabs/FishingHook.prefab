@@ -132,10 +132,10 @@ MonoBehaviour:
   spawner: {fileID: 0}
   isBeingHeld: 0
   player: {fileID: 0}
-  maxStretchDistance: 3
-  stretchResistance: 15
-  snapBackForce: 10
-  maxStretchTime: 0.8
+  maxStretchDistance: 50
+  stretchResistance: 25
+  snapBackForce: 1
+  maxStretchTime: 0.3
   stretchCurve:
     serializedVersion: 2
     m_Curve:

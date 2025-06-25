@@ -18,8 +18,8 @@ public abstract class FishingProjectile : EntityMovement
     public System.Action<bool> OnPlayerInteraction;
 
     [Header("Elastic Line Behavior")]
-    [SerializeField] private float maxStretchDistance = 3f;    // How far beyond maxDistance player can stretch
-    [SerializeField] private float stretchResistance = 15f;    // Resistance force when stretching
+    [SerializeField] private float maxStretchDistance = 8f;    // How far beyond maxDistance player can stretch
+    [SerializeField] private float stretchResistance = 10f;    // Resistance force when stretching
     [SerializeField] private float snapBackForce = 10f;        // Force applied when snapping back
     [SerializeField] private float maxStretchTime = 0.8f;      // Max time allowed in stretch zone
     [SerializeField] private AnimationCurve stretchCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
@@ -206,13 +206,13 @@ public abstract class FishingProjectile : EntityMovement
         }
 
         // Beyond max distance - BOTH constrain player AND move hook
-        if (currentDistance > maxDistance && currentDistance <= totalMaxDistance)
+        if (currentDistance > maxDistance)
         {
             HandleStretchZone(currentDistance, playerRb);
             MoveHookToFollowPlayer(); // Hook follows player
         }
 
-        //// Hard limit - force snap back if too far or stretched too long
+        //Hard limit - force snap back if too far or stretched too long
         //if (currentDistance > totalMaxDistance || (isStretching && stretchTimer > maxStretchTime))
         //{
         //    SnapPlayerBack(playerRb);
@@ -240,26 +240,22 @@ public abstract class FishingProjectile : EntityMovement
         {
             isStretching = true;
             stretchTimer = 0f;
-            OnStretchStarted?.Invoke(); // Notify visual system
+            OnStretchStarted?.Invoke();
             Debug.Log("Fishing line is stretching!");
         }
 
         stretchTimer += Time.deltaTime;
-
-        // Notify visual system of stretch changes
         OnStretchChanged?.Invoke(currentStretchAmount, stretchTimer, maxStretchTime);
 
-        // Apply increasing resistance force as stretch increases
+        // Apply resistance force back to spawn point
         Vector3 directionToSpawn = (spawnPoint - player.transform.position).normalized;
         float resistanceMultiplier = stretchCurve.Evaluate(currentStretchAmount);
         Vector2 resistanceForce = directionToSpawn * stretchResistance * resistanceMultiplier;
 
-        playerRb.AddForce(resistanceForce, ForceMode2D.Force);
+        playerRb.AddForce(resistanceForce, ForceMode2D.Impulse);
 
-        // Visual/audio feedback for stretching
         OnLineStretching(currentStretchAmount);
-
-        Debug.Log($"Line stretch: {currentStretchAmount:F2} | Timer: {stretchTimer:F2} | Resistance: {resistanceMultiplier:F2}");
+        Debug.Log($"Line stretch: {currentStretchAmount:F2} | Resistance: {stretchResistance * resistanceMultiplier:F2}");
     }
 
     private void SnapPlayerBack(Rigidbody2D playerRb)
