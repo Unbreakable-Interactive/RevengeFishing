@@ -103,6 +103,7 @@ public class SimpleObjectPool : MonoBehaviour
         if (enemyBase != null)
         {
             enemyBase.Initialize();
+            enemyBase.ChangeState_Alive();
             Debug.Log($"Spawned {poolName} at {position} - Platform assignment will happen on collision");
         }
 
@@ -123,7 +124,8 @@ public class SimpleObjectPool : MonoBehaviour
         enemy.platformBoundsCalculated = false;
         enemy.platformLeftEdge = 0f;
         enemy.platformRightEdge = 0f;
-        enemy.isGrounded = false;
+        // enemy.isGrounded = false;
+        enemy.SetEnemyNotGrounded();
 
         Debug.Log($"Enemy {enemy.name} assignment cleaned up and reset");
     }

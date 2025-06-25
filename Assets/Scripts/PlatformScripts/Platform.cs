@@ -37,15 +37,15 @@ public class Platform : MonoBehaviour
             }
         }
 
-        SetupExistingEnemyCollisions();
+        SetupSelectiveCollisions();
 
         if (showDebugInfo)
         {
-            Debug.Log($"Platform {gameObject.name} initialized with {assignedEnemies.Count} pre-assigned enemies");
+            Debug.Log($"Platform {gameObject.name} set up selective collisions");
         }
     }
 
-    // FIXED: Collision2D parameter, not Collider2D!
+    // ✅ FIXED: Restore old version collision detection
     void OnCollisionEnter2D(Collision2D collision)
     {
         EnemyBase enemy = collision.gameObject.GetComponent<EnemyBase>();
@@ -60,27 +60,23 @@ public class Platform : MonoBehaviour
         EnemyBase enemy = collision.gameObject.GetComponent<EnemyBase>();
         if (enemy != null)
         {
-            // Only unregister if the enemy is actually leaving the platform
             if (assignedEnemies.Contains(enemy))
             {
                 if (showDebugInfo)
                 {
                     Debug.Log($"Enemy {enemy.name} LEFT platform {gameObject.name}");
                 }
-                // Don't unregister immediately - enemy might be jumping or moving on platform
-                // UnregisterEnemy(enemy);
             }
         }
     }
 
+    // ✅ FIXED: Add platform assignment callback
     private void RegisterEnemyOnCollision(EnemyBase enemy)
     {
         if (enemy == null) return;
         
-        // Check if enemy is already assigned to this platform
         if (assignedEnemies.Contains(enemy)) return;
         
-        // Remove from previous platform if assigned
         Platform previousPlatform = enemy.GetAssignedPlatform();
         if (previousPlatform != null && previousPlatform != this)
         {
@@ -91,20 +87,20 @@ public class Platform : MonoBehaviour
             }
         }
         
-        // Assign to this platform
         assignedEnemies.Add(enemy);
         enemy.SetAssignedPlatform(this);
         
-        // Setup collision
+        // ✅ CRITICAL: Trigger AI activation after platform assignment
+        enemy.OnPlatformAssigned(this);
+        
         Collider2D enemyCollider = enemy.GetComponent<Collider2D>();
         if (enemyCollider != null && platformCollider != null)
         {
             Physics2D.IgnoreCollision(platformCollider, enemyCollider, false);
         }
 
-        // Force recalculate platform bounds
         enemy.platformBoundsCalculated = false;
-        enemy.isGrounded = true;
+        // enemy.isGrounded = true;
 
         if (showDebugInfo)
         {
@@ -112,28 +108,23 @@ public class Platform : MonoBehaviour
         }
     }
 
-    void SetupExistingEnemyCollisions()
+    void SetupSelectiveCollisions()
     {
-        foreach (EnemyBase enemy in assignedEnemies)
+        EnemyBase[] allEnemies = FindObjectsOfType<EnemyBase>();
+        foreach (EnemyBase enemy in allEnemies)
         {
-            if (enemy != null)
+            Collider2D enemyCollider = enemy.GetComponent<Collider2D>();
+            if (enemyCollider != null)
             {
-                SetupEnemyCollisionInternal(enemy);
-            }
-        }
-    }
-
-    private void SetupEnemyCollisionInternal(EnemyBase enemy)
-    {
-        Collider2D enemyCollider = enemy.GetComponent<Collider2D>();
-        if (enemyCollider != null && platformCollider != null)
-        {
-            Physics2D.IgnoreCollision(platformCollider, enemyCollider, false);
-            enemy.SetAssignedPlatform(this);
-            
-            if (showDebugInfo)
-            {
-                Debug.Log($"Setup collision for {enemy.name} on platform {gameObject.name}");
+                if (assignedEnemies.Contains(enemy))
+                {
+                    Physics2D.IgnoreCollision(platformCollider, enemyCollider, false);
+                    enemy.assignedPlatform = this;
+                }
+                else
+                {
+                    Physics2D.IgnoreCollision(platformCollider, enemyCollider, true);
+                }
             }
         }
     }
@@ -141,15 +132,46 @@ public class Platform : MonoBehaviour
     public void UpdateEnemyCollision(EnemyBase enemy, bool shouldCollide)
     {
         Collider2D enemyCollider = enemy.GetComponent<Collider2D>();
-        if (enemyCollider != null && platformCollider != null)
+        if (enemyCollider != null)
         {
             Physics2D.IgnoreCollision(platformCollider, enemyCollider, !shouldCollide);
         }
     }
 
+    public void ScanForNewEnemies(float radius = 10f)
+    {
+        Collider2D[] nearbyColliders = Physics2D.OverlapCircleAll(transform.position, radius);
+        foreach (Collider2D col in nearbyColliders)
+        {
+            EnemyBase enemy = col.GetComponent<EnemyBase>();
+            if (enemy != null && !assignedEnemies.Contains(enemy))
+            {
+                if (enemy.GetAssignedPlatform() == null)
+                {
+                    RegisterEnemyAtRuntime(enemy);
+                }
+            }
+        }
+    }
+
     public void RegisterEnemyAtRuntime(EnemyBase enemy)
     {
-        RegisterEnemyOnCollision(enemy);
+        if (enemy != null && !assignedEnemies.Contains(enemy))
+        {
+            assignedEnemies.Add(enemy);
+            enemy.SetAssignedPlatform(this);
+
+            Collider2D enemyCollider = enemy.GetComponent<Collider2D>();
+            if (enemyCollider != null && platformCollider != null)
+            {
+                Physics2D.IgnoreCollision(enemyCollider, platformCollider, false);
+            }
+
+            if (showDebugInfo)
+            {
+                Debug.Log($"Auto-assigned {enemy.name} to platform {gameObject.name}");
+            }
+        }
     }
 
     public void UnregisterEnemy(EnemyBase enemy)

@@ -62,26 +62,14 @@ public abstract class EntityMovement : MonoBehaviour
     {
         if (rb == null)
         {
-            rb = GetComponent<Rigidbody2D>();
-            if (rb == null)
-            {
-                rb = gameObject.AddComponent<Rigidbody2D>();
-                Debug.Log($"{gameObject.name} - Added missing Rigidbody2D component");
-            }
-            else
-            {
-                Debug.Log($"{gameObject.name} - Found existing Rigidbody2D component");
-            }
+            rb = GetComponent<Rigidbody2D>() ?? gameObject.AddComponent<Rigidbody2D>();
         }
     }
 
     protected virtual void Update()
     {
         // SAFETY CHECK: Don't do anything if not initialized
-        if (!isInitialized || rb == null)
-        {
-            return;
-        }
+        if (!isInitialized || rb == null) return;
 
         if (isAboveWater)
         {

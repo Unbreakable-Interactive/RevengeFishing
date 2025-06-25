@@ -83,13 +83,17 @@ public class HookSpawner : MonoBehaviour
 
         if (currentHook != null)
         {
+            // ✅ CRITICAL FIX: Set the spawn point BEFORE calling other methods
+            currentHook.Initialize();
+            currentHook.SetSpawnPoint(spawnPoint.position);
+            
             currentHook.maxDistance = hookMaxDistance;
             currentHook.SetSpawner(this);
             currentHook.ThrowProjectile(throwDirection, throwForce);
 
             SetupWaterDetection();
 
-            Debug.Log($"✅ Hook thrown successfully by {gameObject.name}!");
+            Debug.Log($"✅ Hook thrown successfully by {gameObject.name}! Spawn point: {spawnPoint.position}");
         }
         else
         {
@@ -194,3 +198,4 @@ public class HookSpawner : MonoBehaviour
         Debug.Log($"Hook handler and references cleared for {gameObject.name}");
     }
 }
+

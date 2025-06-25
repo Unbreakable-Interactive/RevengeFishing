@@ -35,7 +35,6 @@ public abstract class FishingProjectile : EntityMovement
     public System.Action OnStretchStarted;
     public System.Action OnStretchEnded;
 
-
     public virtual void Initialize()
     {
         // Call parent Start() to initialize EntityMovement
@@ -50,7 +49,6 @@ public abstract class FishingProjectile : EntityMovement
 
     protected override void Update()
     {
-
         if (isBeingHeld && player != null)
         {
             // Position hook at player center
@@ -64,9 +62,7 @@ public abstract class FishingProjectile : EntityMovement
             // Normal behavior
             base.Update();
             ConstrainToMaxDistance();
-
         }
-
     }
 
     private void OnTriggerEnter2D(Collider2D other)
@@ -124,8 +120,20 @@ public abstract class FishingProjectile : EntityMovement
             hookCollider.isTrigger = true;
         }
 
-        spawnPoint = transform.position;
+        // ✅ CRITICAL FIX: DON'T overwrite spawnPoint here!
+        // The spawnPoint should be set by the HookSpawner, not by the hook itself
+        // spawnPoint = transform.position; // REMOVED THIS LINE!
+        
         OnProjectileSpawned();
+        
+        Debug.Log($"✅ Hook initialized. SpawnPoint: {spawnPoint}, Current Position: {transform.position}");
+    }
+
+    // ✅ NEW METHOD: Set spawn point from HookSpawner
+    public void SetSpawnPoint(Vector3 spawnPosition)
+    {
+        spawnPoint = spawnPosition;
+        Debug.Log($"✅ Hook spawn point set to: {spawnPoint}");
     }
 
     protected virtual void ConstrainToMaxDistance()
@@ -178,7 +186,6 @@ public abstract class FishingProjectile : EntityMovement
         Destroy(gameObject);
     }
 
-    
     private void ConstrainPlayerToMaxDistance()
     {
         if (player == null) return;
@@ -210,12 +217,6 @@ public abstract class FishingProjectile : EntityMovement
             HandleStretchZone(currentDistance, playerRb);
             MoveHookToFollowPlayer(); // Hook follows player
         }
-
-        //// Hard limit - force snap back if too far or stretched too long
-        //if (currentDistance > totalMaxDistance || (isStretching && stretchTimer > maxStretchTime))
-        //{
-        //    SnapPlayerBack(playerRb);
-        //}
     }
 
     private void MoveHookToFollowPlayer()
@@ -391,5 +392,4 @@ public abstract class FishingProjectile : EntityMovement
             player.RemoveBitingHook(this);
         }
     }
-
 }
