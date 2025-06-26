@@ -4,6 +4,9 @@ using UnityEngine;
 
 public class LandEnemyScript : EnemyBase
 {
+    [Header("Land Enemy Configuration")]
+    public LandEnemyConfig landEnemyConfig = new LandEnemyConfig();
+
     #region Land Enemy Variables
 
     // Movement states for land enemies
@@ -35,12 +38,10 @@ public class LandEnemyScript : EnemyBase
     // For dropping tools when defeated
     [SerializeField] protected GameObject toolDropPrefab; // Tool to spawn when defeated
 
-    protected bool isGrounded;
-
     // Platform bounds
-    protected float platformLeftEdge;
-    protected float platformRightEdge;
-    protected bool platformBoundsCalculated;
+    public float platformLeftEdge;
+    public float platformRightEdge;
+    public bool platformBoundsCalculated;
 
     [SerializeField] protected float maxUpwardVelocity; // For when they swim upward
 
@@ -73,6 +74,30 @@ public class LandEnemyScript : EnemyBase
         return assignedPlatform;
     }
 
+    public virtual void OnPlatformAssigned(Platform platform)
+    {
+        Debug.Log($"{gameObject.name} - Platform assigned: {platform.name}");
+
+        if (Time.time >= nextActionTime - 0.5f)
+        {
+            nextActionTime = Time.time + 0.5f;
+        }
+    }
+
+    public void ClearPlatformAssignment()
+    {
+        if (assignedPlatform != null)
+        {
+            assignedPlatform.UnregisterEnemy(this);
+            assignedPlatform = null;
+        }
+
+        platformBoundsCalculated = false;
+        platformLeftEdge = 0f;
+        platformRightEdge = 0f;
+
+        Debug.Log($"{gameObject.name} platform assignment cleared");
+    }
     #endregion
 
     #region Basic Actions
@@ -82,19 +107,28 @@ public class LandEnemyScript : EnemyBase
         base.Start();
     }
 
-    protected override void Initialize(int powerLevel)
+    public override void Initialize()
     {
-        base.Initialize(powerLevel);
-        isGrounded = false;
+        base.Initialize();
 
+        EnemySetup();
+    }
+
+    protected override void EnemySetup()
+    {
+        base.EnemySetup();
         platformBoundsCalculated = false;
 
-        //// weight must be a random value between x and y. Set to default 6f for now
-        //weight = 6f; // How much the enemy sinks in water; varies between 60 and 100 kg
+        nextActionTime = Time.time + UnityEngine.Random.Range(0.5f, 2f);
+        _landMovementState = LandMovementState.Idle;
 
-        hookSpawner = GetComponent<HookSpawner>() ?? gameObject.AddComponent<HookSpawner>();
+        hookSpawner = GetComponent<HookSpawner>();
+        if (hookSpawner == null)
+        {
+            hookSpawner = gameObject.AddComponent<HookSpawner>();
+        }
+        hookSpawner.Initialize();
 
-        // Set initial movement mode
         SetMovementMode(isAboveWater);
 
         if (assignedPlatform != null && !platformBoundsCalculated)
@@ -102,8 +136,8 @@ public class LandEnemyScript : EnemyBase
             CalculatePlatformBounds();
         }
 
+        Debug.Log($"{gameObject.name} - Enemy initialized with power level {_powerLevel}");
     }
-
     // Update is called once per frame
     protected override void Update()
     {
@@ -230,8 +264,6 @@ public class LandEnemyScript : EnemyBase
     #region Land Movement Logic
     public virtual void LandWalk()
     {
-        CheckGroundedStatus();
-
         // Use virtual AI decision method
         if (Time.time >= nextActionTime)
         {
@@ -270,13 +302,6 @@ public class LandEnemyScript : EnemyBase
                 Debug.Log($"Platform bounds calculated for {gameObject.name}: Left={platformLeftEdge}, Right={platformRightEdge}");
             }
         }
-    }
-
-    protected virtual void CheckGroundedStatus()
-    {
-        // Simple ground check - raycast down
-        RaycastHit2D hit = Physics2D.Raycast(transform.position, Vector2.down, 1f);
-        isGrounded = hit.collider != null && hit.collider.gameObject == assignedPlatform?.gameObject;
     }
 
     protected virtual void CheckPlatformBounds()

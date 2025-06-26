@@ -8,14 +8,14 @@ public class DroppedToolScript : EntityMovement
     private bool hasAntiRotated = false;
 
     // Start is called before the first frame update
-    protected override void Start()
+    protected void Start()
     {
         dropForce = new Vector2(
             UnityEngine.Random.Range(-1f, 1f),
             UnityEngine.Random.Range(0.2f, 1f)
         );
 
-        base.Start();
+        Initialize();
     }
 
     // Update is called once per frame
@@ -24,8 +24,10 @@ public class DroppedToolScript : EntityMovement
         base.Update();
     }
 
-    protected override void Initialize(int powerLevel)
+    public override void Initialize()
     {
+        base.Initialize();
+
         rb.AddForce(dropForce * 20, ForceMode2D.Impulse);
         rb.AddTorque(-dropForce.x * 8, ForceMode2D.Impulse);
         Debug.Log($"Tool dropped in direction {dropForce}");

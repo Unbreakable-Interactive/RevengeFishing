@@ -19,10 +19,43 @@ public class HookSpawner : MonoBehaviour
     public FishingProjectile CurrentHook => currentHook;
    
 
-    private void Start()
+    private void Awake()
     {
         // Store the original max distance on awake
         originalMaxDistance = hookMaxDistance;
+    }
+
+    public void Initialize()
+    {
+        Debug.Log($"HookSpawner.Initialize() called on {gameObject.name}");
+
+        // AUTO-SETUP MISSING REFERENCES
+        if (hookHandlerPrefab == null)
+        {
+            // Try to find the prefab automatically
+            hookHandlerPrefab = Resources.Load<GameObject>("FishingHookHandler");
+            if (hookHandlerPrefab == null)
+            {
+                Debug.LogError($"HookSpawner on {gameObject.name}: hookHandlerPrefab is missing! Assign it in Inspector or place FishingHookHandler in Resources folder!");
+                return;
+            }
+            else
+            {
+                Debug.Log($"HookSpawner on {gameObject.name}: Auto-found hookHandlerPrefab in Resources");
+            }
+        }
+
+        if (spawnPoint == null)
+        {
+            // Auto-create spawn point
+            GameObject spawnGO = new GameObject("AutoHookSpawnPoint");
+            spawnGO.transform.SetParent(transform);
+            spawnGO.transform.localPosition = new Vector3(1f, 0f, 0f); // In front of fisherman
+            spawnPoint = spawnGO.transform;
+            Debug.Log($"HookSpawner on {gameObject.name}: Auto-created spawn point");
+        }
+
+        Debug.Log($"HookSpawner initialized successfully on {gameObject.name}: CanThrow={CanThrowHook()}");
     }
 
     private void Update()
@@ -52,6 +85,9 @@ public class HookSpawner : MonoBehaviour
 
         if (currentHook != null)
         {
+            currentHook.Initialize(); // Ensure the hook is initialized
+            currentHook.SetSpawnPoint(spawnPoint.position);
+
             currentHook.maxDistance = hookMaxDistance;
             currentHook.SetSpawner(this);
             currentHook.ThrowProjectile(throwDirection, throwForce);

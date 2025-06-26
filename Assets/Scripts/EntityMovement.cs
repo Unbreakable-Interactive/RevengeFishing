@@ -10,17 +10,23 @@ public abstract class EntityMovement : MonoBehaviour
     [SerializeField] protected int _fatigue;
     [SerializeField] protected int _maxFatigue;
 
-    [Header("Water/Air Movement Settings")]
+    [Header("Is Above Water?")]
     [SerializeField] protected bool isAboveWater = true;
+
+    [Header("Air Movement Settings")]
     [SerializeField] protected float airGravityScale = 2f;
-    [SerializeField] protected float underwaterGravityScale = 0f;
     [SerializeField] protected float airDrag = 1.5f;
-    [SerializeField] protected float underwaterDrag = 0.5f;
     [SerializeField] protected float airMaxSpeed = 3f;
+
+    [Header("Underwater Movement Settings")]
+    [SerializeField] protected float underwaterGravityScale = 0f;
+    [SerializeField] protected float underwaterDrag = 0.5f;
     [SerializeField] protected float underwaterMaxSpeed = 5f;
 
     [Header("Entity Type")]
     [SerializeField] protected EntityType entityType = EntityType.Generic;
+
+    private bool isInitialized = false;
 
     // Add this property after the existing fields
     public int PowerLevel => _powerLevel;
@@ -37,23 +43,36 @@ public abstract class EntityMovement : MonoBehaviour
 
     protected virtual void Awake()
     {
-        rb = GetComponentInChildren<Rigidbody2D>();
+        EnsureRigidbody2D();
+    }
+
+    private void EnsureRigidbody2D()
+    {
         if (rb == null)
         {
-            rb = gameObject.AddComponent<Rigidbody2D>();
+            rb = GetComponent<Rigidbody2D>() ?? gameObject.AddComponent<Rigidbody2D>();
         }
     }
 
-    protected virtual void Start()
+    public virtual void Initialize()
     {
-        Initialize(_powerLevel);
-        SetMovementMode(isAboveWater);
-    }
+        EnsureRigidbody2D();
 
-    protected abstract void Initialize(int powerLevel);
+        if (GetComponent<PlayerMovement>() != null)
+        {
+            _powerLevel = 100;
+        }
+
+        SetMovementMode(isAboveWater);
+        isInitialized = true;
+
+        Debug.Log($"{gameObject.name} - EntityMovement initialized successfully");
+    }
 
     protected virtual void Update()
     {
+        if (!isInitialized || rb == null) return;
+
         if (isAboveWater)
         {
             AirborneBehavior();

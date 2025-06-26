@@ -13,7 +13,7 @@ public class PlayerStats : MonoBehaviour
     [SerializeField] private Phase phase = Phase.infant;
 
     // Start is called before the first frame update
-    void Start()
+    public void Initialize()
     {
         starterLevel = powerLevel;
         SetPhase();

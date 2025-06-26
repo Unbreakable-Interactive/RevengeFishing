@@ -1,5 +1,6 @@
-using UnityEngine;
 using System.Collections.Generic;
+using System.Linq;
+using UnityEngine;
 
 public class Platform : MonoBehaviour
 {
@@ -20,10 +21,22 @@ public class Platform : MonoBehaviour
     void Start()
     {
         platformCollider = GetComponent<Collider2D>();
-        platformCollider.isTrigger = false; // Make it solid
+        if (platformCollider == null)
+        {
+            Debug.LogError($"Platform {gameObject.name} missing Collider2D component!");
+            return;
+        }
 
-        Collider2D playerCollider = player.GetComponentInChildren<Collider2D>();
-        Physics2D.IgnoreCollision(platformCollider, playerCollider, true);
+        platformCollider.isTrigger = false;
+
+        if (player != null)
+        {
+            Collider2D playerCollider = player.GetComponentInChildren<Collider2D>();
+            if (playerCollider != null)
+            {
+                Physics2D.IgnoreCollision(platformCollider, playerCollider, true);
+            }
+        }
 
         // Set up selective collisions
         SetupSelectiveCollisions();
@@ -31,6 +44,66 @@ public class Platform : MonoBehaviour
         if (showDebugInfo)
         {
             Debug.Log($"Platform {gameObject.name} set up selective collisions");
+        }
+    }
+
+    void OnCollisionEnter2D(Collision2D collision)
+    {
+        LandEnemyScript enemy = collision.gameObject.GetComponent<LandEnemyScript>();
+        if (enemy != null)
+        {
+            RegisterEnemyOnCollision(enemy);
+        }
+    }
+
+    void OnCollisionExit2D(Collision2D collision)
+    {
+        EnemyBase enemy = collision.gameObject.GetComponent<EnemyBase>();
+        if (enemy != null)
+        {
+            if (assignedEnemies.Contains(enemy))
+            {
+                if (showDebugInfo)
+                {
+                    Debug.Log($"Enemy {enemy.name} LEFT platform {gameObject.name}");
+                }
+            }
+        }
+    }
+    private void RegisterEnemyOnCollision(LandEnemyScript enemy)
+    {
+        if (enemy == null) return;
+
+        if (assignedEnemies.Contains(enemy)) return;
+
+        Platform previousPlatform = enemy.GetAssignedPlatform();
+        if (previousPlatform != null && previousPlatform != this)
+        {
+            previousPlatform.UnregisterEnemy(enemy);
+            if (showDebugInfo)
+            {
+                Debug.Log($"Enemy {enemy.name} MOVED from {previousPlatform.name} to {gameObject.name}");
+            }
+        }
+
+        assignedEnemies.Add(enemy);
+        enemy.SetAssignedPlatform(this);
+
+        // CRITICAL: Trigger AI activation after platform assignment
+        enemy.OnPlatformAssigned(this);
+
+        Collider2D enemyCollider = enemy.GetComponent<Collider2D>();
+        if (enemyCollider != null && platformCollider != null)
+        {
+            Physics2D.IgnoreCollision(platformCollider, enemyCollider, false);
+        }
+
+        enemy.platformBoundsCalculated = false;
+        // enemy.isGrounded = true;
+
+        if (showDebugInfo)
+        {
+            Debug.Log($"COLLISION ASSIGNMENT: {enemy.name} assigned to platform {gameObject.name}! Total enemies: {assignedEnemies.Count}");
         }
     }
 
@@ -104,6 +177,27 @@ public class Platform : MonoBehaviour
             if (showDebugInfo)
             {
                 Debug.Log($"Auto-assigned {enemy.name} to platform {gameObject.name}");
+            }
+        }
+    }
+
+    public void UnregisterEnemy(LandEnemyScript enemy)
+    {
+        if (enemy == null) return;
+
+        if (assignedEnemies.Contains(enemy))
+        {
+            assignedEnemies.Remove(enemy);
+
+            Collider2D enemyCollider = enemy.GetComponent<Collider2D>();
+            if (enemyCollider != null && platformCollider != null)
+            {
+                Physics2D.IgnoreCollision(enemyCollider, platformCollider, true);
+            }
+
+            if (showDebugInfo)
+            {
+                Debug.Log($"UNREGISTERED: {enemy.name} from platform {gameObject.name}. Total enemies: {assignedEnemies.Count}");
             }
         }
     }

@@ -15,7 +15,9 @@ public class PlayerMovement : EntityMovement
     [SerializeField] protected float rotationSpeed = 10f;
     [SerializeField] protected float rotationThreshold = 10f; // Degrees - How close to target before considering "complete"
     [SerializeField] protected float boostThreshold = 10f; // Degrees - When to apply boost (higher = earlier boost)
+
     [SerializeField] protected float underwaterRotationSpeed = 10f;
+
     [SerializeField] protected bool autoRotateInAir = true;
     [SerializeField] protected float airRotationSpeed = 8f;
     [SerializeField] protected float minSpeedForRotation = 0.3f;
@@ -30,7 +32,6 @@ public class PlayerMovement : EntityMovement
 
     [Header("Water Movement Settings")]
     [SerializeField] protected float forceAmount = 1f;
-    [SerializeField] protected ForceMode2D forceMode = ForceMode2D.Impulse;
     [SerializeField] protected float maxSpeed = 5f;
     [SerializeField] protected float naturalDrag = 0.5f;
     [SerializeField] protected float rotationDrag = 1f; // Extra drag applied during rotation
@@ -54,30 +55,22 @@ public class PlayerMovement : EntityMovement
     [Header("Debug")]
     public bool enableDebugLogs = false;
 
-    // Start is called before the first frame update
-    protected override void Start()
+    public override void Initialize ()
     {
         entityType = EntityType.Player; // Set entity type to Player
 
-        base.Start(); // Call base Start to initialize Rigidbody2D and movement mode
+        base.Initialize(); // Call base Initialize to set up Rigidbody2D and movement mode
 
+        //_powerLevel = powerLevel; // Initialize power level
+        //DebugLog($"Player initialized with power level: {_powerLevel}");
         mainCamera = Camera.main ?? FindObjectOfType<Camera>();
 
-        Initialize(100); // Initialize with a default power level (to be adjusted)
+        _fatigue = 0;
+        _maxFatigue = _powerLevel;
 
         rb.drag = naturalDrag;
         targetRotation = transform.rotation; //set target rotation to Player's current rotation
         currentGravityScale = underwaterGravityScale;
-    }
-
-    protected override void Initialize (int powerLevel)
-    {
-        _powerLevel = powerLevel; // Initialize power level
-        DebugLog($"Player initialized with power level: {_powerLevel}");
-        _fatigue = 0;
-        _maxFatigue = _powerLevel;
-
-        SetMovementMode(isAboveWater); // Set initial movement mode based on isAboveWater
     }
 
     // Update is called once per frame
@@ -363,7 +356,7 @@ public class PlayerMovement : EntityMovement
         Vector2 forceDirection = transform.right;
 
         // Apply force in that direction
-        rb.AddForce(forceDirection * forceAmount, forceMode);
+        rb.AddForce(forceDirection * forceAmount, ForceMode2D.Impulse);
 
         DebugLog("Applied force in direction: " + forceDirection);
     }

@@ -2,12 +2,10 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using static LandEnemyScript;
 
 public abstract class EnemyBase : EntityMovement
 {
-    [Header("Land Enemy Configuration")]
-    public LandEnemyConfig landEnemyConfig = new LandEnemyConfig();
-
     public enum Tier
     {
         Tier1=0,
@@ -49,27 +47,45 @@ public abstract class EnemyBase : EntityMovement
 
     #region Base Behaviours
 
-    protected override void Start()
+    protected virtual void Start()
     {
         // Set entity type for water detection
         entityType = EntityType.Enemy;
 
-        // Call base initialization (handles Rigidbody2D and water detection)
-        base.Start();
-
-        player = FindObjectOfType<PlayerMovement>();
+        if (player == null)
+        {
+            player = FindObjectOfType<PlayerMovement>();
+        }
         
         // Enemy-specific initialization
-        Initialize(player.PowerLevel);
+        Initialize();
     }
 
-    protected override void Initialize(int powerLevel)
+    public override void Initialize()
     {
-        _powerLevel = powerLevel;
+        base.Initialize();
+
+        if (player == null)
+        {
+            player = FindObjectOfType<PlayerMovement>();
+        }
+
+        EnemySetup();
+    }
+
+    protected virtual void EnemySetup()
+    {
+        if (player != null)
+        {
+            _powerLevel = player.PowerLevel;
+        }
+        else
+        {
+            _powerLevel = 100;
+        }
 
         _fatigue = 0;
         _maxFatigue = _powerLevel;
-
         _state = EnemyState.Alive;
 
         CalculateTier();
@@ -92,9 +108,6 @@ public abstract class EnemyBase : EntityMovement
     }
 
 
-    // How enemy behaves when it interacts with player
-    //public abstract void ReverseFishingBehaviour();
-
     public abstract void WaterMovement();
 
 
@@ -116,6 +129,26 @@ public abstract class EnemyBase : EntityMovement
         }
 
         // return Mathf.Clamp(_fatigue, 0, _maxFatigue);
+    }
+
+    public virtual void TriggerAlive()
+    {
+        ChangeState_Alive();
+        _fatigue = 0;
+
+        if (rb != null)
+        {
+            rb.velocity = Vector2.zero;
+            rb.gravityScale = 1f;
+        }
+
+        Collider2D col = GetComponent<Collider2D>();
+        if (col != null)
+        {
+            col.isTrigger = false;
+        }
+
+        Debug.Log($"{gameObject.name} state reset to Alive");
     }
 
     protected virtual void TriggerDefeat()
@@ -219,6 +252,7 @@ public abstract class EnemyBase : EntityMovement
     // Make sure your GetState() method is public
     public EnemyState GetState() => _state;
     
+    public virtual void ChangeState_Alive() => _state = EnemyState.Alive;
     public virtual void ChangeState_Defeated() => _state = EnemyState.Defeated;
     public virtual void ChangeState_Eaten() => _state = EnemyState.Eaten;
     public virtual void ChangeState_Dead() => _state = EnemyState.Dead;

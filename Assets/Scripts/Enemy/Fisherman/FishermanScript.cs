@@ -12,6 +12,11 @@ public class FishermanScript : LandEnemyScript
         base.Start();
     }
 
+    public override void Initialize()
+    {
+        base.Initialize();
+    }
+
     protected override void Update()
     {
         base.Update();

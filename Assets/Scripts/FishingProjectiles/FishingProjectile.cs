@@ -35,29 +35,14 @@ public abstract class FishingProjectile : EntityMovement
     public System.Action OnStretchStarted;
     public System.Action OnStretchEnded;
 
-
-    protected override void Start()
+    public override void Initialize()
     {
-        // Call parent Start() to initialize EntityMovement
-        base.Start();
+        base.Initialize();
 
-        // Set entity type to Hook
         entityType = EntityType.Hook;
         player = GameObject.FindGameObjectWithTag("Player")?.GetComponent<PlayerMovement>();
 
-        Initialize(0);
-    }
-
-    protected override void Initialize(int powerLevel)
-    {
-        hookCollider = GetComponent<CircleCollider2D>();
-        if (hookCollider != null)
-        {
-            hookCollider.isTrigger = true;
-        }
-
-        spawnPoint = transform.position;
-        OnProjectileSpawned();
+        InitializeProjectile();
     }
 
     protected override void Update()
@@ -79,6 +64,24 @@ public abstract class FishingProjectile : EntityMovement
 
         }
 
+    }
+
+    protected virtual void InitializeProjectile()
+    {
+        hookCollider = GetComponent<CircleCollider2D>();
+        if (hookCollider != null)
+        {
+            hookCollider.isTrigger = true;
+        }
+
+        OnProjectileSpawned();
+
+    }
+
+    public virtual void SetSpawnPoint(Vector3 spawnPosition)
+    {
+        spawnPoint = spawnPosition;
+        Debug.Log($"Hook spawn point set to: {spawnPoint}");
     }
 
     private void OnTriggerEnter2D(Collider2D other)
