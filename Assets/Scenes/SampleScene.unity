@@ -2364,7 +2364,7 @@ MonoBehaviour:
   - poolName: Fishermen
     prefab: {fileID: 1963649820016990938, guid: a8a1f6cfed63bb145a560de9fc880833, type: 3}
     initialSize: 1
-    maxSize: 5
+    maxSize: 3
 --- !u!1 &2005596808
 GameObject:
   m_ObjectHideFlags: 0
