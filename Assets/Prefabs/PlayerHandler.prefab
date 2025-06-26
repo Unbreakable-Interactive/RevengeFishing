@@ -167,6 +167,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Player
       objectReference: {fileID: 0}
+    - target: {fileID: 7015856836239744414, guid: b69f09c4e1675754487856532c9a780a, type: 3}
+      propertyPath: rb
+      value: 
+      objectReference: {fileID: 1633071456880953926}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -180,6 +184,11 @@ GameObject:
 --- !u!58 &1032848364154259681 stripped
 CircleCollider2D:
   m_CorrespondingSourceObject: {fileID: 5938476875424283519, guid: b69f09c4e1675754487856532c9a780a, type: 3}
+  m_PrefabInstance: {fileID: 6646432737778152350}
+  m_PrefabAsset: {fileID: 0}
+--- !u!50 &1633071456880953926 stripped
+Rigidbody2D:
+  m_CorrespondingSourceObject: {fileID: 5374213318811793880, guid: b69f09c4e1675754487856532c9a780a, type: 3}
   m_PrefabInstance: {fileID: 6646432737778152350}
   m_PrefabAsset: {fileID: 0}
 --- !u!114 &4422969977109999104 stripped

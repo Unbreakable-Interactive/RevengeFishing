@@ -1703,7 +1703,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6619afe99ea13c448ba91b91f036be20, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  platformScanRadius: 15
+  spawnPoints: []
+  spawnInterval: 5
+  objectPool: {fileID: 0}
+  poolName: Fisherman
+  enableAutoSpawning: 1
+  maxEnemies: 5
+  minPlayerDistance: 10
+  playerMovement: {fileID: 0}
+  enableSpawnLogs: 1
 --- !u!4 &1318592312
 Transform:
   m_ObjectHideFlags: 0
@@ -2362,6 +2370,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 98344338058364395, guid: 7f9eb2fb35364a94db718320167335ab, type: 3}
   m_PrefabInstance: {fileID: 6708799861719085447}
   m_PrefabAsset: {fileID: 0}
+--- !u!50 &2183849481622994904 stripped
+Rigidbody2D:
+  m_CorrespondingSourceObject: {fileID: 1633071456880953926, guid: 7f9eb2fb35364a94db718320167335ab, type: 3}
+  m_PrefabInstance: {fileID: 6708799861719085447}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &6708799861719085447
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2410,6 +2423,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4422969977109999104, guid: 7f9eb2fb35364a94db718320167335ab, type: 3}
+      propertyPath: rb
+      value: 
+      objectReference: {fileID: 2183849481622994904}
     - target: {fileID: 4869930645036494589, guid: 7f9eb2fb35364a94db718320167335ab, type: 3}
       propertyPath: m_Name
       value: PlayerHandler
