@@ -115,7 +115,7 @@ public class FishermanScript : LandEnemyScript
         CleanupHookSubscription();
 
         // Get current hook from spawner
-        if (hookSpawner.CurrentHook is FishingHook fishingHook)
+        if (hookSpawner.CurrentHook is FishingProjectile fishingHook)
         {
             subscribedHook = fishingHook;
             fishingHook.OnPlayerInteraction += OnHookPlayerInteraction;

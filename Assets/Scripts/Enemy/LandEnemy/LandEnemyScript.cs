@@ -55,7 +55,7 @@ public class LandEnemyScript : EnemyBase
     [SerializeField] protected float hookTimer;
     [SerializeField] protected float hookDuration;
 
-    protected FishingHook subscribedHook;
+    protected FishingProjectile subscribedHook;
 
     #endregion
 

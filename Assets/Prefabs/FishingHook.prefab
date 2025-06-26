@@ -122,19 +122,19 @@ MonoBehaviour:
   _maxFatigue: 0
   isAboveWater: 1
   airGravityScale: 2
-  underwaterGravityScale: 0
   airDrag: 1.5
-  underwaterDrag: 0.5
   airMaxSpeed: 3
-  underwaterMaxSpeed: 5
+  underwaterGravityScale: 0
+  underwaterDrag: 0.5
+  underwaterMaxSpeed: 3
   entityType: 3
   maxDistance: 8
   spawnPoint: {x: 0, y: 0, z: 0}
   spawner: {fileID: 0}
   isBeingHeld: 0
   player: {fileID: 0}
-  maxStretchDistance: 50
-  stretchResistance: 500
+  maxStretchDistance: 20
+  stretchResistance: 100
   snapBackForce: 1
   maxStretchTime: 0.3
   stretchCurve:

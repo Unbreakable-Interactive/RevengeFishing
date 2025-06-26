@@ -260,7 +260,6 @@ public abstract class FishingProjectile : EntityMovement
         playerRb.AddForce(resistanceForce, ForceMode2D.Impulse);
 
         OnLineStretching(currentStretchAmount);
-        // Debug.Log($"Line stretch: {currentStretchAmount:F2} | Resistance: {stretchResistance} | Resistance Multiplier: {resistanceMultiplier:F2} | Multiplier Value: {stretchResistance * resistanceMultiplier:F2}");
         Debug.Log($"Line stretch: {currentStretchAmount:F2} | Resistance: {stretchResistance} | Stretch Value: {stretchValue:F2}");
     }
 
