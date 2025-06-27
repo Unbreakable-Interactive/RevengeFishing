@@ -273,7 +273,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4283144278362533936}
-  - component: {fileID: 7015856836239744414}
+  - component: {fileID: 5706962072255297144}
   - component: {fileID: 5374213318811793880}
   m_Layer: 0
   m_Name: Player
@@ -301,7 +301,7 @@ Transform:
   - {fileID: 8269348812475954983}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &7015856836239744414
+--- !u!114 &5706962072255297144
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -310,40 +310,40 @@ MonoBehaviour:
   m_GameObject: {fileID: 6728867108004361845}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b9bcfd86bcd5c484b8431f1476613680, type: 3}
+  m_Script: {fileID: 11500000, guid: db54e0ff2b071fe458d3e7adf83cb10b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  rb: {fileID: 5374213318811793880}
+  rb: {fileID: 0}
   _powerLevel: 0
   _fatigue: 0
   _maxFatigue: 0
   isAboveWater: 0
-  airGravityScale: 1
-  airDrag: 0
-  airMaxSpeed: 10
+  airGravityScale: 2
+  airDrag: 1.5
+  airMaxSpeed: 3
   underwaterGravityScale: 0
-  underwaterDrag: 0.6
-  underwaterMaxSpeed: 15
+  underwaterDrag: 0.5
+  underwaterMaxSpeed: 5
   entityType: 0
-  rotationSpeed: 15
+  rotationSpeed: 10
   rotationThreshold: 10
-  boostThreshold: 15
+  boostThreshold: 10
   underwaterRotationSpeed: 10
   autoRotateInAir: 1
-  airRotationSpeed: 15
+  airRotationSpeed: 8
   minSpeedForRotation: 0.3
   airGravityAscending: 1.5
   airGravityDescending: 4
   gravityTransitionSpeed: 2
   velocityThreshold: 0.1
-  forceAmount: 2
-  maxSpeed: 15
-  naturalDrag: 0.2
-  rotationDrag: 0.5
-  constantAccel: 1
-  minForwardVelocity: 1.5
-  sidewaysDrag: 2
-  steeringForce: 10
+  forceAmount: 1
+  maxSpeed: 5
+  naturalDrag: 0.5
+  rotationDrag: 1
+  constantAccel: 0.2
+  minForwardVelocity: 1
+  sidewaysDrag: 1
+  steeringForce: 5
   steeringDamping: 0.98
   enableDebugLogs: 0
 --- !u!50 &5374213318811793880

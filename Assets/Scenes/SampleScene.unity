@@ -2131,7 +2131,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b5afe275bf7e5ac4296c2e6db5361764, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playerMovement: {fileID: 2183849481622994905}
+  playerMovement: {fileID: 2183849481622994907}
   playerBounds: {fileID: 2005596811}
   playerStats: {fileID: 1220000951}
   gameCamera: {fileID: 519420031}
@@ -2259,7 +2259,7 @@ MonoBehaviour:
   enableAutoSpawning: 1
   maxEnemies: 5
   minPlayerDistance: 10
-  playerMovement: {fileID: 2183849481622994905}
+  playerMovement: {fileID: 2183849481622994907}
   enableSpawnLogs: 1
 --- !u!4 &1915548629
 Transform:
@@ -2546,15 +2546,15 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 98344338058364395, guid: 7f9eb2fb35364a94db718320167335ab, type: 3}
   m_PrefabInstance: {fileID: 6708799861719085447}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &2183849481622994905 stripped
+--- !u!114 &2183849481622994907 stripped
 MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 4422969977109999104, guid: 7f9eb2fb35364a94db718320167335ab, type: 3}
+  m_CorrespondingSourceObject: {fileID: 1373576552199767526, guid: 7f9eb2fb35364a94db718320167335ab, type: 3}
   m_PrefabInstance: {fileID: 6708799861719085447}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2183849481622994903}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b9bcfd86bcd5c484b8431f1476613680, type: 3}
+  m_Script: {fileID: 11500000, guid: db54e0ff2b071fe458d3e7adf83cb10b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!1001 &6708799861719085447
@@ -2565,6 +2565,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 2547414314093962726, guid: 7f9eb2fb35364a94db718320167335ab, type: 3}
+      propertyPath: entityMovement
+      value: 
+      objectReference: {fileID: 2183849481622994907}
     - target: {fileID: 3182908382894097092, guid: 7f9eb2fb35364a94db718320167335ab, type: 3}
       propertyPath: m_LocalPosition.x
       value: -14.23
