@@ -76,6 +76,11 @@ public class LandEnemy : Enemy
 
     public virtual void OnPlatformAssigned(Platform platform)
     {
+        if (assignedPlatform != null && !platformBoundsCalculated)
+        {
+            CalculatePlatformBounds();
+        }
+
         Debug.Log($"{gameObject.name} - Platform assigned: {platform.name}");
 
         if (Time.time >= nextActionTime - 0.5f)
@@ -130,11 +135,6 @@ public class LandEnemy : Enemy
         hookSpawner.Initialize();
 
         SetMovementMode(isAboveWater);
-
-        if (assignedPlatform != null && !platformBoundsCalculated)
-        {
-            CalculatePlatformBounds();
-        }
 
         Debug.Log($"{gameObject.name} - Enemy initialized with power level {_powerLevel}");
     }
@@ -313,6 +313,10 @@ public class LandEnemy : Enemy
         // If we're near the left edge and moving left, stop or turn around
         if (currentX <= platformLeftEdge && (_landMovementState == LandMovementState.WalkLeft || _landMovementState == LandMovementState.RunLeft))
         {
+            // IMMEDIATE STOP - prevent further movement
+            rb.velocity = new Vector2(0, rb.velocity.y);
+            _landMovementState = LandMovementState.Idle;
+
             // Choose a new action that doesn't involve going left
             ChooseRandomActionExcluding(LandMovementState.WalkLeft, LandMovementState.RunLeft);
             ScheduleNextAction();
@@ -320,6 +324,10 @@ public class LandEnemy : Enemy
         // If we're near the right edge and moving right, stop or turn around
         else if (currentX >= platformRightEdge && (_landMovementState == LandMovementState.WalkRight || _landMovementState == LandMovementState.RunRight))
         {
+            // IMMEDIATE STOP - prevent further movement
+            rb.velocity = new Vector2(0, rb.velocity.y);
+            _landMovementState = LandMovementState.Idle;
+
             // Choose a new action that doesn't involve going right
             ChooseRandomActionExcluding(LandMovementState.WalkRight, LandMovementState.RunRight);
             ScheduleNextAction();

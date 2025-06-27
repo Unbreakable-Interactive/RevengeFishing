@@ -100,7 +100,7 @@ public class Platform : MonoBehaviour
             Physics2D.IgnoreCollision(platformCollider, enemyCollider, false);
         }
 
-        enemy.platformBoundsCalculated = false;
+        enemy.platformBoundsCalculated = true;
         // enemy.isGrounded = true;
 
         if (showDebugInfo)
