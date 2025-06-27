@@ -35,7 +35,6 @@ public abstract class EnemyBase : EntityMovement
     [SerializeField] protected float maxActionTime; //Maximum seconds enemy will do an action, like walk, idle, or run
     [SerializeField] protected float nextActionTime; //actual seconds until next action decision
 
-
     #region Water Enemy Variables
 
     [SerializeField] protected float swimForce;
