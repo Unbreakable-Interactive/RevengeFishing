@@ -2363,7 +2363,7 @@ MonoBehaviour:
   poolConfigs:
   - poolName: Fishermen
     prefab: {fileID: 1963649820016990938, guid: a8a1f6cfed63bb145a560de9fc880833, type: 3}
-    initialSize: 1
+    initialSize: 0
     maxSize: 3
 --- !u!1 &2005596808
 GameObject:
@@ -2546,11 +2546,6 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 98344338058364395, guid: 7f9eb2fb35364a94db718320167335ab, type: 3}
   m_PrefabInstance: {fileID: 6708799861719085447}
   m_PrefabAsset: {fileID: 0}
---- !u!50 &2183849481622994904 stripped
-Rigidbody2D:
-  m_CorrespondingSourceObject: {fileID: 1633071456880953926, guid: 7f9eb2fb35364a94db718320167335ab, type: 3}
-  m_PrefabInstance: {fileID: 6708799861719085447}
-  m_PrefabAsset: {fileID: 0}
 --- !u!114 &2183849481622994905 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 4422969977109999104, guid: 7f9eb2fb35364a94db718320167335ab, type: 3}
@@ -2610,10 +2605,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 4422969977109999104, guid: 7f9eb2fb35364a94db718320167335ab, type: 3}
-      propertyPath: rb
-      value: 
-      objectReference: {fileID: 2183849481622994904}
     - target: {fileID: 4869930645036494589, guid: 7f9eb2fb35364a94db718320167335ab, type: 3}
       propertyPath: m_Name
       value: PlayerHandler
@@ -2675,22 +2666,14 @@ PrefabInstance:
       propertyPath: m_Name
       value: FishermanHandler
       objectReference: {fileID: 0}
+    - target: {fileID: 1963649820016990938, guid: a8a1f6cfed63bb145a560de9fc880833, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6092571517471514807, guid: a8a1f6cfed63bb145a560de9fc880833, type: 3}
       propertyPath: assignedPlatform
       value: 
       objectReference: {fileID: 1130133055}
-    - target: {fileID: 8244682631085026103, guid: a8a1f6cfed63bb145a560de9fc880833, type: 3}
-      propertyPath: m_LocalScale.y
-      value: 1.5
-      objectReference: {fileID: 0}
-    - target: {fileID: 8774570743886161678, guid: a8a1f6cfed63bb145a560de9fc880833, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 1.21
-      objectReference: {fileID: 0}
-    - target: {fileID: 8774570743886161678, guid: a8a1f6cfed63bb145a560de9fc880833, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 2.38
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
