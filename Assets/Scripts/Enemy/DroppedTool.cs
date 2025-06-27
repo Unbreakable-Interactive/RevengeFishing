@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class DroppedToolScript : EntityMovement
+public class DroppedTool : Entity
 {
     private Vector2 dropForce;
     private bool hasAntiRotated = false;

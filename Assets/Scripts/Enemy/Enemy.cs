@@ -2,9 +2,9 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using static LandEnemyScript;
+using static LandEnemy;
 
-public abstract class EnemyBase : EntityMovement
+public abstract class Enemy : Entity
 {
     public enum Tier
     {
@@ -28,7 +28,7 @@ public abstract class EnemyBase : EntityMovement
     [SerializeField] protected EnemyState _state;
 
     [Header("Player Reference")]
-    [SerializeField] protected PlayerMovement player; // Reference to the player object
+    [SerializeField] protected Player player; // Reference to the player object
 
     // time parameters for AI decisions
     [SerializeField] protected float minActionTime; //Minimum seconds enemy will do an action, like walk, idle, or run
@@ -53,7 +53,7 @@ public abstract class EnemyBase : EntityMovement
 
         if (player == null)
         {
-            player = FindObjectOfType<PlayerMovement>();
+            player = FindObjectOfType<Player>();
         }
         
         // Enemy-specific initialization
@@ -66,7 +66,7 @@ public abstract class EnemyBase : EntityMovement
 
         if (player == null)
         {
-            player = FindObjectOfType<PlayerMovement>();
+            player = FindObjectOfType<Player>();
         }
 
         EnemySetup();

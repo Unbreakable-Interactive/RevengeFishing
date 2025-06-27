@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class LandEnemyScript : EnemyBase
+public class LandEnemy : Enemy
 {
     [Header("Land Enemy Configuration")]
     public LandEnemyConfig landEnemyConfig = new LandEnemyConfig();

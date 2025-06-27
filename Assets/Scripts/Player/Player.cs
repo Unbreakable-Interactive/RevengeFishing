@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PlayerMovement : EntityMovement
+public class Player : Entity
 {
     private Camera mainCamera;
     private Vector2 lastMousePosition = Vector2.zero;
@@ -211,7 +211,7 @@ public class PlayerMovement : EntityMovement
                 if (hook.isBeingHeld && hook.IsLineStretching())
                 {
                     // Player is pulling against this fishing line!
-                    FishermanScript fisherman = hook.spawner?.GetComponent<FishermanScript>();
+                    Fisherman fisherman = hook.spawner?.GetComponent<Fisherman>();
                     if (fisherman != null)
                     {
                         fisherman.TakeFatigue(PowerLevel);

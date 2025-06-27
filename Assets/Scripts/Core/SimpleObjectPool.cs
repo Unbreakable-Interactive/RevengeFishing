@@ -89,7 +89,7 @@ public class SimpleObjectPool : MonoBehaviour
         }
 
         // CLEANUP ENEMY STATE ONLY - NO PLATFORM ASSIGNMENT
-        var landEnemy = objectToSpawn.GetComponent<LandEnemyScript>();
+        var landEnemy = objectToSpawn.GetComponent<LandEnemy>();
         if (landEnemy != null)
         {
             CleanupEnemyAssignment(landEnemy);
@@ -111,7 +111,7 @@ public class SimpleObjectPool : MonoBehaviour
         return objectToSpawn;
     }
 
-    private void CleanupEnemyAssignment(LandEnemyScript enemy)
+    private void CleanupEnemyAssignment(LandEnemy enemy)
     {
         Platform oldPlatform = enemy.GetAssignedPlatform();
         if (oldPlatform != null)
@@ -137,7 +137,7 @@ public class SimpleObjectPool : MonoBehaviour
             return;
         }
 
-        var landEnemy = obj.GetComponent<LandEnemyScript>();
+        var landEnemy = obj.GetComponent<LandEnemy>();
         if (landEnemy != null)
         {
             CleanupEnemyAssignment(landEnemy);

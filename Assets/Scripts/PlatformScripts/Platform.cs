@@ -8,7 +8,7 @@ public class Platform : MonoBehaviour
     public GameObject player; // Reference to the player object
 
     [Header("Assigned Enemies")]
-    public List<LandEnemyScript> assignedEnemies = new List<LandEnemyScript>();
+    public List<LandEnemy> assignedEnemies = new List<LandEnemy>();
 
     [Header("Platform Settings")]
     public float surfaceOffset = 0.1f; // How far above surface to place enemies
@@ -49,7 +49,7 @@ public class Platform : MonoBehaviour
 
     void OnCollisionEnter2D(Collision2D collision)
     {
-        LandEnemyScript enemy = collision.gameObject.GetComponent<LandEnemyScript>();
+        LandEnemy enemy = collision.gameObject.GetComponent<LandEnemy>();
         if (enemy != null)
         {
             RegisterEnemyOnCollision(enemy);
@@ -58,7 +58,7 @@ public class Platform : MonoBehaviour
 
     void OnCollisionExit2D(Collision2D collision)
     {
-        EnemyBase enemy = collision.gameObject.GetComponent<EnemyBase>();
+        Enemy enemy = collision.gameObject.GetComponent<Enemy>();
         if (enemy != null)
         {
             if (assignedEnemies.Contains(enemy))
@@ -70,7 +70,7 @@ public class Platform : MonoBehaviour
             }
         }
     }
-    private void RegisterEnemyOnCollision(LandEnemyScript enemy)
+    private void RegisterEnemyOnCollision(LandEnemy enemy)
     {
         if (enemy == null) return;
 
@@ -110,9 +110,9 @@ public class Platform : MonoBehaviour
     void SetupSelectiveCollisions()
     {
         // Find all enemies in scene
-        LandEnemyScript[] allEnemies = FindObjectsOfType<LandEnemyScript>();
+        LandEnemy[] allEnemies = FindObjectsOfType<LandEnemy>();
 
-        foreach (LandEnemyScript enemy in allEnemies)
+        foreach (LandEnemy enemy in allEnemies)
         {
             Collider2D enemyCollider = enemy.GetComponent<Collider2D>();
             if (enemyCollider != null)
@@ -132,7 +132,7 @@ public class Platform : MonoBehaviour
         }
     }
 
-    public void UpdateEnemyCollision(LandEnemyScript enemy, bool shouldCollide)
+    public void UpdateEnemyCollision(LandEnemy enemy, bool shouldCollide)
     {
         Collider2D enemyCollider = enemy.GetComponent<Collider2D>();
         if (enemyCollider != null)
@@ -148,7 +148,7 @@ public class Platform : MonoBehaviour
 
         foreach (Collider2D col in nearbyColliders)
         {
-            LandEnemyScript enemy = col.GetComponent<LandEnemyScript>();
+            LandEnemy enemy = col.GetComponent<LandEnemy>();
             if (enemy != null && !assignedEnemies.Contains(enemy))
             {
                 // Check if enemy doesn't already have a platform assigned
@@ -160,7 +160,7 @@ public class Platform : MonoBehaviour
         }
     }
 
-    public void RegisterEnemyAtRuntime(LandEnemyScript enemy)
+    public void RegisterEnemyAtRuntime(LandEnemy enemy)
     {
         if (enemy != null && !assignedEnemies.Contains(enemy))
         {
@@ -181,7 +181,7 @@ public class Platform : MonoBehaviour
         }
     }
 
-    public void UnregisterEnemy(LandEnemyScript enemy)
+    public void UnregisterEnemy(LandEnemy enemy)
     {
         if (enemy == null) return;
 

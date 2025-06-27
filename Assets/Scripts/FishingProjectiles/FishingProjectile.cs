@@ -1,7 +1,7 @@
 using System.Collections;
 using UnityEngine;
 
-public abstract class FishingProjectile : EntityMovement
+public abstract class FishingProjectile : Entity
 {
     [Header("Distance Constraint")]
     public float maxDistance;
@@ -11,7 +11,7 @@ public abstract class FishingProjectile : EntityMovement
 
     [Header("Player Interaction")]
     [SerializeField] public bool isBeingHeld = false; //is a player biting the hook?
-    [SerializeField] protected PlayerMovement player; //reference to player
+    [SerializeField] protected Player player; //reference to player
     protected CircleCollider2D hookCollider;
 
     // Event to notify fisherman
@@ -40,7 +40,7 @@ public abstract class FishingProjectile : EntityMovement
         base.Initialize();
 
         entityType = EntityType.Hook;
-        player = GameObject.FindGameObjectWithTag("Player")?.GetComponent<PlayerMovement>();
+        player = GameObject.FindGameObjectWithTag("Player")?.GetComponent<Player>();
 
         InitializeProjectile();
     }

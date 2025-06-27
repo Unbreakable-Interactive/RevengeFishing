@@ -18,7 +18,7 @@ public class SpawnHandler : MonoBehaviour
     [SerializeField] private float minPlayerDistance = 10f;
 
     [Header("Player Reference")]
-    [SerializeField] private PlayerMovement playerMovement;
+    [SerializeField] private Player playerMovement;
 
     [Header("Debug")]
     [SerializeField] private bool enableSpawnLogs = true;
@@ -35,7 +35,7 @@ public class SpawnHandler : MonoBehaviour
             objectPool = FindObjectOfType<SimpleObjectPool>();
 
         if (playerMovement == null)
-            playerMovement = FindObjectOfType<PlayerMovement>();
+            playerMovement = FindObjectOfType<Player>();
 
         ValidateSpawnPoints();
     }
@@ -46,7 +46,7 @@ public class SpawnHandler : MonoBehaviour
             objectPool = FindObjectOfType<SimpleObjectPool>();
 
         if (playerMovement == null)
-            playerMovement = FindObjectOfType<PlayerMovement>();
+            playerMovement = FindObjectOfType<Player>();
 
         ValidateSpawnPoints();
         Debug.Log("SpawnHandler initialized successfully");

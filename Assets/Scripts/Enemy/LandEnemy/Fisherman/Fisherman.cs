@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class FishermanScript : LandEnemyScript
+public class Fisherman : LandEnemy
 {
     [Header("Fisherman Configuration")]
     public FishermanConfig fishermanConfig = new FishermanConfig();

@@ -116,7 +116,7 @@ public class HookSpawner : MonoBehaviour
             waterCheck.targetCollider = currentHook.GetComponent<Collider2D>();
 
             // If the hook has EntityMovement, connect it
-            EntityMovement hookMovement = currentHook.GetComponent<EntityMovement>();
+            Entity hookMovement = currentHook.GetComponent<Entity>();
             if (hookMovement != null)
             {
                 waterCheck.entityMovement = hookMovement;

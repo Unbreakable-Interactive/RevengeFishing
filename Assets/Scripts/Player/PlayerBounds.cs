@@ -8,7 +8,7 @@ public class PlayerBounds : MonoBehaviour
 
     private Transform player;
     private Rigidbody2D playerRb;
-    private PlayerMovement playerMovement;
+    private Player playerMovement;
     private BoxCollider2D boundsCollider;
 
     void Start()
@@ -21,7 +21,7 @@ public class PlayerBounds : MonoBehaviour
         boundsCollider.isTrigger = true;
     }
 
-    public void Initialize(PlayerMovement playerMovementScript)
+    public void Initialize(Player playerMovementScript)
     {
         if (playerMovementScript != null)
         {

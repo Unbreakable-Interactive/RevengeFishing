@@ -3,7 +3,7 @@ using UnityEngine;
 public class GameBootstrap : MonoBehaviour
 {
     [Header("Core Game Systems")]
-    [SerializeField] private PlayerMovement playerMovement;
+    [SerializeField] private Player playerMovement;
     [SerializeField] private PlayerBounds playerBounds;
     [SerializeField] private PlayerStats playerStats;
     [SerializeField] private Camera gameCamera;

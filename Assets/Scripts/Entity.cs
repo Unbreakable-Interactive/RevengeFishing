@@ -1,7 +1,7 @@
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody2D))]
-public abstract class EntityMovement : MonoBehaviour
+public abstract class Entity : MonoBehaviour
 {
     [SerializeField] protected Rigidbody2D rb;
 
@@ -58,7 +58,7 @@ public abstract class EntityMovement : MonoBehaviour
     {
         EnsureRigidbody2D();
 
-        if (GetComponent<PlayerMovement>() != null)
+        if (GetComponent<Player>() != null)
         {
             _powerLevel = 100;
         }
