@@ -318,32 +318,32 @@ MonoBehaviour:
   _fatigue: 0
   _maxFatigue: 0
   isAboveWater: 0
-  airGravityScale: 2
-  airDrag: 1.5
-  airMaxSpeed: 3
+  airGravityScale: 1
+  airDrag: 0
+  airMaxSpeed: 10
   underwaterGravityScale: 0
-  underwaterDrag: 0.5
-  underwaterMaxSpeed: 5
-  entityType: 0
+  underwaterDrag: 0.6
+  underwaterMaxSpeed: 15
+  entityType: 1
   rotationSpeed: 10
   rotationThreshold: 10
-  boostThreshold: 10
+  boostThreshold: 15
   underwaterRotationSpeed: 10
   autoRotateInAir: 1
-  airRotationSpeed: 8
+  airRotationSpeed: 15
   minSpeedForRotation: 0.3
   airGravityAscending: 1.5
   airGravityDescending: 4
   gravityTransitionSpeed: 2
   velocityThreshold: 0.1
-  forceAmount: 1
-  maxSpeed: 5
-  naturalDrag: 0.5
-  rotationDrag: 1
-  constantAccel: 0.2
-  minForwardVelocity: 1
-  sidewaysDrag: 1
-  steeringForce: 5
+  forceAmount: 2
+  maxSpeed: 15
+  naturalDrag: 0.2
+  rotationDrag: 0.5
+  constantAccel: 1
+  minForwardVelocity: 1.5
+  sidewaysDrag: 2
+  steeringForce: 10
   steeringDamping: 0.98
   enableDebugLogs: 0
 --- !u!50 &5374213318811793880
@@ -359,7 +359,7 @@ Rigidbody2D:
   m_UseFullKinematicContacts: 0
   m_UseAutoMass: 0
   m_Mass: 1
-  m_LinearDrag: 0
+  m_LinearDrag: 0.2
   m_AngularDrag: 0.05
   m_GravityScale: 0
   m_Material: {fileID: 0}
