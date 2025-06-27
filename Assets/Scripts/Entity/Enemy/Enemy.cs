@@ -50,6 +50,7 @@ public abstract class Enemy : Entity
     {
         // Set entity type for water detection
         entityType = EntityType.Enemy;
+        gameObject.layer = LayerMask.NameToLayer("Enemy");
 
         if (player == null)
         {

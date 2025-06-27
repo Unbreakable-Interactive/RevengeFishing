@@ -27,6 +27,8 @@ public class Platform : MonoBehaviour
             return;
         }
 
+        gameObject.layer = LayerMask.NameToLayer("Platform");
+
         platformCollider.isTrigger = false;
 
         if (player != null)

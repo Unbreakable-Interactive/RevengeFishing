@@ -169,16 +169,18 @@ public class LandEnemy : Enemy
         }
         else
         {
+            //Enemy is automatically defeated when falling into water
+            if (_state == EnemyState.Alive)
+            {
+                TriggerDefeat();
+            }
+
             // When defeated enemy enters water, mark as floating
             hasStartedFloating = true;
 
             Debug.Log($"{gameObject.name} enemy switched to UNDERWATER mode");
         }
 
-    }
-    public virtual void LandMovement()
-    {
-        LandWalk();
     }
 
     public override void WaterMovement()
@@ -262,7 +264,7 @@ public class LandEnemy : Enemy
     #endregion
 
     #region Land Movement Logic
-    public virtual void LandWalk()
+    public virtual void LandMovement()
     {
         // Use virtual AI decision method
         if (Time.time >= nextActionTime)
