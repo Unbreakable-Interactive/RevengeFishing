@@ -145,14 +145,26 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 6936546192436389837}
     m_Modifications:
+    - target: {fileID: 772016937162643826, guid: ce012608d650bc94d9ed1fde3e90d2cb, type: 3}
+      propertyPath: m_Layer
+      value: 7
+      objectReference: {fileID: 0}
     - target: {fileID: 3932039236167525111, guid: ce012608d650bc94d9ed1fde3e90d2cb, type: 3}
       propertyPath: m_Name
       value: FishingHook
+      objectReference: {fileID: 0}
+    - target: {fileID: 3932039236167525111, guid: ce012608d650bc94d9ed1fde3e90d2cb, type: 3}
+      propertyPath: m_Layer
+      value: 7
       objectReference: {fileID: 0}
     - target: {fileID: 4048927617224973841, guid: ce012608d650bc94d9ed1fde3e90d2cb, type: 3}
       propertyPath: rb
       value: 
       objectReference: {fileID: 5026025527197202940}
+    - target: {fileID: 9054268069914657743, guid: ce012608d650bc94d9ed1fde3e90d2cb, type: 3}
+      propertyPath: m_Layer
+      value: 7
+      objectReference: {fileID: 0}
     - target: {fileID: 9079909360616689597, guid: ce012608d650bc94d9ed1fde3e90d2cb, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
