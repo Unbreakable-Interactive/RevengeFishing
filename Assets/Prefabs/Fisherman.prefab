@@ -241,6 +241,7 @@ MonoBehaviour:
   spawnPoint: {fileID: 3470367175335556429}
   throwForce: 10
   hookMaxDistance: 8
+  throwDirection: {x: 1, y: 0.2}
 --- !u!114 &2117141073483461364
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -253,7 +254,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 74f210aa94814394cbc3a52e26206a1e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  rb: {fileID: 0}
+  rb: {fileID: 3522423683038717205}
   _powerLevel: 0
   _fatigue: 0
   _maxFatigue: 0
@@ -273,10 +274,7 @@ MonoBehaviour:
   nextActionTime: 0
   swimForce: 0
   minSwimSpeed: 0
-  landEnemyConfig:
-    idleProbability: 0.5
-    walkProbability: 0.4
-    runProbability: 0.1
+  landEnemyConfig: {fileID: 11400000, guid: c7bf3d738a3374cbeb2406b3ec839fab, type: 2}
   _landMovementState: 0
   walkingSpeed: 1.5
   runningSpeed: 3
@@ -292,15 +290,7 @@ MonoBehaviour:
   hookTimer: 1
   hookDuration: 8
   assignedPlatform: {fileID: 0}
-  fishermanConfig:
-    equipToolChance: 0.7
-    unequipToolChance: 0.3
-    hookThrowChance: 0.4
-    minHookWaitTime: 10
-    maxHookWaitTime: 20
-    fishingBehaviorCheckInterval: 10
-    minActionTime: 1
-    maxActionTime: 4
+  fishermanConfig: {fileID: 11400000, guid: 876c88f03b9414e67960bdc874e7d116, type: 2}
 --- !u!1 &8143527860349171708
 GameObject:
   m_ObjectHideFlags: 0

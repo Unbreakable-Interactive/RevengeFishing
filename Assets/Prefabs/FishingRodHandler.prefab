@@ -126,15 +126,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bbedbc7a2ec570440b5fd6894958fec5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  rb: {fileID: 269467598253431466}
   _powerLevel: 0
   _fatigue: 0
   _maxFatigue: 0
   isAboveWater: 1
   airGravityScale: 2
-  underwaterGravityScale: 0
   airDrag: 1.5
-  underwaterDrag: 0.5
   airMaxSpeed: 3
+  underwaterGravityScale: 0
+  underwaterDrag: 0.5
   underwaterMaxSpeed: 5
   entityType: 0
 --- !u!61 &8456304736541642189

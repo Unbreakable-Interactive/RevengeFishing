@@ -12,7 +12,7 @@ public class EntityHierarchyInspector : Editor
     private static readonly Color EnemyColor = new Color(0.8f, 0.4f, 0.2f);      // Warm orange
     private static readonly Color LandEnemyColor = new Color(0.7f, 0.3f, 0.5f);  // Deep rose
     private static readonly Color FishermanColor = new Color(0.5f, 0.3f, 0.7f);  // Rich purple
-    private static readonly Color FishingProjectileColor = new Color(0.3f, 0.7f, 0.8f); // Cyan
+    private static readonly Color FishingProjectileColor = new Color(0.1f, 0.5f, 0.7f); // Cyan
     private static readonly Color FishingHookColor = new Color(0.2f, 0.5f, 0.6f); // Teal
     private static readonly Color DroppedToolColor = new Color(0.6f, 0.4f, 0.2f); // Brown
     

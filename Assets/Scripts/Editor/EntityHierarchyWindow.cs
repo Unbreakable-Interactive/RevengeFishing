@@ -16,7 +16,7 @@ public class EntityHierarchyWindow : EditorWindow
         { typeof(Enemy), new Color(0.8f, 0.4f, 0.2f) },
         { typeof(LandEnemy), new Color(0.7f, 0.3f, 0.5f) },
         { typeof(Fisherman), new Color(0.5f, 0.3f, 0.7f) },
-        { typeof(FishingProjectile), new Color(0.3f, 0.7f, 0.8f) },
+        { typeof(FishingProjectile), new Color(0.1f, 0.5f, 0.7f)},
         { typeof(FishingHook), new Color(0.2f, 0.5f, 0.6f) },
         { typeof(DroppedTool), new Color(0.6f, 0.4f, 0.2f) }
     };

@@ -216,6 +216,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ac0b09e7857660247b1477e93731de29, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!1 &25718443 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1963649820016990938, guid: a8a1f6cfed63bb145a560de9fc880833, type: 3}
+  m_PrefabInstance: {fileID: 8471196664114344537}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &188611162
 GameObject:
   m_ObjectHideFlags: 0
@@ -2128,7 +2133,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1721747964}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b5afe275bf7e5ac4296c2e6db5361764, type: 3}
+  m_Script: {fileID: 11500000, guid: e32216a2f79d2ca4f996ac8b4d9f96e9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   playerMovement: {fileID: 2183849481622994907}
@@ -2357,12 +2362,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 1933053475}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d4792407f78536a44a5e30ffa5b67505, type: 3}
+  m_Script: {fileID: 11500000, guid: c0d582e135e5429f8ad323cf20fa0b68, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   poolConfigs:
   - poolName: Fishermen
-    prefab: {fileID: 1963649820016990938, guid: a8a1f6cfed63bb145a560de9fc880833, type: 3}
+    prefab: {fileID: 25718443}
     initialSize: 0
     maxSize: 3
 --- !u!1 &2005596808

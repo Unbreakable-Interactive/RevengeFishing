@@ -128,8 +128,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b422c3c85585ab1409b60b7384fcd1d4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  powerLevel: 100
-  phase: 0
+  _config: {fileID: 11400000, guid: 519c911c847b744d88f2a8e10d6d8f27, type: 2}
+  _powerLevel: 0
+  _hunger: 0
+  _fatigue: 0
+  _phase: 0
 --- !u!1 &5736262942231147453
 GameObject:
   m_ObjectHideFlags: 0
@@ -313,7 +316,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: db54e0ff2b071fe458d3e7adf83cb10b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  rb: {fileID: 0}
+  rb: {fileID: 5374213318811793880}
   _powerLevel: 0
   _fatigue: 0
   _maxFatigue: 0

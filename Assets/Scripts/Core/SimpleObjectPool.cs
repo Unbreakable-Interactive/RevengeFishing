@@ -161,23 +161,23 @@ public class SimpleObjectPool : MonoBehaviour
         enemy.platformLeftEdge = 0f;
         enemy.platformRightEdge = 0f;
 
-        // ✅ FLOATING STATE RESET
-        enemy.HasStartedFloating = false;
-        enemy.FloatingStartTime = 0f;
-
-        // ✅ MOVEMENT STATE RESET
-        enemy.MovementStateLand = LandEnemy.LandMovementState.Idle;
-        enemy.fishingToolEquipped = false;
-
-        // ✅ HOOK FISHING STATE RESET (CRITICAL FIX)
-        enemy.HasThrownHook = false;
-        enemy.HookTimer = 0f;
-
-        // ✅ TIMING RESET (next action time)
-        enemy.NextActionTime = Time.time + UnityEngine.Random.Range(0.5f, 2f);
-
-        // ✅ SAVE INITIAL SPAWN POSITION (THE SOLUTION TO THE MAIN PROBLEM)
-        enemy.InitialSpawnPosition = spawnPosition;
+        // // ✅ FLOATING STATE RESET
+        // enemy.HasStartedFloating = false;
+        // enemy.FloatingStartTime = 0f;
+        //
+        // // ✅ MOVEMENT STATE RESET
+        // enemy.MovementStateLand = LandEnemy.LandMovementState.Idle;
+        // enemy.fishingToolEquipped = false;
+        //
+        // // ✅ HOOK FISHING STATE RESET (CRITICAL FIX)
+        // enemy.HasThrownHook = false;
+        // enemy.HookTimer = 0f;
+        //
+        // // ✅ TIMING RESET (next action time)
+        // enemy.NextActionTime = Time.time + UnityEngine.Random.Range(0.5f, 2f);
+        //
+        // // ✅ SAVE INITIAL SPAWN POSITION (THE SOLUTION TO THE MAIN PROBLEM)
+        // enemy.InitialSpawnPosition = spawnPosition;
 
         // ✅ COLLISION RESET - ENSURE PROPER PHYSICS
         Collider2D enemyCollider = enemy.GetComponent<Collider2D>();
@@ -216,10 +216,10 @@ public class SimpleObjectPool : MonoBehaviour
         if (enemyBase != null)
         {
             // ✅ RESET TO ORIGINAL SPAWN POSITION (stored in InitialSpawnPosition)
-            Vector3 resetPosition = enemyBase.InitialSpawnPosition;
-            obj.transform.position = resetPosition;
+            // Vector3 resetPosition = enemyBase.InitialSpawnPosition;
+            // obj.transform.position = resetPosition;
             
-            CompleteEnemyReset(enemyBase, resetPosition);
+            // CompleteEnemyReset(enemyBase, resetPosition);
             
             // ✅ RESET CHILD TRANSFORM TOO (if enemy is child of handler)
             if (enemyBase.transform != obj.transform)
