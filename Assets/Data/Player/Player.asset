@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 46099f358c47495aaac4f1f3f68dc0a8, type: 3}
+  m_Name: Player
+  m_EditorClassIdentifier: 
+  startingPowerLevel: 100
+  phaseThresholds:
+    juvenile: 10000
+    adult: 1000000
+    beast: 100000000
+    monster: 10000000000
+  maxHunger: 100
+  maxFatigue: 100
+  hungerDecayRate: 1
+  fatigueRecoveryRate: 0.5

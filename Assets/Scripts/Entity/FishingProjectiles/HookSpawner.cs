@@ -1,10 +1,11 @@
 using UnityEngine;
+using Utils;
 
 public class HookSpawner : MonoBehaviour
 {
     [Header("Hook Settings")]
-    public GameObject hookHandlerPrefab; // reference to hookHandlerPrefab with water detection
-    public Transform spawnPoint; //reference to the original spawn point at the tip of the fishing rod.
+    public GameObject hookHandlerPrefab;
+    public Transform spawnPoint;
     public float throwForce = 8f;
 
     [Header("Distance Control")]
@@ -14,14 +15,15 @@ public class HookSpawner : MonoBehaviour
     private float originalMaxDistance;
 
     private GameObject currentHookHandler; // Changed from currentHook to currentHookHandler
+    private HookPartsHandler curHookHandler;
     private FishingProjectile currentHook; // Reference to the actual hook component
 
     public FishingProjectile CurrentHook => currentHook;
-   
 
+    [SerializeField] private Vector2 throwDirection = new Vector2(1f, 0.2f);
+    
     private void Awake()
     {
-        // Store the original max distance on awake
         originalMaxDistance = hookMaxDistance;
     }
 
@@ -33,7 +35,7 @@ public class HookSpawner : MonoBehaviour
         if (hookHandlerPrefab == null)
         {
             // Try to find the prefab automatically
-            hookHandlerPrefab = Resources.Load<GameObject>("FishingHookHandler");
+            hookHandlerPrefab = Resources.Load<GameObject>(AssetNames.HOOKHANDLER_PREFAB_NAME);
             if (hookHandlerPrefab == null)
             {
                 Debug.LogError($"HookSpawner on {gameObject.name}: hookHandlerPrefab is missing! Assign it in Inspector or place FishingHookHandler in Resources folder!");
@@ -58,34 +60,41 @@ public class HookSpawner : MonoBehaviour
         Debug.Log($"HookSpawner initialized successfully on {gameObject.name}: CanThrow={CanThrowHook()}");
     }
 
-    private void Update()
+    public bool CanThrowHook()
     {
-        //Check if spawn point has moved
+        bool canThrow = hookHandlerPrefab != null && spawnPoint != null && currentHook == null;
+        Debug.Log($"CanThrowHook() on {gameObject.name}: Prefab={hookHandlerPrefab != null}, SpawnPoint={spawnPoint != null}, NoHook={currentHook == null} -> Result={canThrow}");
+        return canThrow;
     }
-
-    public bool CanThrowHook() => hookHandlerPrefab != null && spawnPoint != null && currentHook == null;
 
     public void ThrowHook()
     {
-        if (!CanThrowHook()) return;
+        Debug.Log($"ThrowHook() called on {gameObject.name}: CanThrow={CanThrowHook()}");
+        
+        if (!CanThrowHook()) 
+        {
+            Debug.LogError($"ThrowHook() FAILED on {gameObject.name}: CanThrow=false");
+            return;
+        }
+        
+        throwDirection = new Vector2(Random.Range(0.2f, 1f), Random.Range(0.2f, 0.5f));
 
-        Vector2 throwDirection = new Vector2(
-                UnityEngine.Random.Range(0.2f, 1f),
-                UnityEngine.Random.Range(0.2f, 0.5f)
-            );
+        // hookMaxDistance = originalMaxDistance;
+        hookMaxDistance = originalMaxDistance + (Random.Range(-2f, 2f));
 
-        // Set to original max distance before throwing, plus some variety
-        hookMaxDistance = originalMaxDistance + (UnityEngine.Random.Range(-2f, 2f));
-
-        // Instantiate the hook handler (which contains both hook and waterline)
+        // Instantiate the hook handler
         currentHookHandler = Instantiate(hookHandlerPrefab, spawnPoint.position, spawnPoint.rotation);
+        curHookHandler = currentHookHandler.GetComponent<HookPartsHandler>();
+        Debug.Log($"✅ Instantiated hook handler: {currentHookHandler.name} at {spawnPoint.position}");
 
         // Find the actual fishing hook within the handler
-        currentHook = currentHookHandler.GetComponentInChildren<FishingProjectile>();
-
+        // currentHook = currentHookHandler.GetComponentInChildren<FishingProjectile>();
+        currentHook = curHookHandler.FishingProjectile;
+        
         if (currentHook != null)
         {
-            currentHook.Initialize(); // Ensure the hook is initialized
+            // ✅ CRITICAL FIX: Set the spawn point BEFORE calling other methods
+            currentHook.Initialize();
             currentHook.SetSpawnPoint(spawnPoint.position);
 
             currentHook.maxDistance = hookMaxDistance;
@@ -95,20 +104,21 @@ public class HookSpawner : MonoBehaviour
             // Setup water detection
             SetupWaterDetection();
 
-            Debug.Log($"Hook handler thrown by {gameObject.name}!");
+            Debug.Log($"✅ Hook thrown successfully by {gameObject.name}! Spawn point: {spawnPoint.position}");
         }
         else
         {
-            Debug.LogError($"No FishingProjectile found in {hookHandlerPrefab.name}!");
+            Debug.LogError($"❌ No FishingProjectile found in {hookHandlerPrefab.name}!");
             Destroy(currentHookHandler);
             currentHookHandler = null;
+            curHookHandler = null;
         }
     }
 
     private void SetupWaterDetection()
     {
-        // Find the WaterLine component in the handler
-        WaterCheck waterCheck = currentHookHandler.GetComponentInChildren<WaterCheck>();
+        // WaterCheck waterCheck = currentHookHandler.GetComponentInChildren<WaterCheck>();
+        WaterCheck waterCheck = curHookHandler.WaterCheck;
 
         if (waterCheck != null && currentHook != null)
         {
@@ -193,6 +203,7 @@ public class HookSpawner : MonoBehaviour
         {
             Destroy(currentHookHandler);
             currentHookHandler = null;
+            curHookHandler = null;
         }
         currentHook = null;
 

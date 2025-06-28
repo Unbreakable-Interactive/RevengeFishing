@@ -1,5 +1,6 @@
 using System.Collections;
 using UnityEngine;
+using Utils;
 
 public abstract class FishingProjectile : Entity
 {
@@ -47,7 +48,6 @@ public abstract class FishingProjectile : Entity
 
     protected override void Update()
     {
-
         if (isBeingHeld && player != null)
         {
             // Position hook at player center
@@ -61,9 +61,7 @@ public abstract class FishingProjectile : Entity
             // Normal behavior
             base.Update();
             ConstrainToMaxDistance();
-
         }
-
     }
 
     protected virtual void InitializeProjectile()
@@ -75,7 +73,7 @@ public abstract class FishingProjectile : Entity
         }
 
         OnProjectileSpawned();
-
+        Debug.Log($"✅ Hook initialized. SpawnPoint: {spawnPoint}, Current Position: {transform.position}");
     }
 
     public virtual void SetSpawnPoint(Vector3 spawnPosition)
@@ -86,7 +84,7 @@ public abstract class FishingProjectile : Entity
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-        if (other.CompareTag("PlayerCollider") && !isBeingHeld)
+        if (other.CompareTag(TagNames.PLAYERCOLLIDER) && !isBeingHeld)
         {
             StartHolding(player.transform);
         }
@@ -101,9 +99,7 @@ public abstract class FishingProjectile : Entity
 
         // Register this hook with the player
         if (player != null)
-        {
             player.AddBitingHook(this);
-        }
 
         // Notify fisherman
         OnPlayerInteraction?.Invoke(true);
@@ -182,13 +178,12 @@ public abstract class FishingProjectile : Entity
         Destroy(gameObject);
     }
 
-    
     private void ConstrainPlayerToMaxDistance()
     {
         if (player == null) return;
 
         float currentDistance = Vector3.Distance(player.transform.position, spawnPoint);
-        float totalMaxDistance = maxDistance + maxStretchDistance;
+        // float totalMaxDistance = maxDistance + maxStretchDistance;
 
         Rigidbody2D playerRb = player.GetComponent<Rigidbody2D>();
         if (playerRb == null) return;
@@ -214,12 +209,6 @@ public abstract class FishingProjectile : Entity
             HandleStretchZone(currentDistance, playerRb);
             MoveHookToFollowPlayer(); // Hook follows player
         }
-
-        //Hard limit - force snap back if too far or stretched too long
-        //if (currentDistance > totalMaxDistance || (isStretching && stretchTimer > maxStretchTime))
-        //{
-        //    SnapPlayerBack(playerRb);
-        //}
     }
 
     private void MoveHookToFollowPlayer()
@@ -254,8 +243,6 @@ public abstract class FishingProjectile : Entity
         Vector3 directionToSpawn = (spawnPoint - player.transform.position).normalized;
         float resistanceMultiplier = stretchCurve.Evaluate(currentStretchAmount);
         Vector2 resistanceForce = directionToSpawn * (stretchResistance * resistanceMultiplier);
-        //float stretchValue = stretchResistance * Time.deltaTime;
-        //Vector2 resistanceForce = directionToSpawn * (stretchValue);
 
         playerRb.AddForce(resistanceForce, ForceMode2D.Impulse);
 
@@ -381,6 +368,7 @@ public abstract class FishingProjectile : Entity
     protected abstract void OnProjectileThrown();
     protected abstract void OnProjectileRetracted();
 
+    // New abstract methods for environment behavior
     protected abstract void OnAirborneBehavior();
     protected abstract void OnUnderwaterBehavior();
 

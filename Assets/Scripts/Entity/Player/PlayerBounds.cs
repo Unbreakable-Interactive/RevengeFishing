@@ -6,9 +6,9 @@ public class PlayerBounds : MonoBehaviour
     public float bounceForce = 1.5f;
     public bool allowUpwardExit = true;
 
-    private Transform player;
+    private Transform playerTransform;
     private Rigidbody2D playerRb;
-    private Player playerMovement;
+    private Player player;
     private BoxCollider2D boundsCollider;
 
     void Start()
@@ -25,26 +25,25 @@ public class PlayerBounds : MonoBehaviour
     {
         if (playerMovementScript != null)
         {
-            player = playerMovementScript.transform;
-            playerRb = player.GetComponent<Rigidbody2D>();
-            playerMovement = playerMovementScript;
-            Debug.Log("PlayerBounds initialized with Player reference.");
+            playerTransform = playerMovementScript.transform;
+            playerRb = playerTransform.GetComponent<Rigidbody2D>();
+            player = playerMovementScript;
+            Debug.Log("PlayerBounds initialized with player reference");
         }
         else
         {
             Debug.LogError("PlayerBounds: No PlayerMovement provided!");
         }
-
     }
 
     void OnTriggerExit2D(Collider2D other)
     {
         // Check if it's the player's collider (either direct or child)
-        bool isPlayer = player != null && (other.transform == player || other.transform.IsChildOf(player));
+        bool isPlayer = player != null && (other.transform == playerTransform || other.transform.IsChildOf(playerTransform));
 
         if (isPlayer && player != null && playerRb != null)
         {
-            Vector2 playerPos = player.position;
+            Vector2 playerPos = playerTransform.position;
             Bounds bounds = boundsCollider.bounds;
 
             // Allow upward exit for jumping
@@ -89,7 +88,7 @@ public class PlayerBounds : MonoBehaviour
 
     void HandleBounceRotation(Vector2 newVelocity)
     {
-        if (playerMovement.IsAboveWater)
+        if (player.IsAboveWater)
         {
             // In air: The HandleAirborneRotation() will automatically rotate to face velocity
             // No need to override - it will happen automatically next frame
@@ -101,8 +100,8 @@ public class PlayerBounds : MonoBehaviour
             if (newVelocity.magnitude > 0.1f)
             {
                 float angle = Mathf.Atan2(newVelocity.y, newVelocity.x) * Mathf.Rad2Deg;
-                player.rotation = Quaternion.AngleAxis(angle, Vector3.forward);
-                Debug.Log($"Underwater bounce - rotated to face: {angle:F1}°");
+                playerTransform.rotation = Quaternion.AngleAxis(angle, Vector3.forward);
+                Debug.Log($"Underwater bounce - rotated to face: {angle:F1}Â°");
             }
         }
     }

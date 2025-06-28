@@ -1,17 +1,19 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using Utils;
 
 public class Platform : MonoBehaviour
 {
     [Header("Player")]
-    public GameObject player; // Reference to the player object
+    public GameObject player;
 
     [Header("Assigned Enemies")]
     public List<LandEnemy> assignedEnemies = new List<LandEnemy>();
 
+    [Tooltip("Not used")]
     [Header("Platform Settings")]
-    public float surfaceOffset = 0.1f; // How far above surface to place enemies
+    public float surfaceOffset = 0.1f;
 
     [Header("Debug")]
     public bool showDebugInfo = true;
@@ -26,9 +28,8 @@ public class Platform : MonoBehaviour
             Debug.LogError($"Platform {gameObject.name} missing Collider2D component!");
             return;
         }
-
-        gameObject.layer = LayerMask.NameToLayer("Platform");
-
+        gameObject.layer = LayerMask.NameToLayer(LayerNames.PLATFORM);
+        
         platformCollider.isTrigger = false;
 
         if (player != null)
@@ -40,7 +41,6 @@ public class Platform : MonoBehaviour
             }
         }
 
-        // Set up selective collisions
         SetupSelectiveCollisions();
 
         if (showDebugInfo)
@@ -60,7 +60,7 @@ public class Platform : MonoBehaviour
 
     void OnCollisionExit2D(Collision2D collision)
     {
-        Enemy enemy = collision.gameObject.GetComponent<Enemy>();
+        LandEnemy enemy = collision.gameObject.GetComponent<LandEnemy>();
         if (enemy != null)
         {
             if (assignedEnemies.Contains(enemy))
@@ -75,38 +75,31 @@ public class Platform : MonoBehaviour
     private void RegisterEnemyOnCollision(LandEnemy enemy)
     {
         if (enemy == null) return;
-
+        
         if (assignedEnemies.Contains(enemy)) return;
-
+        
         Platform previousPlatform = enemy.GetAssignedPlatform();
         if (previousPlatform != null && previousPlatform != this)
         {
             previousPlatform.UnregisterEnemy(enemy);
             if (showDebugInfo)
-            {
                 Debug.Log($"Enemy {enemy.name} MOVED from {previousPlatform.name} to {gameObject.name}");
-            }
         }
-
+        
         assignedEnemies.Add(enemy);
         enemy.SetAssignedPlatform(this);
-
-        // CRITICAL: Trigger AI activation after platform assignment
+        
+        // ✅ CRITICAL: Trigger AI activation after platform assignment
         enemy.OnPlatformAssigned(this);
-
+        
         Collider2D enemyCollider = enemy.GetComponent<Collider2D>();
         if (enemyCollider != null && platformCollider != null)
-        {
             Physics2D.IgnoreCollision(platformCollider, enemyCollider, false);
-        }
 
-        enemy.platformBoundsCalculated = true;
-        // enemy.isGrounded = true;
+        enemy.platformBoundsCalculated = false;
 
         if (showDebugInfo)
-        {
-            Debug.Log($"COLLISION ASSIGNMENT: {enemy.name} assigned to platform {gameObject.name}! Total enemies: {assignedEnemies.Count}");
-        }
+            Debug.Log($"✅ COLLISION ASSIGNMENT: {enemy.name} assigned to platform {gameObject.name}! Total enemies: {assignedEnemies.Count}");
     }
 
     void SetupSelectiveCollisions()

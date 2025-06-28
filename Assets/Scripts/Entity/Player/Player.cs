@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -61,8 +60,6 @@ public class Player : Entity
 
         base.Initialize(); // Call base Initialize to set up Rigidbody2D and movement mode
 
-        //_powerLevel = powerLevel; // Initialize power level
-        //DebugLog($"Player initialized with power level: {_powerLevel}");
         mainCamera = Camera.main ?? FindObjectOfType<Camera>();
 
         _fatigue = 0;
@@ -73,7 +70,6 @@ public class Player : Entity
         currentGravityScale = underwaterGravityScale;
     }
 
-    // Update is called once per frame
     protected override void Update()
     {
         base.Update(); // Call base Update to handle movement mode

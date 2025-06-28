@@ -1,36 +1,31 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-enum Phase { infant, juvenile, adult, beast, monster }
+public enum Phase { infant, juvenile, adult, beast, monster }
 
 public class PlayerStats : MonoBehaviour
 {
-    [SerializeField] private long powerLevel = 100; //default starting power level is 100
-    private long starterLevel;
-    /*[SerializeField]*/ private long hunger; //player dies if reaches 100%
-    /*[SerializeField]*/ private long fatigue; //player dies if reaches 100%
-    [SerializeField] private Phase phase = Phase.infant;
-
-    // Start is called before the first frame update
+    [Header("Configuration")]
+    [SerializeField] private PlayerConfig _config;
+    
+    // Runtime values
+    [SerializeField] private long _powerLevel;
+    [SerializeField] private long _hunger;
+    [SerializeField] private long _fatigue;
+    [SerializeField] private Phase _phase;
+    
     public void Initialize()
     {
-        starterLevel = powerLevel;
+        _powerLevel = _config.startingPowerLevel;
         SetPhase();
     }
-
-    // Update is called once per frame
-    void Update()
+    
+    private void SetPhase()
     {
-        
-    }
-
-    void SetPhase()
-    {
-        if (powerLevel >= 10000000000) phase = Phase.monster; //modify these to be dynamic instead of hardcoded
-        else if (powerLevel >= 100000000) phase = Phase.beast;
-        else if (powerLevel >= 1000000) phase = Phase.adult;
-        else if (powerLevel >= 10000) phase = Phase.juvenile;
-        else phase = Phase.infant;
+        var thresholds = _config.phaseThresholds;
+        if (_powerLevel >= thresholds.monster) _phase = Phase.monster;
+        else if (_powerLevel >= thresholds.beast) _phase = Phase.beast;
+        else if (_powerLevel >= thresholds.adult) _phase = Phase.adult;
+        else if (_powerLevel >= thresholds.juvenile) _phase = Phase.juvenile;
+        else _phase = Phase.infant;
     }
 }
