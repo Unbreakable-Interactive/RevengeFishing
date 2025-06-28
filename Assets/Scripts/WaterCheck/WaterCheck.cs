@@ -11,6 +11,7 @@ public class WaterCheck : MonoBehaviour
     {
         // Ensure this collider is set as a trigger
         GetComponent<Collider2D>().isTrigger = true;
+        
     }
 
     private void OnTriggerExit2D(Collider2D other)
@@ -20,8 +21,11 @@ public class WaterCheck : MonoBehaviour
         // Determine if object is above or below the water line
         bool aboveWater = other.transform.position.y > transform.position.y;
 
-        entityMovement.SetMovementMode(aboveWater);
-
-        Debug.Log($"{other.name} {(aboveWater ? "exited" : "entered")} water!");
+        // ✅ FIXED: Add cooldown to prevent spam calls
+        if (entityMovement != null)
+        {
+            entityMovement.SetMovementMode(aboveWater);
+            Debug.Log($"{other.name} {(aboveWater ? "exited" : "entered")} water!");
+        }
     }
 }

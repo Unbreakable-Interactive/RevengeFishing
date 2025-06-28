@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4296805662065278111}
   - component: {fileID: 8767175256861322817}
-  m_Layer: 6
+  m_Layer: 7
   m_Name: Collider
   m_TagString: Enemy
   m_Icon: {fileID: 0}
@@ -87,7 +87,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4289201725534140788}
   - component: {fileID: 3033624813667994110}
-  m_Layer: 6
+  m_Layer: 7
   m_Name: FishingRodVisual
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -173,7 +173,7 @@ GameObject:
   - component: {fileID: 3522423683038717205}
   - component: {fileID: 910140621170360805}
   - component: {fileID: 2117141073483461364}
-  m_Layer: 6
+  m_Layer: 7
   m_Name: Fisherman
   m_TagString: Enemy
   m_Icon: {fileID: 0}
@@ -240,9 +240,8 @@ MonoBehaviour:
   hookHandlerPrefab: {fileID: 2202176723642426590, guid: 96755b07ec09907448fa89c168d540f4, type: 3}
   spawnPoint: {fileID: 3470367175335556429}
   throwForce: 8
-  throwDirection: {x: 1, y: 0.2}
   hookMaxDistance: 8
-  currentHook: {fileID: 0}
+  throwDirection: {x: 1, y: 0.2}
 --- !u!114 &2117141073483461364
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -261,37 +260,41 @@ MonoBehaviour:
   _maxFatigue: 0
   isAboveWater: 1
   airGravityScale: 2
-  underwaterGravityScale: 0
   airDrag: 1.5
-  underwaterDrag: 0.5
   airMaxSpeed: 3
+  underwaterGravityScale: -0.2
+  underwaterDrag: 1
   underwaterMaxSpeed: 5
   entityType: 2
-  canEscape: 1
-  assignedPlatform: {fileID: 0}
+  _tier: 0
+  _state: 0
+  player: {fileID: 0}
+  minActionTime: 1
+  maxActionTime: 4
+  nextActionTime: 0
+  swimForce: 0
+  minSwimSpeed: 0
+  landEnemyConfig: {fileID: 11400000, guid: c7bf3d738a3374cbeb2406b3ec839fab, type: 2}
+  _landMovementState: 0
+  walkingSpeed: 1.5
+  runningSpeed: 3
+  edgeBuffer: 0.5
   fishingToolEquipped: 0
-  toolDropPrefab: {fileID: 2743509415465814910, guid: a106a3ba687ec00469ed0a6d34ab4fe9, type: 3}
-  currentMovementState: 0
+  toolDropPrefab: {fileID: 1880579898394139232, guid: 850bb6ff98bfe4c1a9ca1a42e8154763, type: 3}
   platformLeftEdge: 0
   platformRightEdge: 0
   platformBoundsCalculated: 0
-  isGrounded: 0
-  config:
-    idleProbability: 0.6
-    walkProbability: 0.15
-    runProbability: 0.05
-    equipToolChance: 0.6
-    unequipToolChance: 0.6
-    hookThrowChance: 0.4
-    minHookWaitTime: 10
-    maxHookWaitTime: 20
-    fishingBehaviorCheckInterval: 10
-    minActionTime: 1
-    maxActionTime: 4
-  fishingToolEquipChance: 0.3
-  hookThrowChance: 0.4
-  toolUnequipChance: 0.2
-  fishingActivityCooldown: 2
+  maxUpwardVelocity: 5
+  weight: 6
+  hasStartedFloating: 0
+  minFloatingTime: 0
+  floatingStartTime: 0
+  initialSpawnPosition: {x: 0, y: 0, z: 0}
+  hookTimer: 1
+  hookDuration: 8
+  assignedPlatform: {fileID: 0}
+  _fishermanConfig: {fileID: 11400000, guid: 876c88f03b9414e67960bdc874e7d116, type: 2}
+  retractionSpeed: 2
 --- !u!1 &8143527860349171708
 GameObject:
   m_ObjectHideFlags: 0
@@ -301,7 +304,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3470367175335556429}
-  m_Layer: 6
+  m_Layer: 7
   m_Name: RodAttachPoint
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -333,7 +336,7 @@ GameObject:
   m_Component:
   - component: {fileID: 3348643983329745823}
   - component: {fileID: 8651322663268210135}
-  m_Layer: 6
+  m_Layer: 7
   m_Name: Sprite
   m_TagString: Untagged
   m_Icon: {fileID: 0}

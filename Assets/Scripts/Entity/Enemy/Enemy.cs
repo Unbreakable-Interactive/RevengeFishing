@@ -5,20 +5,20 @@ public abstract class Enemy : Entity
 {
     public enum Tier
     {
-        Tier1=0,
-        Tier2=1,
-        Tier3=2,
-        Tier4=3,
-        Tier5=4,
-        Tier6=5
+        Tier1 = 0,
+        Tier2 = 1,
+        Tier3 = 2,
+        Tier4 = 3,
+        Tier5 = 4,
+        Tier6 = 5
     }
 
     public enum EnemyState
     {
-        Alive=0,
-        Defeated=1,
-        Eaten=2,
-        Dead=3
+        Alive = 0,
+        Defeated = 1,
+        Eaten = 2,
+        Dead = 3
     }
 
     [SerializeField] protected Tier _tier;
@@ -35,6 +35,13 @@ public abstract class Enemy : Entity
     [Header("Water Enemy Variables")]
     [SerializeField] protected float swimForce;
     [SerializeField] protected float minSwimSpeed;
+
+    // ✅ POOLING: Make timing accessible for reset
+    public float NextActionTime 
+    { 
+        get { return nextActionTime; } 
+        set { nextActionTime = value; } 
+    }
 
     
     #region Base Behaviours
@@ -170,10 +177,24 @@ public abstract class Enemy : Entity
     {
         Debug.Log($"{gameObject.name} has ESCAPED! The player can no longer catch this enemy.");
 
-        // Destroy the parent FishermanHandler (or this object if no parent)
-        GameObject objectToDestroy = transform.parent != null ? transform.parent.gameObject : gameObject;
-        // ! Instead of destroy, return to pool.
-        Destroy(objectToDestroy);
+        // ✅ FIXED: Use object pooling instead of Destroy
+        GameObject objectToReturn = transform.parent != null ? transform.parent.gameObject : gameObject;
+        
+        // Find the object pool and return this enemy
+        SimpleObjectPool pool = FindObjectOfType<SimpleObjectPool>();
+        if (pool != null)
+        {
+            // Determine pool name based on object type
+            string poolName = "Fisherman"; // Default for now - can be made dynamic later
+            
+            Debug.Log($"Returning {gameObject.name} to pool '{poolName}' instead of destroying");
+            pool.ReturnToPool(poolName, objectToReturn);
+        }
+        else
+        {
+            Debug.LogWarning($"No SimpleObjectPool found! Falling back to Destroy for {gameObject.name}");
+            Destroy(objectToReturn);
+        }
     }
     
     /// <summary>
@@ -215,9 +236,24 @@ public abstract class Enemy : Entity
     {
         Debug.Log($"{gameObject.name} has been REVERSE FISHED!");
 
-        // Destroy the parent FishermanHandler (or this object if no parent)
-        GameObject objectToDestroy = transform.parent != null ? transform.parent.gameObject : gameObject;
-        Destroy(objectToDestroy);
+        // ✅ FIXED: Use object pooling instead of Destroy
+        GameObject objectToReturn = transform.parent != null ? transform.parent.gameObject : gameObject;
+        
+        // Find the object pool and return this enemy
+        SimpleObjectPool pool = FindObjectOfType<SimpleObjectPool>();
+        if (pool != null)
+        {
+            // Determine pool name based on object type
+            string poolName = "Fisherman"; // Default for now - can be made dynamic later
+            
+            Debug.Log($"Returning {gameObject.name} to pool '{poolName}' after being reverse fished");
+            pool.ReturnToPool(poolName, objectToReturn);
+        }
+        else
+        {
+            Debug.LogWarning($"No SimpleObjectPool found! Falling back to Destroy for {gameObject.name}");
+            Destroy(objectToReturn);
+        }
     }
 
     #endregion

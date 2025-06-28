@@ -5,66 +5,52 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="72e206af-8527-4cfa-822c-91eed1a8f669" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/Assets/Scripts/EnemyAIState.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/Scripts/Entity.meta" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/Scripts/Entity/Enemy/DroppedTool.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/Scripts/Entity/Enemy/DroppedTool.cs.meta" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/Scripts/Entity/Enemy/Enemy.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/Scripts/Entity/Enemy/LandEnemy.meta" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/Scripts/Entity/Enemy/LandEnemy/Fisherman.meta" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/Scripts/Entity/Enemy/LandEnemy/Fisherman/FishermanConfig.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/Scripts/Entity/Enemy/LandEnemy/LandEnemy.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/Scripts/Entity/Enemy/LandEnemy/LandEnemy.cs.meta" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/Scripts/Entity/Enemy/LandEnemy/LandEnemyConfig.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/Scripts/Entity/Enemy/LandEnemy/LandEnemyConfig.cs.meta" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/Scripts/Entity/Entity.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/Scripts/Entity/Entity.cs.meta" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/Scripts/FishingProjectiles/HookPartsHandler.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/Scripts/FishingProjectiles/HookPartsHandler.cs.meta" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/Scripts/Utils/AssetNames.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/Scripts/Utils/AssetNames.cs.meta" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/Scripts/Utils/LayerNames.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/Scripts/Utils/LayerNames.cs.meta" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/Scripts/Utils/TagNames.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/Scripts/Utils/TagNames.cs.meta" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/Scripts/WaterCheck.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Scripts/Entity/Enemy/LandEnemy/Fisherman/SO.meta" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.RevengeFishing2D/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.RevengeFishing2D/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Prefabs/Fisherman.prefab" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Prefabs/Fisherman.prefab" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Prefabs/FishermanHandler.prefab" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Prefabs/FishermanHandler.prefab" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Prefabs/FishingHookHandler.prefab" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Prefabs/FishingHookHandler.prefab" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Prefabs/PlayerHandler.prefab" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Prefabs/PlayerHandler.prefab" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scenes/SampleScene.unity" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scenes/SampleScene.unity" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scenes/Testing.unity" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scenes/Testing.unity" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Core/GameBootstrap.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Core/GameBootstrap.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Core/SimpleObjectPool.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Core/SimpleObjectPool.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Enemy.meta" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Entity/Enemy.meta" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Enemy/EnemyAIState.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Enemy/EnemyAIState.cs.meta" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/EnemyAIState.cs.meta" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Enemy/EnemyBase.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Enemy/EnemyBase.cs.meta" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Entity/Enemy/Enemy.cs.meta" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Enemy/FishermanConfig.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Enemy/FishermanConfig.cs.meta" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Entity/Enemy/LandEnemy/Fisherman/FishermanConfig.cs.meta" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Enemy/FishermanScript.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Entity/Enemy/LandEnemy/Fisherman/Fisherman.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Enemy/FishermanScript.cs.meta" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Entity/Enemy/LandEnemy/Fisherman/Fisherman.cs.meta" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/EntityMovement.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/EntityMovement.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/FishingProjectiles/FishingLineRenderer.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/FishingProjectiles/FishingLineRenderer.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/FishingProjectiles/FishingProjectile.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/FishingProjectiles/FishingProjectile.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/FishingProjectiles/HookSpawner.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/FishingProjectiles/HookSpawner.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/PlatformScripts/Platform.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/PlatformScripts/Platform.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/PlatformScripts/PortPlatform.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/PlatformScripts/PortPlatform.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Player.meta" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Entity/Player.meta" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Player/PlayerBounds.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Entity/Player/PlayerBounds.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Player/PlayerBounds.cs.meta" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Entity/Player/PlayerBounds.cs.meta" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Player/PlayerMovement.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Player/PlayerMovement.cs.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Player/PlayerStats.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Entity/Player/PlayerStats.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Player/PlayerStats.cs.meta" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Entity/Player/PlayerStats.cs.meta" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/SpawnHandler.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Utils/SpawnHandler.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/SpawnHandler.cs.meta" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Utils/SpawnHandler.cs.meta" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/WaterCheck.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/WaterCheck/WaterCheck.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/WaterCheck.cs.meta" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/WaterCheck/WaterCheck.cs.meta" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/WaterCheckFollow.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/WaterCheck/WaterCheckFollow.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/WaterCheckFollow.cs.meta" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/WaterCheck/WaterCheckFollow.cs.meta" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ProjectSettings/TagManager.asset" beforeDir="false" afterPath="$PROJECT_DIR$/ProjectSettings/TagManager.asset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/EnemyAIState.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/EnemyAIState.cs.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Entity/Enemy/Enemy.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Entity/Enemy/Enemy.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Entity/Enemy/LandEnemy/Fisherman/Fisherman.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Entity/Enemy/LandEnemy/Fisherman/Fisherman.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Entity/Enemy/LandEnemy/Fisherman/FishermanConfig.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Entity/Enemy/LandEnemy/Fisherman/SO/FishermanConfig.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Entity/Enemy/LandEnemy/Fisherman/FishermanConfig.cs.meta" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Entity/Enemy/LandEnemy/Fisherman/SO/FishermanConfig.cs.meta" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Entity/Enemy/LandEnemy/LandEnemyConfig.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Entity/Enemy/LandEnemy/LandEnemyConfig.cs.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Entity/Player/PlayerStats.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Entity/Player/PlayerStats.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/EntityMovement.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/EntityMovement.cs.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/FishingProjectiles.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/FishingProjectiles/FishingHook.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/FishingProjectiles/FishingHook.cs.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/FishingProjectiles/FishingLineRenderer.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/FishingProjectiles/FishingLineRenderer.cs.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/FishingProjectiles/FishingProjectile.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/FishingProjectiles/FishingProjectile.cs.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/FishingProjectiles/HookPartsHandler.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/FishingProjectiles/HookPartsHandler.cs.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/FishingProjectiles/HookSpawner.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/FishingProjectiles/HookSpawner.cs.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Packages/com.bezi.sidekick/Editor/BeziSidekickInternal.dll" beforeDir="false" afterPath="$PROJECT_DIR$/Packages/com.bezi.sidekick/Editor/BeziSidekickInternal.dll" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Packages/com.bezi.sidekick/Editor/Resources/Icons/bezi-dark-icon-20.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Packages/com.bezi.sidekick/Editor/Resources/Icons/bezi-dark-icon-20.png.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Packages/com.bezi.sidekick/Editor/Resources/Icons/bezi-icon-20.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Packages/com.bezi.sidekick/Editor/Resources/Icons/bezi-icon-20.png.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Packages/com.bezi.sidekick/Editor/Resources/Icons/bezi-icon.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Packages/com.bezi.sidekick/Editor/Resources/Icons/bezi-icon.png.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Packages/com.bezi.sidekick/Editor/Resources/Icons/sync-dark-icon-20.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Packages/com.bezi.sidekick/Editor/Resources/Icons/sync-dark-icon-20.png.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Packages/com.bezi.sidekick/Editor/Resources/Icons/sync-icon-20.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Packages/com.bezi.sidekick/Editor/Resources/Icons/sync-icon-20.png.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Packages/com.bezi.sidekick/Plugins/Microsoft.CodeAnalysis.CSharp.dll" beforeDir="false" afterPath="$PROJECT_DIR$/Packages/com.bezi.sidekick/Plugins/Microsoft.CodeAnalysis.CSharp.dll" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Packages/com.bezi.sidekick/Plugins/Microsoft.CodeAnalysis.dll" beforeDir="false" afterPath="$PROJECT_DIR$/Packages/com.bezi.sidekick/Plugins/Microsoft.CodeAnalysis.dll" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Packages/com.bezi.sidekick/Plugins/SharpToken.dll" beforeDir="false" afterPath="$PROJECT_DIR$/Packages/com.bezi.sidekick/Plugins/SharpToken.dll" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Packages/com.bezi.sidekick/Plugins/System.Collections.Immutable.dll" beforeDir="false" afterPath="$PROJECT_DIR$/Packages/com.bezi.sidekick/Plugins/System.Collections.Immutable.dll" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Packages/com.bezi.sidekick/Plugins/System.Reflection.Metadata.dll" beforeDir="false" afterPath="$PROJECT_DIR$/Packages/com.bezi.sidekick/Plugins/System.Reflection.Metadata.dll" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Packages/com.bezi.sidekick/Plugins/System.Runtime.CompilerServices.Unsafe.dll" beforeDir="false" afterPath="$PROJECT_DIR$/Packages/com.bezi.sidekick/Plugins/System.Runtime.CompilerServices.Unsafe.dll" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Packages/com.bezi.sidekick/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/Packages/com.bezi.sidekick/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Unity_Naming_Conventions.md" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -170,7 +156,7 @@
       <workItem from="1749678011090" duration="6889000" />
       <workItem from="1750286567612" duration="3328000" />
       <workItem from="1750836624393" duration="5574000" />
-      <workItem from="1751100290251" duration="10018000" />
+      <workItem from="1751100290251" duration="13865000" />
     </task>
     <servers />
   </component>

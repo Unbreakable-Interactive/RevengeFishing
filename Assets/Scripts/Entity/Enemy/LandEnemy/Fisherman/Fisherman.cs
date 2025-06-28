@@ -3,7 +3,7 @@ using UnityEngine;
 public class Fisherman : LandEnemy
 {
     [Header("Fisherman Configuration")]
-    public FishermanConfig fishermanConfig = new FishermanConfig();
+    [SerializeField] private FishermanConfig _fishermanConfig;
     [Tooltip("Units per second")]
     [SerializeField] float retractionSpeed = 2f;
 
@@ -16,6 +16,12 @@ public class Fisherman : LandEnemy
     public override void Initialize()
     {
         base.Initialize();
+        
+        // Validate config is assigned
+        if (_fishermanConfig == null)
+        {
+            Debug.LogError($"FishermanConfig is not assigned to {gameObject.name}! Please assign it in the inspector.");
+        }
     }
 
     protected override void Update()
@@ -44,7 +50,7 @@ public class Fisherman : LandEnemy
             hasThrownHook = false;
             hookTimer = 0f;
 
-            if (Random.value < fishermanConfig.unequipToolChance)
+            if (_fishermanConfig != null && Random.value < _fishermanConfig.unequipToolChance)
                 TryUnequipFishingTool();
         }
     }
@@ -52,12 +58,13 @@ public class Fisherman : LandEnemy
     protected override void MakeAIDecision()
     {
         if (_state == EnemyState.Defeated) return;
+        if (_fishermanConfig == null) return; // Safety check
 
         if (_landMovementState == LandMovementState.Idle && !hasThrownHook)
         {
             if (!fishingToolEquipped)
             {
-                if (Random.value < fishermanConfig.equipToolChance)
+                if (Random.value < _fishermanConfig.equipToolChance)
                 {
                     ScheduleNextAction();
                     TryEquipFishingTool();
@@ -68,7 +75,7 @@ public class Fisherman : LandEnemy
             {
                 float random = Random.value;
                 
-                if (random < fishermanConfig.hookThrowChance)
+                if (random < _fishermanConfig.hookThrowChance)
                 {
                     if (hookSpawner?.CanThrowHook() == true)
                     {
@@ -79,7 +86,7 @@ public class Fisherman : LandEnemy
                         SubscribeToHookEvents();
                     }
                 }
-                else if (random < (fishermanConfig.hookThrowChance + fishermanConfig.unequipToolChance))
+                else if (random < (_fishermanConfig.hookThrowChance + _fishermanConfig.unequipToolChance))
                 {
                     // Put away fishing tool
                     ScheduleNextAction();

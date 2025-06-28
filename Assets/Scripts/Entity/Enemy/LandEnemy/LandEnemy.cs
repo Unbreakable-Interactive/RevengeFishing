@@ -4,7 +4,7 @@ using UnityEngine;
 public class LandEnemy : Enemy
 {
     [Header("Land Enemy Configuration")]
-    public LandEnemyConfig landEnemyConfig = new LandEnemyConfig();
+    public LandEnemyConfig landEnemyConfig; // ✅ FIXED: Remove constructor call
 
     #region Land Enemy Variables
 
@@ -50,11 +50,47 @@ public class LandEnemy : Enemy
 
     [Header("Escape System")]
     [SerializeField] protected bool hasStartedFloating = false; // Track if enemy is floating upward
+    [SerializeField] protected float minFloatingTime = 3f; // Minimum time before escape (prevents fast disappearing)
+    [SerializeField] protected float floatingStartTime; // When floating started
+
+    // ✅ POOLING: Make floating state accessible for reset
+    public bool HasStartedFloating 
+    { 
+        get { return hasStartedFloating; } 
+        set { hasStartedFloating = value; } 
+    }
+    
+    public float FloatingStartTime 
+    { 
+        get { return floatingStartTime; } 
+        set { floatingStartTime = value; } 
+    }
+
+    // ✅ POOLING: Store initial spawn position for reset
+    [SerializeField] private Vector3 initialSpawnPosition;
+    public Vector3 InitialSpawnPosition 
+    { 
+        get { return initialSpawnPosition; } 
+        set { initialSpawnPosition = value; } 
+    }
 
     protected HookSpawner hookSpawner;
     protected bool hasThrownHook;
     [SerializeField] protected float hookTimer;
     [SerializeField] protected float hookDuration;
+
+    // ✅ POOLING: Make fishing state accessible for reset and movement checks
+    public bool HasThrownHook 
+    { 
+        get { return hasThrownHook; } 
+        set { hasThrownHook = value; } 
+    }
+    
+    public float HookTimer 
+    { 
+        get { return hookTimer; } 
+        set { hookTimer = value; } 
+    }
 
     protected FishingProjectile subscribedHook;
 
@@ -123,11 +159,34 @@ public class LandEnemy : Enemy
     protected override void EnemySetup()
     {
         base.EnemySetup();
+        
+        // ✅ COMPLETE STATE RESET for pooling
         platformBoundsCalculated = false;
-
-        nextActionTime = Time.time + UnityEngine.Random.Range(0.5f, 2f);
+        platformLeftEdge = 0f;
+        platformRightEdge = 0f;
+        
+        // ✅ FLOATING STATE RESET
+        hasStartedFloating = false;
+        floatingStartTime = 0f;
+        
+        // ✅ MOVEMENT STATE RESET
         _landMovementState = LandMovementState.Idle;
+        fishingToolEquipped = false;
+        
+        // ✅ HOOK STATE RESET (CRITICAL FIX)
+        hasThrownHook = false;
+        hookTimer = 0f;
+        
+        // ✅ SCHEDULING RESET
+        nextActionTime = Time.time + UnityEngine.Random.Range(0.5f, 2f);
 
+        // ✅ SAVE CURRENT POSITION AS INITIAL SPAWN POSITION (if not already set by pooling)
+        if (initialSpawnPosition == Vector3.zero)
+        {
+            initialSpawnPosition = transform.position;
+        }
+
+        // ✅ HOOK SPAWNER SETUP
         hookSpawner = GetComponent<HookSpawner>();
         if (hookSpawner == null)
         {
@@ -135,9 +194,18 @@ public class LandEnemy : Enemy
         }
         hookSpawner.Initialize();
 
+        // ✅ PHYSICS RESET (additional safety)
+        if (rb != null)
+        {
+            rb.velocity = Vector2.zero;
+            rb.angularVelocity = 0f;
+            rb.gravityScale = 1f;
+            rb.simulated = true; // ✅ ENSURE PHYSICS IS ENABLED
+        }
+
         SetMovementMode(isAboveWater);
 
-        Debug.Log($"{gameObject.name} - Enemy initialized with power level {_powerLevel}");
+        Debug.Log($"✅ {gameObject.name} - Enemy COMPLETELY INITIALIZED with power level {_powerLevel} at position {transform.position}");
     }
     // Update is called once per frame
     protected override void Update()
@@ -147,6 +215,12 @@ public class LandEnemy : Enemy
 
     public override void SetMovementMode(bool aboveWater)
     {
+        // ✅ PREVENT LOOP: Don't process if already in correct state
+        if (isAboveWater == aboveWater) 
+        {
+            return; // No state change needed
+        }
+        
         base.SetMovementMode(aboveWater);
         Debug.Log($"{gameObject.name} SetMovementMode called: aboveWater={aboveWater}, state={_state}, hasStartedFloating={hasStartedFloating}");
 
@@ -155,17 +229,31 @@ public class LandEnemy : Enemy
             // If defeated enemy reaches surface while floating, they escape
             if (_state == EnemyState.Defeated && hasStartedFloating)
             {
-                Debug.Log($"{gameObject.name} - ESCAPE CONDITIONS MET! Triggering escape.");
-
-                TriggerEscape();
-                return; // Exit early since enemy will be destroyed
+                // ✅ FIXED: Check minimum floating time before allowing escape
+                float floatingDuration = Time.time - floatingStartTime;
+                if (floatingDuration >= minFloatingTime)
+                {
+                    Debug.Log($"{gameObject.name} - ESCAPE CONDITIONS MET! Floating for {floatingDuration:F1}s. Triggering escape.");
+                    TriggerEscape();
+                    return; // Exit early since enemy will be returned to pool
+                }
+                else
+                {
+                    Debug.Log($"{gameObject.name} - Not ready to escape yet. Floating for {floatingDuration:F1}s (need {minFloatingTime}s)");
+                }
             }
             else if (_state == EnemyState.Defeated)
             {
                 Debug.Log($"{gameObject.name} - Defeated but escape conditions not met: hasStartedFloating={hasStartedFloating}");
             }
 
-            hasStartedFloating = false; // Reset floating flag when above water
+            // ✅ FIXED: Reset floating when enemy exits water COMPLETELY (not defeated anymore)
+            if (_state == EnemyState.Alive)
+            {
+                hasStartedFloating = false; 
+                floatingStartTime = 0f;
+                Debug.Log($"{gameObject.name} - ALIVE enemy exited water, floating flags RESET");
+            }
             Debug.Log($"{gameObject.name} enemy switched to AIRBORNE mode");
         }
         else
@@ -176,8 +264,13 @@ public class LandEnemy : Enemy
                 TriggerDefeat();
             }
 
-            // When defeated enemy enters water, mark as floating
-            hasStartedFloating = true;
+            // When defeated enemy enters water, mark as floating and record time
+            if (!hasStartedFloating)
+            {
+                hasStartedFloating = true;
+                floatingStartTime = Time.time; // ✅ FIXED: Record when floating started
+                Debug.Log($"{gameObject.name} - Started floating at time {floatingStartTime}");
+            }
 
             Debug.Log($"{gameObject.name} enemy switched to UNDERWATER mode");
         }
@@ -311,6 +404,8 @@ public class LandEnemy : Enemy
     {
         float currentX = transform.position.x;
 
+        // ❌ REMOVED: Teleporting safety fix - it was causing water trigger loops!
+
         // If we're near the left edge and moving left, stop or turn around
         if (currentX <= platformLeftEdge && (_landMovementState == LandMovementState.WalkLeft || _landMovementState == LandMovementState.RunLeft))
         {
@@ -340,6 +435,14 @@ public class LandEnemy : Enemy
     {
         if (fishingToolEquipped) return;
 
+        // ✅ SAFETY CHECK: Ensure config exists
+        if (landEnemyConfig == null)
+        {
+            Debug.LogWarning($"{gameObject.name}: LandEnemyConfig is not assigned! Using default behavior.");
+            _landMovementState = (UnityEngine.Random.value < 0.5f) ? LandMovementState.Idle : LandMovementState.WalkLeft;
+            return;
+        }
+
         // Only handle basic enemy movement - no fishing logic!
         float randomValue = UnityEngine.Random.value;
 
@@ -364,7 +467,11 @@ public class LandEnemy : Enemy
     //actually executes the action chosen by ChooseRandomLandAction
     protected virtual void ExecuteLandMovementBehaviour()
     {
+        // ✅ CRITICAL FIX: Prevent movement when fishing tool equipped OR hook is thrown
         if (fishingToolEquipped) return;
+        
+        // ✅ ADDITIONAL CHECK: Don't move if hook is active
+        if (hasThrownHook) return;
 
         Vector2 movement = Vector2.zero;
 
