@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+<<<<<<<< HEAD:Assets/Scripts/Core/GameEntry.cs.meta
+guid: e32216a2f79d2ca4f996ac8b4d9f96e9
+========
+guid: df68ea72faddb442c92d82a800a0619c
+>>>>>>>> 335451e9d8eabd1c15addec4d82330ef50be540b:Assets/Scripts/Core/GameBootstrap.cs.meta
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

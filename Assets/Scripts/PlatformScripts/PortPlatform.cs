@@ -170,8 +170,8 @@ public class PortPlatform : MonoBehaviour
 
     bool IsPlayer(GameObject obj)
     {
-        return obj.CompareTag("Player") || obj.GetComponent<PlayerMovement>() != null ||
-               obj.GetComponentInParent<PlayerMovement>() != null;
+        return obj.CompareTag("Player") || obj.GetComponent<Player>() != null ||
+               obj.GetComponentInParent<Player>() != null;
     }
 
     void OnDrawGizmos()

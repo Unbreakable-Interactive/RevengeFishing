@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4296805662065278111}
   - component: {fileID: 8767175256861322817}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Collider
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -104,7 +104,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0.258819, w: 0.9659259}
   m_LocalPosition: {x: 0.8299999, y: 0.5799999, z: 0}
-  m_LocalScale: {x: 0.10000001, y: 2, z: 1}
+  m_LocalScale: {x: 0.10000001, y: 1.5, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 3348643983329745823}
@@ -224,7 +224,7 @@ Rigidbody2D:
   m_Interpolate: 0
   m_SleepingMode: 1
   m_CollisionDetection: 0
-  m_Constraints: 0
+  m_Constraints: 4
 --- !u!114 &910140621170360805
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -239,9 +239,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   hookHandlerPrefab: {fileID: 2202176723642426590, guid: 96755b07ec09907448fa89c168d540f4, type: 3}
   spawnPoint: {fileID: 3470367175335556429}
-  throwForce: 8
-  throwDirection: {x: 1, y: 0.2}
+  throwForce: 10
   hookMaxDistance: 8
+  throwDirection: {x: 1, y: 0.2}
 --- !u!114 &2117141073483461364
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -254,28 +254,43 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 74f210aa94814394cbc3a52e26206a1e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  rb: {fileID: 3522423683038717205}
+  _powerLevel: 0
+  _fatigue: 0
+  _maxFatigue: 0
   isAboveWater: 1
   airGravityScale: 2
-  underwaterGravityScale: 0
   airDrag: 1.5
-  underwaterDrag: 0.5
   airMaxSpeed: 3
+  underwaterGravityScale: -0.2
+  underwaterDrag: 1
   underwaterMaxSpeed: 5
-  entityType: 0
-  assignedPlatform: {fileID: 0}
+  entityType: 2
+  _tier: 0
+  _state: 0
+  player: {fileID: 0}
+  minActionTime: 1
+  maxActionTime: 4
+  nextActionTime: 0
+  swimForce: 0
+  minSwimSpeed: 0
+  landEnemyConfig: {fileID: 11400000, guid: c7bf3d738a3374cbeb2406b3ec839fab, type: 2}
+  _landMovementState: 0
+  walkingSpeed: 1.5
+  runningSpeed: 3
+  edgeBuffer: 0.5
+  fishingToolEquipped: 0
   toolDropPrefab: {fileID: 2743509415465814910, guid: a106a3ba687ec00469ed0a6d34ab4fe9, type: 3}
-  config:
-    idleProbability: 0.7
-    walkProbability: 0.25
-    runProbability: 0.05
-    equipToolChance: 0.7
-    unequipToolChance: 0.2
-    hookThrowChance: 0.4
-    minHookWaitTime: 10
-    maxHookWaitTime: 20
-    fishingBehaviorCheckInterval: 10
-    minActionTime: 1
-    maxActionTime: 4
+  platformLeftEdge: 0
+  platformRightEdge: 0
+  platformBoundsCalculated: 0
+  maxUpwardVelocity: 5
+  weight: 6
+  hasStartedFloating: 0
+  hookTimer: 1
+  hookDuration: 8
+  assignedPlatform: {fileID: 0}
+  fishermanConfig: {fileID: 11400000, guid: 876c88f03b9414e67960bdc874e7d116, type: 2}
 --- !u!1 &8143527860349171708
 GameObject:
   m_ObjectHideFlags: 0
@@ -301,7 +316,7 @@ Transform:
   m_GameObject: {fileID: 8143527860349171708}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1.3456411, y: 2.5831165, z: 0}
+  m_LocalPosition: {x: 1.21, y: 2.38, z: 0}
   m_LocalScale: {x: 0.10000002, y: 2, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

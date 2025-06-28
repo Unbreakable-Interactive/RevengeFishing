@@ -9,7 +9,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6936546192436389837}
-  m_Layer: 0
+  - component: {fileID: 1479867712578342029}
+  m_Layer: 7
   m_Name: FishingHookHandler
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -33,6 +34,20 @@ Transform:
   - {fileID: 6056597548842938761}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1479867712578342029
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2202176723642426590}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 21a169e85659448abfda04ccbdbb680f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  waterCheck: {fileID: 5981384484931965602}
+  fishingProjectile: {fileID: 6720643909206843586}
 --- !u!1001 &5788205565109834129
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -97,11 +112,26 @@ PrefabInstance:
       propertyPath: m_Name
       value: WaterLine
       objectReference: {fileID: 0}
+    - target: {fileID: 8258166059126711420, guid: d864e1d7d3d7d86458db1be6c7ac35ab, type: 3}
+      propertyPath: m_Layer
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: d864e1d7d3d7d86458db1be6c7ac35ab, type: 3}
+--- !u!114 &5981384484931965602 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 239239663148630835, guid: d864e1d7d3d7d86458db1be6c7ac35ab, type: 3}
+  m_PrefabInstance: {fileID: 5788205565109834129}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8cfe11e371c05b849ba85b8d2c30f40b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!4 &6056597548842938761 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 314844239601557528, guid: d864e1d7d3d7d86458db1be6c7ac35ab, type: 3}
@@ -119,6 +149,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: FishingHook
       objectReference: {fileID: 0}
+    - target: {fileID: 4048927617224973841, guid: ce012608d650bc94d9ed1fde3e90d2cb, type: 3}
+      propertyPath: rb
+      value: 
+      objectReference: {fileID: 5026025527197202940}
     - target: {fileID: 9079909360616689597, guid: ce012608d650bc94d9ed1fde3e90d2cb, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -167,6 +201,11 @@ PrefabInstance:
 --- !u!4 &1978902422991499630 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 9079909360616689597, guid: ce012608d650bc94d9ed1fde3e90d2cb, type: 3}
+  m_PrefabInstance: {fileID: 7310512282287226579}
+  m_PrefabAsset: {fileID: 0}
+--- !u!50 &5026025527197202940 stripped
+Rigidbody2D:
+  m_CorrespondingSourceObject: {fileID: 2356560897641432879, guid: ce012608d650bc94d9ed1fde3e90d2cb, type: 3}
   m_PrefabInstance: {fileID: 7310512282287226579}
   m_PrefabAsset: {fileID: 0}
 --- !u!1 &6045309449209764900 stripped

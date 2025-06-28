@@ -128,8 +128,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b422c3c85585ab1409b60b7384fcd1d4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  powerLevel: 100
-  phase: 0
+  _config: {fileID: 11400000, guid: 519c911c847b744d88f2a8e10d6d8f27, type: 2}
+  _powerLevel: 0
+  _hunger: 0
+  _fatigue: 0
+  _phase: 0
 --- !u!1 &5736262942231147453
 GameObject:
   m_ObjectHideFlags: 0
@@ -209,7 +212,7 @@ GameObject:
   - component: {fileID: 5938476875424283519}
   m_Layer: 0
   m_Name: Collider
-  m_TagString: Untagged
+  m_TagString: PlayerCollider
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -273,7 +276,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4283144278362533936}
-  - component: {fileID: 7015856836239744414}
+  - component: {fileID: 5706962072255297144}
   - component: {fileID: 5374213318811793880}
   m_Layer: 0
   m_Name: Player
@@ -292,8 +295,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -2.5827727, y: 2.8505163, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 2, y: 2, z: 2}
+  m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 4480840211297593226}
   - {fileID: 5719622611857122817}
@@ -301,7 +304,7 @@ Transform:
   - {fileID: 8269348812475954983}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &7015856836239744414
+--- !u!114 &5706962072255297144
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -310,31 +313,33 @@ MonoBehaviour:
   m_GameObject: {fileID: 6728867108004361845}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b9bcfd86bcd5c484b8431f1476613680, type: 3}
+  m_Script: {fileID: 11500000, guid: db54e0ff2b071fe458d3e7adf83cb10b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  rb: {fileID: 5374213318811793880}
+  _powerLevel: 0
+  _fatigue: 0
+  _maxFatigue: 0
   isAboveWater: 0
   airGravityScale: 1
-  underwaterGravityScale: 0
   airDrag: 0
-  underwaterDrag: 0.6
   airMaxSpeed: 10
+  underwaterGravityScale: 0
+  underwaterDrag: 0.6
   underwaterMaxSpeed: 15
-  entityType: 0
-  rotationSpeed: 15
+  entityType: 1
+  rotationSpeed: 10
   rotationThreshold: 10
   boostThreshold: 15
   underwaterRotationSpeed: 10
+  autoRotateInAir: 1
+  airRotationSpeed: 15
+  minSpeedForRotation: 0.3
   airGravityAscending: 1.5
   airGravityDescending: 4
   gravityTransitionSpeed: 2
   velocityThreshold: 0.1
-  autoRotateInAir: 1
-  airRotationSpeed: 15
-  minSpeedForRotation: 0.3
-  disableAutoRotation: 0
   forceAmount: 2
-  forceMode: 1
   maxSpeed: 15
   naturalDrag: 0.2
   rotationDrag: 0.5
@@ -343,7 +348,6 @@ MonoBehaviour:
   sidewaysDrag: 2
   steeringForce: 10
   steeringDamping: 0.98
-  isConstrainedByExternalForce: 0
   enableDebugLogs: 0
 --- !u!50 &5374213318811793880
 Rigidbody2D:
@@ -358,7 +362,7 @@ Rigidbody2D:
   m_UseFullKinematicContacts: 0
   m_UseAutoMass: 0
   m_Mass: 1
-  m_LinearDrag: 0
+  m_LinearDrag: 0.2
   m_AngularDrag: 0.05
   m_GravityScale: 0
   m_Material: {fileID: 0}
