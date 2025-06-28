@@ -89,14 +89,14 @@ public class Platform : MonoBehaviour
         assignedEnemies.Add(enemy);
         enemy.SetAssignedPlatform(this);
         
-        // ✅ CRITICAL: Trigger AI activation after platform assignment
+        // CRITICAL: Trigger AI activation after platform assignment
         enemy.OnPlatformAssigned(this);
         
         Collider2D enemyCollider = enemy.GetComponent<Collider2D>();
         if (enemyCollider != null && platformCollider != null)
             Physics2D.IgnoreCollision(platformCollider, enemyCollider, false);
 
-        enemy.platformBoundsCalculated = false;
+        enemy.platformBoundsCalculated = true;
 
         if (showDebugInfo)
             Debug.Log($"✅ COLLISION ASSIGNMENT: {enemy.name} assigned to platform {gameObject.name}! Total enemies: {assignedEnemies.Count}");
