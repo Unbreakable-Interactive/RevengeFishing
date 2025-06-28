@@ -10,9 +10,9 @@ GameObject:
   m_Component:
   - component: {fileID: 5573305840415414532}
   - component: {fileID: 745396263765711557}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Collider
-  m_TagString: Untagged
+  m_TagString: Hook
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -80,7 +80,7 @@ GameObject:
   - component: {fileID: 53763512692988648}
   - component: {fileID: 2356560897641432879}
   - component: {fileID: 3126174731786038201}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: FishingHook
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -116,22 +116,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dabed3281e442614d9ee2d7eb7ead20a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  rb: {fileID: 2356560897641432879}
+  _powerLevel: 0
+  _fatigue: 0
+  _maxFatigue: 0
   isAboveWater: 1
   airGravityScale: 2
-  underwaterGravityScale: 0
   airDrag: 1.5
-  underwaterDrag: 0.5
   airMaxSpeed: 3
-  underwaterMaxSpeed: 5
+  underwaterGravityScale: 0
+  underwaterDrag: 0.5
+  underwaterMaxSpeed: 3
   entityType: 3
   maxDistance: 8
   spawnPoint: {x: 0, y: 0, z: 0}
+  spawner: {fileID: 0}
   isBeingHeld: 0
   player: {fileID: 0}
-  maxStretchDistance: 3
-  stretchResistance: 15
-  snapBackForce: 20
-  maxStretchTime: 0.8
+  maxStretchDistance: 20
+  stretchResistance: 100
+  snapBackForce: 1
+  maxStretchTime: 0.3
   stretchCurve:
     serializedVersion: 2
     m_Curve:
@@ -370,7 +375,7 @@ GameObject:
   m_Component:
   - component: {fileID: 7244508698831430092}
   - component: {fileID: 2454960926440440285}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Sprite
   m_TagString: Untagged
   m_Icon: {fileID: 0}

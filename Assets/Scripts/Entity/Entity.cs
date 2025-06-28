@@ -1,7 +1,7 @@
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody2D))]
-public abstract class EntityMovement : MonoBehaviour
+public abstract class Entity : MonoBehaviour
 {
     [SerializeField] protected Rigidbody2D rb;
 
@@ -10,24 +10,28 @@ public abstract class EntityMovement : MonoBehaviour
     [SerializeField] protected int _fatigue;
     [SerializeField] protected int _maxFatigue;
 
-    [Header("Water/Air Movement Settings")]
-    public bool isAboveWater = true;
-    public float airGravityScale = 2f;
-    public float underwaterGravityScale = 0f;
-    public float airDrag = 1.5f;
-    public float underwaterDrag = 0.5f;
-    public float airMaxSpeed = 3f;
-    public float underwaterMaxSpeed = 5f;
+    [Header("Is Above Water?")]
+    [SerializeField] protected bool isAboveWater = true;
+
+    [Header("Air Movement Settings")]
+    [SerializeField] protected float airGravityScale = 2f;
+    [SerializeField] protected float airDrag = 1.5f;
+    [SerializeField] protected float airMaxSpeed = 3f;
+
+    [Header("Underwater Movement Settings")]
+    [SerializeField] protected float underwaterGravityScale = 0f;
+    [SerializeField] protected float underwaterDrag = 0.5f;
+    [SerializeField] protected float underwaterMaxSpeed = 5f;
 
     [Header("Entity Type")]
-    public EntityType entityType = EntityType.Generic;
+    [SerializeField] protected EntityType entityType = EntityType.Generic;
 
     private bool isInitialized = false;
 
-    public int PowerLevel
-    {
-        get => _powerLevel;
-    }
+    // Add this property after the existing fields
+    public int PowerLevel => _powerLevel;
+
+    public bool IsAboveWater => isAboveWater;
 
     public enum EntityType
     {
@@ -39,8 +43,15 @@ public abstract class EntityMovement : MonoBehaviour
 
     protected virtual void Awake()
     {
-        // ENSURE RIGIDBODY2D IS ALWAYS AVAILABLE
         EnsureRigidbody2D();
+    }
+
+    private void EnsureRigidbody2D()
+    {
+        if (rb == null)
+        {
+            rb = GetComponent<Rigidbody2D>() ?? gameObject.AddComponent<Rigidbody2D>();
+        }
     }
 
     public virtual void Initialize()
@@ -58,17 +69,8 @@ public abstract class EntityMovement : MonoBehaviour
         Debug.Log($"{gameObject.name} - EntityMovement initialized successfully");
     }
 
-    private void EnsureRigidbody2D()
-    {
-        if (rb == null)
-        {
-            rb = GetComponent<Rigidbody2D>() ?? gameObject.AddComponent<Rigidbody2D>();
-        }
-    }
-
     protected virtual void Update()
     {
-        // SAFETY CHECK: Don't do anything if not initialized
         if (!isInitialized || rb == null) return;
 
         if (isAboveWater)
@@ -81,13 +83,13 @@ public abstract class EntityMovement : MonoBehaviour
         }
     }
 
-    public virtual void OnEnterWater()
+    protected virtual void OnEnterWater()
     {
         Debug.Log($"{gameObject.name} entered water");
         SetMovementMode(false);
     }
 
-    public virtual void OnExitWater()
+    protected virtual void OnExitWater()
     {
         Debug.Log($"{gameObject.name} exited water");
         SetMovementMode(true);

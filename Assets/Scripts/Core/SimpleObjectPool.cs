@@ -89,7 +89,7 @@ public class SimpleObjectPool : MonoBehaviour
         }
 
         // CLEANUP ENEMY STATE ONLY - NO PLATFORM ASSIGNMENT
-        var enemyBase = objectToSpawn.GetComponent<EnemyBase>();
+        var enemyBase = objectToSpawn.GetComponent<LandEnemy>();
         if (enemyBase != null)
         {
             CleanupEnemyAssignment(enemyBase);
@@ -111,7 +111,7 @@ public class SimpleObjectPool : MonoBehaviour
         return objectToSpawn;
     }
 
-    private void CleanupEnemyAssignment(EnemyBase enemy)
+    private void CleanupEnemyAssignment(LandEnemy enemy)
     {
         Platform oldPlatform = enemy.GetAssignedPlatform();
         if (oldPlatform != null)
@@ -125,7 +125,7 @@ public class SimpleObjectPool : MonoBehaviour
         enemy.platformLeftEdge = 0f;
         enemy.platformRightEdge = 0f;
         // enemy.isGrounded = false;
-        enemy.SetEnemyNotGrounded();
+        // enemy.SetEnemyNotGrounded();
 
         Debug.Log($"Enemy {enemy.name} assignment cleaned up and reset");
     }
@@ -139,7 +139,7 @@ public class SimpleObjectPool : MonoBehaviour
             return;
         }
 
-        var enemyBase = obj.GetComponent<EnemyBase>();
+        var enemyBase = obj.GetComponent<LandEnemy>();
         if (enemyBase != null)
         {
             CleanupEnemyAssignment(enemyBase);

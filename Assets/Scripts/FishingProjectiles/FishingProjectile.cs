@@ -1,7 +1,8 @@
 using System.Collections;
 using UnityEngine;
+using Utils;
 
-public abstract class FishingProjectile : EntityMovement
+public abstract class FishingProjectile : Entity
 {
     [Header("Distance Constraint")]
     public float maxDistance = 15f;
@@ -11,16 +12,16 @@ public abstract class FishingProjectile : EntityMovement
 
     [Header("Player Interaction")]
     [SerializeField] public bool isBeingHeld = false; 
-    [SerializeField] protected PlayerMovement player;
+    [SerializeField] protected Player player;
     protected CircleCollider2D hookCollider;
 
     // Event to notify fisherman
     public System.Action<bool> OnPlayerInteraction;
 
     [Header("Elastic Line Behavior")]
-    [SerializeField] private float maxStretchDistance = 3f;    // How far beyond maxDistance player can stretch
-    [SerializeField] private float stretchResistance = 15f;    // Resistance force when stretching
-    [SerializeField] private float snapBackForce = 20f;        // Force applied when snapping back
+    [SerializeField] private float maxStretchDistance = 8f;    // How far beyond maxDistance player can stretch
+    [SerializeField] private float stretchResistance = 10f;    // Resistance force when stretching
+    [SerializeField] private float snapBackForce = 10f;        // Force applied when snapping back
     [SerializeField] private float maxStretchTime = 0.8f;      // Max time allowed in stretch zone
     [SerializeField] private AnimationCurve stretchCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
 
@@ -35,14 +36,14 @@ public abstract class FishingProjectile : EntityMovement
     public System.Action OnStretchStarted;
     public System.Action OnStretchEnded;
 
-    public virtual void Initialize()
+    public override void Initialize()
     {
         // Call parent Start() to initialize EntityMovement
         base.Initialize();
 
         // Set entity type to Hook
         entityType = EntityType.Hook;
-        player = GameObject.FindGameObjectWithTag("Player")?.GetComponent<PlayerMovement>();
+        player = GameObject.FindGameObjectWithTag("Player")?.GetComponent<Player>();
 
         InitializeProjectile();
     }
@@ -67,10 +68,8 @@ public abstract class FishingProjectile : EntityMovement
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-        if (other.CompareTag("PlayerCollider") && !isBeingHeld)
-        {
+        if (other.CompareTag(TagNames.PLAYERCOLLIDER) && !isBeingHeld)
             StartHolding(player.transform);
-        }
     }
 
     private void StartHolding(Transform playerTransform)
@@ -82,9 +81,7 @@ public abstract class FishingProjectile : EntityMovement
 
         // Register this hook with the player
         if (player != null)
-        {
             player.AddBitingHook(this);
-        }
 
         // Notify fisherman
         OnPlayerInteraction?.Invoke(true);
@@ -97,7 +94,7 @@ public abstract class FishingProjectile : EntityMovement
     {
         if (isBeingHeld && player != null)
         {
-            // NEW: Unregister this hook from the player
+            // Unregister this hook from the player
             player.RemoveBitingHook(this);
 
             isBeingHeld = false;
@@ -120,20 +117,16 @@ public abstract class FishingProjectile : EntityMovement
             hookCollider.isTrigger = true;
         }
 
-        // ✅ CRITICAL FIX: DON'T overwrite spawnPoint here!
-        // The spawnPoint should be set by the HookSpawner, not by the hook itself
-        // spawnPoint = transform.position; // REMOVED THIS LINE!
-        
         OnProjectileSpawned();
         
         Debug.Log($"✅ Hook initialized. SpawnPoint: {spawnPoint}, Current Position: {transform.position}");
     }
 
     // ✅ NEW METHOD: Set spawn point from HookSpawner
-    public void SetSpawnPoint(Vector3 spawnPosition)
+    public virtual void SetSpawnPoint(Vector3 spawnPosition)
     {
         spawnPoint = spawnPosition;
-        Debug.Log($"✅ Hook spawn point set to: {spawnPoint}");
+        Debug.Log($"Hook spawn point set to: {spawnPoint}");
     }
 
     protected virtual void ConstrainToMaxDistance()
@@ -166,6 +159,7 @@ public abstract class FishingProjectile : EntityMovement
 
     public virtual void ThrowProjectile(Vector2 throwDirection, float throwForce)
     {
+        if (rb == null) Debug.LogError("Rigidbody2D is not assigned!");
         rb.AddForce(throwDirection.normalized * throwForce, ForceMode2D.Impulse);
         OnProjectileThrown();
     }
@@ -191,7 +185,7 @@ public abstract class FishingProjectile : EntityMovement
         if (player == null) return;
 
         float currentDistance = Vector3.Distance(player.transform.position, spawnPoint);
-        float totalMaxDistance = maxDistance + maxStretchDistance;
+        // float totalMaxDistance = maxDistance + maxStretchDistance;
 
         Rigidbody2D playerRb = player.GetComponent<Rigidbody2D>();
         if (playerRb == null) return;
@@ -211,8 +205,7 @@ public abstract class FishingProjectile : EntityMovement
             return;
         }
 
-        // Beyond max distance - BOTH constrain player AND move hook
-        if (currentDistance > maxDistance && currentDistance <= totalMaxDistance)
+        if (currentDistance > maxDistance)
         {
             HandleStretchZone(currentDistance, playerRb);
             MoveHookToFollowPlayer(); // Hook follows player
@@ -240,26 +233,22 @@ public abstract class FishingProjectile : EntityMovement
         {
             isStretching = true;
             stretchTimer = 0f;
-            OnStretchStarted?.Invoke(); // Notify visual system
+            OnStretchStarted?.Invoke();
             Debug.Log("Fishing line is stretching!");
         }
 
         stretchTimer += Time.deltaTime;
-
-        // Notify visual system of stretch changes
         OnStretchChanged?.Invoke(currentStretchAmount, stretchTimer, maxStretchTime);
 
-        // Apply increasing resistance force as stretch increases
+        // Apply resistance force back to spawn point
         Vector3 directionToSpawn = (spawnPoint - player.transform.position).normalized;
         float resistanceMultiplier = stretchCurve.Evaluate(currentStretchAmount);
-        Vector2 resistanceForce = directionToSpawn * stretchResistance * resistanceMultiplier;
+        Vector2 resistanceForce = directionToSpawn * (stretchResistance * resistanceMultiplier);
 
-        playerRb.AddForce(resistanceForce, ForceMode2D.Force);
+        playerRb.AddForce(resistanceForce, ForceMode2D.Impulse);
 
-        // Visual/audio feedback for stretching
         OnLineStretching(currentStretchAmount);
-
-        Debug.Log($"Line stretch: {currentStretchAmount:F2} | Timer: {stretchTimer:F2} | Resistance: {resistanceMultiplier:F2}");
+        Debug.Log($"Line stretch: {currentStretchAmount:F2} | Resistance: {stretchResistance}");
     }
 
     private void SnapPlayerBack(Rigidbody2D playerRb)

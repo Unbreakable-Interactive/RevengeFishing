@@ -1,4 +1,5 @@
 using UnityEngine;
+using Utils;
 
 public class HookSpawner : MonoBehaviour
 {
@@ -7,16 +8,20 @@ public class HookSpawner : MonoBehaviour
     public Transform spawnPoint;
     public float throwForce = 8f;
 
-    [Header("Throw Direction")]
-    public Vector2 throwDirection = new Vector2(1f, 0.2f);
-
     [Header("Distance Control")]
-    public float hookMaxDistance = 15f;
-
+    public float hookMaxDistance = 8f;
+    
+    // Store the original max distance
     private float originalMaxDistance;
-    private GameObject currentHookHandler;
-    public FishingProjectile currentHook;
 
+    private GameObject currentHookHandler; // Changed from currentHook to currentHookHandler
+    private HookPartsHandler curHookHandler;
+    private FishingProjectile currentHook; // Reference to the actual hook component
+
+    public FishingProjectile CurrentHook => currentHook;
+
+    [SerializeField] private Vector2 throwDirection = new Vector2(1f, 0.2f);
+    
     private void Awake()
     {
         originalMaxDistance = hookMaxDistance;
@@ -30,7 +35,7 @@ public class HookSpawner : MonoBehaviour
         if (hookHandlerPrefab == null)
         {
             // Try to find the prefab automatically
-            hookHandlerPrefab = Resources.Load<GameObject>("FishingHookHandler");
+            hookHandlerPrefab = Resources.Load<GameObject>(AssetNames.HOOKHANDLER_PREFAB_NAME);
             if (hookHandlerPrefab == null)
             {
                 Debug.LogError($"HookSpawner on {gameObject.name}: hookHandlerPrefab is missing! Assign it in Inspector or place FishingHookHandler in Resources folder!");
@@ -71,16 +76,21 @@ public class HookSpawner : MonoBehaviour
             Debug.LogError($"ThrowHook() FAILED on {gameObject.name}: CanThrow=false");
             return;
         }
+        
+        throwDirection = new Vector2(Random.Range(0.2f, 1f), Random.Range(0.2f, 0.5f));
 
-        hookMaxDistance = originalMaxDistance;
+        // hookMaxDistance = originalMaxDistance;
+        hookMaxDistance = originalMaxDistance + (Random.Range(-2f, 2f));
 
         // Instantiate the hook handler
         currentHookHandler = Instantiate(hookHandlerPrefab, spawnPoint.position, spawnPoint.rotation);
+        curHookHandler = currentHookHandler.GetComponent<HookPartsHandler>();
         Debug.Log($"✅ Instantiated hook handler: {currentHookHandler.name} at {spawnPoint.position}");
 
         // Find the actual fishing hook within the handler
-        currentHook = currentHookHandler.GetComponentInChildren<FishingProjectile>();
-
+        // currentHook = currentHookHandler.GetComponentInChildren<FishingProjectile>();
+        currentHook = curHookHandler.FishingProjectile;
+        
         if (currentHook != null)
         {
             // ✅ CRITICAL FIX: Set the spawn point BEFORE calling other methods
@@ -100,22 +110,22 @@ public class HookSpawner : MonoBehaviour
             Debug.LogError($"❌ No FishingProjectile found in {hookHandlerPrefab.name}!");
             Destroy(currentHookHandler);
             currentHookHandler = null;
+            curHookHandler = null;
         }
     }
 
     private void SetupWaterDetection()
     {
-        WaterCheck waterCheck = currentHookHandler.GetComponentInChildren<WaterCheck>();
+        // WaterCheck waterCheck = currentHookHandler.GetComponentInChildren<WaterCheck>();
+        WaterCheck waterCheck = curHookHandler.WaterCheck;
 
         if (waterCheck != null && currentHook != null)
         {
             waterCheck.targetCollider = currentHook.GetComponent<Collider2D>();
 
-            EntityMovement hookMovement = currentHook.GetComponent<EntityMovement>();
+            Entity hookMovement = currentHook.GetComponent<Entity>();
             if (hookMovement != null)
-            {
                 waterCheck.entityMovement = hookMovement;
-            }
 
             Debug.Log("Water detection configured for fishing hook!");
         }
@@ -190,6 +200,7 @@ public class HookSpawner : MonoBehaviour
         {
             Destroy(currentHookHandler);
             currentHookHandler = null;
+            curHookHandler = null;
         }
         currentHook = null;
 

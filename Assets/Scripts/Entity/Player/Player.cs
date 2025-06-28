@@ -1,8 +1,7 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PlayerMovement : EntityMovement
+public class Player : Entity
 {
     private Camera mainCamera;
     private Vector2 lastMousePosition = Vector2.zero;
@@ -12,51 +11,39 @@ public class PlayerMovement : EntityMovement
     private bool hasAppliedBoost = false; // Track if boost was already applied
 
     [Header("Rotation Settings")]
-    public float rotationSpeed = 10f;
-    public float rotationThreshold = 10f; // Degrees - How close to target before considering "complete"
-    public float boostThreshold = 10f; // Degrees - When to apply boost (higher = earlier boost)
+    [SerializeField] protected float rotationSpeed = 10f;
+    [SerializeField] protected float rotationThreshold = 10f; // Degrees - How close to target before considering "complete"
+    [SerializeField] protected float boostThreshold = 10f; // Degrees - When to apply boost (higher = earlier boost)
 
-    [Header("Water/Air Movement Modes")]
-    //public bool isAboveWater = false;
-    //public float airGravityScale = 2f;
-    //public float underwaterGravityScale = 0f;
-    //public float airDrag = 1.5f;
-    //public float underwaterDrag = 0.5f;
-    //public float airMaxSpeed = 3f;
-    //public float underwaterMaxSpeed = 5f;
-    public float underwaterRotationSpeed = 10f;
+    [SerializeField] protected float underwaterRotationSpeed = 10f;
+
+    [SerializeField] protected bool autoRotateInAir = true;
+    [SerializeField] protected float airRotationSpeed = 8f;
+    [SerializeField] protected float minSpeedForRotation = 0.3f;
 
     [Header("Variable Gravity Settings")]
-    public float airGravityAscending = 1.5f;    // Lighter gravity when moving upward
-    public float airGravityDescending = 4f;     // Stronger gravity when falling down
-    public float gravityTransitionSpeed = 2f;   // How quickly gravity changes
-    public float velocityThreshold = 0.1f;      // Minimum velocity to determine direction
+    [SerializeField] protected float airGravityAscending = 1.5f;    // Lighter gravity when moving upward
+    [SerializeField] protected float airGravityDescending = 4f;     // Stronger gravity when falling down
+    [SerializeField] protected float gravityTransitionSpeed = 2f;   // How quickly gravity changes
+    [SerializeField] protected float velocityThreshold = 0.1f;      // Minimum velocity to determine direction
 
     private float currentGravityScale;          // Current gravity being applied
 
-    [Header("Airborne Rotation")]
-    public bool autoRotateInAir = true;
-    public float airRotationSpeed = 8f;
-    public float minSpeedForRotation = 0.3f;
-
-    [HideInInspector] public bool disableAutoRotation = false; // For future overrides
-
     [Header("Water Movement Settings")]
-    public float forceAmount = 1f;
-    public ForceMode2D forceMode = ForceMode2D.Impulse;
-    public float maxSpeed = 5f;
-    public float naturalDrag = 0.5f;
-    public float rotationDrag = 1f; // Extra drag applied during rotation
-    public float constantAccel = 0.2f; 
-    public float minForwardVelocity = 1f; 
-    public float sidewaysDrag = 1f; // higher = less sideways drift
+    [SerializeField] protected float forceAmount = 1f;
+    [SerializeField] protected float maxSpeed = 5f;
+    [SerializeField] protected float naturalDrag = 0.5f;
+    [SerializeField] protected float rotationDrag = 1f; // Extra drag applied during rotation
+    [SerializeField] protected float constantAccel = 0.2f; 
+    [SerializeField] protected float minForwardVelocity = 1f; 
+    [SerializeField] protected float sidewaysDrag = 1f; // higher = less sideways drift
 
     [Header("Steering Settings")]
-    public float steeringForce = 5f;
-    public float steeringDamping = 0.98f; // Reduces velocity over time when steering
+    [SerializeField] protected float steeringForce = 5f;
+    [SerializeField] protected float steeringDamping = 0.98f; // Reduces velocity over time when steering
 
     [Header("External Constraints")]
-    public bool isConstrainedByExternalForce = false;
+    private bool isConstrainedByExternalForce = false;
     private Vector3 constraintCenter;
     private float constraintRadius;
     private System.Action<Vector3> onConstraintViolation;
@@ -67,7 +54,6 @@ public class PlayerMovement : EntityMovement
     [Header("Debug")]
     public bool enableDebugLogs = false;
 
-    // Start is called before the first frame update
     public override void Initialize()
     {
         entityType = EntityType.Player; // Set entity type to Player
@@ -79,20 +65,11 @@ public class PlayerMovement : EntityMovement
         _fatigue = 0;
         _maxFatigue = _powerLevel;
 
-        //rb = GetComponent<Rigidbody2D>();
-
-        //// Add Rigidbody2D if it doesn't exist
-        //if (rb == null)
-        //{
-        //    rb = gameObject.AddComponent<Rigidbody2D>();
-        //    DebugLog("Added Rigidbody2D component to Player");
-        //}
         rb.drag = naturalDrag;
         targetRotation = transform.rotation; //set target rotation to Player's current rotation
-        currentGravityScale = airGravityScale;
+        currentGravityScale = underwaterGravityScale;
     }
 
-    // Update is called once per frame
     protected override void Update()
     {
         base.Update(); // Call base Update to handle movement mode
@@ -135,6 +112,7 @@ public class PlayerMovement : EntityMovement
 
     }
 
+    #region Input Handling
     void HandleMouseInput()
     {
 
@@ -154,74 +132,7 @@ public class PlayerMovement : EntityMovement
             WhileMouseUnheld(lastMousePosition);
         }
     }
-
-    void UpdateRotation()
-    {
-        if (isRotatingToTarget)
-        {
-            ApplyRotationDeceleration(); // Start decelerating immediately
-            ContinueRotationToTarget();
-            CheckForBoostTiming(); // Check if it's time to boost
-            CheckRotationCompletion();
-        }
-    }
-
-    void HandleSteering()
-    {
-        // Only allow steering if:
-        // 1. Object is moving
-        // 2. Mouse is being held (for steering input)
-        // 3. Not currently doing initial rotation
-        if (Input.GetMouseButton(0) && !shouldApplyForceAfterRotation)
-        {
-            ApplySteering(GetMouseWorldPosition());
-        }
-    }
-
-    // Method for hooks to register when they bite
-    public void AddBitingHook(FishingProjectile hook)
-    {
-        if (!activeBitingHooks.Contains(hook))
-        {
-            activeBitingHooks.Add(hook);
-            DebugLog($"Hook {hook.name} is now biting player. Total hooks: {activeBitingHooks.Count}");
-        }
-    }
-
-    // Method for hooks to unregister when they release
-    public void RemoveBitingHook(FishingProjectile hook)
-    {
-        if (activeBitingHooks.Contains(hook))
-        {
-            activeBitingHooks.Remove(hook);
-            DebugLog($"Hook {hook.name} released player. Total hooks: {activeBitingHooks.Count}");
-        }
-    }
-
-    // Efficient tug-of-war method using only active hooks
-    private void TryTugOfWarPull()
-    {
-        // Check if player is constrained by any hooks
-        if (activeBitingHooks.Count > 0)
-        {
-            // Only check hooks that are currently biting the player
-            foreach (FishingProjectile hook in activeBitingHooks)
-            {
-                // Check if this hook is stretching (player is pulling against it)
-                if (hook.isBeingHeld && hook.IsLineStretching())
-                {
-                    // Player is pulling against this fishing line!
-                    FishermanScript fisherman = hook.spawner?.GetComponent<FishermanScript>();
-                    if (fisherman != null)
-                    {
-                        fisherman.TakeFatigue(PowerLevel);
-                        DebugLog($"Player pulls against {fisherman.name}'s fishing line - fisherman suffers fatigue!");
-                    }
-                }
-            }
-        }
-    }
-
+    
     //Triggers frame mouse is clicked
     void OnMouseClick()
     {
@@ -259,7 +170,103 @@ public class PlayerMovement : EntityMovement
     {
         //Let object coast if mouse is released
     }
+    #endregion
 
+    #region Reverse Fishing
+    
+    // Method for hooks to register when they bite
+    public void AddBitingHook(FishingProjectile hook)
+    {
+        if (!activeBitingHooks.Contains(hook))
+        {
+            activeBitingHooks.Add(hook);
+            DebugLog($"Hook {hook.name} is now biting player. Total hooks: {activeBitingHooks.Count}");
+        }
+    }
+
+    // Method for hooks to unregister when they release
+    public void RemoveBitingHook(FishingProjectile hook)
+    {
+        if (activeBitingHooks.Contains(hook))
+        {
+            activeBitingHooks.Remove(hook);
+            DebugLog($"Hook {hook.name} released player. Total hooks: {activeBitingHooks.Count}");
+        }
+    }
+
+    // Efficient tug-of-war method using only active hooks
+    private void TryTugOfWarPull()
+    {
+        // Check if player is constrained by any hooks
+        if (activeBitingHooks.Count > 0)
+        {
+            // Only check hooks that are currently biting the player
+            foreach (FishingProjectile hook in activeBitingHooks)
+            {
+                // Check if this hook is stretching (player is pulling against it)
+                if (hook.isBeingHeld && hook.IsLineStretching())
+                {
+                    // Player is pulling against this fishing line!
+                    Fisherman fisherman = hook.spawner?.GetComponent<Fisherman>();
+                    if (fisherman != null)
+                    {
+                        fisherman.TakeFatigue(PowerLevel);
+                        DebugLog($"Player pulls against {fisherman.name}'s fishing line - fisherman suffers fatigue!");
+                    }
+                }
+            }
+        }
+    }
+
+    public void SetPositionConstraint(Vector3 center, float radius, System.Action<Vector3> violationCallback = null)
+    {
+        isConstrainedByExternalForce = true;
+        constraintCenter = center;
+        constraintRadius = radius;
+        onConstraintViolation = violationCallback;
+        DebugLog($"Player constraint set: Center={center}, Radius={radius}");
+    }
+
+    public void RemovePositionConstraint()
+    {
+        isConstrainedByExternalForce = false;
+        onConstraintViolation = null;
+        DebugLog("Player constraint removed");
+    }
+
+    private void ApplyExternalConstraints()
+    {
+        if (!isConstrainedByExternalForce) return;
+
+        float currentDistance = Vector3.Distance(transform.position, constraintCenter);
+
+        if (currentDistance > constraintRadius)
+        {
+            // Constrain position to circle boundary
+            Vector3 direction = (transform.position - constraintCenter).normalized;
+            Vector3 constrainedPosition = constraintCenter + direction * constraintRadius;
+            transform.position = constrainedPosition;
+
+            // Apply rope-like physics to velocity
+            Vector2 currentVelocity = rb.velocity;
+            Vector2 radialDirection = direction;
+            Vector2 tangentDirection = new Vector2(-radialDirection.y, radialDirection.x);
+
+            // Remove radial velocity component (can't move away from center)
+            float tangentVelocity = Vector2.Dot(currentVelocity, tangentDirection);
+            rb.velocity = tangentDirection * tangentVelocity;
+
+            // Notify the constraining object about the violation
+            onConstraintViolation?.Invoke(constrainedPosition);
+
+            DebugLog($"Player constrained to radius {constraintRadius} at position {constrainedPosition}");
+        }
+    }
+    
+    #endregion
+    
+    
+    #region Movement
     void SetTargetRotation(Vector2 mousePosition)
     {
         Vector2 direction = mousePosition - (Vector2)transform.position;
@@ -269,6 +276,29 @@ public class PlayerMovement : EntityMovement
             float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
             targetRotation = Quaternion.AngleAxis(angle, Vector3.forward);
             isRotatingToTarget = true;
+        }
+    }
+
+    void UpdateRotation()
+    {
+        if (isRotatingToTarget)
+        {
+            ApplyRotationDeceleration(); // Start decelerating immediately
+            ContinueRotationToTarget();
+            CheckForBoostTiming(); // Check if it's time to boost
+            CheckRotationCompletion();
+        }
+    }
+
+    void HandleSteering()
+    {
+        // Only allow steering if:
+        // 1. Object is moving
+        // 2. Mouse is being held (for steering input)
+        // 3. Not currently doing initial rotation
+        if (Input.GetMouseButton(0) && !shouldApplyForceAfterRotation)
+        {
+            ApplySteering(GetMouseWorldPosition());
         }
     }
 
@@ -323,7 +353,7 @@ public class PlayerMovement : EntityMovement
         Vector2 forceDirection = transform.right;
 
         // Apply force in that direction
-        rb.AddForce(forceDirection * forceAmount, forceMode);
+        rb.AddForce(forceDirection * forceAmount, ForceMode2D.Impulse);
 
         DebugLog("Applied force in direction: " + forceDirection);
     }
@@ -395,51 +425,6 @@ public class PlayerMovement : EntityMovement
         ApplyExternalConstraints();
     }
 
-    public void SetPositionConstraint(Vector3 center, float radius, System.Action<Vector3> violationCallback = null)
-    {
-        isConstrainedByExternalForce = true;
-        constraintCenter = center;
-        constraintRadius = radius;
-        onConstraintViolation = violationCallback;
-        DebugLog($"Player constraint set: Center={center}, Radius={radius}");
-    }
-
-    public void RemovePositionConstraint()
-    {
-        isConstrainedByExternalForce = false;
-        onConstraintViolation = null;
-        DebugLog("Player constraint removed");
-    }
-
-    private void ApplyExternalConstraints()
-    {
-        if (!isConstrainedByExternalForce) return;
-
-        float currentDistance = Vector3.Distance(transform.position, constraintCenter);
-
-        if (currentDistance > constraintRadius)
-        {
-            // Constrain position to circle boundary
-            Vector3 direction = (transform.position - constraintCenter).normalized;
-            Vector3 constrainedPosition = constraintCenter + direction * constraintRadius;
-            transform.position = constrainedPosition;
-
-            // Apply rope-like physics to velocity
-            Vector2 currentVelocity = rb.velocity;
-            Vector2 radialDirection = direction;
-            Vector2 tangentDirection = new Vector2(-radialDirection.y, radialDirection.x);
-
-            // Remove radial velocity component (can't move away from center)
-            float tangentVelocity = Vector2.Dot(currentVelocity, tangentDirection);
-            rb.velocity = tangentDirection * tangentVelocity;
-
-            // Notify the constraining object about the violation
-            onConstraintViolation?.Invoke(constrainedPosition);
-
-            DebugLog($"Player constrained to radius {constraintRadius} at position {constrainedPosition}");
-        }
-    }
-
     void AirGravity()
     {
         // Determine if fish is ascending or descending
@@ -479,14 +464,16 @@ public class PlayerMovement : EntityMovement
     void HandleAirborneRotation()
     {
         // Auto-rotate to face velocity direction
-        if (autoRotateInAir && !disableAutoRotation && rb.velocity.magnitude > minSpeedForRotation)
+        if (autoRotateInAir && rb.velocity.magnitude > minSpeedForRotation)
         {
             float angle = Mathf.Atan2(rb.velocity.y, rb.velocity.x) * Mathf.Rad2Deg;
             transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.AngleAxis(angle, Vector3.forward), airRotationSpeed * Time.deltaTime);
         }
-
     }
-
+    
+    #endregion
+    
+    #region Utils
     //Determines the current position of the mouse in the context of the game world
     Vector2 GetMouseWorldPosition()
     {
@@ -494,10 +481,12 @@ public class PlayerMovement : EntityMovement
         Vector3 mouseWorldPosition = mainCamera.ScreenToWorldPoint(new Vector3(mouseScreenPosition.x, mouseScreenPosition.y, mainCamera.nearClipPlane));
         return new Vector2(mouseWorldPosition.x, mouseWorldPosition.y);
     }
-
+    
     //Passes Debugger messages through enabled check
     void DebugLog(string message)
     {
         if (enableDebugLogs) Debug.Log(message);
     }
+    
+    #endregion
 }

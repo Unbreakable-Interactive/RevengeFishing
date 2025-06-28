@@ -4,7 +4,7 @@ public class WaterCheck : MonoBehaviour
 {
     [Header("Water Detection")]
     //public LayerMask playerLayerMask = -1;
-    public EntityMovement entityMovement; // Reference to the target entity movement script
+    public Entity entityMovement; // Reference to the target entity movement script
     public Collider2D targetCollider;
 
     private void Start()

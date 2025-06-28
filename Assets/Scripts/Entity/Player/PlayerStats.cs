@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 enum Phase { infant, juvenile, adult, beast, monster }
@@ -12,17 +10,10 @@ public class PlayerStats : MonoBehaviour
     /*[SerializeField]*/ private long fatigue; //player dies if reaches 100%
     [SerializeField] private Phase phase = Phase.infant;
 
-    // Start is called before the first frame update
     public void Initialize()
     {
         starterLevel = powerLevel;
         SetPhase();
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
     }
 
     void SetPhase()
