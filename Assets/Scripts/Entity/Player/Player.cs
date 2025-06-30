@@ -53,6 +53,10 @@ public class Player : Entity
     [Header("Fishing Hook Interaction")]
     private List<FishingProjectile> activeBitingHooks = new List<FishingProjectile>();
 
+    [Header("Line Extension")]
+    [SerializeField] private float lineExtensionAmount = 0.5f; // How much to extend per pull
+    [SerializeField] private float maxLineExtension = 12f; // Maximum line length allowed
+
     [Header("Debug")]
     public bool enableDebugLogs = false;
 
@@ -210,6 +214,16 @@ public class Player : Entity
                 // Check if this hook is stretching (player is pulling against it)
                 if (hook.isBeingHeld && hook.IsLineStretching())
                 {
+                    // Check if player is at max distance and trying to extend line
+                    float currentDistance = Vector3.Distance(transform.position, hook.spawnPoint.position);
+                    float hookMaxDistance = hook.maxDistance;
+
+                    // If player is at or near max distance, try to extend the line
+                    if (currentDistance >= hookMaxDistance * 0.95f) // 95% of max distance
+                    {
+                        TryExtendFishingLine(hook);
+                    }
+
                     // Player is pulling against this fishing line!
                     Fisherman fisherman = hook.spawner?.GetComponent<Fisherman>();
                     if (fisherman != null)
@@ -219,6 +233,30 @@ public class Player : Entity
                     }
                 }
             }
+        }
+    }
+
+    private void TryExtendFishingLine(FishingProjectile hook)
+    {
+        if (hook.spawner == null) return;
+
+        HookSpawner hookSpawner = hook.spawner;
+        float currentLineLength = hookSpawner.GetLineLength();
+
+        // Only extend if we haven't reached the maximum allowed length
+        if (currentLineLength < maxLineExtension)
+        {
+            float newLineLength = Mathf.Min(currentLineLength + lineExtensionAmount, maxLineExtension);
+            hookSpawner.SetLineLength(newLineLength);
+
+            DebugLog($"Player extended fishing line from {currentLineLength:F1} to {newLineLength:F1}");
+
+            // Optional: Add visual/audio feedback here
+            // PlayLineExtensionEffect();
+        }
+        else
+        {
+            DebugLog("Fishing line is already at maximum length!");
         }
     }
 

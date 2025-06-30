@@ -251,6 +251,14 @@ public class LandEnemy : Enemy
 
         Debug.Log($"{gameObject.name} giving player a firm fishing rod pull!");
 
+        // SHORTEN THE FISHING LINE when enemy pulls
+        float currentLineLength = hookSpawner.GetLineLength();
+        float lineReduction = UnityEngine.Random.Range(0.8f, 1.2f); // Reduce line by 0.8-1.2 units
+        float newLineLength = Mathf.Max(currentLineLength - lineReduction, 2f); // Don't go below 2 units
+
+        hookSpawner.SetLineLength(newLineLength);
+        Debug.Log($"Fisherman shortened line from {currentLineLength:F1} to {newLineLength:F1}");
+
         // Calculate a partial pull toward the hook spawn (like reeling in a fish)
         Vector3 playerPosition = player.transform.position;
         Vector3 pullDirection = (hookSpawnPoint - playerPosition).normalized;
@@ -289,7 +297,7 @@ public class LandEnemy : Enemy
             yield return null;
         }
 
-        // Brief constraint to prevent immediate escape (shorter than before)
+        // Brief constraint to prevent immediate escape
         player.SetPositionConstraint(player.transform.position, 0.8f);
         yield return new WaitForSeconds(0.2f);
 
