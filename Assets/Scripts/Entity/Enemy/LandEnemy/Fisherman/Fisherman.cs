@@ -58,7 +58,7 @@ public class Fisherman : LandEnemy
             hookTimer = 0f; // RESET TIMER
 
             // chance to put away rod after fishing
-            if (UnityEngine.Random.value < fishermanConfig.unequipToolChance)
+            if (Random.value < fishermanConfig.unequipToolChance)
             {
                 TryUnequipFishingTool();
             }
@@ -76,7 +76,7 @@ public class Fisherman : LandEnemy
             if (!fishingToolEquipped)
             {
                 // chance to equip fishing tool when idle
-                if (UnityEngine.Random.value < fishermanConfig.equipToolChance)
+                if (Random.value < fishermanConfig.equipToolChance)
                 {
                     ScheduleNextAction();
                     TryEquipFishingTool();
@@ -86,7 +86,7 @@ public class Fisherman : LandEnemy
             else
             {
                 // With fishing tool equipped, choose between fishing and unequipping
-                float random = UnityEngine.Random.value;
+                float random = Random.value;
                 if (random < fishermanConfig.hookThrowChance)
                 {
                     // Try to fish

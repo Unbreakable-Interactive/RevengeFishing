@@ -11,8 +11,8 @@ public class DroppedTool : Entity
     protected void Start()
     {
         dropForce = new Vector2(
-            UnityEngine.Random.Range(-1f, 1f),
-            UnityEngine.Random.Range(0.2f, 1f)
+            Random.Range(-1f, 1f),
+            Random.Range(0.2f, 1f)
         );
 
         Initialize();

@@ -130,7 +130,7 @@ public class LandEnemy : Enemy
         base.EnemySetup();
         platformBoundsCalculated = false;
 
-        nextActionTime = Time.time + UnityEngine.Random.Range(0.5f, 2f);
+        nextActionTime = Time.time + Random.Range(0.5f, 2f);
         _landMovementState = LandMovementState.Idle;
 
         hookSpawner = GetComponent<HookSpawner>();
@@ -211,19 +211,19 @@ public class LandEnemy : Enemy
         // Start the pull mechanic if we have an active hook
         if (CanPullPlayer() && hookSpawner.HasActiveHook())
         {
-            StartCoroutine(ContinuousPullMechanic());
+            StartCoroutine(ContinuousPull());
         }
     }
 
-    private IEnumerator ContinuousPullMechanic()
+    private IEnumerator ContinuousPull()
     {
         Debug.Log($"{gameObject.name} starting continuous pull mechanic!");
 
         // Continue pulling until enemy is defeated
         while (_state == EnemyState.Alive && CanPullPlayer() && hookSpawner.HasActiveHook())
         {
-            // Wait for random interval between 0.5 and 1 second
-            float waitTime = UnityEngine.Random.Range(0.5f, 1f);
+            // Wait for random interval between 0.8 and 1.5 seconds
+            float waitTime = Random.Range(0.8f, 1.5f);
             yield return new WaitForSeconds(waitTime);
 
             // Check again if we should still be pulling
@@ -280,13 +280,12 @@ public class LandEnemy : Enemy
         Vector3 playerPosition = player.transform.position;
         Vector3 pullDirection = (hookSpawnPoint - playerPosition).normalized;
 
-        // Calculate pull strength based on how much line was shortened
-        float pullStrength = lineShortened * 8f; // Multiplier for force intensity
-        float pullDuration = 0.4f; // Duration of the reel effect
+        // Use unified pullForce instead of hard-coded 8f
+        float pullStrength = lineShortened * pullForce;
+        float pullDuration = 0.4f;
 
-        Debug.Log($"Applying reel force: direction={pullDirection}, strength={pullStrength}, duration={pullDuration}");
+        Debug.Log($"[REEL FORCE] Applying reel force: direction={pullDirection}, strength={pullStrength}, duration={pullDuration}");
 
-        // Apply force over time for natural feel
         float elapsedTime = 0f;
         Rigidbody2D playerRb = player.GetComponent<Rigidbody2D>();
 
@@ -295,7 +294,7 @@ public class LandEnemy : Enemy
             elapsedTime += Time.deltaTime;
             float progress = elapsedTime / pullDuration;
 
-            // Use exponential decay for natural reel feel (strong start, gentle end)
+            // Use exponential decay for natural reel feel
             float currentForceMultiplier = Mathf.Lerp(1f, 0.1f, progress * progress);
             Vector2 frameForce = pullDirection * pullStrength * currentForceMultiplier;
 
@@ -304,11 +303,9 @@ public class LandEnemy : Enemy
             yield return null;
         }
 
-        // Brief movement constraint after the pull (like being momentarily caught)
-        player.SetPositionConstraint(player.transform.position, 0.5f);
-        yield return new WaitForSeconds(0.3f);
-        player.RemovePositionConstraint();
+        Debug.Log("[REEL FORCE] Reel force application complete");
     }
+
 
     // Small resistance pull when line can't be shortened
     private IEnumerator ApplyResistancePull()
@@ -319,12 +316,13 @@ public class LandEnemy : Enemy
 
         Rigidbody2D playerRb = player.GetComponent<Rigidbody2D>();
 
-        // Apply a smaller, brief resistance force
-        for (int i = 0; i < 3; i++)
-        {
-            playerRb.AddForce(pullDirection * 6f, ForceMode2D.Impulse);
-            yield return new WaitForSeconds(0.1f);
-        }
+        // Apply a smaller resistance force (half of main pull force)
+        float resistanceForce = pullForce * 0.5f;
+
+        Debug.Log($"[RESISTANCE PULL] Applying resistance force: {resistanceForce}");
+
+        playerRb.AddForce(pullDirection * resistanceForce, ForceMode2D.Impulse);
+        yield return null;
     }
 
     private void ApplyPullFatigueDamage()
@@ -353,8 +351,9 @@ public class LandEnemy : Enemy
             return 0f;
         }
 
+        Debug.Log("Shortening fishing line.");
         float currentLineLength = hookSpawner.GetLineLength();
-        float baseReduction = UnityEngine.Random.Range(maxLineReduction - lineReductionVariation, maxLineReduction);
+        float baseReduction = Random.Range(maxLineReduction - lineReductionVariation, maxLineReduction);
         float newLineLength = Mathf.Max(currentLineLength - baseReduction, minLineLength);
 
         float actualReduction = currentLineLength - newLineLength;
@@ -362,19 +361,13 @@ public class LandEnemy : Enemy
         if (actualReduction > 0)
         {
             hookSpawner.SetLineLength(newLineLength);
-
-            // IMPORTANT: Force update the hook's constraint immediately
-            if (hookSpawner.CurrentHook != null)
-            {
-                hookSpawner.CurrentHook.maxDistance = newLineLength;
-                Debug.Log($"Fisherman reeled in line: {currentLineLength:F1} to {newLineLength:F1} (reduced by {actualReduction:F1})");
-            }
+            Debug.Log("Fishing line shortened.");
 
             return actualReduction;
         }
         else
         {
-            Debug.Log($"Line already at minimum length ({minLineLength:F1}) - cannot shorten further");
+            Debug.Log($"Line already at minimum length ({minLineLength:F1}) - cannot shorten further.");
             return 0f;
         }
     }
@@ -537,23 +530,23 @@ public class LandEnemy : Enemy
         if (fishingToolEquipped) return;
 
         // Only handle basic enemy movement - no fishing logic!
-        float randomValue = UnityEngine.Random.value;
+        float randomValue = Random.value;
 
         Debug.Log($"Choosing random land action for {gameObject.name}. Random value = {randomValue}");
         if (randomValue < landEnemyConfig.idleProbability)
         {
-            Debug.Log($"{gameObject.name} is idle");
+            //Debug.Log($"{gameObject.name} is idle");
             _landMovementState = LandMovementState.Idle;
         }
         else if (randomValue < (landEnemyConfig.idleProbability + landEnemyConfig.walkProbability))
         {
-            Debug.Log($"{gameObject.name} is walking");
-            _landMovementState = (UnityEngine.Random.value < 0.5f) ? LandMovementState.WalkLeft : LandMovementState.WalkRight;
+            //Debug.Log($"{gameObject.name} is walking");
+            _landMovementState = (Random.value < 0.5f) ? LandMovementState.WalkLeft : LandMovementState.WalkRight;
         }
         else
         {
-            Debug.Log($"{gameObject.name} is running");
-            _landMovementState = (UnityEngine.Random.value < 0.5f) ? LandMovementState.RunLeft : LandMovementState.RunRight;
+            //Debug.Log($"{gameObject.name} is running");
+            _landMovementState = (Random.value < 0.5f) ? LandMovementState.RunLeft : LandMovementState.RunRight;
         }
     }
 
@@ -568,14 +561,14 @@ public class LandEnemy : Enemy
         switch (_landMovementState)
         {
             case LandMovementState.Idle:
-                Debug.Log("Idle state, no movement");
+                //Debug.Log("Idle state, no movement");
                 break;
             case LandMovementState.WalkLeft:
-                Debug.Log("Walking left");
+                //Debug.Log("Walking left");
                 movement = Vector2.left * walkingSpeed;
                 break;
             case LandMovementState.WalkRight:
-                Debug.Log("Walking right");
+                //Debug.Log("Walking right");
                 movement = Vector2.right * walkingSpeed;
                 break;
             case LandMovementState.RunLeft:
@@ -624,7 +617,7 @@ public class LandEnemy : Enemy
 
         if (validStates.Count > 0)
         {
-            _landMovementState = validStates[UnityEngine.Random.Range(0, validStates.Count)];
+            _landMovementState = validStates[Random.Range(0, validStates.Count)];
         }
         else
         {

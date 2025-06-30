@@ -174,7 +174,7 @@ public class SimpleObjectPool : MonoBehaviour
         // enemy.HookTimer = 0f;
         //
         // // TIMING RESET (next action time)
-        // enemy.NextActionTime = Time.time + UnityEngine.Random.Range(0.5f, 2f);
+        // enemy.NextActionTime = Time.time + Random.Range(0.5f, 2f);
         //
         // // SAVE INITIAL SPAWN POSITION (THE SOLUTION TO THE MAIN PROBLEM)
         // enemy.InitialSpawnPosition = spawnPosition;

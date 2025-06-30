@@ -129,7 +129,7 @@ MonoBehaviour:
   underwaterMaxSpeed: 3
   entityType: 3
   maxDistance: 8
-  spawnPoint: {x: 0, y: 0, z: 0}
+  spawnPoint: {fileID: 0}
   spawner: {fileID: 0}
   isBeingHeld: 0
   player: {fileID: 0}
