@@ -54,7 +54,7 @@ public class FishingLineRenderer : MonoBehaviour
         if (fishingProjectile != null)
         {
             // Get spawn point from FishingProjectile
-            startPoint = fishingProjectile.spawnPoint;
+            startPoint = fishingProjectile.spawnPoint.position;
             endPoint = fishingProjectile.transform;
 
             // Subscribe to events
@@ -93,7 +93,7 @@ public class FishingLineRenderer : MonoBehaviour
 
     private void UpdateLinePositions()
     {
-        startPoint = fishingProjectile.spawnPoint;
+        startPoint = fishingProjectile.spawnPoint.position;
 
         if (endPoint == null)
         {

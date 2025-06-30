@@ -7,7 +7,7 @@ public abstract class FishingProjectile : Entity
     [Header("Distance Constraint")]
     public float maxDistance;
 
-    public Vector3 spawnPoint;
+    public Transform spawnPoint;
     public HookSpawner spawner;
 
     [Header("Player Interaction")]
@@ -73,10 +73,10 @@ public abstract class FishingProjectile : Entity
         }
 
         OnProjectileSpawned();
-        Debug.Log($"✅ Hook initialized. SpawnPoint: {spawnPoint}, Current Position: {transform.position}");
+        Debug.Log($"Hook initialized. SpawnPoint: {spawnPoint}, Current Position: {transform.position}");
     }
 
-    public virtual void SetSpawnPoint(Vector3 spawnPosition)
+    public virtual void SetSpawnPoint(Transform spawnPosition)
     {
         spawnPoint = spawnPosition;
         Debug.Log($"Hook spawn point set to: {spawnPoint}");
@@ -129,15 +129,15 @@ public abstract class FishingProjectile : Entity
 
     protected virtual void ConstrainToMaxDistance()
     {
-        float currentDistance = Vector3.Distance(transform.position, spawnPoint);
+        float currentDistance = Vector3.Distance(transform.position, spawnPoint.position);
 
         if (currentDistance > maxDistance)
         {
             // Calculate direction from spawn point to current position
-            Vector3 direction = (transform.position - spawnPoint).normalized;
+            Vector3 direction = (transform.position - spawnPoint.position).normalized;
 
             // Position hook exactly at max distance (rope constraint)
-            Vector3 constrainedPosition = spawnPoint + direction * maxDistance;
+            Vector3 constrainedPosition = spawnPoint.position + direction * maxDistance;
             transform.position = constrainedPosition;
 
             // Project velocity onto the tangent of the circle (rope physics)
@@ -182,7 +182,7 @@ public abstract class FishingProjectile : Entity
     {
         if (player == null) return;
 
-        float currentDistance = Vector3.Distance(player.transform.position, spawnPoint);
+        float currentDistance = Vector3.Distance(player.transform.position, spawnPoint.position);
         // float totalMaxDistance = maxDistance + maxStretchDistance;
 
         Rigidbody2D playerRb = player.GetComponent<Rigidbody2D>();
@@ -240,7 +240,7 @@ public abstract class FishingProjectile : Entity
         OnStretchChanged?.Invoke(currentStretchAmount, stretchTimer, maxStretchTime);
 
         // Apply resistance force back to spawn point
-        Vector3 directionToSpawn = (spawnPoint - player.transform.position).normalized;
+        Vector3 directionToSpawn = (spawnPoint.position - player.transform.position).normalized;
         float resistanceMultiplier = stretchCurve.Evaluate(currentStretchAmount);
         Vector2 resistanceForce = directionToSpawn * (stretchResistance * resistanceMultiplier);
 
@@ -252,7 +252,7 @@ public abstract class FishingProjectile : Entity
 
     private void SnapPlayerBack(Rigidbody2D playerRb)
     {
-        Vector3 directionToSpawn = (spawnPoint - player.transform.position).normalized;
+        Vector3 directionToSpawn = (spawnPoint.position - player.transform.position).normalized;
 
         // Calculate snap force based on how much the line was stretched
         float snapMultiplier = Mathf.Lerp(1f, 2f, currentStretchAmount);
@@ -263,7 +263,7 @@ public abstract class FishingProjectile : Entity
         playerRb.AddForce(snapForce, ForceMode2D.Impulse);
 
         // Position player at max allowed distance
-        Vector3 allowedPosition = spawnPoint + (player.transform.position - spawnPoint).normalized * maxDistance;
+        Vector3 allowedPosition = spawnPoint.position + (player.transform.position - spawnPoint.position).normalized * maxDistance;
         player.transform.position = allowedPosition;
 
         // Reset stretch state
@@ -347,7 +347,7 @@ public abstract class FishingProjectile : Entity
 
     public float GetCurrentDistance()
     {
-        return Vector3.Distance(transform.position, spawnPoint);
+        return Vector3.Distance(transform.position, spawnPoint.position);
     }
 
     // Implement EntityMovement abstract methods

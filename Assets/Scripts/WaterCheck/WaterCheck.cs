@@ -22,7 +22,7 @@ public class WaterCheck : MonoBehaviour
         // Determine if object is above or below the water line
         bool aboveWater = other.transform.position.y > transform.position.y;
 
-        // ✅ FIXED: Add cooldown to prevent spam calls
+        // FIXED: Add cooldown to prevent spam calls
         if (entityMovement != null)
         {
             entityMovement.SetMovementMode(aboveWater);

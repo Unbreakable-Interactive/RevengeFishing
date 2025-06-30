@@ -99,7 +99,7 @@ public class Platform : MonoBehaviour
         enemy.platformBoundsCalculated = true;
 
         if (showDebugInfo)
-            Debug.Log($"✅ COLLISION ASSIGNMENT: {enemy.name} assigned to platform {gameObject.name}! Total enemies: {assignedEnemies.Count}");
+            Debug.Log($"COLLISION ASSIGNMENT: {enemy.name} assigned to platform {gameObject.name}! Total enemies: {assignedEnemies.Count}");
     }
 
     void SetupSelectiveCollisions()

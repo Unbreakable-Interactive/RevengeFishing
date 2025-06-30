@@ -85,7 +85,7 @@ public class HookSpawner : MonoBehaviour
         // Instantiate the hook handler
         currentHookHandler = Instantiate(hookHandlerPrefab, spawnPoint.position, spawnPoint.rotation);
         curHookHandler = currentHookHandler.GetComponent<HookPartsHandler>();
-        Debug.Log($"✅ Instantiated hook handler: {currentHookHandler.name} at {spawnPoint.position}");
+        Debug.Log($"Instantiated hook handler: {currentHookHandler.name} at {spawnPoint.position}");
 
         // Find the actual fishing hook within the handler
         // currentHook = currentHookHandler.GetComponentInChildren<FishingProjectile>();
@@ -93,9 +93,9 @@ public class HookSpawner : MonoBehaviour
         
         if (currentHook != null)
         {
-            // ✅ CRITICAL FIX: Set the spawn point BEFORE calling other methods
+            // CRITICAL FIX: Set the spawn point BEFORE calling other methods
             currentHook.Initialize();
-            currentHook.SetSpawnPoint(spawnPoint.position);
+            currentHook.SetSpawnPoint(spawnPoint);
 
             currentHook.maxDistance = hookMaxDistance;
             currentHook.SetSpawner(this);
@@ -104,11 +104,11 @@ public class HookSpawner : MonoBehaviour
             // Setup water detection
             SetupWaterDetection();
 
-            Debug.Log($"✅ Hook thrown successfully by {gameObject.name}! Spawn point: {spawnPoint.position}");
+            Debug.Log($"Hook thrown successfully by {gameObject.name}! Spawn point: {spawnPoint.position}");
         }
         else
         {
-            Debug.LogError($"❌ No FishingProjectile found in {hookHandlerPrefab.name}!");
+            Debug.LogError($"No FishingProjectile found in {hookHandlerPrefab.name}!");
             Destroy(currentHookHandler);
             currentHookHandler = null;
             curHookHandler = null;
@@ -151,7 +151,7 @@ public class HookSpawner : MonoBehaviour
                 SetLineLength(newLength);
 
                 // MOVE HOOK TOWARD SPAWN POINT
-                Vector3 spawnPosition = currentHook.spawnPoint; // Access spawn point
+                Vector3 spawnPosition = currentHook.spawnPoint.position; // Access spawn point
                 Vector3 currentPosition = currentHook.transform.position;
                 Vector3 direction = (spawnPosition - currentPosition).normalized;
 

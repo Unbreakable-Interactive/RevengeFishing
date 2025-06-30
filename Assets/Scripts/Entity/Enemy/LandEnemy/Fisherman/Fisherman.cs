@@ -28,6 +28,11 @@ public class Fisherman : LandEnemy
     {
         if (!hasThrownHook) return;
 
+        //if (hookSpawner != null)
+        //{
+        //    hookSpawner.CurrentHook.
+        //}
+
         // ADD HOOK TIMER LOGIC
         hookTimer += Time.deltaTime;
 
