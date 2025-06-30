@@ -59,6 +59,9 @@ public class LandEnemy : Enemy
 
     [Header("Pull Mechanic")]
     [SerializeField] protected bool isPullingPlayer = false;
+    [SerializeField] protected float minLineLength = 2f;      // Minimum line length
+    [SerializeField] protected float maxLineReduction = 1.5f;  // Max reduction per pull
+    [SerializeField] protected float lineReductionVariation = 0.4f; // Random variation
 
     #endregion
 
@@ -239,9 +242,6 @@ public class LandEnemy : Enemy
 
         isPullingPlayer = true;
 
-        // Get the hook spawn point
-        Vector3 hookSpawnPoint = hookSpawner.spawnPoint.position;
-
         if (player == null)
         {
             Debug.LogError("Player not found for pull mechanic!");
@@ -249,64 +249,115 @@ public class LandEnemy : Enemy
             yield break;
         }
 
-        Debug.Log($"{gameObject.name} giving player a firm fishing rod pull!");
+        Debug.Log($"{gameObject.name} starting fishing reel pull!");
 
-        // SHORTEN THE FISHING LINE when enemy pulls
-        float currentLineLength = hookSpawner.GetLineLength();
-        float lineReduction = UnityEngine.Random.Range(0.8f, 1.2f); // Reduce line by 0.8-1.2 units
-        float newLineLength = Mathf.Max(currentLineLength - lineReduction, 2f); // Don't go below 2 units
+        // PHASE 1: Shorten the fishing line first (this is the "reel in" action)
+        float lineShortened = ShortenFishingLine();
 
-        hookSpawner.SetLineLength(newLineLength);
-        Debug.Log($"Fisherman shortened line from {currentLineLength:F1} to {newLineLength:F1}");
+        if (lineShortened > 0)
+        {
+            // PHASE 2: Apply physics-based pull toward the hook spawn point
+            yield return StartCoroutine(ApplyReelForce(lineShortened));
+        }
+        else
+        {
+            Debug.Log($"{gameObject.name} couldn't shorten line further - applying resistance pull instead");
+            // Even if line can't be shortened, apply a small resistance pull
+            yield return StartCoroutine(ApplyResistancePull());
+        }
 
-        // Calculate a partial pull toward the hook spawn (like reeling in a fish)
+        isPullingPlayer = false;
+        Debug.Log($"{gameObject.name} finished fishing reel pull");
+    }
+
+    // New physics-based reel force method
+    private IEnumerator ApplyReelForce(float lineShortened)
+    {
+        Vector3 hookSpawnPoint = hookSpawner.spawnPoint.position;
         Vector3 playerPosition = player.transform.position;
         Vector3 pullDirection = (hookSpawnPoint - playerPosition).normalized;
 
-        // Pull them only partway - adjust this value to control pull strength
-        float pullDistance = 1f; // How far to pull them (in Unity units)
-        Vector3 targetPosition = playerPosition + (pullDirection * pullDistance);
+        // Calculate pull strength based on how much line was shortened
+        float pullStrength = lineShortened * 8f; // Multiplier for force intensity
+        float pullDuration = 0.4f; // Duration of the reel effect
 
-        // Make sure we don't pull them past the hook spawn point
-        float distanceToHook = Vector3.Distance(playerPosition, hookSpawnPoint);
-        if (pullDistance >= distanceToHook)
-        {
-            // If they're very close, just pull them 30% of the remaining distance
-            targetPosition = Vector3.Lerp(playerPosition, hookSpawnPoint, 0.3f);
-        }
+        Debug.Log($"Applying reel force: direction={pullDirection}, strength={pullStrength}, duration={pullDuration}");
 
+        // Apply force over time for natural feel
         float elapsedTime = 0f;
-        float snapBackDuration = 0.3f; // Quick, snappy pull
+        Rigidbody2D playerRb = player.GetComponent<Rigidbody2D>();
 
-        // Apply brief movement toward the hook (like a fish being reeled in)
-        while (elapsedTime < snapBackDuration)
+        while (elapsedTime < pullDuration)
         {
             elapsedTime += Time.deltaTime;
-            float progress = elapsedTime / snapBackDuration;
+            float progress = elapsedTime / pullDuration;
 
-            // Use sharp easing for snappy fishing rod feel
-            progress = Mathf.SmoothStep(0f, 1f, progress);
+            // Use exponential decay for natural reel feel (strong start, gentle end)
+            float currentForceMultiplier = Mathf.Lerp(1f, 0.1f, progress * progress);
+            Vector2 frameForce = pullDirection * pullStrength * currentForceMultiplier;
 
-            // Lerp player toward the partial target position
-            Vector3 newPosition = Vector3.Lerp(playerPosition, targetPosition, progress);
-            player.transform.position = newPosition;
-
-            // Add some force for physics effect
-            player.GetComponent<Rigidbody2D>().AddForce(pullDirection * pullForce, ForceMode2D.Impulse);
+            playerRb.AddForce(frameForce, ForceMode2D.Force);
 
             yield return null;
         }
 
-        // Brief constraint to prevent immediate escape
-        player.SetPositionConstraint(player.transform.position, 0.8f);
-        yield return new WaitForSeconds(0.2f);
-
-        // Release the player
+        // Brief movement constraint after the pull (like being momentarily caught)
+        player.SetPositionConstraint(player.transform.position, 0.5f);
+        yield return new WaitForSeconds(0.3f);
         player.RemovePositionConstraint();
-        isPullingPlayer = false;
-
-        Debug.Log($"{gameObject.name} finished single fishing rod pull");
     }
+
+    // Small resistance pull when line can't be shortened
+    private IEnumerator ApplyResistancePull()
+    {
+        Vector3 hookSpawnPoint = hookSpawner.spawnPoint.position;
+        Vector3 playerPosition = player.transform.position;
+        Vector3 pullDirection = (hookSpawnPoint - playerPosition).normalized;
+
+        Rigidbody2D playerRb = player.GetComponent<Rigidbody2D>();
+
+        // Apply a smaller, brief resistance force
+        for (int i = 0; i < 3; i++)
+        {
+            playerRb.AddForce(pullDirection * 6f, ForceMode2D.Impulse);
+            yield return new WaitForSeconds(0.1f);
+        }
+    }
+
+    private float ShortenFishingLine()
+    {
+        if (hookSpawner == null || !hookSpawner.HasActiveHook())
+        {
+            Debug.LogWarning("Cannot shorten line - no active hook!");
+            return 0f;
+        }
+
+        float currentLineLength = hookSpawner.GetLineLength();
+        float baseReduction = UnityEngine.Random.Range(maxLineReduction - lineReductionVariation, maxLineReduction);
+        float newLineLength = Mathf.Max(currentLineLength - baseReduction, minLineLength);
+
+        float actualReduction = currentLineLength - newLineLength;
+
+        if (actualReduction > 0)
+        {
+            hookSpawner.SetLineLength(newLineLength);
+
+            // IMPORTANT: Force update the hook's constraint immediately
+            if (hookSpawner.CurrentHook != null)
+            {
+                hookSpawner.CurrentHook.maxDistance = newLineLength;
+                Debug.Log($"Fisherman reeled in line: {currentLineLength:F1} to {newLineLength:F1} (reduced by {actualReduction:F1})");
+            }
+
+            return actualReduction;
+        }
+        else
+        {
+            Debug.Log($"Line already at minimum length ({minLineLength:F1}) - cannot shorten further");
+            return 0f;
+        }
+    }
+
 
     protected override void InterruptAllActions()
     {

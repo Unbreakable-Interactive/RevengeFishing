@@ -56,6 +56,10 @@ public class Player : Entity
     [Header("Line Extension")]
     [SerializeField] private float lineExtensionAmount = 0.5f; // How much to extend per pull
     [SerializeField] private float maxLineExtension = 12f; // Maximum line length allowed
+    [SerializeField] private float lineExtensionSpeedPenalty = 0.8f; // Speed multiplier when extending (0.4 = 60% slower)
+    // State tracking for continuous slowdown
+    private bool isAtMaxHookDistance = false;
+    private float originalMaxSpeed;
 
     [Header("Debug")]
     public bool enableDebugLogs = false;
@@ -76,11 +80,14 @@ public class Player : Entity
         rb.drag = naturalDrag;
         targetRotation = transform.rotation; //set target rotation to Player's current rotation
         currentGravityScale = underwaterGravityScale;
+
+        originalMaxSpeed = maxSpeed;
     }
 
     protected override void Update()
     {
         base.Update(); // Call base Update to handle movement mode
+        CheckMaxHookDistanceState();
     }
 
     protected override void UnderwaterBehavior()
@@ -107,17 +114,18 @@ public class Player : Entity
         if (aboveWater)
         {
             currentGravityScale = airGravityScale;
-            maxSpeed = airMaxSpeed;
+            originalMaxSpeed = airMaxSpeed;
             rotationSpeed = airRotationSpeed;
             DebugLog("Player switched to AIRBORNE mode");
         }
         else
         {
-            maxSpeed = underwaterMaxSpeed;
+            originalMaxSpeed = underwaterMaxSpeed;
             rotationSpeed = underwaterRotationSpeed;
             DebugLog("Player switched to UNDERWATER mode");
         }
 
+        maxSpeed = isAtMaxHookDistance ? originalMaxSpeed * lineExtensionSpeedPenalty : originalMaxSpeed;
     }
 
     #region Input Handling
@@ -251,12 +259,56 @@ public class Player : Entity
 
             DebugLog($"Player extended fishing line from {currentLineLength:F1} to {newLineLength:F1}");
 
-            // Optional: Add visual/audio feedback here
-            // PlayLineExtensionEffect();
+            // Optional: Add resistance force when extending
+            Vector3 directionToHook = (hook.spawnPoint.position - transform.position).normalized;
+            rb.AddForce(-directionToHook * 2f, ForceMode2D.Impulse);
         }
         else
         {
             DebugLog("Fishing line is already at maximum length!");
+        }
+    }
+
+    private void CheckMaxHookDistanceState()
+    {
+        bool wasAtMaxDistance = isAtMaxHookDistance;
+        isAtMaxHookDistance = false; // Reset state
+
+        // Check if player is constrained by any hooks
+        if (activeBitingHooks.Count > 0)
+        {
+            foreach (FishingProjectile hook in activeBitingHooks)
+            {
+                if (hook.isBeingHeld)
+                {
+                    // Check if player is at or beyond this hook's max distance
+                    float currentDistance = Vector3.Distance(transform.position, hook.spawnPoint.position);
+                    float hookMaxDistance = hook.maxDistance;
+
+                    if (currentDistance >= hookMaxDistance * 0.95f) // At 95% or more of max distance
+                    {
+                        isAtMaxHookDistance = true;
+                        break; // Found one hook at max distance, that's enough
+                    }
+                }
+            }
+        }
+
+        // Apply or remove speed penalty based on state change
+        if (isAtMaxHookDistance != wasAtMaxDistance)
+        {
+            if (isAtMaxHookDistance)
+            {
+                // Apply slowdown
+                maxSpeed = originalMaxSpeed * lineExtensionSpeedPenalty;
+                DebugLog($"Player at max hook distance - speed reduced to {maxSpeed:F1}");
+            }
+            else
+            {
+                // Remove slowdown
+                maxSpeed = originalMaxSpeed;
+                DebugLog($"Player moved within hook range - speed restored to {maxSpeed:F1}");
+            }
         }
     }
 
