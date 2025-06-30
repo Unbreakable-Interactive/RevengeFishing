@@ -1,8 +1,17 @@
 using System.Collections.Generic;
 using UnityEngine;
+using static Enemy;
 
 public class Player : Entity
 {
+    public enum Status
+    {
+        Alive,
+        Fished,
+        Starved,
+        Hunted
+    }
+
     private Camera mainCamera;
     private Vector2 lastMousePosition = Vector2.zero;
     private Quaternion targetRotation;
@@ -11,6 +20,8 @@ public class Player : Entity
     private bool hasAppliedBoost = false; // Track if boost was already applied
 
     [SerializeField] protected int hunger;
+
+    [SerializeField] protected Status status;
 
     [Header("Rotation Settings")]
     [SerializeField] protected float rotationSpeed = 10f;
@@ -189,7 +200,20 @@ public class Player : Entity
     #endregion
 
     #region Reverse Fishing
-    
+
+    public void TakeFishingFatigue(float fatigueDamage)
+    {
+        // 10% enemy's fatigue
+        _fatigue += (int)(fatigueDamage);
+
+        // Check if enemy should be defeated
+        if (_fatigue >= _maxFatigue)
+        {
+            PlayerDie(Status.Fished);
+        }
+
+    }
+
     // Method for hooks to register when they bite
     public void AddBitingHook(FishingProjectile hook)
     {
@@ -368,6 +392,11 @@ public class Player : Entity
         _maxFatigue = _powerLevel;
 
         DebugLog($"Player gained {powerGain} power from eating enemy! New power level: {_powerLevel}");
+    }
+
+    public void PlayerDie(Status deathType)
+    {
+        Destroy(gameObject);
     }
 
     #endregion

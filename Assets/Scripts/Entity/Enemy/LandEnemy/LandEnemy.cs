@@ -251,10 +251,13 @@ public class LandEnemy : Enemy
 
         Debug.Log($"{gameObject.name} starting fishing reel pull!");
 
+        // APPLY FATIGUE DAMAGE TO PLAYER (once per pull)
+        ApplyPullFatigueDamage();
+
         // PHASE 1: Shorten the fishing line first (this is the "reel in" action)
         float lineShortened = ShortenFishingLine();
 
-        if (lineShortened > 0)
+        if (lineShortened > minLineLength)
         {
             // PHASE 2: Apply physics-based pull toward the hook spawn point
             yield return StartCoroutine(ApplyReelForce(lineShortened));
@@ -323,6 +326,24 @@ public class LandEnemy : Enemy
             yield return new WaitForSeconds(0.1f);
         }
     }
+
+    private void ApplyPullFatigueDamage()
+    {
+        if (player == null)
+        {
+            Debug.LogWarning("Cannot apply pull fatigue damage - player not found!");
+            return;
+        }
+
+        // Calculate fatigue damage as 10% of this enemy's power level
+        float fatigueDamage = PowerLevel * 0.1f;
+
+        // Apply fatigue damage to the player
+        player.TakeFishingFatigue(fatigueDamage);
+
+        Debug.Log($"{gameObject.name} deals {fatigueDamage:F1} fatigue damage to player (from PowerLevel {PowerLevel})");
+    }
+
 
     private float ShortenFishingLine()
     {
