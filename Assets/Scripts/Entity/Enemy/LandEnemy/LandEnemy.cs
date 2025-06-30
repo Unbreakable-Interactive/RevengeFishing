@@ -57,6 +57,9 @@ public class LandEnemy : Enemy
 
     protected FishingProjectile subscribedHook;
 
+    [Header("Pull Mechanic")]
+    [SerializeField] protected bool isPullingPlayer = false;
+
     #endregion
 
     #region Platform Assignment
@@ -198,6 +201,105 @@ public class LandEnemy : Enemy
         WaterMovement();
     }
 
+    protected override void OnFirstFatigueReceived()
+    {
+        base.OnFirstFatigueReceived();
+
+        // Start the pull mechanic if we have an active hook
+        if (CanPullPlayer() && hookSpawner.HasActiveHook())
+        {
+            StartCoroutine(ContinuousPullMechanic());
+        }
+    }
+
+    private IEnumerator ContinuousPullMechanic()
+    {
+        Debug.Log($"{gameObject.name} starting continuous pull mechanic!");
+
+        // Continue pulling until enemy is defeated
+        while (_state == EnemyState.Alive && CanPullPlayer() && hookSpawner.HasActiveHook())
+        {
+            // Wait for random interval between 0.5 and 1 second
+            float waitTime = UnityEngine.Random.Range(0.5f, 1f);
+            yield return new WaitForSeconds(waitTime);
+
+            // Check again if we should still be pulling
+            if (_state == EnemyState.Alive && CanPullPlayer() && hookSpawner.HasActiveHook())
+            {
+                yield return StartCoroutine(PerformSinglePull());
+            }
+        }
+
+        Debug.Log($"{gameObject.name} stopped continuous pulling - enemy defeated or hook lost");
+    }
+
+    private IEnumerator PerformSinglePull()
+    {
+        if (isPullingPlayer) yield break; // Prevent overlapping pulls
+
+        isPullingPlayer = true;
+
+        // Get the hook spawn point
+        Vector3 hookSpawnPoint = hookSpawner.spawnPoint.position;
+
+        if (player == null)
+        {
+            Debug.LogError("Player not found for pull mechanic!");
+            isPullingPlayer = false;
+            yield break;
+        }
+
+        Debug.Log($"{gameObject.name} giving player a firm fishing rod pull!");
+
+        // Calculate a partial pull toward the hook spawn (like reeling in a fish)
+        Vector3 playerPosition = player.transform.position;
+        Vector3 pullDirection = (hookSpawnPoint - playerPosition).normalized;
+
+        // Pull them only partway - adjust this value to control pull strength
+        float pullDistance = 1f; // How far to pull them (in Unity units)
+        Vector3 targetPosition = playerPosition + (pullDirection * pullDistance);
+
+        // Make sure we don't pull them past the hook spawn point
+        float distanceToHook = Vector3.Distance(playerPosition, hookSpawnPoint);
+        if (pullDistance >= distanceToHook)
+        {
+            // If they're very close, just pull them 30% of the remaining distance
+            targetPosition = Vector3.Lerp(playerPosition, hookSpawnPoint, 0.3f);
+        }
+
+        float elapsedTime = 0f;
+        float snapBackDuration = 0.3f; // Quick, snappy pull
+
+        // Apply brief movement toward the hook (like a fish being reeled in)
+        while (elapsedTime < snapBackDuration)
+        {
+            elapsedTime += Time.deltaTime;
+            float progress = elapsedTime / snapBackDuration;
+
+            // Use sharp easing for snappy fishing rod feel
+            progress = Mathf.SmoothStep(0f, 1f, progress);
+
+            // Lerp player toward the partial target position
+            Vector3 newPosition = Vector3.Lerp(playerPosition, targetPosition, progress);
+            player.transform.position = newPosition;
+
+            // Add some force for physics effect
+            player.GetComponent<Rigidbody2D>().AddForce(pullDirection * pullForce, ForceMode2D.Impulse);
+
+            yield return null;
+        }
+
+        // Brief constraint to prevent immediate escape (shorter than before)
+        player.SetPositionConstraint(player.transform.position, 0.8f);
+        yield return new WaitForSeconds(0.2f);
+
+        // Release the player
+        player.RemovePositionConstraint();
+        isPullingPlayer = false;
+
+        Debug.Log($"{gameObject.name} finished single fishing rod pull");
+    }
+
     protected override void InterruptAllActions()
     {
         // Stop any movement
@@ -242,6 +344,21 @@ public class LandEnemy : Enemy
             subscribedHook.OnPlayerInteraction -= OnHookPlayerInteraction;
             subscribedHook = null;
         }
+
+        // Stop any active pulling when defeated
+        if (isPullingPlayer)
+        {
+            StopAllCoroutines();
+            isPullingPlayer = false;
+
+            // Release player constraint if active
+            Player player = FindObjectOfType<Player>();
+            if (player != null)
+            {
+                player.RemovePositionConstraint();
+            }
+        }
+
     }
 
     protected virtual void OnHookPlayerInteraction(bool isBeingHeld)

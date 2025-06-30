@@ -30,7 +30,13 @@ public abstract class Enemy : Entity
     [Header("Player Reference")]
     [SerializeField] protected Player player; // Reference to the player object
 
-    // time parameters for AI decisions
+    [Header("Pull Mechanic")]
+    [SerializeField] protected bool hasReceivedFirstFatigue = false;
+    [SerializeField] protected bool canPullPlayer = false;
+    [SerializeField] protected float pullForce = 5f;
+    [SerializeField] protected float pullDuration = 1f;
+
+    [Header("Decisionmaking Timer")]
     [SerializeField] protected float minActionTime; //Minimum seconds enemy will do an action, like walk, idle, or run
     [SerializeField] protected float maxActionTime; //Maximum seconds enemy will do an action, like walk, idle, or run
     [SerializeField] protected float nextActionTime; //actual seconds until next action decision
@@ -119,6 +125,14 @@ public abstract class Enemy : Entity
 
     public void TakeFatigue(int playerPowerLevel)
     {
+        if (!hasReceivedFirstFatigue)
+        {
+            hasReceivedFirstFatigue = true;
+            canPullPlayer = true;
+            OnFirstFatigueReceived();
+            Debug.Log($"{gameObject.name} received first fatigue damage - can now pull player!");
+        }
+
         // 5% more fatigue
         _fatigue += (int)((float)playerPowerLevel * .05f);
 
@@ -129,6 +143,17 @@ public abstract class Enemy : Entity
         }
 
         // return Mathf.Clamp(_fatigue, 0, _maxFatigue);
+    }
+
+    protected virtual void OnFirstFatigueReceived()
+    {
+        // Override in derived classes for specific enemy types
+        Debug.Log($"{gameObject.name} can now pull the player!");
+    }
+
+    public bool CanPullPlayer()
+    {
+        return canPullPlayer && _state == EnemyState.Alive;
     }
 
     public virtual void TriggerAlive()

@@ -269,6 +269,10 @@ MonoBehaviour:
   _tier: 0
   _state: 0
   player: {fileID: 0}
+  hasReceivedFirstFatigue: 0
+  canPullPlayer: 0
+  pullForce: 1
+  pullDuration: 0.1
   minActionTime: 1
   maxActionTime: 4
   nextActionTime: 0
@@ -289,6 +293,7 @@ MonoBehaviour:
   hasStartedFloating: 0
   hookTimer: 1
   hookDuration: 8
+  isPullingPlayer: 0
   assignedPlatform: {fileID: 0}
   fishermanConfig: {fileID: 11400000, guid: 876c88f03b9414e67960bdc874e7d116, type: 2}
 --- !u!1 &8143527860349171708
