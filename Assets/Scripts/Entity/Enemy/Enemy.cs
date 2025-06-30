@@ -184,6 +184,12 @@ public abstract class Enemy : Entity
         ChangeState_Dead();
         // Interrupt all current actions
         InterruptAllActions();
+        // Transfer portion of this enemy's power to the player
+        if (player != null)
+        {
+            player.GainPowerFromEating(_powerLevel);
+            Debug.Log($"Player consumed {gameObject.name} with power level {_powerLevel}");
+        }
         // Handle any specific death logic (like cleanup)
         EnemyDie();
     }

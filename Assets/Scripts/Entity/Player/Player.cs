@@ -10,6 +10,8 @@ public class Player : Entity
     private bool shouldApplyForceAfterRotation = false;
     private bool hasAppliedBoost = false; // Track if boost was already applied
 
+    [SerializeField] protected int hunger;
+
     [Header("Rotation Settings")]
     [SerializeField] protected float rotationSpeed = 10f;
     [SerializeField] protected float rotationThreshold = 10f; // Degrees - How close to target before considering "complete"
@@ -64,6 +66,8 @@ public class Player : Entity
 
         _fatigue = 0;
         _maxFatigue = _powerLevel;
+
+        hunger = 0; // hunger increases by 1 each second; player starves if hunger reaches 40
 
         rb.drag = naturalDrag;
         targetRotation = transform.rotation; //set target rotation to Player's current rotation
@@ -261,6 +265,19 @@ public class Player : Entity
 
             DebugLog($"Player constrained to radius {constraintRadius} at position {constrainedPosition}");
         }
+    }
+
+    public void GainPowerFromEating(int enemyPowerLevel)
+    {
+        int powerGain = Mathf.RoundToInt(enemyPowerLevel * 0.1f); // 10% of enemy's power
+        _powerLevel += powerGain;
+
+        // add way to heal HUNGER and then FATIGUE according to design document
+
+        // Update max fatigue to match new power level
+        _maxFatigue = _powerLevel;
+
+        DebugLog($"Player gained {powerGain} power from eating enemy! New power level: {_powerLevel}");
     }
 
     #endregion
