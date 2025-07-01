@@ -219,18 +219,29 @@ public abstract class Enemy : Entity
         EnemyDie();
     }
 
-    /// <summary>
-    /// Destroy FishermanHandler (that is the father who contains fisherman and waterline)
-    /// </summary>
     protected virtual void TriggerEscape()
     {
         Debug.Log($"{gameObject.name} has ESCAPED! The player can no longer catch this enemy.");
 
-        // Destroy the parent FishermanHandler (or this object if no parent)
-        GameObject objectToDestroy = transform.parent != null ? transform.parent.gameObject : gameObject;
-        Destroy(objectToDestroy);
+        // Find the SpawnHandler to properly return this enemy to the pool
+        SpawnHandler spawnHandler = FindObjectOfType<SpawnHandler>();
+        if (spawnHandler != null)
+        {
+            // Get the root object (FishermanHandler or this object)
+            GameObject objectToReturn = transform.parent != null ? transform.parent.gameObject : gameObject;
+
+            // Return to pool instead of destroying
+            spawnHandler.OnEnemyDestroyed(objectToReturn);
+            Debug.Log($"{gameObject.name} returned to pool after escape");
+        }
+        else
+        {
+            Debug.LogWarning($"No SpawnHandler found! Destroying {gameObject.name} as fallback");
+            GameObject objectToDestroy = transform.parent != null ? transform.parent.gameObject : gameObject;
+            Destroy(objectToDestroy);
+        }
     }
-    
+
     /// <summary>
     /// Set time to next action
     /// </summary>
@@ -271,9 +282,23 @@ public abstract class Enemy : Entity
     {
         Debug.Log($"{gameObject.name} has been REVERSE FISHED!");
 
-        // Destroy the parent FishermanHandler (or this object if no parent)
-        GameObject objectToDestroy = transform.parent != null ? transform.parent.gameObject : gameObject;
-        Destroy(objectToDestroy);
+        // Find the SpawnHandler to properly return this enemy to the pool
+        SpawnHandler spawnHandler = FindObjectOfType<SpawnHandler>();
+        if (spawnHandler != null)
+        {
+            // Get the root object (FishermanHandler or this object)
+            GameObject objectToReturn = transform.parent != null ? transform.parent.gameObject : gameObject;
+
+            // Return to pool instead of destroying
+            spawnHandler.OnEnemyDestroyed(objectToReturn);
+            Debug.Log($"{gameObject.name} returned to pool instead of being destroyed");
+        }
+        else
+        {
+            Debug.LogWarning($"No SpawnHandler found! Destroying {gameObject.name} as fallback");
+            GameObject objectToDestroy = transform.parent != null ? transform.parent.gameObject : gameObject;
+            Destroy(objectToDestroy);
+        }
     }
 
     #endregion
