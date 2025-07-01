@@ -41,6 +41,24 @@ public abstract class Enemy : Entity
     [SerializeField] protected float maxActionTime; //Maximum seconds enemy will do an action, like walk, idle, or run
     [SerializeField] protected float nextActionTime; //actual seconds until next action decision
 
+    public float NextActionTime
+    {
+        get { return nextActionTime; }
+        set { nextActionTime = value; }
+    }
+
+    public bool HasReceivedFirstFatigue
+    {
+        get { return hasReceivedFirstFatigue; }
+        set { hasReceivedFirstFatigue = value; }
+    }
+
+    public bool CanPullThePlayer
+    {
+        get { return canPullPlayer; }
+        set { canPullPlayer = value; }
+    }
+
     #region Water Enemy Variables
 
     [SerializeField] protected float swimForce;

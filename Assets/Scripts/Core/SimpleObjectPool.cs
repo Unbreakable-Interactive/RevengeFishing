@@ -161,21 +161,27 @@ public class SimpleObjectPool : MonoBehaviour
         enemy.platformLeftEdge = 0f;
         enemy.platformRightEdge = 0f;
 
-        // // FLOATING STATE RESET
-        // enemy.HasStartedFloating = false;
-        // enemy.FloatingStartTime = 0f;
-        //
-        // // MOVEMENT STATE RESET
-        // enemy.MovementStateLand = LandEnemy.LandMovementState.Idle;
-        // enemy.fishingToolEquipped = false;
-        //
-        // // HOOK FISHING STATE RESET (CRITICAL FIX)
-        // enemy.HasThrownHook = false;
-        // enemy.HookTimer = 0f;
-        //
-        // // TIMING RESET (next action time)
-        // enemy.NextActionTime = Time.time + Random.Range(0.5f, 2f);
-        //
+        // FLOATING STATE RESET
+        enemy.HasStartedFloating = false;
+        //enemy.FloatingStartTime = 0f;
+
+        // MOVEMENT STATE RESET
+        enemy.MovementStateLand = LandEnemy.LandMovementState.Idle;
+        enemy.fishingToolEquipped = false;
+
+        // HOOK FISHING STATE RESET (CRITICAL FIX)
+        enemy.HasThrownHook = false;
+        enemy.HookTimer = 0f;
+
+        // TIMING RESET (next action time)
+        enemy.NextActionTime = Time.time + Random.Range(0.5f, 2f);
+
+        // FISHING PULL RESET
+        enemy.HasReceivedFirstFatigue = false;
+        enemy.CanPullThePlayer = false;
+
+        enemy.StopAllCoroutines();
+
         // // SAVE INITIAL SPAWN POSITION (THE SOLUTION TO THE MAIN PROBLEM)
         // enemy.InitialSpawnPosition = spawnPosition;
 

@@ -63,6 +63,24 @@ public class LandEnemy : Enemy
     [SerializeField] protected float maxLineReduction = 1.5f;  // Max reduction per pull
     [SerializeField] protected float lineReductionVariation = 0.4f; // Random variation
 
+    public bool HasStartedFloating
+    {
+        get { return hasStartedFloating; }
+        set { hasStartedFloating = value; }
+    }
+
+    public bool HasThrownHook
+    {
+        get { return hasThrownHook; }
+        set { hasThrownHook = value; }
+    }
+
+    public float HookTimer
+    {
+        get { return hookTimer; }
+        set { hookTimer = value; }
+    }
+
     #endregion
 
     #region Platform Assignment
