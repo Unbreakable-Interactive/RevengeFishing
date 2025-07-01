@@ -1,3 +1,4 @@
+using UnityEngine.SceneManagement;
 using System.Collections.Generic;
 using UnityEngine;
 using static Enemy;
@@ -65,7 +66,7 @@ public class Player : Entity
     private List<FishingProjectile> activeBitingHooks = new List<FishingProjectile>();
 
     [Header("Line Extension")]
-    [SerializeField] private float lineExtensionAmount = 0.5f; // How much to extend per pull
+    [SerializeField] private float lineExtensionAmount = 1f; // How much to extend per pull
     [SerializeField] private float maxLineExtension = 12f; // Maximum line length allowed
     [SerializeField] private float lineExtensionSpeedPenalty = 0.8f; // Speed multiplier when extending (0.4 = 60% slower)
     // State tracking for continuous slowdown
@@ -396,7 +397,19 @@ public class Player : Entity
 
     public void PlayerDie(Status deathType)
     {
-        Destroy(gameObject);
+        StartCoroutine(HandlePlayerDeath(deathType));
+    }
+
+    private System.Collections.IEnumerator HandlePlayerDeath(Status deathType)
+    {
+        // Optional: Add death animation or effects here
+        Debug.Log($"Player died: {deathType}");
+
+        // Optional: Brief pause before scene transition (remove if you want instant transition)
+        yield return new WaitForSeconds(0f);
+
+        // Transition to GameOver scene
+        SceneManager.LoadScene("GameOver");
     }
 
     #endregion

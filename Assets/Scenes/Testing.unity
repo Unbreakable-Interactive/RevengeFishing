@@ -431,7 +431,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2729197461602565041, guid: 3becf651e46424c6cb1d7693bd8820e9, type: 3}
       propertyPath: m_Name
-      value: BackgroundTempHolder (1)
+      value: BackgroundTempHolder
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
