@@ -10,7 +10,7 @@ public class Player : Entity
         Alive,
         Fished,
         Starved,
-        Hunted
+        Slain
     }
 
     private Camera mainCamera;
@@ -402,10 +402,13 @@ public class Player : Entity
 
     private System.Collections.IEnumerator HandlePlayerDeath(Status deathType)
     {
+        // Store the death type for the GameOver scene
+        DeathManager.SetDeathType(deathType);
+
         // Optional: Add death animation or effects here
         Debug.Log($"Player died: {deathType}");
 
-        // Optional: Brief pause before scene transition (remove if you want instant transition)
+        // Optional: Brief pause before scene transition
         yield return new WaitForSeconds(0f);
 
         // Transition to GameOver scene
