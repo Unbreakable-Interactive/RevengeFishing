@@ -2246,6 +2246,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1373576552199767526, guid: 7f9eb2fb35364a94db718320167335ab, type: 3}
+      propertyPath: maxLineExtension
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 1373576552199767526, guid: 7f9eb2fb35364a94db718320167335ab, type: 3}
+      propertyPath: lineExtensionSpeedPenalty
+      value: 0.6
+      objectReference: {fileID: 0}
     - target: {fileID: 3182908382894097092, guid: 7f9eb2fb35364a94db718320167335ab, type: 3}
       propertyPath: m_LocalPosition.x
       value: -14.23
