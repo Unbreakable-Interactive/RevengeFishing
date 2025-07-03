@@ -105,5 +105,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 382926d58d98cd5429c8d6872cbdd08c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  waterSurfaceY: 5.92
+  waterSurfaceY: -0.19
   target: {fileID: 0}
