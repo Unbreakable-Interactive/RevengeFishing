@@ -649,7 +649,21 @@ public class Player : Entity
     Vector2 GetMouseWorldPosition()
     {
         Vector3 mouseScreenPosition = Input.mousePosition;
-        Vector3 mouseWorldPosition = mainCamera.ScreenToWorldPoint(new Vector3(mouseScreenPosition.x, mouseScreenPosition.y, mainCamera.nearClipPlane));
+        Vector3 mouseWorldPosition;
+        
+        if (mainCamera.orthographic)
+        {
+            // For orthographic cameras, use nearClipPlane
+            mouseWorldPosition = mainCamera.ScreenToWorldPoint(new Vector3(mouseScreenPosition.x, mouseScreenPosition.y, mainCamera.nearClipPlane));
+        }
+        else
+        {
+            // For perspective cameras, we need to specify the Z distance from camera to the game world plane
+            // Calculate the distance from camera to the player's Z position (game world plane)
+            float distanceToGamePlane = Mathf.Abs(mainCamera.transform.position.z - transform.position.z);
+            mouseWorldPosition = mainCamera.ScreenToWorldPoint(new Vector3(mouseScreenPosition.x, mouseScreenPosition.y, distanceToGamePlane));
+        }
+        
         return new Vector2(mouseWorldPosition.x, mouseWorldPosition.y);
     }
 
