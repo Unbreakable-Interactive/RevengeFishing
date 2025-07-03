@@ -21,6 +21,7 @@ public class Player : Entity
     private bool hasAppliedBoost = false; // Track if boost was already applied
 
     [SerializeField] protected int hunger;
+    [SerializeField] protected int maxHunger;
 
     [SerializeField] protected Status status;
 
@@ -68,7 +69,7 @@ public class Player : Entity
     [Header("Line Extension")]
     [SerializeField] private float lineExtensionAmount = 1f; // How much to extend per pull
     [SerializeField] private float maxLineExtension = 12f; // Maximum line length allowed
-    [SerializeField] private float lineExtensionSpeedPenalty = 0.8f; // Speed multiplier when extending (0.4 = 60% slower)
+    [SerializeField] private float lineExtensionSpeedPenalty = 0.6f; // Speed multiplier when extending (0.6 = 40% slower)
     // State tracking for continuous slowdown
     private bool isAtMaxHookDistance = false;
     private float originalMaxSpeed;
@@ -88,6 +89,7 @@ public class Player : Entity
         _maxFatigue = _powerLevel;
 
         hunger = 0; // hunger increases by 1 each second; player starves if hunger reaches 40
+        maxHunger = _powerLevel;
 
         rb.drag = naturalDrag;
         targetRotation = transform.rotation; //set target rotation to Player's current rotation
@@ -384,15 +386,33 @@ public class Player : Entity
 
     public void GainPowerFromEating(int enemyPowerLevel)
     {
-        int powerGain = Mathf.RoundToInt(enemyPowerLevel * 0.1f); // 10% of enemy's power
-        _powerLevel += powerGain;
+        // store old values
+        int prevFatigue = _maxFatigue;
+        int prevHunger = maxHunger;
+        int prevLevel = _powerLevel;
 
-        // add way to heal HUNGER and then FATIGUE according to design document
+        hunger -= Mathf.RoundToInt((float)enemyPowerLevel * 0.5f);
+        
+        if (hunger < 0)
+        {
+            _fatigue += hunger; //heals as much fatigue as hunger overflowed
+            hunger = 0;
+        }
 
-        // Update max fatigue to match new power level
+        // Ensure fatigue does not drop below 0
+        if (_fatigue < 0) _fatigue = 0;
+
+        _powerLevel += Mathf.RoundToInt((float)enemyPowerLevel * 0.1f); // 10% of enemy's power
+
+        // Update new max values to match new power level
         _maxFatigue = _powerLevel;
+        maxHunger = _powerLevel;
 
-        DebugLog($"Player gained {powerGain} power from eating enemy! New power level: {_powerLevel}");
+        // keep values proportional to new power level
+        hunger = Mathf.RoundToInt(((float)hunger / (float)prevHunger) * (float)maxHunger);
+        _fatigue = Mathf.RoundToInt(((float)_fatigue / (float)prevFatigue) * (float)_maxFatigue);
+
+        DebugLog($"Player gained {Mathf.RoundToInt((float)enemyPowerLevel * 0.1f)} power from eating enemy! New power level: {_powerLevel}");
     }
 
     public void PlayerDie(Status deathType)

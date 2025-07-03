@@ -5,7 +5,7 @@ using UnityEngine;
 public class Fisherman : LandEnemy
 {
     [Header("Fisherman Configuration")]
-    public FishermanConfig fishermanConfig = new FishermanConfig();
+    [SerializeField] protected FishermanConfig fishermanConfig;
 
     protected override void Start()
     {
@@ -27,11 +27,6 @@ public class Fisherman : LandEnemy
     private void HandleActiveHook()
     {
         if (!hasThrownHook) return;
-
-        //if (hookSpawner != null)
-        //{
-        //    hookSpawner.CurrentHook.
-        //}
 
         // ADD HOOK TIMER LOGIC
         hookTimer += Time.deltaTime;
