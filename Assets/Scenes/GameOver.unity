@@ -969,7 +969,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 98a57ec8bafac6645a1b530b655447f4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  targetSceneName: Testing
+  targetSceneName: SurfaceScene
   enableDebugLogs: 1
 --- !u!1 &2047559497
 GameObject:
