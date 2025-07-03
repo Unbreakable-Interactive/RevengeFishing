@@ -93,6 +93,10 @@ PrefabInstance:
       propertyPath: target
       value: 
       objectReference: {fileID: 2561211109777225482}
+    - target: {fileID: 7442979135199402340, guid: d864e1d7d3d7d86458db1be6c7ac35ab, type: 3}
+      propertyPath: waterSurfaceY
+      value: -0.19
+      objectReference: {fileID: 0}
     - target: {fileID: 8258166059126711420, guid: d864e1d7d3d7d86458db1be6c7ac35ab, type: 3}
       propertyPath: m_Name
       value: WaterLine
@@ -159,6 +163,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3033624813667994110, guid: 29c863f917d5e8846acde5d4d6a4ca7e, type: 3}
+      propertyPath: m_SortingOrder
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 5610486745833245567, guid: 29c863f917d5e8846acde5d4d6a4ca7e, type: 3}
       propertyPath: m_Layer
       value: 7
@@ -174,6 +182,10 @@ PrefabInstance:
     - target: {fileID: 8143527860349171708, guid: 29c863f917d5e8846acde5d4d6a4ca7e, type: 3}
       propertyPath: m_Layer
       value: 7
+      objectReference: {fileID: 0}
+    - target: {fileID: 8651322663268210135, guid: 29c863f917d5e8846acde5d4d6a4ca7e, type: 3}
+      propertyPath: m_SortingOrder
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8741494658121359265, guid: 29c863f917d5e8846acde5d4d6a4ca7e, type: 3}
       propertyPath: m_Layer
