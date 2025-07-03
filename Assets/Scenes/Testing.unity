@@ -438,17 +438,6 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 3becf651e46424c6cb1d7693bd8820e9, type: 3}
---- !u!114 &463055525 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 7196867333118590110, guid: 7f9eb2fb35364a94db718320167335ab, type: 3}
-  m_PrefabInstance: {fileID: 6708799861719085447}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b422c3c85585ab1409b60b7384fcd1d4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &519420028
 GameObject:
   m_ObjectHideFlags: 0
@@ -2053,7 +2042,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   playerMovement: {fileID: 6708799861719085448}
   playerBounds: {fileID: 2005596811}
-  playerStats: {fileID: 463055525}
+  playerStats: {fileID: 0}
   gameCamera: {fileID: 519420031}
   spawnHandler: {fileID: 1318592311}
   enableBootstrapLogs: 1
@@ -2300,7 +2289,7 @@ MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 1373576552199767526, guid: 7f9eb2fb35364a94db718320167335ab, type: 3}
   m_PrefabInstance: {fileID: 6708799861719085447}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2183849481622994903}
+  m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: db54e0ff2b071fe458d3e7adf83cb10b, type: 3}
