@@ -99,20 +99,36 @@ public abstract class Enemy : Entity
 
     protected virtual void EnemySetup()
     {
-        if (player != null)
+        // Only set default power level if it hasn't been set already by the PowerLevelScaler
+        if (_powerLevel <= 0) // Check if power level hasn't been set yet
         {
-            _powerLevel = player.PowerLevel;
+            if (player != null)
+            {
+                _powerLevel = player.PowerLevel;
+            }
+            else
+            {
+                _powerLevel = 100;
+            }
         }
-        else
-        {
-            _powerLevel = 100;
-        }
+
 
         _fatigue = 0;
         _maxFatigue = _powerLevel;
         _state = EnemyState.Alive;
 
         CalculateTier();
+    }
+
+    public virtual void SetPowerLevel(int newPowerLevel)
+    {
+        _powerLevel = newPowerLevel;
+
+        // Update any derived stats that depend on power level
+        _maxFatigue = _powerLevel;
+        _fatigue = 0; // Reset fatigue when power level changes
+
+        Debug.Log($"{gameObject.name} power level set to {_powerLevel}");
     }
 
     private void CalculateTier()

@@ -294,7 +294,7 @@ Transform:
   m_GameObject: {fileID: 6728867108004361845}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -2.5827727, y: 2.8505163, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 2, y: 2, z: 2}
   m_ConstrainProportionsScale: 1
   m_Children:
@@ -328,6 +328,9 @@ MonoBehaviour:
   underwaterDrag: 0.6
   underwaterMaxSpeed: 15
   entityType: 1
+  hunger: 0
+  maxHunger: 0
+  status: 0
   rotationSpeed: 10
   rotationThreshold: 10
   boostThreshold: 15
@@ -348,6 +351,9 @@ MonoBehaviour:
   sidewaysDrag: 2
   steeringForce: 10
   steeringDamping: 0.98
+  lineExtensionAmount: 1
+  maxLineExtension: 12
+  lineExtensionSpeedPenalty: 0.6
   enableDebugLogs: 0
 --- !u!50 &5374213318811793880
 Rigidbody2D:
