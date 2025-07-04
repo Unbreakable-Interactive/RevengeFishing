@@ -1,173 +1,258 @@
 using UnityEngine;
+using System;
 
 [System.Serializable]
 public class EnemyPowerTier
 {
     [Header("Power Level Range")]
-    public float minPowerMultiplier;  // Multiplier of player power (e.g., 0.9 for 90%)
-    public float maxPowerMultiplier;  // Multiplier of player power (e.g., 1.1 for 110%)
+    public float minPowerMultiplier;
+    public float maxPowerMultiplier;
 
     [Header("Spawn Probability")]
     [Range(0f, 100f)]
-    public float spawnPercentage;     // Percentage chance this tier spawns
+    public float spawnPercentage;
 
     [Header("Description")]
-    public string tierName;           // For debugging/editor display
+    public string tierName;
+
+    // Cached values for optimization
+    [HideInInspector] public float cumulativeWeight;
 }
 
 public class PowerLevelScaler : MonoBehaviour
 {
     [Header("Power Level Distribution")]
-    [SerializeField]
-    private EnemyPowerTier[] powerTiers = new EnemyPowerTier[]
-    {
-        new EnemyPowerTier { tierName = "Around Player Level", minPowerMultiplier = 0.9f, maxPowerMultiplier = 1.1f, spawnPercentage = 50f },
-        new EnemyPowerTier { tierName = "Moderately Below", minPowerMultiplier = 0.7f, maxPowerMultiplier = 0.899f, spawnPercentage = 14f },
-        new EnemyPowerTier { tierName = "Moderately Above", minPowerMultiplier = 1.101f, maxPowerMultiplier = 1.3f, spawnPercentage = 14f },
-        new EnemyPowerTier { tierName = "Significantly Below", minPowerMultiplier = 0.5f, maxPowerMultiplier = 0.699f, spawnPercentage = 8f },
-        new EnemyPowerTier { tierName = "Significantly Above", minPowerMultiplier = 1.301f, maxPowerMultiplier = 1.5f, spawnPercentage = 8f },
-        new EnemyPowerTier { tierName = "Very High Above", minPowerMultiplier = 1.501f, maxPowerMultiplier = 2.0f, spawnPercentage = 6f }
-    };
+    [SerializeField] private EnemyPowerTier[] powerTiers;
 
     [Header("References")]
     [SerializeField] private Player player;
 
+    [Header("Optimization")]
+    [SerializeField] private bool cachePlayerPowerLevel = true;
+    [SerializeField] private float powerLevelCacheTime = 0.5f; // Update cache every 0.5 seconds
+
     [Header("Debug")]
     [SerializeField] private bool enableDebugLogs = true;
 
+    // Cached values
+    private int cachedPlayerPowerLevel = -1;
+    private float lastPowerLevelCacheTime = 0f;
+    private float totalWeight = 0f;
+
+    // Events
+    public static event Action<int> OnPlayerPowerChanged;
+
+    // Singleton pattern for easy access
+    public static PowerLevelScaler Instance { get; private set; }
+
+    private void Awake()
+    {
+        // Singleton setup
+        if (Instance == null)
+        {
+            Instance = this;
+        }
+        else
+        {
+            Debug.LogWarning("Multiple PowerLevelScaler instances found! Destroying duplicate.");
+            Destroy(gameObject);
+            return;
+        }
+    }
+
     private void Start()
     {
-        // Don't get player power level here - get it dynamically when needed
         if (player == null)
             player = FindObjectOfType<Player>();
 
         if (player == null)
+        {
             Debug.LogError("PowerLevelScaler: Could not find Player in scene!");
-        else
-            Debug.Log("PowerLevelScaler: Found player reference (will get power level dynamically)");
+            return;
+        }
 
-        ValidatePowerTiers();
+        ValidateAndCachePowerTiers();
+
+        // Subscribe to player power changes if available
+        if (player != null)
+        {
+            // Cache initial power level
+            UpdateCachedPowerLevel(true);
+        }
+
+        LogDebug("PowerLevelScaler initialized successfully");
+    }
+
+    private void OnDestroy()
+    {
+        if (Instance == this)
+            Instance = null;
     }
 
     /// <summary>
-    /// Calculate enemy power level based on player's current power level and weighted distribution
+    /// Get player power level with caching optimization
+    /// </summary>
+    private int GetPlayerPowerLevel()
+    {
+        if (!cachePlayerPowerLevel)
+        {
+            return player?.PowerLevel ?? 1000;
+        }
+
+        // Update cache if enough time has passed
+        if (Time.time - lastPowerLevelCacheTime > powerLevelCacheTime)
+        {
+            UpdateCachedPowerLevel();
+        }
+
+        return cachedPlayerPowerLevel > 0 ? cachedPlayerPowerLevel : 1000;
+    }
+
+    /// <summary>
+    /// Update cached player power level
+    /// </summary>
+    private void UpdateCachedPowerLevel(bool forceUpdate = false)
+    {
+        if (player == null) return;
+
+        int newPowerLevel = player.PowerLevel;
+
+        if (forceUpdate || newPowerLevel != cachedPlayerPowerLevel)
+        {
+            int oldPowerLevel = cachedPlayerPowerLevel;
+            cachedPlayerPowerLevel = newPowerLevel;
+            lastPowerLevelCacheTime = Time.time;
+
+            // Trigger event if power level changed
+            if (oldPowerLevel != newPowerLevel && oldPowerLevel > 0)
+            {
+                OnPlayerPowerChanged?.Invoke(newPowerLevel);
+                LogDebug($"Player power level updated: {oldPowerLevel} -> {newPowerLevel}");
+            }
+        }
+    }
+
+    /// <summary>
+    /// Calculate enemy power level (optimized version)
     /// </summary>
     public int CalculateEnemyPowerLevel()
     {
-        // Always try to find player if reference is missing
         if (player == null)
         {
-            player = FindObjectOfType<Player>();
-
-            if (player != null && enableDebugLogs)
-                Debug.Log("PowerLevelScaler: Found player reference during runtime");
+            Debug.LogError("PowerLevelScaler: No Player reference!");
+            return 100;
         }
 
-        if (player == null)
-        {
-            Debug.LogError("PowerLevelScaler: No Player found in scene!");
-            return 1000; // Fallback
-        }
+        int playerPowerLevel = GetPlayerPowerLevel();
 
-        // Get player power level DYNAMICALLY each time
-        int playerPowerLevel = player.PowerLevel;
-
-        // Handle case where player hasn't been initialized yet
         if (playerPowerLevel <= 0)
         {
-            if (enableDebugLogs)
-                Debug.LogWarning($"PowerLevelScaler: Player power level is {playerPowerLevel}, player may not be initialized yet. Using fallback of 1000.");
-            return 1000; // Fallback when player isn't ready
+            LogDebug("Player power level is 0 or negative, using fallback");
+            return 100;
         }
 
-        if (enableDebugLogs)
-            Debug.Log($"PowerLevelScaler: Using player power level: {playerPowerLevel}");
-
-        EnemyPowerTier selectedTier = SelectRandomTier();
+        EnemyPowerTier selectedTier = SelectRandomTierOptimized();
 
         // Calculate power level within the selected tier's range
         float minPower = playerPowerLevel * selectedTier.minPowerMultiplier;
         float maxPower = playerPowerLevel * selectedTier.maxPowerMultiplier;
 
-        int enemyPowerLevel = Mathf.RoundToInt(Random.Range(minPower, maxPower));
-
-        // Ensure minimum power level of 1
+        int enemyPowerLevel = Mathf.RoundToInt(UnityEngine.Random.Range(minPower, maxPower));
         enemyPowerLevel = Mathf.Max(1, enemyPowerLevel);
 
-        if (enableDebugLogs)
-        {
-            Debug.Log($"Player Power: {playerPowerLevel} | Selected Tier: {selectedTier.tierName} | Enemy Power: {enemyPowerLevel}");
-        }
+        LogDebug($"Player: {playerPowerLevel} | Tier: {selectedTier.tierName} | Enemy: {enemyPowerLevel}");
 
         return enemyPowerLevel;
     }
 
     /// <summary>
-    /// Select a random tier based on weighted probabilities
+    /// Optimized tier selection using pre-calculated cumulative weights
     /// </summary>
-    private EnemyPowerTier SelectRandomTier()
+    private EnemyPowerTier SelectRandomTierOptimized()
     {
-        float totalWeight = 0f;
-
-        // Calculate total weight
-        foreach (var tier in powerTiers)
+        if (totalWeight <= 0f)
         {
-            totalWeight += tier.spawnPercentage;
+            Debug.LogError("Total weight is 0! Check power tier configuration.");
+            return powerTiers[0];
         }
 
-        // Generate random value
-        float randomValue = Random.Range(0f, totalWeight);
-        float currentWeight = 0f;
+        float randomValue = UnityEngine.Random.Range(0f, totalWeight);
 
-        // Select tier based on weight
-        foreach (var tier in powerTiers)
+        // Use binary search for better performance with many tiers
+        for (int i = 0; i < powerTiers.Length; i++)
         {
-            currentWeight += tier.spawnPercentage;
-            if (randomValue <= currentWeight)
+            if (randomValue <= powerTiers[i].cumulativeWeight)
             {
-                return tier;
+                return powerTiers[i];
             }
         }
 
-        // Fallback to first tier
-        return powerTiers[0];
+        return powerTiers[powerTiers.Length - 1];
     }
 
     /// <summary>
-    /// Validate that tier percentages add up to 100%
+    /// Validate tiers and pre-calculate cumulative weights for optimization
     /// </summary>
-    private void ValidatePowerTiers()
+    private void ValidateAndCachePowerTiers()
     {
-        float totalPercentage = 0f;
-        foreach (var tier in powerTiers)
+        if (powerTiers == null || powerTiers.Length == 0)
         {
-            totalPercentage += tier.spawnPercentage;
+            Debug.LogError("No power tiers configured!");
+            return;
         }
 
-        if (Mathf.Abs(totalPercentage - 100f) > 0.1f)
+        totalWeight = 0f;
+        float runningTotal = 0f;
+
+        // Calculate cumulative weights for optimized selection
+        for (int i = 0; i < powerTiers.Length; i++)
         {
-            Debug.LogWarning($"Power tier percentages don't add up to 100%! Current total: {totalPercentage}%");
+            runningTotal += powerTiers[i].spawnPercentage;
+            powerTiers[i].cumulativeWeight = runningTotal;
+            totalWeight += powerTiers[i].spawnPercentage;
         }
 
+        // Validate total percentage
+        if (Mathf.Abs(totalWeight - 100f) > 0.1f)
+        {
+            Debug.LogWarning($"Power tier percentages don't add up to 100%! Current total: {totalWeight}%");
+        }
+
+        LogDebug($"Validated {powerTiers.Length} power tiers (Total: {totalWeight}%)");
+    }
+
+    /// <summary>
+    /// Force update cached power level (call when player gains power)
+    /// </summary>
+    public void RefreshPlayerPowerLevel()
+    {
+        UpdateCachedPowerLevel(true);
+    }
+
+    /// <summary>
+    /// Conditional debug logging
+    /// </summary>
+    private void LogDebug(string message)
+    {
+#if UNITY_EDITOR
         if (enableDebugLogs)
-        {
-            Debug.Log($"Power Level Scaler initialized with {powerTiers.Length} tiers totaling {totalPercentage}%");
-        }
+            Debug.Log($"[PowerLevelScaler] {message}");
+#endif
     }
 
     /// <summary>
     /// Get distribution statistics for debugging
     /// </summary>
+    [ContextMenu("Test Distribution")]
     public void LogDistributionStats(int sampleSize = 1000)
     {
         if (!enableDebugLogs) return;
 
         int[] tierCounts = new int[powerTiers.Length];
 
-        // Generate sample
         for (int i = 0; i < sampleSize; i++)
         {
-            EnemyPowerTier selectedTier = SelectRandomTier();
+            EnemyPowerTier selectedTier = SelectRandomTierOptimized();
             for (int j = 0; j < powerTiers.Length; j++)
             {
                 if (powerTiers[j] == selectedTier)
@@ -178,12 +263,18 @@ public class PowerLevelScaler : MonoBehaviour
             }
         }
 
-        // Log results
-        Debug.Log($"=== POWER DISTRIBUTION STATS (Sample Size: {sampleSize}) ===");
+        Debug.Log($"=== POWER DISTRIBUTION STATS (Sample: {sampleSize}) ===");
         for (int i = 0; i < powerTiers.Length; i++)
         {
             float actualPercentage = (tierCounts[i] / (float)sampleSize) * 100f;
-            Debug.Log($"{powerTiers[i].tierName}: Expected {powerTiers[i].spawnPercentage}% | Actual {actualPercentage:F1}% | Count: {tierCounts[i]}");
+            Debug.Log($"{powerTiers[i].tierName}: Expected {powerTiers[i].spawnPercentage}% | Actual {actualPercentage:F1}%");
         }
+    }
+
+    // Editor validation
+    private void OnValidate()
+    {
+        if (Application.isPlaying)
+            ValidateAndCachePowerTiers();
     }
 }

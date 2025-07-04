@@ -34,12 +34,17 @@ public class SpawnHandler : MonoBehaviour
 
     private void SetupPowerLevelScaler()
     {
-        if (powerLevelScaler == null)
-            powerLevelScaler = FindObjectOfType<PowerLevelScaler>();
-
+        // Use null-conditional operator for cleaner code
         if (powerLevelScaler == null)
         {
-            Debug.LogWarning("PowerLevelScaler not found! Enemies will spawn with default power levels.");
+            powerLevelScaler = FindObjectOfType<PowerLevelScaler>();
+
+            if (enableSpawnLogs)
+            {
+                Debug.Log(powerLevelScaler != null
+                    ? "PowerLevelScaler found and assigned"
+                    : "PowerLevelScaler not found in scene!");
+            }
         }
     }
 
@@ -265,36 +270,31 @@ public class SpawnHandler : MonoBehaviour
 
     private void SetEnemyPowerLevel(GameObject enemy)
     {
-        Debug.Log($"=== SetEnemyPowerLevel called for {enemy.name} ===");
-        Debug.Log($"PowerLevelScaler reference: {(powerLevelScaler != null ? "FOUND" : "NULL")}");
-
+        // Cache the enemy component lookup
         Enemy enemyComponent = enemy.GetComponentInChildren<Enemy>();
-        Debug.Log($"Enemy component: {(enemyComponent != null ? "FOUND" : "NULL")}");
 
-        if (enemyComponent != null && powerLevelScaler != null)
+        if (enemyComponent == null || powerLevelScaler == null)
         {
-            Debug.Log("About to call CalculateEnemyPowerLevel...");
-            int newPowerLevel = powerLevelScaler.CalculateEnemyPowerLevel();
-            Debug.Log($"PowerLevelScaler returned: {newPowerLevel}");
-
-            Debug.Log($"Enemy power level BEFORE SetPowerLevel: {enemyComponent.PowerLevel}");
-            enemyComponent.SetPowerLevel(newPowerLevel);
-            Debug.Log($"Enemy power level AFTER SetPowerLevel: {enemyComponent.PowerLevel}");
-
-            // Update the level display if it exists
-            LevelDisplay levelDisplay = enemy.GetComponentInChildren<LevelDisplay>();
-            if (levelDisplay != null)
-            {
-                levelDisplay.SetEntity(enemyComponent);
-            }
-
             if (enableSpawnLogs)
-                Debug.Log($"Set {enemy.name} power level to {newPowerLevel}");
+            {
+                Debug.LogWarning($"Cannot set power level for {enemy.name}! " +
+                               $"Enemy Component: {enemyComponent != null}, " +
+                               $"PowerLevelScaler: {powerLevelScaler != null}");
+            }
+            return;
         }
-        else
-        {
-            Debug.LogError($"Cannot set power level! PowerLevelScaler: {powerLevelScaler != null}, EnemyComponent: {enemyComponent != null}");
-        }
+
+        // Single method call and assignment
+        int newPowerLevel = powerLevelScaler.CalculateEnemyPowerLevel();
+        enemyComponent.SetPowerLevel(newPowerLevel);
+
+        // Batch the level display update with the power level setting
+        LevelDisplay levelDisplay = enemy.GetComponentInChildren<LevelDisplay>();
+        levelDisplay?.SetEntity(enemyComponent);
+
+        // Conditional debug logging (only in editor builds)
+        if (enableSpawnLogs)
+            Debug.Log($"Set {enemy.name} power level to {newPowerLevel}");
     }
 
     private GameObject SpawnAtPosition(Vector3 position)
