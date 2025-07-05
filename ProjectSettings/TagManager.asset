@@ -8,6 +8,7 @@ TagManager:
   - PlayerCollider
   - FishingRod
   - DropTool
+  - WaterSurface
   layers:
   - Default
   - TransparentFX
@@ -44,4 +45,43 @@ TagManager:
   m_SortingLayers:
   - name: Default
     uniqueID: 0
+    locked: 0
+  - name: Background0
+    uniqueID: 66111231
+    locked: 0
+  - name: Background1
+    uniqueID: 4113488411
+    locked: 0
+  - name: Ground
+    uniqueID: 1387797537
+    locked: 0
+  - name: Background2
+    uniqueID: 1182051529
+    locked: 0
+  - name: ShipBack
+    uniqueID: 2573354103
+    locked: 0
+  - name: Sailor
+    uniqueID: 3051440391
+    locked: 0
+  - name: ShipFront
+    uniqueID: 1206245633
+    locked: 0
+  - name: Tool
+    uniqueID: 3908170167
+    locked: 0
+  - name: Player
+    uniqueID: 4041299789
+    locked: 0
+  - name: Foreground0
+    uniqueID: 2168948223
+    locked: 0
+  - name: Foreground1
+    uniqueID: 3810282383
+    locked: 0
+  - name: Foreground2
+    uniqueID: 3719585995
+    locked: 0
+  - name: CameraSortingLayer
+    uniqueID: 351440645
     locked: 0

@@ -5,7 +5,7 @@ using UnityEngine;
 public class LandEnemy : Enemy
 {
     [Header("Land Enemy Configuration")]
-    public LandEnemyConfig landEnemyConfig = new LandEnemyConfig();
+    public LandEnemyConfig landEnemyConfig;
 
     #region Land Enemy Variables
 
@@ -147,6 +147,12 @@ public class LandEnemy : Enemy
     {
         base.EnemySetup();
         platformBoundsCalculated = false;
+
+        // Initialize LandEnemyConfig if not assigned in Inspector
+        if (landEnemyConfig == null)
+        {
+            landEnemyConfig = ScriptableObject.CreateInstance<LandEnemyConfig>();
+        }
 
         nextActionTime = Time.time + Random.Range(0.5f, 2f);
         _landMovementState = LandMovementState.Idle;
