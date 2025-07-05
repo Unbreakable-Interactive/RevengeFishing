@@ -29,15 +29,28 @@ public class SpawnHandler : MonoBehaviour
     private int currentEnemyCount = 0;
     private float lastSpawnTime = 0f;
 
+    [Header("Power Level Scaling")]
+    [SerializeField] private PowerLevelScaler powerLevelScaler;
+
+    private void SetupPowerLevelScaler()
+    {
+        // Use null-conditional operator for cleaner code
+        if (powerLevelScaler == null)
+        {
+            powerLevelScaler = FindObjectOfType<PowerLevelScaler>();
+
+            if (enableSpawnLogs)
+            {
+                Debug.Log(powerLevelScaler != null
+                    ? "PowerLevelScaler found and assigned"
+                    : "PowerLevelScaler not found in scene!");
+            }
+        }
+    }
+
     void Start()
     {
-        if (objectPool == null)
-            objectPool = FindObjectOfType<SimpleObjectPool>();
-        
-        if (playerMovement == null)
-            playerMovement = FindObjectOfType<Player>();
-            
-        ValidateSpawnPoints();
+        Initialize();
     }
 
     public void Initialize()
@@ -47,7 +60,9 @@ public class SpawnHandler : MonoBehaviour
         
         if (playerMovement == null)
             playerMovement = FindObjectOfType<Player>();
-            
+
+        SetupPowerLevelScaler();
+
         ValidateSpawnPoints();
         Debug.Log("SpawnHandler initialized successfully");
     }
@@ -248,16 +263,53 @@ public class SpawnHandler : MonoBehaviour
         }
         return true;
     }
-    
+
     #endregion
 
     #region Core Spawning
-    
+
+    private void SetEnemyPowerLevel(GameObject enemy)
+    {
+        // Cache the enemy component lookup
+        Enemy enemyComponent = enemy.GetComponentInChildren<Enemy>();
+
+        if (enemyComponent == null || powerLevelScaler == null)
+        {
+            if (enableSpawnLogs)
+            {
+                Debug.LogWarning($"Cannot set power level for {enemy.name}! " +
+                               $"Enemy Component: {enemyComponent != null}, " +
+                               $"PowerLevelScaler: {powerLevelScaler != null}");
+            }
+            return;
+        }
+
+        // Single method call and assignment
+        int newPowerLevel = powerLevelScaler.CalculateEnemyPowerLevel();
+        enemyComponent.SetPowerLevel(newPowerLevel);
+
+        // Batch the level display update with the power level setting
+        LevelDisplay levelDisplay = enemy.GetComponentInChildren<LevelDisplay>();
+        levelDisplay?.SetEntity(enemyComponent);
+
+        // Conditional debug logging (only in editor builds)
+        if (enableSpawnLogs)
+            Debug.Log($"Set {enemy.name} power level to {newPowerLevel}");
+    }
+
     private GameObject SpawnAtPosition(Vector3 position)
     {
         if (objectPool != null && spawningEnabled)
         {
-            return objectPool.Spawn(poolName, position);
+            GameObject enemy = objectPool.Spawn(poolName, position);
+
+            if (enemy != null)
+            {
+                // Set power level for the spawned enemy
+                SetEnemyPowerLevel(enemy);
+            }
+
+            return enemy;
         }
         return null;
     }
