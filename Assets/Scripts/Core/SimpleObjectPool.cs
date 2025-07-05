@@ -49,7 +49,7 @@ public class SimpleObjectPool : MonoBehaviour
         poolDictionary[poolName] = objectPool;
         activeCount[poolName] = 0;
 
-        Debug.Log($"Pool '{poolName}' created with {initialSize} objects");
+        // Debug.Log($"Pool '{poolName}' created with {initialSize} objects"); // DISABLED for performance
     }
 
     public GameObject Spawn(string poolName, Vector3 position)
@@ -79,7 +79,7 @@ public class SimpleObjectPool : MonoBehaviour
                 }
 
                 objectToSpawn = Instantiate(config.prefab, transform);
-                Debug.Log($"Created new object for pool '{poolName}' (pool was empty). Active: {activeCount[poolName] + 1}/{config.maxSize}");
+                // Debug.Log($"Created new object for pool '{poolName}' (pool was empty). Active: {activeCount[poolName] + 1}/{config.maxSize}"); // DISABLED
             }
             else
             {
