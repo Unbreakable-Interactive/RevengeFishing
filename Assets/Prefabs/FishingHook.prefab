@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5573305840415414532}
   - component: {fileID: 745396263765711557}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Collider
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -80,7 +80,7 @@ GameObject:
   - component: {fileID: 53763512692988648}
   - component: {fileID: 2356560897641432879}
   - component: {fileID: 3126174731786038201}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: FishingHook
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -116,7 +116,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dabed3281e442614d9ee2d7eb7ead20a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  rb: {fileID: 0}
+  rb: {fileID: 2356560897641432879}
   _powerLevel: 0
   _fatigue: 0
   _maxFatigue: 0
@@ -175,10 +175,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   normalColor: {r: 1, g: 0.90902627, b: 0.22075468, a: 1}
   normalWidth: 0.03
-  normalMaterial: {fileID: 0}
+  normalMaterial: {fileID: 2100000, guid: 439e5e99113c78d449a35405032a9296, type: 2}
   stretchedColor: {r: 1, g: 0, b: 0, a: 1}
   stretchedWidth: 0.05
-  stretchedMaterial: {fileID: 0}
+  stretchedMaterial: {fileID: 2100000, guid: 439e5e99113c78d449a35405032a9296, type: 2}
   stretchColorCurve:
     serializedVersion: 2
     m_Curve:
@@ -282,7 +282,7 @@ LineRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 0}
+  - {fileID: 2100000, guid: 439e5e99113c78d449a35405032a9296, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -300,9 +300,9 @@ LineRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingLayerID: -386797129
+  m_SortingLayer: 8
+  m_SortingOrder: 10
   m_Positions:
   - {x: 0, y: 0, z: 0}
   - {x: 0, y: 0, z: 1}
@@ -375,7 +375,7 @@ GameObject:
   m_Component:
   - component: {fileID: 7244508698831430092}
   - component: {fileID: 2454960926440440285}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Sprite
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -417,7 +417,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: a97c105638bdf8b4a8650670310a4cd3, type: 2}
+  - {fileID: 2100000, guid: 57457f37d378f417d9f84c94055a141e, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -435,11 +435,11 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
-  m_SortingOrder: 0
-  m_Sprite: {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
-  m_Color: {r: 1, g: 0.24206921, b: 0, a: 1}
+  m_SortingLayerID: -386797129
+  m_SortingLayer: 8
+  m_SortingOrder: 15
+  m_Sprite: {fileID: 21300000, guid: 400b06f692d03474ba469b955755e33b, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0

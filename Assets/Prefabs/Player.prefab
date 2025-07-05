@@ -52,7 +52,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: a97c105638bdf8b4a8650670310a4cd3, type: 2}
+  - {fileID: 2100000, guid: e7d10d2b86ed2e84d906ca1689cf8f7e, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -74,7 +74,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_Sprite: {fileID: 3625043607559282579, guid: 19fb86013d8c24d6cb8410c0aadf30fa, type: 3}
-  m_Color: {r: 1, g: 1, b: 0, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -328,6 +328,9 @@ MonoBehaviour:
   underwaterDrag: 0.6
   underwaterMaxSpeed: 15
   entityType: 1
+  hunger: 0
+  maxHunger: 0
+  status: 0
   rotationSpeed: 10
   rotationThreshold: 10
   boostThreshold: 15
@@ -348,6 +351,9 @@ MonoBehaviour:
   sidewaysDrag: 2
   steeringForce: 10
   steeringDamping: 0.98
+  lineExtensionAmount: 1
+  maxLineExtension: 12
+  lineExtensionSpeedPenalty: 0.6
   enableDebugLogs: 0
 --- !u!50 &5374213318811793880
 Rigidbody2D:
