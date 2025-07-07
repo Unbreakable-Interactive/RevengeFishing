@@ -353,7 +353,7 @@ MonoBehaviour:
   steeringForce: 10
   steeringDamping: 0.98
   lineExtensionAmount: 1
-  maxLineExtension: 12
+  maxLineExtension: 10
   lineExtensionSpeedPenalty: 0.6
   enableDebugLogs: 0
 --- !u!114 &2299430188239530610
