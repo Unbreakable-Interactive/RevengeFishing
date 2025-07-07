@@ -402,7 +402,7 @@ public class Player : Entity
         // Ensure fatigue does not drop below 0
         if (_fatigue < 0) _fatigue = 0;
 
-        _powerLevel += Mathf.RoundToInt((float)enemyPowerLevel * 0.1f); // 10% of enemy's power
+        _powerLevel += Mathf.RoundToInt((float)enemyPowerLevel * 0.2f); // 20% of enemy's power
 
         // Update new max values to match new power level
         _maxFatigue = _powerLevel;
@@ -412,7 +412,7 @@ public class Player : Entity
         hunger = Mathf.RoundToInt(((float)hunger / (float)prevHunger) * (float)maxHunger);
         _fatigue = Mathf.RoundToInt(((float)_fatigue / (float)prevFatigue) * (float)_maxFatigue);
 
-        DebugLog($"Player gained {Mathf.RoundToInt((float)enemyPowerLevel * 0.1f)} power from eating enemy! New power level: {_powerLevel}");
+        DebugLog($"Player gained {Mathf.RoundToInt((float)enemyPowerLevel * 0.2f)} power from eating enemy! New power level: {_powerLevel}");
     }
 
     public void PlayerDie(Status deathType)
