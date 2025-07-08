@@ -3,49 +3,36 @@ using UnityEngine;
 public class BoatFloater : MonoBehaviour
 {
     [Header("Float Points")]
-    public Transform[] floatPoints = new Transform[3]; // Bow, Center, Center
+    public Transform[] floatPoints = new Transform[3];
     
-    [Header("Settings")]
-    public float buoyancyForce = 5f;       
-    public float waterDrag = 0.98f;         
-    public float angularDrag = 0.95f;       
-    public float stabilityForce = 0.5f;    
-    public float maxBuoyancyDepth = 1f;    
+    [Header("Buoyancy Settings")]
+    [SerializeField] private float buoyancyForce = 6f;
+    [SerializeField] private float waterDrag = 0.85f;
+    [SerializeField] private float angularDrag = 0.7f;
+    
+    [Header("Wave Rolling Control")]
+    [SerializeField] private float waveRollStrength = 2.5f;        // Main control for boat swaying
+    [SerializeField] private float rollResponseSpeed = 1.5f;       // How fast boat responds to waves
+    [SerializeField] private float maxRollAngle = 12f;             // Maximum tilt angle
+    [SerializeField] private bool enableWaveRolling = true;        // Enable/disable rolling
+    
+    [Header("Stability")]
+    [SerializeField] private float stabilityForce = 0.3f;          // Force to return to upright
     
     private Rigidbody2D rb;
     private WaterPhysics waterPhysics;
-    private float originalGravityScale;    
+    private float currentRollAngle = 0f;
+    private float rollVelocity = 0f;
     
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
         waterPhysics = WaterPhysics.Instance;
         
-        
-        originalGravityScale = rb.gravityScale;
-        
-        
-        rb.gravityScale = 0.3f;  
-        rb.drag = 0.2f;        
-        rb.angularDrag = 0.3f;   
-        
-        if (floatPoints[0] == null) CreateFloatPoints();
-    }
-    
-    void CreateFloatPoints()
-    {
-        Bounds bounds = GetComponent<Collider2D>().bounds;
-        
-        for (int i = 0; i < 3; i++)
+        if (floatPoints[0] == null || floatPoints[1] == null || floatPoints[2] == null)
         {
-            GameObject point = new GameObject($"FloatPoint_{i}");
-            point.transform.SetParent(transform);
-            floatPoints[i] = point.transform;
+            Debug.LogError("BoatFloater: Float Points not assigned in inspector.");
         }
-        
-        floatPoints[0].localPosition = new Vector3(-bounds.size.x * 0.4f, -bounds.size.y * 0.1f, 0); // Bow
-        floatPoints[1].localPosition = new Vector3(0, -bounds.size.y * 0.1f, 0);                     // Center
-        floatPoints[2].localPosition = new Vector3(bounds.size.x * 0.4f, -bounds.size.y * 0.1f, 0);  // Stern
     }
     
     void FixedUpdate()
@@ -54,12 +41,19 @@ public class BoatFloater : MonoBehaviour
         
         ApplyBuoyancy();
         ApplyWaterResistance();
+        
+        if (enableWaveRolling)
+        {
+            ApplyWaveRolling();
+        }
+        
         ApplyStability();
     }
     
     void ApplyBuoyancy()
     {
         int submergedPoints = 0;
+        Vector2 totalForce = Vector2.zero;
         
         foreach (Transform point in floatPoints)
         {
@@ -72,38 +66,55 @@ public class BoatFloater : MonoBehaviour
             if (submersion > 0)
             {
                 submergedPoints++;
-                
-                submersion = Mathf.Min(submersion, maxBuoyancyDepth);
-                
-                Vector2 buoyancyVector = Vector2.up * buoyancyForce * submersion;
-                rb.AddForceAtPosition(buoyancyVector, worldPos);
+                float force = submersion * buoyancyForce;
+                totalForce += Vector2.up * force;
             }
         }
         
-        if (submergedPoints == 0)
+        if (submergedPoints > 0)
         {
-            rb.gravityScale = originalGravityScale;
+            rb.AddForce(totalForce);
         }
-        else
-        {
-            rb.gravityScale = 0.1f;
-        }
+    }
+    
+    void ApplyWaveRolling()
+    {
+        if (floatPoints.Length < 3) return;
+        
+        // Get water heights at bow and stern
+        float bowHeight = waterPhysics.GetWaterHeightAt(floatPoints[0].position);      // Bow
+        float sternHeight = waterPhysics.GetWaterHeightAt(floatPoints[2].position);   // Stern
+        
+        // Calculate height difference for rolling effect
+        float heightDifference = bowHeight - sternHeight;
+        
+        // Calculate target roll angle based on wave difference
+        float targetRollAngle = heightDifference * waveRollStrength;
+        targetRollAngle = Mathf.Clamp(targetRollAngle, -maxRollAngle, maxRollAngle);
+        
+        // Smooth transition to target angle
+        currentRollAngle = Mathf.SmoothDamp(
+            currentRollAngle, 
+            targetRollAngle, 
+            ref rollVelocity, 
+            1f / rollResponseSpeed, 
+            Mathf.Infinity, 
+            Time.fixedDeltaTime
+        );
+        
+        // Apply torque based on angle difference
+        float currentBoatAngle = transform.eulerAngles.z;
+        if (currentBoatAngle > 180f) currentBoatAngle -= 360f;
+        
+        float angleDifference = Mathf.DeltaAngle(currentBoatAngle, currentRollAngle);
+        float rollTorque = angleDifference * rollResponseSpeed;
+        
+        rb.AddTorque(rollTorque, ForceMode2D.Force);
     }
     
     void ApplyWaterResistance()
     {
-        int submergedCount = 0;
-        foreach (Transform point in floatPoints)
-        {
-            if (point != null)
-            {
-                Vector2 worldPos = point.position;
-                float waterHeight = waterPhysics.GetWaterHeightAt(worldPos);
-                if (waterHeight > worldPos.y) submergedCount++;
-            }
-        }
-        
-        if (submergedCount > 0)
+        if (IsInWater())
         {
             rb.velocity *= waterDrag;
             rb.angularVelocity *= angularDrag;
@@ -112,13 +123,26 @@ public class BoatFloater : MonoBehaviour
     
     void ApplyStability()
     {
-        float targetRotation = 0f;
-        float rotationDifference = Mathf.DeltaAngle(transform.eulerAngles.z, targetRotation);
+        // Simple force to keep boat relatively upright
+        float currentAngle = transform.eulerAngles.z;
+        if (currentAngle > 180f) currentAngle -= 360f;
         
-        if (Mathf.Abs(rotationDifference) > 5f)
+        float stabilityTorque = -currentAngle * stabilityForce * Time.fixedDeltaTime;
+        rb.AddTorque(stabilityTorque);
+    }
+    
+    bool IsInWater()
+    {
+        foreach (Transform point in floatPoints)
         {
-            rb.AddTorque(-rotationDifference * stabilityForce * Time.fixedDeltaTime);
+            if (point != null)
+            {
+                Vector2 worldPos = point.position;
+                float waterHeight = waterPhysics.GetWaterHeightAt(worldPos);
+                if (waterHeight > worldPos.y) return true;
+            }
         }
+        return false;
     }
     
     void OnDrawGizmosSelected()
@@ -131,14 +155,15 @@ public class BoatFloater : MonoBehaviour
                 if (point != null)
                 {
                     Gizmos.DrawWireSphere(point.position, 0.1f);
-                    
-                    if (waterPhysics != null)
-                    {
-                        float waterHeight = waterPhysics.GetWaterHeightAt(point.position);
-                        Gizmos.color = Color.cyan;
-                        Gizmos.DrawWireSphere(new Vector3(point.position.x, waterHeight, point.position.z), 0.05f);
-                    }
                 }
+            }
+            
+            // Show roll angle indicator
+            if (enableWaveRolling)
+            {
+                Gizmos.color = Color.yellow;
+                Vector3 rollIndicator = transform.position + Vector3.up * currentRollAngle * 0.1f;
+                Gizmos.DrawLine(transform.position, rollIndicator);
             }
         }
     }

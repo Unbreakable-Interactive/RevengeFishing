@@ -19,12 +19,14 @@ Shader "Custom/URP/ISTImprovedsWater"
         _NormalStrength ("Normal Strength", Range(0, 1)) = 0.5
         _NormalTiling ("Normal Tiling", Float) = 1.0
         
-        // Foam effect for high amplitude waves
+        // Scale compensation for large objects - SET THIS TO YOUR OBJECT'S SCALE
+        [Header(Scale Compensation)]
+        _ObjectScale ("Object Scale XZ", Vector) = (24.57, 1, 5.85, 1)
+        
         [Toggle] _EnableStormFoam ("Enable Storm Foam", Float) = 1
         _StormFoamThreshold ("Storm Foam Threshold", Range(0, 10)) = 3.0
         _StormFoamIntensity ("Storm Foam Intensity", Range(0, 5)) = 1.5
         
-        // Sprite texture properties
         _SpriteTexture ("Sprite Texture", 2D) = "white" {}
         _SpriteTiling ("Sprite Tiling", Float) = 1.0
         _SpriteSpeed ("Sprite Animation Speed", Range(0, 2)) = 0.3
@@ -78,12 +80,12 @@ Shader "Custom/URP/ISTImprovedsWater"
                 float fogFactor : TEXCOORD5;
                 float3 viewDirWS : TEXCOORD6;
                 float2 baseUV : TEXCOORD7;
-                float2 spriteUV : TEXCOORD8;  // New UV for sprite texture
+                float2 spriteUV : TEXCOORD8;
             };
             
             TEXTURE2D(_NormalMap);
             SAMPLER(sampler_NormalMap);
-            TEXTURE2D(_SpriteTexture);  // Sprite texture declaration
+            TEXTURE2D(_SpriteTexture);
             SAMPLER(sampler_SpriteTexture);
             
             struct WaveParticle
@@ -116,13 +118,14 @@ Shader "Custom/URP/ISTImprovedsWater"
                 float _EnableStormFoam;
                 float _StormFoamThreshold;
                 float _StormFoamIntensity;
-                float4 _SpriteTexture_ST;  // Sprite texture properties
+                float4 _SpriteTexture_ST;
                 float _SpriteTiling;
                 float _SpriteSpeed;
                 float _SpriteOpacity;
                 float _SpriteDistortion;
                 float _InteractiveWaveStrength;
                 float _InteractiveWaveSpeed;
+                float4 _ObjectScale;
             CBUFFER_END
             
             float2 seamlessTiling(float2 uv, float scale, float2 offset)
@@ -137,16 +140,12 @@ Shader "Custom/URP/ISTImprovedsWater"
                 float k = 2 * 3.14159 / wavelength;
                 float f = k * (dot(d, worldPosition.xz) - speed * _Time.y);
                 
-                // Adjust steepness based on amplitude to prevent sharp peaks
-                // Higher amplitude waves will have reduced steepness automatically
                 float amplitudeScale = 1.0 / (1.0 + _WaveAmplitude * 0.15);
                 float a = steepness * amplitudeScale / k;
                 
-                // Add smoothing coefficient to reduce triangulation at high amplitudes
                 float smoothCoeff = saturate(1.0 - (_WaveAmplitude - 2.0) * 0.1);
-                smoothCoeff = max(smoothCoeff, 0.4); // Don't let it go below 0.4 to maintain some wave shape
+                smoothCoeff = max(smoothCoeff, 0.4);
                 
-                // Apply smoothing to the wave function
                 float sinVal = sin(f) * smoothCoeff + sin(f * 0.5) * (1.0 - smoothCoeff);
                 float cosVal = cos(f) * smoothCoeff + cos(f * 0.5) * (1.0 - smoothCoeff);
                 
@@ -160,7 +159,7 @@ Shader "Custom/URP/ISTImprovedsWater"
             float3 CalculateDynamicWaves(float3 worldPosition)
             {
                 float3 displacement = float3(0, 0, 0);
-                float2 pos = worldPosition.xz;
+                float2 pos = worldPosition.xz / _ObjectScale.xz;
                 
                 for (int i = 0; i < _WaveParticleCount; i++)
                 {
@@ -194,27 +193,27 @@ Shader "Custom/URP/ISTImprovedsWater"
                 Varyings output = (Varyings)0;
                 
                 float3 worldPos = TransformObjectToWorld(input.positionOS.xyz);
-                
                 float3 worldOriginalPos = worldPos;
+                
+                // Apply scale compensation
+                float3 scaledWorldPos = worldPos;
+                scaledWorldPos.xz = scaledWorldPos.xz / _ObjectScale.xz;
                 
                 float3 waveOffset = 0;
                 
-                // Create multi-layered waves with improved distribution for high amplitudes
-                waveOffset += GerstnerWave(worldPos, _WaveAmplitude * 0.5, 2/_WaveFrequency, _WaveSpeed * 0.8, 0);
-                waveOffset += GerstnerWave(worldPos, _WaveAmplitude * 0.25, 4/_WaveFrequency, _WaveSpeed, 30);
-                waveOffset += GerstnerWave(worldPos, _WaveAmplitude * 0.125, 8/_WaveFrequency, _WaveSpeed * 1.2, 60);
+                // Create multi-layered waves using scale-compensated position
+                waveOffset += GerstnerWave(scaledWorldPos, _WaveAmplitude * 0.5, 2/_WaveFrequency, _WaveSpeed * 0.8, 0);
+                waveOffset += GerstnerWave(scaledWorldPos, _WaveAmplitude * 0.25, 4/_WaveFrequency, _WaveSpeed, 30);
+                waveOffset += GerstnerWave(scaledWorldPos, _WaveAmplitude * 0.125, 8/_WaveFrequency, _WaveSpeed * 1.2, 60);
                 
-                // Add more high-frequency detail waves that become more prominent in storm conditions
-                float stormFactor = saturate((_WaveAmplitude - 1.0) / 9.0); // 0 at amplitude 1, 1 at amplitude 10
+                float stormFactor = saturate((_WaveAmplitude - 1.0) / 9.0);
                 if (stormFactor > 0)
                 {
-                    // Add more chaotic small waves during stormy conditions
-                    waveOffset += GerstnerWave(worldPos, _WaveAmplitude * 0.06 * stormFactor, 16/_WaveFrequency, _WaveSpeed * 0.7, 15) * stormFactor;
-                    waveOffset += GerstnerWave(worldPos, _WaveAmplitude * 0.04 * stormFactor, 12/_WaveFrequency, _WaveSpeed * 1.3, 45) * stormFactor;
-                    waveOffset += GerstnerWave(worldPos, _WaveAmplitude * 0.03 * stormFactor, 20/_WaveFrequency, _WaveSpeed * 0.9, 75) * stormFactor;
+                    waveOffset += GerstnerWave(scaledWorldPos, _WaveAmplitude * 0.06 * stormFactor, 16/_WaveFrequency, _WaveSpeed * 0.7, 15) * stormFactor;
+                    waveOffset += GerstnerWave(scaledWorldPos, _WaveAmplitude * 0.04 * stormFactor, 12/_WaveFrequency, _WaveSpeed * 1.3, 45) * stormFactor;
+                    waveOffset += GerstnerWave(scaledWorldPos, _WaveAmplitude * 0.03 * stormFactor, 20/_WaveFrequency, _WaveSpeed * 0.9, 75) * stormFactor;
                     
-                    // Apply gentle smoothing to avoid sharp triangulation
-                    waveOffset.y = waveOffset.y * (0.9 + 0.1 * sin(worldPos.x * 0.1) * sin(worldPos.z * 0.1));
+                    waveOffset.y = waveOffset.y * (0.9 + 0.1 * sin(scaledWorldPos.x * 0.1) * sin(scaledWorldPos.z * 0.1));
                 }
                 
                 waveOffset += CalculateDynamicWaves(worldPos);
@@ -228,11 +227,9 @@ Shader "Custom/URP/ISTImprovedsWater"
                 output.positionWS = positionInputs.positionWS;
                 output.screenPos = ComputeScreenPos(output.positionCS);
                 
+                // Use world position for texture UV (repeats every 1 world unit)
                 output.baseUV = worldOriginalPos.xz * 0.1 * _NormalTiling;
-                
-                // Calculate sprite UV with distortion based on wave height
                 output.spriteUV = worldOriginalPos.xz * 0.1 * _SpriteTiling;
-                // Add subtle distortion to sprite based on wave height
                 output.spriteUV += waveOffset.xz * _SpriteDistortion;
                 
                 VertexNormalInputs normalInputs = GetVertexNormalInputs(input.normalOS, input.tangentOS);
@@ -241,9 +238,7 @@ Shader "Custom/URP/ISTImprovedsWater"
                 output.bitangentWS = normalInputs.bitangentWS;
                 
                 output.uv = TRANSFORM_TEX(input.uv, _NormalMap);
-                
                 output.fogFactor = ComputeFogFactor(output.positionCS.z);
-                
                 output.viewDirWS = GetWorldSpaceViewDir(output.positionWS);
                 
                 return output;
@@ -265,7 +260,6 @@ Shader "Custom/URP/ISTImprovedsWater"
                 normalWS = normalize(normalWS);
                 
                 float2 screenUV = input.screenPos.xy / input.screenPos.w;
-                
                 float2 refractionOffset = normalTS.xy * _Refraction * 0.01;
                 float2 refractedUV = screenUV + refractionOffset;
                 
@@ -277,13 +271,10 @@ Shader "Custom/URP/ISTImprovedsWater"
                 float waterlineEdge = 1 - saturate(pow(abs(depthDifference) / _WaterlineThickness, _WaterlineSharpness));
                 
                 float4 waterColor = lerp(_ShallowColor, _DeepColor, depthFade);
-                
                 waterColor = lerp(waterColor, _WaterlineColor, waterlineEdge);
                 
-                // Calculate storm conditions based on wave amplitude
                 float stormIntensity = saturate((_WaveAmplitude - _StormFoamThreshold) / (10.0 - _StormFoamThreshold));
                 
-                // Sample sprite texture with animation
                 float2 spriteUV1 = seamlessTiling(input.spriteUV, 1.0, _Time.y * float2(0.01, 0.02) * _SpriteSpeed);
                 float2 spriteUV2 = seamlessTiling(input.spriteUV, 0.7, _Time.y * float2(-0.015, 0.01) * _SpriteSpeed);
                 
@@ -291,27 +282,21 @@ Shader "Custom/URP/ISTImprovedsWater"
                 half4 spriteColor2 = SAMPLE_TEXTURE2D(_SpriteTexture, sampler_SpriteTexture, spriteUV2);
                 half4 spriteColor = (spriteColor1 + spriteColor2) * 0.5;
                 
-                // Apply turbulence-based foam during stormy conditions
                 float foamMask = 0;
                 if (_EnableStormFoam > 0.5 && stormIntensity > 0)
                 {
-                    // Generate foam patterns based on wave height and turbulence
                     float2 foamUV = input.positionWS.xz * 0.2;
                     float noise1 = sin(foamUV.x * 8.3 + _Time.y * 2.0) * cos(foamUV.y * 7.9 + _Time.y * 1.7) * 0.5 + 0.5;
                     float noise2 = sin(foamUV.x * 12.5 - _Time.y * 1.8) * cos(foamUV.y * 10.7 - _Time.y * 2.3) * 0.5 + 0.5;
                     
-                    // Calculate wave height contribution
                     float waveContribution = saturate(length(input.positionWS.y - TransformObjectToWorld(float3(0,0,0)).y) * 2.0);
                     
-                    // Create dynamic foam pattern
                     foamMask = saturate((noise1 * noise2 * 1.5 - (1.0 - stormIntensity)) + waveContribution * stormIntensity);
                     foamMask = pow(foamMask, 1.0 + (1.0 - stormIntensity) * 2.0) * _StormFoamIntensity;
                     
-                    // Add foam to water color (white foam)
                     waterColor.rgb = lerp(waterColor.rgb, float3(1.0, 1.0, 1.0), foamMask * stormIntensity);
                 }
-
-                // Apply sprite texture blending to water color (after foam)
+                
                 float spriteBlendFactor = spriteColor.a * _SpriteOpacity * (1.0 - foamMask * 0.7);
                 waterColor.rgb = lerp(waterColor.rgb, spriteColor.rgb, spriteBlendFactor);
                 
