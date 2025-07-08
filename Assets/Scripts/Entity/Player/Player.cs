@@ -256,10 +256,15 @@ public class Player : Entity
                     // Player is pulling against this fishing line!
                     Fisherman fisherman = hook.spawner?.GetComponent<Fisherman>();
 
-                    // If player is at or near max distance, try to extend the line
-                    if (currentDistance >= hookMaxDistance * 0.99f) // 99% of max distance
+                    // If player is at or near max distance, try extending the fishing line
+                    if (currentDistance >= hookMaxDistance * 0.99f) // At 99% or more of max distance
                     {
                         TryExtendFishingLine(hook);
+                    }
+
+                    // If player is at or near max distance, deal fatigue damage
+                    if (currentDistance >= hookMaxDistance * 0.9f) // 90% of max distance
+                    {
                         if (fisherman != null)
                         {
                             fisherman.TakeFatigue(PowerLevel);
