@@ -247,25 +247,27 @@ public class Player : Entity
             foreach (FishingProjectile hook in activeBitingHooks)
             {
                 // Check if this hook is stretching (player is pulling against it)
-                if (hook.isBeingHeld && hook.IsLineStretching())
+                if (hook.isBeingHeld /*&& hook.IsLineStretching()*/)
                 {
                     // Check if player is at max distance and trying to extend line
                     float currentDistance = Vector3.Distance(transform.position, hook.spawnPoint.position);
                     float hookMaxDistance = hook.maxDistance;
 
-                    // If player is at or near max distance, try to extend the line
-                    if (currentDistance >= hookMaxDistance * 0.95f) // 95% of max distance
-                    {
-                        TryExtendFishingLine(hook);
-                    }
-
                     // Player is pulling against this fishing line!
                     Fisherman fisherman = hook.spawner?.GetComponent<Fisherman>();
-                    if (fisherman != null)
+
+                    // If player is at or near max distance, try to extend the line
+                    if (currentDistance >= hookMaxDistance * 0.99f) // 99% of max distance
                     {
-                        fisherman.TakeFatigue(PowerLevel);
-                        DebugLog($"Player pulls against {fisherman.name}'s fishing line - fisherman suffers fatigue!");
+                        TryExtendFishingLine(hook);
+                        if (fisherman != null)
+                        {
+                            fisherman.TakeFatigue(PowerLevel);
+                            DebugLog($"Player pulls against {fisherman.name}'s fishing line - fisherman suffers fatigue!");
+                        }
+
                     }
+
                 }
             }
         }
