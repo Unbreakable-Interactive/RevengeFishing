@@ -204,6 +204,8 @@ public class Player : Entity
 
     #region Reverse Fishing
 
+    public int GetFatigue() => _fatigue;
+
     public void TakeFishingFatigue(float fatigueDamage)
     {
         // 10% enemy's fatigue
@@ -655,7 +657,7 @@ public class Player : Entity
 
     public int GetHunger() => hunger;
     public int GetMaxHunger() => maxHunger; 
-    public float GetHungerPercentage() => maxHunger > 0 ? (float)hunger / PowerLevel : 0f;
+    public float GetHungerPercentage() => maxHunger > 0 ? (float)hunger / (float)maxHunger : 0f;
 
     public void SetHunger(int value)
     {
@@ -665,6 +667,16 @@ public class Player : Entity
     public void ModifyHunger(int amount)
     {
         SetHunger(hunger + amount);
+    }
+
+    public void SetFatigue(int value)
+    {
+        _fatigue = Mathf.Clamp(value, 0, _maxFatigue);
+    }
+
+    public void ModifyFatigue(int amount)
+    {
+        SetFatigue(_fatigue + amount);
     }
 
     #endregion

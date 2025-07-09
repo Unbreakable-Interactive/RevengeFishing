@@ -7,11 +7,16 @@ public class HungerManager : MonoBehaviour
     [SerializeField] private float hungerPercentageRate = 0.02f; // 2% of power level per second
     [SerializeField] private float hungerUpdateInterval = 1f; // How often to update hunger, in seconds
 
+    [Header("Fatigue Recovery Configuration")]
+    [SerializeField] private float fatigueRecoveryPercentageRate = 0.02f; // 2% of power level per second at 0% hunger
+    [SerializeField] private float fatigueUpdateInterval = 1f; // How often to recover fatigue
+
     [Header("Debug")]
     [SerializeField] private bool enableDebugLogs = false;
 
     [SerializeField] private Player player;
     private Coroutine hungerCoroutine;
+    private Coroutine fatigueRecoveryCoroutine;
 
     // Properties for external access
     public float CurrentHungerRate => CalculateCurrentHungerRate();
@@ -20,18 +25,17 @@ public class HungerManager : MonoBehaviour
     // Events
     public System.Action<int> OnHungerChanged;
     public System.Action<float> OnHungerRateChanged;
+    public System.Action<int> OnFatigueChanged;
 
-    //private void Start()
-    //{
-    //    Initialize();
-    //}
+
+    private void Start()
+    {
+        Initialize();
+    }
 
     public void Initialize()
     {
-        if (player == null)
-        {
-            player = GetComponent<Player>();
-        }
+        if (player == null) player = GetComponent<Player>();
 
         if (player == null)
         {
@@ -40,6 +44,7 @@ public class HungerManager : MonoBehaviour
         }
 
         StartHungerSystem();
+        StartFatigueRecoverySystem();
 
         DebugLog($"HungerManager initialized.");
     }
@@ -56,6 +61,19 @@ public class HungerManager : MonoBehaviour
         DebugLog("Hunger system started");
     }
 
+    public void StartFatigueRecoverySystem()
+    {
+        if (player == null)
+        {
+            Debug.LogError("HungerManager: Cannot start fatigue recovery system - no player reference!");
+            return;
+        }
+        
+        fatigueRecoveryCoroutine = StartCoroutine(FatigueRecoveryCoroutine());
+        DebugLog("Fatigue recovery system started");
+
+    }
+
     public void StopHungerSystem()
     {
         if (hungerCoroutine != null)
@@ -66,12 +84,31 @@ public class HungerManager : MonoBehaviour
         DebugLog("Hunger system stopped");
     }
 
+    public void StopFatigueRecoverySystem()
+    {
+        if (fatigueRecoveryCoroutine != null)
+        {
+            StopCoroutine(fatigueRecoveryCoroutine);
+            fatigueRecoveryCoroutine = null;
+        }
+        DebugLog("Hunger system stopped");
+    }
+
     private IEnumerator HungerAccumulationCoroutine()
     {
         while (player != null)
         {
             AccumulateHunger();
             yield return new WaitForSeconds(hungerUpdateInterval);
+        }
+    }
+
+    private IEnumerator FatigueRecoveryCoroutine()
+    {
+        while (player != null)
+        {
+            RecoverFatigue();
+            yield return new WaitForSeconds(fatigueUpdateInterval);
         }
     }
 
@@ -104,6 +141,36 @@ public class HungerManager : MonoBehaviour
         }
     }
 
+    private void RecoverFatigue()
+    {
+        if (player == null) return;
+        if (player.GetFatigue() <= 0) return; // No fatigue to recover
+
+        // Calculate recovery efficiency based on hunger
+        float hungerPercentage = player.GetHungerPercentage();
+        float recoveryEfficiency = 1f - hungerPercentage; // 0% hunger = 100% efficiency
+
+        // Calculate base recovery (2% of power level per second)
+        float baseRecovery = player.PowerLevel * fatigueRecoveryPercentageRate;
+
+        // Apply efficiency modifier
+        int actualRecovery = Mathf.RoundToInt(baseRecovery * recoveryEfficiency);
+
+
+        if (hungerPercentage >= .8f) // Block fatigue recovery if player is over 80% hungry
+        {
+            DebugLog("No fatigue recovery - too hungry!");
+        }
+        else if (actualRecovery > 0) 
+        {
+            player.ModifyFatigue(-actualRecovery);
+
+            DebugLog($"Fatigue -{actualRecovery} (Efficiency: {recoveryEfficiency * 100:F0}%).");
+
+        }
+
+    }
+
     private float CalculateCurrentHungerRate()
     {
         if (player == null) return 0f;
@@ -117,6 +184,7 @@ public class HungerManager : MonoBehaviour
         DebugLog("Player has starved!");
         player.PlayerDie(Player.Status.Starved);
         StopHungerSystem();
+        StopFatigueRecoverySystem();
     }
 
     public float GetHungerPercentage()
@@ -169,17 +237,18 @@ public class HungerManager : MonoBehaviour
     private void OnDestroy()
     {
         StopHungerSystem();
+        StopFatigueRecoverySystem();
     }
 
-    private void OnApplicationPause(bool pauseStatus)
-    {
-        if (pauseStatus)
-        {
-            StopHungerSystem();
-        }
-        else
-        {
-            StartHungerSystem();
-        }
-    }
+    //private void OnApplicationPause(bool pauseStatus)
+    //{
+    //    if (pauseStatus)
+    //    {
+    //        StopHungerSystem();
+    //    }
+    //    else
+    //    {
+    //        StartHungerSystem();
+    //    }
+    //}
 }
