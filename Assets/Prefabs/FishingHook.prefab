@@ -128,12 +128,12 @@ MonoBehaviour:
   underwaterDrag: 0.5
   underwaterMaxSpeed: 3
   entityType: 3
-  maxDistance: 8
+  maxDistance: 6
   spawnPoint: {fileID: 0}
   spawner: {fileID: 0}
   isBeingHeld: 0
   player: {fileID: 0}
-  maxStretchDistance: 20
+  maxStretchDistance: 4
   stretchResistance: 100
   snapBackForce: 1
   maxStretchTime: 0.3
