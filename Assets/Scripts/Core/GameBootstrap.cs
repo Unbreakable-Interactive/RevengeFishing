@@ -5,9 +5,8 @@ public class GameBootstrap : MonoBehaviour
     [Header("Core Game Systems")]
     [SerializeField] private Player playerMovement;
     [SerializeField] private PlayerBounds playerBounds;
-    [SerializeField] private PlayerStats playerStats;
     [SerializeField] private Camera gameCamera;
-    
+
     [Header("Spawn Systems")]
     [SerializeField] private SpawnHandler spawnHandler;
     
@@ -47,20 +46,15 @@ public class GameBootstrap : MonoBehaviour
     
     private void InitializePlayerSystemsPhase()
     {
-        if (playerStats != null)
-            playerStats.Initialize();
+        if (playerMovement != null) playerMovement.Initialize();
         
-        if (playerMovement != null)
-            playerMovement.Initialize();
-        
-        if (playerBounds != null && playerMovement != null)
-            playerBounds.Initialize(playerMovement);
+        if (playerBounds != null && playerMovement != null) playerBounds.Initialize(playerMovement);
+
     }
-    
+
     private void InitializeSpawnSystemsPhase()
     {
-        if (spawnHandler != null)
-            spawnHandler.Initialize();
+        if (spawnHandler != null) spawnHandler.Initialize();
     }
     
     void Update()

@@ -92,12 +92,12 @@ public class CameraScaler : MonoBehaviour
         // Debug logging
         if (Time.frameCount % 60 == 0) // Once per second
         {
-            Debug.Log($"Player Scale: {playerScale:F2}, Target Distance: {newTargetDistance:F1}, Current: {currentDistance:F1}");
+            //Debug.Log($"Player Scale: {playerScale:F2}, Target Distance: {newTargetDistance:F1}, Current: {currentDistance:F1}");
         }
 
         // Update target if changed
         targetDistance = newTargetDistance;
-        Debug.Log($"CAMERA DISTANCE CHANGE: Player {playerScale:F2}x to Distance {targetDistance:F1}");
+        //Debug.Log($"CAMERA DISTANCE CHANGE: Player {playerScale:F2}x to Distance {targetDistance:F1}");
 
         // Apply smooth or instant movement
         if (smoothMovement)
@@ -129,7 +129,7 @@ public class CameraScaler : MonoBehaviour
             // Update Framing Transposer Camera Distance
             framingTransposer.m_CameraDistance = currentDistance;
 
-            Debug.Log($"Updated Framing Transposer Camera Distance to: {currentDistance:F1}");
+            //Debug.Log($"Updated Framing Transposer Camera Distance to: {currentDistance:F1}");
         }
     }
 

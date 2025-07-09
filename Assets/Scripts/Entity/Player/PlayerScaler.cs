@@ -14,12 +14,10 @@ public class PlayerScaler : MonoBehaviour
     [SerializeField] private float currentScaleMultiplier = 1f;
 
     private Player player;
-    private PlayerStats playerStats;
 
     private void Awake()
     {
         player = GetComponent<Player>();
-        playerStats = GetComponent<PlayerStats>();
         originalScale = transform.localScale;
     }
 
