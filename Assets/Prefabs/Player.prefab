@@ -277,6 +277,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4283144278362533936}
   - component: {fileID: 5706962072255297144}
+  - component: {fileID: 2299430188239530610}
   - component: {fileID: 5374213318811793880}
   m_Layer: 0
   m_Name: Player
@@ -352,9 +353,26 @@ MonoBehaviour:
   steeringForce: 10
   steeringDamping: 0.98
   lineExtensionAmount: 1
-  maxLineExtension: 12
+  maxLineExtension: 10
   lineExtensionSpeedPenalty: 0.6
   enableDebugLogs: 0
+--- !u!114 &2299430188239530610
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6728867108004361845}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f697d855c63ba4a4c92a5113d8dabd06, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  scalingConfig: {fileID: 11400000, guid: 6fe96df1e76b0514c836ad7101c30bf5, type: 2}
+  originalScale: {x: 2, y: 2, z: 2}
+  currentPowerLevel: 0
+  targetScaleMultiplier: 1
+  currentScaleMultiplier: 1
 --- !u!50 &5374213318811793880
 Rigidbody2D:
   serializedVersion: 4
