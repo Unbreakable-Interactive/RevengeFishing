@@ -651,6 +651,24 @@ public class Player : Entity
     }
     #endregion
 
+    #region Hunger
+
+    public int GetHunger() => hunger;
+    public int GetMaxHunger() => maxHunger; 
+    public float GetHungerPercentage() => maxHunger > 0 ? (float)hunger / PowerLevel : 0f;
+
+    public void SetHunger(int value)
+    {
+        hunger = Mathf.Clamp(value, 0, PowerLevel);
+    }
+
+    public void ModifyHunger(int amount)
+    {
+        SetHunger(hunger + amount);
+    }
+
+    #endregion
+
     #region Utils
     //Determines the current position of the mouse in the context of the game world
     Vector2 GetMouseWorldPosition()
