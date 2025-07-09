@@ -204,28 +204,6 @@ public class HungerManager : MonoBehaviour
         typeof(Player).GetField("hunger", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).SetValue(player, value);
     }
 
-    // Public methods for external control
-    public void ModifyHunger(int amount)
-    {
-        if (player == null) return;
-
-        int currentHunger = GetPlayerHunger();
-        int maxHunger = MaxHunger;
-        int newHunger = Mathf.Clamp(currentHunger + amount, 0, maxHunger);
-
-        SetPlayerHunger(newHunger);
-        OnHungerChanged?.Invoke(newHunger);
-
-        DebugLog($"Hunger modified by {amount}. New hunger: {newHunger}/{maxHunger}");
-    }
-
-    public void SetHungerPercentageRate(float newRate)
-    {
-        hungerPercentageRate = newRate;
-        OnHungerRateChanged?.Invoke(CalculateCurrentHungerRate());
-        DebugLog($"Hunger percentage rate changed to {newRate:F3}");
-    }
-
     private void DebugLog(string message)
     {
         if (enableDebugLogs)
