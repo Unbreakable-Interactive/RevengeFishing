@@ -40,7 +40,7 @@ public abstract class FishingProjectile : Entity
     {
         base.Initialize();
 
-        entityType = EntityType.Hook;
+        entityType = EntityType.FishingProjectile;
         player = GameObject.FindGameObjectWithTag("Player")?.GetComponent<Player>();
 
         InitializeProjectile();

@@ -5,16 +5,16 @@ using UnityEngine;
 namespace RevengeFishing.Hunger
 {
     /// <summary>
-    /// Used to monitor, and control the <seealso cref="Entity"/> hunger, and there fatigue over time.
+    /// Used to monitor, and control the <seealso cref="Entity"/> hunger, and their fatigue over time.
     /// 
-    /// As the player is pulled further in by the fisherman, The player will start to struggle, and build up there fatigue,
-    /// which will then challenge the player. This should hold the Players values of Fatigue.
+    /// As the player is pulled further in by the fisherman, The player will start to struggle, and build up their fatigue,
+    /// which will then challenge the player. This should hold the Player's values of Fatigue.
     /// </summary>
     [System.Serializable]
     public class HungerHandler
     {
         /// <summary>
-        /// Controls the players Hunger.
+        /// Controls the player's Hunger.
         /// 
         /// Hunger increases by 1 each second; player starves if hunger reaches 40
         /// </summary>
@@ -23,17 +23,14 @@ namespace RevengeFishing.Hunger
 
         protected int _powerLevel;
 
-        protected int _maxFatigue;
+        protected EntityFatigue _entityFatigue;
 
-        protected int _fatigue;
-
-        public HungerHandler(int playerPowerLevel, int maxFatigue, int maxHunger, int initialFatigue = 0)
+        public HungerHandler(int playerPowerLevel, int maxHunger, EntityFatigue entityFatigue, int initialHunger = 0)
         {
             _powerLevel = playerPowerLevel;
-            _maxFatigue = maxFatigue;
             _maxHunger = maxHunger;
-            _fatigue = 0;
-            _hunger = 0;
+            _hunger = initialHunger;
+            _entityFatigue = entityFatigue;
         }
 
         /// <summary>
@@ -54,26 +51,26 @@ namespace RevengeFishing.Hunger
         /// <param name="newPowerLevel">This is the 'new' power level after it has been adjusted.</param>
         public void GainedPowerFromEating(int enemyPowerLevel, int newPowerLevel)
         {
-            int prevFatigue = _maxFatigue;
+            int prevFatigue = _entityFatigue._maxFatigue;
             int prevHunger = GetMaxHunger();
             _hunger -= Mathf.RoundToInt((float)enemyPowerLevel * 0.5f);
 
             if (_hunger < 0)
             {
-                _fatigue += _hunger; //heals as much fatigue as hunger overflowed
+                _entityFatigue._fatigue += _hunger; //heals as much fatigue as hunger overflowed
                 _hunger = 0;
             }
 
             // Ensure fatigue does not drop below 0
-            if (_fatigue < 0) _fatigue = 0;
+            if (_entityFatigue._fatigue < 0) _entityFatigue._fatigue = 0;
 
             // Update new max values to match new power level
-            _maxFatigue = newPowerLevel;
+            _entityFatigue._maxFatigue = newPowerLevel;
             _maxHunger = newPowerLevel;
 
             // keep values proportional to new power level
             _hunger = Mathf.RoundToInt((float)_hunger / (float)prevHunger * (float)_maxHunger);
-            _fatigue = Mathf.RoundToInt((float)_fatigue / (float)prevFatigue * (float)_maxFatigue);
+            _entityFatigue._fatigue = Mathf.RoundToInt((float)_entityFatigue._fatigue / (float)prevFatigue * (float)_entityFatigue._maxFatigue);
 
             //Debug.Log($"Player gained {Mathf.RoundToInt((float)enemyPowerLevel * 0.2f)} power from eating enemy! New power level: {_powerLevel}");
         }
@@ -97,12 +94,12 @@ namespace RevengeFishing.Hunger
 
         public void SetFatigue(int value)
         {
-            _fatigue = Mathf.Clamp(value, 0, _maxFatigue);
+            _entityFatigue._fatigue = Mathf.Clamp(value, 0, _entityFatigue._maxFatigue);
         }
 
         public void ModifyFatigue(int amount)
         {
-            SetFatigue(_fatigue + amount);
+            SetFatigue(_entityFatigue._fatigue + amount);
         }
     }
 }

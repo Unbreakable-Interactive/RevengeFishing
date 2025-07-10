@@ -93,7 +93,7 @@ public class Player : Entity
         //hunger = 0; // hunger increases by 1 each second; player starves if hunger reaches 40
         //maxHunger = _powerLevel;
 
-        _hungerHandler = new HungerHandler(_powerLevel, _powerLevel, _powerLevel, 0);
+        _hungerHandler = new HungerHandler(_powerLevel, _powerLevel, entityFatigue, 0);
 
         rb.drag = naturalDrag;
         targetRotation = transform.rotation; //set target rotation to Player's current rotation
@@ -208,15 +208,15 @@ public class Player : Entity
 
     #region Reverse Fishing
 
-    public int GetFatigue() => _fatigue;
+    public int GetFatigue() => entityFatigue._fatigue;
 
     public void TakeFishingFatigue(float fatigueDamage)
     {
         // 10% enemy's fatigue
-        _fatigue += (int)(fatigueDamage);
+        entityFatigue._fatigue += (int)(fatigueDamage);
 
         // Check if enemy should be defeated
-        if (_fatigue >= _maxFatigue)
+        if (entityFatigue._fatigue >= entityFatigue._maxFatigue)
         {
             PlayerDie(Status.Fished);
         }
@@ -402,7 +402,7 @@ public class Player : Entity
         //adjust powerLevel.
         _powerLevel += Mathf.RoundToInt((float)enemyPowerLevel * 0.2f); // 20% of enemy's power
         // Update new max values to match new power level
-        _maxFatigue = _powerLevel;
+        entityFatigue._maxFatigue = _powerLevel;
 
         _hungerHandler.GainedPowerFromEating(enemyPowerLevel, _powerLevel);
 

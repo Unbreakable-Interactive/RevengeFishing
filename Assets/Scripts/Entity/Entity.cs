@@ -7,8 +7,7 @@ public abstract class Entity : MonoBehaviour
 
     [Header("Character Stats")]
     [SerializeField] protected int _powerLevel;
-    [SerializeField] protected int _fatigue;
-    [SerializeField] protected int _maxFatigue;
+    [SerializeField] protected EntityFatigue entityFatigue;
 
     [Header("Is Above Water?")]
     [SerializeField] protected bool isAboveWater = true;
@@ -38,7 +37,7 @@ public abstract class Entity : MonoBehaviour
         Generic,
         Player,
         Enemy,
-        Hook
+        FishingProjectile
     }
 
     protected virtual void Awake()
@@ -60,8 +59,10 @@ public abstract class Entity : MonoBehaviour
 
         if (GetComponent<Player>() != null)
         {
-            _powerLevel = 100;
+            _powerLevel = 100; //starting power level for player
         }
+
+        entityFatigue = new EntityFatigue(_powerLevel != 0 ? _powerLevel : 100, 0);
 
         SetMovementMode(isAboveWater);
         isInitialized = true;
