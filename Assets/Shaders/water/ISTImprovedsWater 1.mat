@@ -52,7 +52,7 @@ Material:
     - _ValleyDepth: 0.8
     - _WaterlineSharpness: 100
     - _WaterlineThickness: 0.1
-    - _WaveAmplitude: 0.6
+    - _WaveAmplitude: 0.2
     - _WaveCircularity: 0.7
     - _WaveContrast: 3
     - _WaveFrequency: 2.4
