@@ -204,6 +204,8 @@ public class Player : Entity
 
     #region Reverse Fishing
 
+    public int GetFatigue() => _fatigue;
+
     public void TakeFishingFatigue(float fatigueDamage)
     {
         // 10% enemy's fatigue
@@ -247,25 +249,32 @@ public class Player : Entity
             foreach (FishingProjectile hook in activeBitingHooks)
             {
                 // Check if this hook is stretching (player is pulling against it)
-                if (hook.isBeingHeld && hook.IsLineStretching())
+                if (hook.isBeingHeld /*&& hook.IsLineStretching()*/)
                 {
                     // Check if player is at max distance and trying to extend line
                     float currentDistance = Vector3.Distance(transform.position, hook.spawnPoint.position);
                     float hookMaxDistance = hook.maxDistance;
 
-                    // If player is at or near max distance, try to extend the line
-                    if (currentDistance >= hookMaxDistance * 0.95f) // 95% of max distance
+                    // Player is pulling against this fishing line!
+                    Fisherman fisherman = hook.spawner?.GetComponent<Fisherman>();
+
+                    // If player is at or near max distance, try extending the fishing line
+                    if (currentDistance >= hookMaxDistance * 0.99f) // At 99% or more of max distance
                     {
                         TryExtendFishingLine(hook);
                     }
 
-                    // Player is pulling against this fishing line!
-                    Fisherman fisherman = hook.spawner?.GetComponent<Fisherman>();
-                    if (fisherman != null)
+                    // If player is at or near max distance, deal fatigue damage
+                    if (currentDistance >= hookMaxDistance * 0.9f) // 90% of max distance
                     {
-                        fisherman.TakeFatigue(PowerLevel);
-                        DebugLog($"Player pulls against {fisherman.name}'s fishing line - fisherman suffers fatigue!");
+                        if (fisherman != null)
+                        {
+                            fisherman.TakeFatigue(PowerLevel);
+                            DebugLog($"Player pulls against {fisherman.name}'s fishing line - fisherman suffers fatigue!");
+                        }
+
                     }
+
                 }
             }
         }
@@ -402,7 +411,7 @@ public class Player : Entity
         // Ensure fatigue does not drop below 0
         if (_fatigue < 0) _fatigue = 0;
 
-        _powerLevel += Mathf.RoundToInt((float)enemyPowerLevel * 0.1f); // 10% of enemy's power
+        _powerLevel += Mathf.RoundToInt((float)enemyPowerLevel * 0.2f); // 20% of enemy's power
 
         // Update new max values to match new power level
         _maxFatigue = _powerLevel;
@@ -412,7 +421,7 @@ public class Player : Entity
         hunger = Mathf.RoundToInt(((float)hunger / (float)prevHunger) * (float)maxHunger);
         _fatigue = Mathf.RoundToInt(((float)_fatigue / (float)prevFatigue) * (float)_maxFatigue);
 
-        DebugLog($"Player gained {Mathf.RoundToInt((float)enemyPowerLevel * 0.1f)} power from eating enemy! New power level: {_powerLevel}");
+        DebugLog($"Player gained {Mathf.RoundToInt((float)enemyPowerLevel * 0.2f)} power from eating enemy! New power level: {_powerLevel}");
     }
 
     public void PlayerDie(Status deathType)
@@ -642,6 +651,34 @@ public class Player : Entity
         }
 
     }
+    #endregion
+
+    #region Hunger
+
+    public int GetHunger() => hunger;
+    public int GetMaxHunger() => maxHunger; 
+    public float GetHungerPercentage() => maxHunger > 0 ? (float)hunger / (float)maxHunger : 0f;
+
+    public void SetHunger(int value)
+    {
+        hunger = Mathf.Clamp(value, 0, PowerLevel);
+    }
+
+    public void ModifyHunger(int amount)
+    {
+        SetHunger(hunger + amount);
+    }
+
+    public void SetFatigue(int value)
+    {
+        _fatigue = Mathf.Clamp(value, 0, _maxFatigue);
+    }
+
+    public void ModifyFatigue(int amount)
+    {
+        SetFatigue(_fatigue + amount);
+    }
+
     #endregion
 
     #region Utils

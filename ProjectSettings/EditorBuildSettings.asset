@@ -12,7 +12,7 @@ EditorBuildSettings:
     path: Assets/Scenes/SurfaceScene.unity
     guid: c987e5987df8b2d4ea8421e21012f5fe
   - enabled: 0
-    path: Assets/Scenes/Testing.unity
+    path: Assets/Scenes/UnUsed Samples/Testing.unity
     guid: 2cc48032158394295af393f9ba5314e4
   - enabled: 1
     path: Assets/Scenes/GameOver.unity
