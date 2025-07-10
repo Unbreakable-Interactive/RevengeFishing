@@ -7,7 +7,7 @@ public abstract class Entity : MonoBehaviour
 
     [Header("Character Stats")]
     [SerializeField] protected int _powerLevel;
-    [SerializeField] protected EntityFatigue entityFatigue;
+    [SerializeField] public EntityFatigue entityFatigue;
 
     [Header("Is Above Water?")]
     [SerializeField] protected bool isAboveWater = true;
