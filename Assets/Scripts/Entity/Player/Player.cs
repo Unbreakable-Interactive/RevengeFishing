@@ -1,6 +1,7 @@
 using UnityEngine.SceneManagement;
 using System.Collections.Generic;
 using UnityEngine;
+using RevengeFishing.Hunger;
 using static Enemy;
 
 public class Player : Entity
@@ -20,8 +21,9 @@ public class Player : Entity
     private bool shouldApplyForceAfterRotation = false;
     private bool hasAppliedBoost = false; // Track if boost was already applied
 
-    [SerializeField] protected int hunger;
-    [SerializeField] protected int maxHunger;
+    // [SerializeField] protected int hunger;
+    // [SerializeField] protected int maxHunger;
+    [SerializeField] public HungerHandler _hungerHandler;
 
     [SerializeField] protected Status status;
 
@@ -85,11 +87,13 @@ public class Player : Entity
 
         mainCamera = Camera.main ?? FindObjectOfType<Camera>();
 
-        _fatigue = 0;
-        _maxFatigue = _powerLevel;
+        // _fatigue = 0;
+        // _maxFatigue = _powerLevel;
 
-        hunger = 0; // hunger increases by 1 each second; player starves if hunger reaches 40
-        maxHunger = _powerLevel;
+        //hunger = 0; // hunger increases by 1 each second; player starves if hunger reaches 40
+        //maxHunger = _powerLevel;
+
+        _hungerHandler = new HungerHandler(_powerLevel, _powerLevel, _powerLevel, 0);
 
         rb.drag = naturalDrag;
         targetRotation = transform.rotation; //set target rotation to Player's current rotation
@@ -395,31 +399,12 @@ public class Player : Entity
 
     public void GainPowerFromEating(int enemyPowerLevel)
     {
-        // store old values
-        int prevFatigue = _maxFatigue;
-        int prevHunger = maxHunger;
-        int prevLevel = _powerLevel;
-
-        hunger -= Mathf.RoundToInt((float)enemyPowerLevel * 0.5f);
-        
-        if (hunger < 0)
-        {
-            _fatigue += hunger; //heals as much fatigue as hunger overflowed
-            hunger = 0;
-        }
-
-        // Ensure fatigue does not drop below 0
-        if (_fatigue < 0) _fatigue = 0;
-
+        //adjust powerLevel.
         _powerLevel += Mathf.RoundToInt((float)enemyPowerLevel * 0.2f); // 20% of enemy's power
-
         // Update new max values to match new power level
         _maxFatigue = _powerLevel;
-        maxHunger = _powerLevel;
 
-        // keep values proportional to new power level
-        hunger = Mathf.RoundToInt(((float)hunger / (float)prevHunger) * (float)maxHunger);
-        _fatigue = Mathf.RoundToInt(((float)_fatigue / (float)prevFatigue) * (float)_maxFatigue);
+        _hungerHandler.GainedPowerFromEating(enemyPowerLevel, _powerLevel);
 
         DebugLog($"Player gained {Mathf.RoundToInt((float)enemyPowerLevel * 0.2f)} power from eating enemy! New power level: {_powerLevel}");
     }
@@ -651,34 +636,6 @@ public class Player : Entity
         }
 
     }
-    #endregion
-
-    #region Hunger
-
-    public int GetHunger() => hunger;
-    public int GetMaxHunger() => maxHunger; 
-    public float GetHungerPercentage() => maxHunger > 0 ? (float)hunger / (float)maxHunger : 0f;
-
-    public void SetHunger(int value)
-    {
-        hunger = Mathf.Clamp(value, 0, PowerLevel);
-    }
-
-    public void ModifyHunger(int amount)
-    {
-        SetHunger(hunger + amount);
-    }
-
-    public void SetFatigue(int value)
-    {
-        _fatigue = Mathf.Clamp(value, 0, _maxFatigue);
-    }
-
-    public void ModifyFatigue(int amount)
-    {
-        SetFatigue(_fatigue + amount);
-    }
-
     #endregion
 
     #region Utils
