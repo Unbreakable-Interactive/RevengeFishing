@@ -50,25 +50,25 @@ namespace RevengeFishing.Hunger
         public void GainedPowerFromEating(int enemyPowerLevel, int newPowerLevel)
         {
             int prevFatigue = _entityFatigue.maxFatigue;
-            int prevHunger = GetMaxHunger();
+            int prevHunger = GetHunger();
             _hunger -= Mathf.RoundToInt((float)enemyPowerLevel * 0.5f);
 
             if (_hunger < 0)
             {
-                _entityFatigue.fatigue += _hunger; //heals as much fatigue as hunger overflowed
-                _hunger = 0;
+                ModifyFatigue(_hunger); //heals as much fatigue as hunger overflowed
+                SetHunger(0);
             }
 
             // Ensure fatigue does not drop below 0
-            if (_entityFatigue.fatigue < 0) _entityFatigue.fatigue = 0;
+            if (_entityFatigue.fatigue < 0) SetFatigue(0);
 
             // Update new max values to match new power level
             _entityFatigue.maxFatigue = newPowerLevel;
             _maxHunger = newPowerLevel;
 
             // keep values proportional to new power level
-            _hunger = Mathf.RoundToInt((float)_hunger / (float)prevHunger * (float)_maxHunger);
-            _entityFatigue.fatigue = Mathf.RoundToInt((float)_entityFatigue.fatigue / (float)prevFatigue * (float)_entityFatigue.maxFatigue);
+            SetHunger(Mathf.RoundToInt((float)_hunger / (float)prevHunger * (float)_maxHunger));
+            SetFatigue(Mathf.RoundToInt((float)_entityFatigue.fatigue / (float)prevFatigue * (float)_entityFatigue.maxFatigue));
 
             //Debug.Log($"Player gained {Mathf.RoundToInt((float)enemyPowerLevel * 0.2f)} power from eating enemy! New power level: {_powerLevel}");
         }
