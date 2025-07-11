@@ -191,6 +191,26 @@ public class EntityHierarchyInspector : Editor
         
         if (property != null)
         {
+            //// Check if this field has a Header attribute
+            //var headerAttribute = field.GetCustomAttribute<HeaderAttribute>();
+            //if (headerAttribute != null)
+            //{
+            //    // Draw some space before the header
+            //    EditorGUILayout.Space(8);
+
+            //    // Create a header style
+            //    var headerStyle = new GUIStyle(EditorStyles.boldLabel)
+            //    {
+            //        normal = { textColor = Color.white * 0.9f },
+            //        fontStyle = FontStyle.Bold,
+            //        fontSize = 11
+            //    };
+
+            //    // Draw the header
+            //    EditorGUILayout.LabelField(headerAttribute.header, headerStyle);
+            //    EditorGUILayout.Space(2);
+            //}
+            
             // Custom field display with type info
             EditorGUILayout.BeginHorizontal();
             
@@ -292,14 +312,15 @@ public class EntityHierarchyInspector : Editor
 
     private int GetFieldOrder(FieldInfo field)
     {
-        // Headers come first
-        if (field.GetCustomAttribute<HeaderAttribute>() != null) return 0;
-        
-        // Then public fields
-        if (field.IsPublic) return 1;
-        
-        // Then private SerializeField
-        return 2;
+        //// Headers come first
+        //if (field.GetCustomAttribute<HeaderAttribute>() != null) return 0;
+
+        //// Then public fields
+        //if (field.IsPublic) return 1;
+
+        //// Then private SerializeField
+        //return 2;
+        return 0;
     }
 
     private string GetFieldTypeDisplay(FieldInfo field)
