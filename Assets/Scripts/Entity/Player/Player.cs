@@ -208,15 +208,15 @@ public class Player : Entity
 
     #region Reverse Fishing
 
-    public int GetFatigue() => entityFatigue._fatigue;
+    public int GetFatigue() => entityFatigue.fatigue;
 
     public void TakeFishingFatigue(float fatigueDamage)
     {
         // 10% enemy's fatigue
-        entityFatigue._fatigue += (int)(fatigueDamage);
+        entityFatigue.fatigue += (int)(fatigueDamage);
 
         // Check if enemy should be defeated
-        if (entityFatigue._fatigue >= entityFatigue._maxFatigue)
+        if (entityFatigue.fatigue >= entityFatigue.maxFatigue)
         {
             PlayerDie(Status.Fished);
         }
@@ -402,7 +402,7 @@ public class Player : Entity
         //adjust powerLevel.
         _powerLevel += Mathf.RoundToInt((float)enemyPowerLevel * 0.2f); // 20% of enemy's power
         // Update new max values to match new power level
-        entityFatigue._maxFatigue = _powerLevel;
+        entityFatigue.maxFatigue = _powerLevel;
 
         _hungerHandler.GainedPowerFromEating(enemyPowerLevel, _powerLevel);
 

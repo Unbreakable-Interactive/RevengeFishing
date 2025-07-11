@@ -51,26 +51,26 @@ namespace RevengeFishing.Hunger
         /// <param name="newPowerLevel">This is the 'new' power level after it has been adjusted.</param>
         public void GainedPowerFromEating(int enemyPowerLevel, int newPowerLevel)
         {
-            int prevFatigue = _entityFatigue._maxFatigue;
+            int prevFatigue = _entityFatigue.maxFatigue;
             int prevHunger = GetMaxHunger();
             _hunger -= Mathf.RoundToInt((float)enemyPowerLevel * 0.5f);
 
             if (_hunger < 0)
             {
-                _entityFatigue._fatigue += _hunger; //heals as much fatigue as hunger overflowed
+                _entityFatigue.fatigue += _hunger; //heals as much fatigue as hunger overflowed
                 _hunger = 0;
             }
 
             // Ensure fatigue does not drop below 0
-            if (_entityFatigue._fatigue < 0) _entityFatigue._fatigue = 0;
+            if (_entityFatigue.fatigue < 0) _entityFatigue.fatigue = 0;
 
             // Update new max values to match new power level
-            _entityFatigue._maxFatigue = newPowerLevel;
+            _entityFatigue.maxFatigue = newPowerLevel;
             _maxHunger = newPowerLevel;
 
             // keep values proportional to new power level
             _hunger = Mathf.RoundToInt((float)_hunger / (float)prevHunger * (float)_maxHunger);
-            _entityFatigue._fatigue = Mathf.RoundToInt((float)_entityFatigue._fatigue / (float)prevFatigue * (float)_entityFatigue._maxFatigue);
+            _entityFatigue.fatigue = Mathf.RoundToInt((float)_entityFatigue.fatigue / (float)prevFatigue * (float)_entityFatigue.maxFatigue);
 
             //Debug.Log($"Player gained {Mathf.RoundToInt((float)enemyPowerLevel * 0.2f)} power from eating enemy! New power level: {_powerLevel}");
         }
@@ -94,12 +94,12 @@ namespace RevengeFishing.Hunger
 
         public void SetFatigue(int value)
         {
-            _entityFatigue._fatigue = Mathf.Clamp(value, 0, _entityFatigue._maxFatigue);
+            _entityFatigue.fatigue = Mathf.Clamp(value, 0, _entityFatigue.maxFatigue);
         }
 
         public void ModifyFatigue(int amount)
         {
-            SetFatigue(_entityFatigue._fatigue + amount);
+            SetFatigue(_entityFatigue.fatigue + amount);
         }
     }
 }

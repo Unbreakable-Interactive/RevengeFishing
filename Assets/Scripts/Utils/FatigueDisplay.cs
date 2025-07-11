@@ -42,7 +42,7 @@ public class FatigueDisplay : MonoBehaviour
     {
         if (entity == null || fatigueDisplay == null) return;
 
-        fatigueDisplay.text = $"{entity.entityFatigue._fatigue.ToString()} / {entity.entityFatigue._maxFatigue.ToString()}";
+        fatigueDisplay.text = $"{entity.entityFatigue.fatigue.ToString()} / {entity.entityFatigue.maxFatigue.ToString()}";
     }
 
     /// <summary>
