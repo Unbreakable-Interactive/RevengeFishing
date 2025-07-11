@@ -20,15 +20,13 @@ namespace RevengeFishing.Hunger
         /// </summary>
         [SerializeField] protected int _hunger;
         [SerializeField] protected int _maxHunger;
-
-        protected int _powerLevel;
+        [SerializeField] protected int _maxHungerBonus = 0;
 
         protected EntityFatigue _entityFatigue;
 
-        public HungerHandler(int playerPowerLevel, int maxHunger, EntityFatigue entityFatigue, int initialHunger = 0)
+        public HungerHandler(int maxHunger, EntityFatigue entityFatigue, int initialHunger = 0)
         {
-            _powerLevel = playerPowerLevel;
-            _maxHunger = maxHunger;
+            _maxHunger = maxHunger + _maxHungerBonus;
             _hunger = initialHunger;
             _entityFatigue = entityFatigue;
         }
@@ -83,7 +81,7 @@ namespace RevengeFishing.Hunger
         /// </summary>
         public void SetHunger(int value)
         {
-            _hunger = Mathf.Clamp(value, 0, _powerLevel);
+            _hunger = Mathf.Clamp(value, 0, _maxHunger);
         }
 
 

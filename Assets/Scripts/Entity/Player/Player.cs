@@ -93,7 +93,7 @@ public class Player : Entity
         //hunger = 0; // hunger increases by 1 each second; player starves if hunger reaches 40
         //maxHunger = _powerLevel;
 
-        _hungerHandler = new HungerHandler(_powerLevel, _powerLevel, entityFatigue, 0);
+        _hungerHandler = new HungerHandler(_powerLevel, entityFatigue, 0);
 
         rb.drag = naturalDrag;
         targetRotation = transform.rotation; //set target rotation to Player's current rotation
