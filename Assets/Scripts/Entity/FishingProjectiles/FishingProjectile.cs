@@ -22,12 +22,12 @@ public abstract class FishingProjectile : Entity
     [SerializeField] private float maxStretchDistance = 8f;    // How far beyond maxDistance player can stretch
     [SerializeField] private float stretchResistance = 10f;    // Resistance force when stretching
     [SerializeField] private float snapBackForce = 10f;        // Force applied when snapping back
-    [SerializeField] private float maxStretchTime = 0.8f;      // Max time allowed in stretch zone
+    //[SerializeField] private float maxStretchTime = 0.8f;      // Max time allowed in stretch zone
     [SerializeField] private AnimationCurve stretchCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
 
     // Stretch state tracking
     private bool isStretching = false;
-    private float stretchTimer = 0f;
+    //private float stretchTimer = 0f;
     private float currentStretchAmount = 0f;
 
     [Header("Visual Events")]
@@ -40,7 +40,7 @@ public abstract class FishingProjectile : Entity
     {
         base.Initialize();
 
-        entityType = EntityType.Hook;
+        entityType = EntityType.FishingProjectile;
         player = GameObject.FindGameObjectWithTag("Player")?.GetComponent<Player>();
 
         InitializeProjectile();
@@ -195,7 +195,7 @@ public abstract class FishingProjectile : Entity
             if (isStretching)
             {
                 isStretching = false;
-                stretchTimer = 0f;
+                //stretchTimer = 0f;
                 currentStretchAmount = 0f;
                 OnStretchEnded?.Invoke();
                 Debug.Log("Fishing line relaxed");
@@ -231,13 +231,13 @@ public abstract class FishingProjectile : Entity
         if (!isStretching)
         {
             isStretching = true;
-            stretchTimer = 0f;
+            //stretchTimer = 0f;
             OnStretchStarted?.Invoke();
             Debug.Log("Fishing line is stretching!");
         }
 
-        stretchTimer += Time.deltaTime;
-        OnStretchChanged?.Invoke(currentStretchAmount, stretchTimer, maxStretchTime);
+        //stretchTimer += Time.deltaTime;
+        //OnStretchChanged?.Invoke(currentStretchAmount, stretchTimer, maxStretchTime);
 
         // Apply resistance force back to spawn point
         Vector3 directionToSpawn = (spawnPoint.position - player.transform.position).normalized;
@@ -268,7 +268,7 @@ public abstract class FishingProjectile : Entity
 
         // Reset stretch state
         isStretching = false;
-        stretchTimer = 0f;
+        //stretchTimer = 0f;
 
         // Visual/audio feedback for snap
         // Notify visual system
@@ -324,7 +324,7 @@ public abstract class FishingProjectile : Entity
 
     public float GetStretchTimer()
     {
-        return stretchTimer;
+        return 0f;
     }
 
     // Reset stretch state method update
@@ -333,7 +333,7 @@ public abstract class FishingProjectile : Entity
         if (isStretching)
         {
             isStretching = false;
-            stretchTimer = 0f;
+            //stretchTimer = 0f;
             currentStretchAmount = 0f;
             OnStretchEnded?.Invoke(); // Notify visual system
             Debug.Log("Fishing line relaxed");

@@ -43,6 +43,10 @@ public class LandEnemy : Enemy
     public float platformRightEdge;
     public bool platformBoundsCalculated;
 
+    // Overlapping other enemy?
+    protected IdleDetector idleDetector;
+
+
     [SerializeField] protected float maxUpwardVelocity; // For when they swim upward
 
     [SerializeField] protected float weight; // How much the enemy sinks in water; varies between 60 and 100 kg
@@ -165,6 +169,15 @@ public class LandEnemy : Enemy
         hookSpawner.Initialize();
 
         SetMovementMode(isAboveWater);
+
+        idleDetector = GetComponentInChildren<IdleDetector>();
+
+        if (idleDetector != null && _landMovementState == LandMovementState.Idle && idleDetector.ShouldAvoidIdle())
+        {
+            Debug.Log($"{gameObject.name} moved on spawn due to overlap with idle enemies");
+            ChooseMovementAction();
+        }
+
 
         Debug.Log($"{gameObject.name} - Enemy initialized with power level {_powerLevel}");
     }
@@ -556,20 +569,29 @@ public class LandEnemy : Enemy
         // Only handle basic enemy movement - no fishing logic!
         float randomValue = Random.value;
 
+
         Debug.Log($"Choosing random land action for {gameObject.name}. Random value = {randomValue}");
         if (randomValue < landEnemyConfig.idleProbability)
         {
-            //Debug.Log($"{gameObject.name} is idle");
+            // Only avoid idle if we're overlapping and not fishing
+            if (idleDetector != null && idleDetector.ShouldAvoidIdle())
+            {
+                Debug.Log($"{gameObject.name} prevented from going idle due to overlap with {idleDetector.GetOverlappingIdleEnemyCount()} idle enemy(ies)");
+
+                // Force a movement action instead of idle
+                ChooseMovementAction();
+                return;
+            }
+
+            // Safe to go idle
             _landMovementState = LandMovementState.Idle;
         }
         else if (randomValue < (landEnemyConfig.idleProbability + landEnemyConfig.walkProbability))
         {
-            //Debug.Log($"{gameObject.name} is walking");
             _landMovementState = (Random.value < 0.5f) ? LandMovementState.WalkLeft : LandMovementState.WalkRight;
         }
         else
         {
-            //Debug.Log($"{gameObject.name} is running");
             _landMovementState = (Random.value < 0.5f) ? LandMovementState.RunLeft : LandMovementState.RunRight;
         }
     }
@@ -648,6 +670,22 @@ public class LandEnemy : Enemy
             _landMovementState = LandMovementState.Idle; // Fallback
         }
     }
+
+    private void ChooseMovementAction()
+    {
+        float movementChoice = Random.value;
+        if (movementChoice < 0.8f)
+        {
+            // Choose walking
+            _landMovementState = (Random.value < 0.5f) ? LandMovementState.WalkLeft : LandMovementState.WalkRight;
+        }
+        else
+        {
+            // Choose running
+            _landMovementState = (Random.value < 0.5f) ? LandMovementState.RunLeft : LandMovementState.RunRight;
+        }
+    }
+
     #endregion
 
     #region Fishing Tool System

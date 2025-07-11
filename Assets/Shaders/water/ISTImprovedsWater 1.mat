@@ -37,14 +37,14 @@ Material:
     - _EnableStormFoam: 0
     - _InteractiveWaveSpeed: 5
     - _InteractiveWaveStrength: 0.7
-    - _NormalStrength: 0.5
+    - _NormalStrength: 0.8
     - _NormalTiling: 1
     - _PeakHeight: 2
     - _RadialWaveStrength: 1
     - _Refraction: 0.163
     - _Smoothness: 0.785
     - _SpriteDistortion: 0
-    - _SpriteOpacity: 0.85
+    - _SpriteOpacity: 0.8
     - _SpriteSpeed: 0.811
     - _SpriteTiling: 1.15
     - _StormFoamIntensity: 0
@@ -63,9 +63,9 @@ Material:
     - _WaveSpeed: 0.754
     - _WaveTurbulence: 1
     m_Colors:
-    - _DeepColor: {r: 0, g: 0.12171346, b: 0.5943396, a: 1}
+    - _DeepColor: {r: 0, g: 0.12171344, b: 0.5943396, a: 0.39215687}
     - _ObjectScale: {r: 24.57, g: 1, b: 5.85, a: 1}
     - _ScaleCompensation: {r: 24.57, g: 1, b: 5.85, a: 1}
-    - _ShallowColor: {r: 0.17734659, g: 0.37404904, b: 0.5754717, a: 0.85490197}
+    - _ShallowColor: {r: 0.17734653, g: 0.37404895, b: 0.57547164, a: 0.84313726}
     - _WaterlineColor: {r: 1, g: 1, b: 1, a: 1}
   m_BuildTextureStacks: []
