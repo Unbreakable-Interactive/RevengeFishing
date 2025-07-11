@@ -91,11 +91,11 @@ public class MouthMagnet : MonoBehaviour
         {
             FishingProjectile projectile = attractedProjectiles[i];
 
-            //if (projectile == null)
-            //{
-            //    attractedProjectiles.RemoveAt(i);
-            //    continue;
-            //}
+            if (projectile == null)
+            {
+                attractedProjectiles.RemoveAt(i);
+                continue;
+            }
 
             if (projectile.isBeingHeld)
             {
