@@ -486,7 +486,7 @@ MonoBehaviour:
   hookTimer: 1
   hookDuration: 8
   isPullingPlayer: 0
-  minLineLength: 3
+  minLineLength: 6
   maxLineReduction: 1.5
   lineReductionVariation: 0.4
   assignedPlatform: {fileID: 0}
