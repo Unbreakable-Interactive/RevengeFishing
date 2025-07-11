@@ -108,12 +108,6 @@ public class MouthMagnet : MonoBehaviour
             Vector2 directionToMagnet = (MagnetCenter - (Vector2)projectile.transform.position);
             float distance = directionToMagnet.magnitude;
 
-            //if (distance > maxMagnetRange)
-            //{
-            //    attractedProjectiles.RemoveAt(i);
-            //    continue;
-            //}
-
             if (distance < 0.1f) continue;
 
             directionToMagnet.Normalize();

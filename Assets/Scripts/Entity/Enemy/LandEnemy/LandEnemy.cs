@@ -607,22 +607,17 @@ public class LandEnemy : Enemy
         switch (_landMovementState)
         {
             case LandMovementState.Idle:
-                //Debug.Log("Idle state, no movement");
                 break;
             case LandMovementState.WalkLeft:
-                //Debug.Log("Walking left");
                 movement = Vector2.left * walkingSpeed;
                 break;
             case LandMovementState.WalkRight:
-                //Debug.Log("Walking right");
                 movement = Vector2.right * walkingSpeed;
                 break;
             case LandMovementState.RunLeft:
-                Debug.Log("Running left");
                 movement = Vector2.left * runningSpeed;
                 break;
             case LandMovementState.RunRight:
-                Debug.Log("Running right");
                 movement = Vector2.right * runningSpeed;
                 break;
         }
