@@ -400,7 +400,7 @@ public class Player : Entity
     public void GainPowerFromEating(int enemyPowerLevel)
     {
         //adjust powerLevel.
-        _powerLevel += Mathf.RoundToInt((float)enemyPowerLevel * 0.2f); // 20% of enemy's power
+        _powerLevel += Mathf.RoundToInt((float)enemyPowerLevel * 0.1f); // 10% of enemy's power
         // Update new max values to match new power level
         entityFatigue.maxFatigue = _powerLevel;
 
