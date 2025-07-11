@@ -447,8 +447,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   rb: {fileID: 3522423683038717205}
   _powerLevel: 0
-  _fatigue: 0
-  _maxFatigue: 0
+  entityFatigue:
+    fatigue: 0
+    maxFatigue: 0
   isAboveWater: 1
   airGravityScale: 2
   airDrag: 1.5
@@ -532,7 +533,7 @@ MonoBehaviour:
   hookHandlerPrefab: {fileID: 2202176723642426590, guid: 96755b07ec09907448fa89c168d540f4, type: 3}
   spawnPoint: {fileID: 3470367175335556429}
   throwForce: 10
-  hookMaxDistance: 6
+  hookMaxDistance: 8
   throwDirection: {x: 1, y: 0.2}
 --- !u!1 &8143527860349171708
 GameObject:

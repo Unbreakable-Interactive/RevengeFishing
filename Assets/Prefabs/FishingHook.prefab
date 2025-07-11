@@ -118,8 +118,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   rb: {fileID: 0}
   _powerLevel: 0
-  _fatigue: 0
-  _maxFatigue: 0
+  entityFatigue:
+    fatigue: 0
+    maxFatigue: 0
   isAboveWater: 1
   airGravityScale: 2
   airDrag: 1.5
@@ -128,7 +129,7 @@ MonoBehaviour:
   underwaterDrag: 0.5
   underwaterMaxSpeed: 3
   entityType: 3
-  maxDistance: 6
+  maxDistance: 8
   spawnPoint: {fileID: 0}
   spawner: {fileID: 0}
   isBeingHeld: 0
@@ -136,7 +137,6 @@ MonoBehaviour:
   maxStretchDistance: 4
   stretchResistance: 100
   snapBackForce: 1
-  maxStretchTime: 0.3
   stretchCurve:
     serializedVersion: 2
     m_Curve:
