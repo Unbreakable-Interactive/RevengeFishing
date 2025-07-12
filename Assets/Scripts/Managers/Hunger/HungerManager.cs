@@ -1,5 +1,7 @@
 using UnityEngine;
 using System.Collections;
+using System.Reflection;
+using RevengeFishing.Hunger;
 
 public class HungerManager : MonoBehaviour
 {
@@ -20,7 +22,7 @@ public class HungerManager : MonoBehaviour
 
     // Properties for external access
     public float CurrentHungerRate => CalculateCurrentHungerRate();
-    public int MaxHunger => player?.GetMaxHunger() ?? 0; 
+    public int MaxHunger => player?._hungerHandler.GetMaxHunger() ?? 0;
 
     // Events
     public System.Action<int> OnHungerChanged;
@@ -68,7 +70,7 @@ public class HungerManager : MonoBehaviour
             Debug.LogError("HungerManager: Cannot start fatigue recovery system - no player reference!");
             return;
         }
-        
+
         fatigueRecoveryCoroutine = StartCoroutine(FatigueRecoveryCoroutine());
         DebugLog("Fatigue recovery system started");
 
@@ -147,7 +149,7 @@ public class HungerManager : MonoBehaviour
         if (player.GetFatigue() <= 0) return; // No fatigue to recover
 
         // Calculate recovery efficiency based on hunger
-        float hungerPercentage = player.GetHungerPercentage();
+        float hungerPercentage = player._hungerHandler.GetHungerPercentage();
         float recoveryEfficiency = 1f - hungerPercentage; // 0% hunger = 100% efficiency
 
         // Calculate base recovery (2% of power level per second)
@@ -161,9 +163,9 @@ public class HungerManager : MonoBehaviour
         {
             DebugLog("No fatigue recovery - too hungry!");
         }
-        else if (actualRecovery > 0) 
+        else if (actualRecovery > 0)
         {
-            player.ModifyFatigue(-actualRecovery);
+            player._hungerHandler.ModifyFatigue(-actualRecovery);
 
             DebugLog($"Fatigue -{actualRecovery} (Efficiency: {recoveryEfficiency * 100:F0}%).");
 
@@ -175,7 +177,7 @@ public class HungerManager : MonoBehaviour
     {
         if (player == null) return 0f;
 
-        // Hunger rate = Power Level × Percentage Rate
+        // Hunger rate = Power Level ï¿½ Percentage Rate
         return player.PowerLevel * hungerPercentageRate;
     }
 
@@ -196,12 +198,12 @@ public class HungerManager : MonoBehaviour
     // Helper methods to access Player's hunger fields
     private int GetPlayerHunger()
     {
-        return (int)typeof(Player).GetField("hunger", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(player);
+        return player._hungerHandler.GetHunger();
     }
 
     private void SetPlayerHunger(int value)
     {
-        typeof(Player).GetField("hunger", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).SetValue(player, value);
+        player._hungerHandler.SetHunger(value);
     }
 
     private void DebugLog(string message)

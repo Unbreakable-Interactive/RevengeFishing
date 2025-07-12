@@ -113,8 +113,8 @@ public abstract class Enemy : Entity
         }
 
 
-        _fatigue = 0;
-        _maxFatigue = _powerLevel;
+        entityFatigue.fatigue = 0;
+        entityFatigue.maxFatigue = _powerLevel;
         _state = EnemyState.Alive;
 
         CalculateTier();
@@ -125,8 +125,8 @@ public abstract class Enemy : Entity
         _powerLevel = newPowerLevel;
 
         // Update any derived stats that depend on power level
-        _maxFatigue = _powerLevel;
-        _fatigue = 0; // Reset fatigue when power level changes
+        entityFatigue.maxFatigue = _powerLevel;
+        entityFatigue.fatigue = 0; // Reset fatigue when power level changes
 
         Debug.Log($"{gameObject.name} power level set to {_powerLevel}");
     }
@@ -168,10 +168,10 @@ public abstract class Enemy : Entity
         }
 
         // 5% more fatigue
-        _fatigue += (int)((float)playerPowerLevel * .05f);
+        entityFatigue.fatigue += (int)((float)playerPowerLevel * .05f);
 
         // Check if enemy should be defeated
-        if (_fatigue >= _maxFatigue && _state == EnemyState.Alive)
+        if (entityFatigue.fatigue >= entityFatigue.maxFatigue && _state == EnemyState.Alive)
         {
             TriggerDefeat();
         }
@@ -193,7 +193,7 @@ public abstract class Enemy : Entity
     public virtual void TriggerAlive()
     {
         ChangeState_Alive();
-        _fatigue = 0;
+        entityFatigue.fatigue = 0;
 
         if (rb != null)
         {
