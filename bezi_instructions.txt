@@ -1,0 +1,71 @@
+C# Best Practices for Unity Game Development
+
+<Project Structure & Organization>
+
+Organize scripts clearly: Use folders like Scripts/Core, Scripts/UI, Scripts/Gameplay, etc.
+
+One class per file: Makes searching and refactoring much easier.
+
+Namespace your code: Prevent naming collisions and clarify ownership (e.g., namespace MyGame.Player).
+
+<Unity-Specific Best Practices>
+
+Avoid using Update() unnecessarily: Heavy use of Update() can cause performance issues. Use events, coroutines, or InvokeRepeating() where possible.
+
+Cache component lookups: Use GetComponent in Awake() or Start() and store the reference.
+
+Use FixedUpdate() for physics logic, Update() for regular per-frame logic, and LateUpdate() for camera or follow adjustments.
+
+Prefer SerializeField over public fields: Keep fields private but visible in the Inspector for designer-friendly tweaking.
+
+<Code Quality>
+
+Follow C# naming conventions:
+
+PascalCase for public methods and properties.
+
+camelCase for private fields.
+
+_underscore prefix for private serialized fields (optional but common in Unity).
+
+Use properties instead of public fields when possible for better encapsulation.
+
+Write self-explanatory methods: A method should do one clear thing.
+
+<Performance Tips>
+
+Use object pooling for frequently spawned/destroyed objects.
+
+Avoid frequent Find() or string-based tag searches in performance-critical code.
+
+Minimize garbage generation: Avoid frequent allocations (e.g., new lists in Update), and use StringBuilder for heavy string operations.
+
+<Testing & Debugging>
+
+Use assertions and custom debug logs to catch unexpected states early.
+
+Create debug-only utilities using #if UNITY_EDITOR or DEBUG directives.
+
+Write editor tools (custom inspectors or scriptable objects) to streamline content setup.
+
+<Serialization & ScriptableObjects>
+
+Use ScriptableObjects for config data: Great for settings, data-driven designs, and decoupling systems.
+
+Be cautious with [Serializable] classes: Changing field orders or removing fields can break saved data.
+
+<Collaboration & Documentation>
+
+Write XML or summary comments on public APIs and core systems.
+
+Leave TODO/FIXME notes clearly marked so they’re easy to find later.
+
+Commit often and use descriptive commit messages.
+
+<Common Pitfalls to Avoid>
+
+Don't rely on OnDestroy() for saving data — it may not run in all shutdown cases.
+
+Avoid heavy logic in constructors; Unity lifecycle methods (Awake, Start, etc.) are preferred.
+
+Watch out for hidden allocations (e.g., using LINQ in hot paths).
