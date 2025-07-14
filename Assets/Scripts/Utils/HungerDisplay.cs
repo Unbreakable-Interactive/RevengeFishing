@@ -43,7 +43,7 @@ public class HungerDisplay : MonoBehaviour
     {
         if (player == null || hungerDisplay == null) return;
 
-        hungerDisplay.text = $"{player._hungerHandler.GetHunger().ToString()} / {player._hungerHandler.GetMaxHunger().ToString()}";
+        hungerDisplay.text = $"{player.HungerHandler.GetHunger().ToString()} / {player.HungerHandler.GetMaxHunger().ToString()}";
     }
 
     /// <summary>

@@ -14,8 +14,14 @@ public class Player : Entity
         Slain
     }
 
-    private Camera mainCamera;
+    [SerializeField] private Camera mainCamera;
     private Vector2 lastMousePosition = Vector2.zero;
+    private Vector2 mousePosition = Vector2.zero;
+    private Vector3 cachedMouseScreenPosition = Vector3.zero;
+    private Vector3 cachedMouseWorldPosition = Vector3.zero;
+    private Vector3 cachedPlayerPosition = Vector3.zero;
+
+
     private Quaternion targetRotation;
     private bool isRotatingToTarget = false;
     private bool shouldApplyForceAfterRotation = false;
@@ -23,7 +29,9 @@ public class Player : Entity
 
     // [SerializeField] protected int hunger;
     // [SerializeField] protected int maxHunger;
-    [SerializeField] public HungerHandler _hungerHandler;
+    [SerializeField] protected HungerHandler hungerHandler;
+
+    public HungerHandler HungerHandler => hungerHandler;
 
     [SerializeField] protected Status status;
 
@@ -85,7 +93,12 @@ public class Player : Entity
 
         base.Initialize(); // Call base Initialize to set up Rigidbody2D and movement mode
 
-        mainCamera = Camera.main ?? FindObjectOfType<Camera>();
+        // Try to find MainCamera first, then any camera as fallback
+        mainCamera = GameObject.FindGameObjectWithTag("MainCamera")?.GetComponent<Camera>();
+        if (mainCamera == null) mainCamera = FindObjectOfType<Camera>();
+
+        // safety check
+        if (mainCamera == null) Debug.LogError("Player: No camera found in scene! Player won't work correctly.");
 
         // _fatigue = 0;
         // _maxFatigue = _powerLevel;
@@ -93,7 +106,7 @@ public class Player : Entity
         //hunger = 0; // hunger increases by 1 each second; player starves if hunger reaches 40
         //maxHunger = _powerLevel;
 
-        _hungerHandler = new HungerHandler(_powerLevel, entityFatigue, 0);
+        hungerHandler = new HungerHandler(_powerLevel, entityFatigue, 0);
 
         rb.drag = naturalDrag;
         targetRotation = transform.rotation; //set target rotation to Player's current rotation
@@ -105,7 +118,7 @@ public class Player : Entity
     protected override void Update()
     {
         base.Update(); // Call base Update to handle movement mode
-        CheckMaxHookDistanceState();
+        if (activeBitingHooks != null && activeBitingHooks.Count > 0) CheckMaxHookDistanceState();
     }
 
     protected override void UnderwaterBehavior()
@@ -149,15 +162,16 @@ public class Player : Entity
     #region Input Handling
     void HandleMouseInput()
     {
+        mousePosition = GetMouseWorldPosition();
 
         if (Input.GetMouseButtonDown(0))
         {
-            OnMouseClick();
+            OnMouseClick(mousePosition);
         }
 
         if (Input.GetMouseButton(0))
         {
-            OnMouseHold();
+            OnMouseHold(mousePosition);
             lastMousePosition = GetMouseWorldPosition();
         }
 
@@ -168,9 +182,8 @@ public class Player : Entity
     }
 
     //Triggers frame mouse is clicked
-    void OnMouseClick()
+    void OnMouseClick(Vector2 mousePosition)
     {
-        Vector2 mousePosition = GetMouseWorldPosition();
         SetTargetRotation(mousePosition);
         shouldApplyForceAfterRotation = true; // Flag to apply force when rotation completes
 
@@ -182,7 +195,7 @@ public class Player : Entity
     }
 
     //Triggers as long as mouse is being clicked
-    void OnMouseHold()
+    void OnMouseHold(Vector2 mousePosition)
     {
         // If we're not currently doing initial rotation and we're moving, this will trigger steering
         if (!shouldApplyForceAfterRotation && !isRotatingToTarget)
@@ -192,7 +205,6 @@ public class Player : Entity
         else
         {
             // Still doing initial rotation/launch
-            Vector2 mousePosition = GetMouseWorldPosition();
             SetTargetRotation(mousePosition);
             DebugLog("Mouse held - continuously rotating to: " + mousePosition);
         }
@@ -246,6 +258,8 @@ public class Player : Entity
     // Efficient tug-of-war method using only active hooks
     private void TryTugOfWarPull()
     {
+        cachedPlayerPosition = transform.position; // Cache it once
+
         // Check if player is constrained by any hooks
         if (activeBitingHooks.Count > 0)
         {
@@ -256,20 +270,21 @@ public class Player : Entity
                 if (hook.isBeingHeld /*&& hook.IsLineStretching()*/)
                 {
                     // Check if player is at max distance and trying to extend line
-                    float currentDistance = Vector3.Distance(transform.position, hook.spawnPoint.position);
-                    float hookMaxDistance = hook.maxDistance;
+                    Vector3 distanceVector = cachedPlayerPosition - hook.spawnPoint.position;
+                    float currentDistanceSqr = distanceVector.sqrMagnitude;
+                    float hookMaxDistanceSqr = hook.maxDistance * hook.maxDistance;
 
                     // Player is pulling against this fishing line!
                     Fisherman fisherman = hook.spawner?.GetComponent<Fisherman>();
 
                     // If player is at or near max distance, try extending the fishing line
-                    if (currentDistance >= hookMaxDistance * 0.99f) // At 99% or more of max distance
+                    if (currentDistanceSqr >= hookMaxDistanceSqr * (0.99f * 0.99f)) // At 99% or more of max distance
                     {
                         TryExtendFishingLine(hook);
                     }
 
                     // If player is at or near max distance, deal fatigue damage
-                    if (currentDistance >= hookMaxDistance * 0.9f) // 90% of max distance
+                    if (currentDistanceSqr >= hookMaxDistanceSqr * (0.9f * 0.9f)) // 90% of max distance
                     {
                         if (fisherman != null)
                         {
@@ -286,6 +301,7 @@ public class Player : Entity
 
     private void TryExtendFishingLine(FishingProjectile hook)
     {
+        cachedPlayerPosition = transform.position;
         if (hook.spawner == null) return;
 
         HookSpawner hookSpawner = hook.spawner;
@@ -300,7 +316,7 @@ public class Player : Entity
             DebugLog($"Player extended fishing line from {currentLineLength:F1} to {newLineLength:F1}");
 
             // Optional: Add resistance force when extending
-            Vector3 directionToHook = (hook.spawnPoint.position - transform.position).normalized;
+            Vector3 directionToHook = (hook.spawnPoint.position - cachedPlayerPosition).normalized;
             rb.AddForce(-directionToHook * 2f, ForceMode2D.Impulse);
         }
         else
@@ -311,6 +327,8 @@ public class Player : Entity
 
     private void CheckMaxHookDistanceState()
     {
+        cachedPlayerPosition = transform.position;
+
         bool wasAtMaxDistance = isAtMaxHookDistance;
         isAtMaxHookDistance = false; // Reset state
 
@@ -322,10 +340,12 @@ public class Player : Entity
                 if (hook.isBeingHeld)
                 {
                     // Check if player is at or beyond this hook's max distance
-                    float currentDistance = Vector3.Distance(transform.position, hook.spawnPoint.position);
-                    float hookMaxDistance = hook.maxDistance;
+                    Vector3 distanceVector = cachedPlayerPosition - hook.spawnPoint.position;
+                    float currentDistanceSqr = distanceVector.sqrMagnitude;
+                    float hookMaxDistanceSqr = hook.maxDistance * hook.maxDistance;
+                    float thresholdSqr = hookMaxDistanceSqr * (0.95f * 0.95f); // Square the 95% threshold too
 
-                    if (currentDistance >= hookMaxDistance * 0.95f) // At 95% or more of max distance
+                    if (currentDistanceSqr >= thresholdSqr)
                     {
                         isAtMaxHookDistance = true;
                         break; // Found one hook at max distance, that's enough
@@ -370,14 +390,16 @@ public class Player : Entity
 
     private void ApplyExternalConstraints()
     {
+        cachedPlayerPosition = transform.position;
+
         if (!isConstrainedByExternalForce) return;
 
-        float currentDistance = Vector3.Distance(transform.position, constraintCenter);
+        float currentDistance = Vector3.Distance(cachedPlayerPosition, constraintCenter);
 
         if (currentDistance > constraintRadius)
         {
             // Constrain position to circle boundary
-            Vector3 direction = (transform.position - constraintCenter).normalized;
+            Vector3 direction = (cachedPlayerPosition - constraintCenter).normalized;
             Vector3 constrainedPosition = constraintCenter + direction * constraintRadius;
             transform.position = constrainedPosition;
 
@@ -404,7 +426,7 @@ public class Player : Entity
         // Update new max values to match new power level
         entityFatigue.maxFatigue = _powerLevel;
 
-        _hungerHandler.GainedPowerFromEating(enemyPowerLevel, _powerLevel);
+        hungerHandler.GainedPowerFromEating(enemyPowerLevel, _powerLevel);
 
         DebugLog($"Player gained {Mathf.RoundToInt((float)enemyPowerLevel * 0.2f)} power from eating enemy! New power level: {_powerLevel}");
     }
@@ -434,7 +456,9 @@ public class Player : Entity
     #region Movement
     void SetTargetRotation(Vector2 mousePosition)
     {
-        Vector2 direction = mousePosition - (Vector2)transform.position;
+        cachedPlayerPosition = transform.position;
+
+        Vector2 direction = mousePosition - (Vector2)cachedPlayerPosition;
 
         if (direction != Vector2.zero)
         {
@@ -525,7 +549,9 @@ public class Player : Entity
 
     void ApplySteering(Vector2 targetPosition)
     {
-        Vector2 direction = targetPosition - (Vector2)transform.position;
+        cachedPlayerPosition = transform.position;
+
+        Vector2 direction = targetPosition - (Vector2)cachedPlayerPosition;
 
         if (direction != Vector2.zero)
         {
@@ -642,23 +668,36 @@ public class Player : Entity
     //Determines the current position of the mouse in the context of the game world
     Vector2 GetMouseWorldPosition()
     {
-        Vector3 mouseScreenPosition = Input.mousePosition;
-        Vector3 mouseWorldPosition;
+        cachedPlayerPosition = transform.position;
+
+        if (mainCamera == null)
+        {
+            Debug.LogError("Player: Camera is null! Cannot get mouse world position.");
+            return Vector2.zero;
+        }
+
+        cachedMouseScreenPosition = Input.mousePosition;
         
         if (mainCamera.orthographic)
         {
             // For orthographic cameras, use nearClipPlane
-            mouseWorldPosition = mainCamera.ScreenToWorldPoint(new Vector3(mouseScreenPosition.x, mouseScreenPosition.y, mainCamera.nearClipPlane));
+            cachedMouseScreenPosition.z = mainCamera.nearClipPlane;
+            cachedMouseWorldPosition = mainCamera.ScreenToWorldPoint(cachedMouseScreenPosition);
         }
         else
         {
             // For perspective cameras, we need to specify the Z distance from camera to the game world plane
             // Calculate the distance from camera to the player's Z position (game world plane)
-            float distanceToGamePlane = Mathf.Abs(mainCamera.transform.position.z - transform.position.z);
-            mouseWorldPosition = mainCamera.ScreenToWorldPoint(new Vector3(mouseScreenPosition.x, mouseScreenPosition.y, distanceToGamePlane));
+            float distanceToGamePlane = Mathf.Abs(mainCamera.transform.position.z - cachedPlayerPosition.z);
+            cachedMouseScreenPosition.z = distanceToGamePlane;
+            cachedMouseWorldPosition = mainCamera.ScreenToWorldPoint(cachedMouseScreenPosition);
         }
-        
-        return new Vector2(mouseWorldPosition.x, mouseWorldPosition.y);
+
+        // Reuse existing mousePosition field instead of creating new Vector2
+        mousePosition.x = cachedMouseWorldPosition.x;
+        mousePosition.y = cachedMouseWorldPosition.y;
+
+        return mousePosition;
     }
 
     //Passes Debugger messages through enabled check

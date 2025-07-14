@@ -22,7 +22,7 @@ public class HungerManager : MonoBehaviour
 
     // Properties for external access
     public float CurrentHungerRate => CalculateCurrentHungerRate();
-    public int MaxHunger => player?._hungerHandler.GetMaxHunger() ?? 0;
+    public int MaxHunger => player?.HungerHandler.GetMaxHunger() ?? 0;
 
     // Events
     public System.Action<int> OnHungerChanged;
@@ -149,7 +149,7 @@ public class HungerManager : MonoBehaviour
         if (player.GetFatigue() <= 0) return; // No fatigue to recover
 
         // Calculate recovery efficiency based on hunger
-        float hungerPercentage = player._hungerHandler.GetHungerPercentage();
+        float hungerPercentage = player.HungerHandler.GetHungerPercentage();
         float recoveryEfficiency = 1f - hungerPercentage; // 0% hunger = 100% efficiency
 
         // Calculate base recovery (2% of power level per second)
@@ -165,7 +165,7 @@ public class HungerManager : MonoBehaviour
         }
         else if (actualRecovery > 0)
         {
-            player._hungerHandler.ModifyFatigue(-actualRecovery);
+            player.HungerHandler.ModifyFatigue(-actualRecovery);
 
             DebugLog($"Fatigue -{actualRecovery} (Efficiency: {recoveryEfficiency * 100:F0}%).");
 
@@ -198,12 +198,12 @@ public class HungerManager : MonoBehaviour
     // Helper methods to access Player's hunger fields
     private int GetPlayerHunger()
     {
-        return player._hungerHandler.GetHunger();
+        return player.HungerHandler.GetHunger();
     }
 
     private void SetPlayerHunger(int value)
     {
-        player._hungerHandler.SetHunger(value);
+        player.HungerHandler.SetHunger(value);
     }
 
     private void DebugLog(string message)
