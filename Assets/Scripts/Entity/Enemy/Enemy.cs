@@ -78,7 +78,8 @@ public abstract class Enemy : Entity
 
         if (player == null)
         {
-            player = FindObjectOfType<Player>();
+            // player = FindObjectOfType<Player>();
+            player = Player.Instance;
         }
         
         // Enemy-specific initialization
@@ -91,7 +92,8 @@ public abstract class Enemy : Entity
 
         if (player == null)
         {
-            player = FindObjectOfType<Player>();
+            // player = FindObjectOfType<Player>();
+            player = Player.Instance;
         }
 
         EnemySetup();

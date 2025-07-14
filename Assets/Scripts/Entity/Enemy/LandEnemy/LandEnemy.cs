@@ -462,11 +462,15 @@ public class LandEnemy : Enemy
             isPullingPlayer = false;
 
             // Release player constraint if active
-            Player player = FindObjectOfType<Player>();
+            // Player player = FindObjectOfType<Player>();
+            // if (player != null)
+            // {
+            //     player.RemovePositionConstraint();
+            // }
+            
+            Player player = Player.Instance;
             if (player != null)
-            {
                 player.RemovePositionConstraint();
-            }
         }
 
     }
