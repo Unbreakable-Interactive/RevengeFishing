@@ -1,8 +1,4 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using static LandEnemy;
 
 public abstract class Enemy : Entity
 {
@@ -39,7 +35,7 @@ public abstract class Enemy : Entity
     [SerializeField] protected float pullForce = 5f;
     [SerializeField] protected float pullDuration = 1f;
 
-    [Header("Decisionmaking Timer")]
+    [Header("Decision making Timer")]
     [SerializeField] protected float minActionTime; //Minimum seconds enemy will do an action, like walk, idle, or run
     [SerializeField] protected float maxActionTime; //Maximum seconds enemy will do an action, like walk, idle, or run
     [SerializeField] protected float nextActionTime; //actual seconds until next action decision

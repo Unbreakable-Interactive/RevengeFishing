@@ -1,6 +1,5 @@
 using UnityEngine;
 using System.Collections.Generic;
-using System;
 using System.Linq;
 
 [CreateAssetMenu(fileName = "EntityTypeColorConfig", menuName = "Entity System/Entity Color Configuration")]

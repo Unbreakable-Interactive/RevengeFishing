@@ -4,7 +4,6 @@ using UnityEditor.Compilation;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System;
 
 /// <summary>
 /// Automatically discovers entity types and manages color configuration
