@@ -14,7 +14,8 @@ public class Player : Entity
         Slain
     }
 
-    private Camera mainCamera;
+    [Header("Camera Reference")]
+    [SerializeField] private Camera mainCamera;
     private Vector2 lastMousePosition = Vector2.zero;
     private Quaternion targetRotation;
     private bool isRotatingToTarget = false;
@@ -108,7 +109,15 @@ public class Player : Entity
 
         base.Initialize(); // Call base Initialize to set up Rigidbody2D and movement mode
 
-        mainCamera = Camera.main ?? FindObjectOfType<Camera>();
+        // Use cached camera reference or fallback to Camera.main for singleton pattern
+        if (mainCamera == null)
+        {
+            mainCamera = Camera.main;
+            if (mainCamera == null)
+            {
+                Debug.LogWarning("No main camera found! Please assign camera reference in Player component.");
+            }
+        }
 
         // _fatigue = 0;
         // _maxFatigue = _powerLevel;

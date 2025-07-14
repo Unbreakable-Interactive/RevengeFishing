@@ -17,23 +17,17 @@ public class GameOverController : MonoBehaviour
 
     private void SetupGameOverMessage()
     {
-        // Find the game over text if not assigned
+        // Validate that gameOverText is assigned in inspector
         if (gameOverText == null)
         {
-            gameOverText = GameObject.Find("DeathMessage")?.GetComponent<TextMeshProUGUI>();
+            Debug.LogError("GameOverController: gameOverText is not assigned in inspector! Please assign the TextMeshProUGUI component in the inspector.");
+            return;
         }
 
-        if (gameOverText != null)
-        {
-            // Get the appropriate message based on death type
-            string message = DeathManager.GetDeathMessage(DeathManager.LastDeathType);
-            gameOverText.text = message;
+        // Get the appropriate message based on death type
+        string message = DeathManager.GetDeathMessage(DeathManager.LastDeathType);
+        gameOverText.text = message;
 
-            Debug.Log($"Game Over message set to: {message}");
-        }
-        else
-        {
-            Debug.LogError("GameOverController: Could not find TextMeshProUGUI component for game over message!");
-        }
+        Debug.Log($"Game Over message set to: {message}");
     }
 }
