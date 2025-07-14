@@ -1,26 +1,20 @@
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 using Utils;
 
 public class Platform : MonoBehaviour
 {
-    [Header("Player")]
-    public GameObject player;
-
     [Header("Assigned Enemies")]
     public List<LandEnemy> assignedEnemies = new List<LandEnemy>();
-
-    [Tooltip("Not used")]
-    [Header("Platform Settings")]
-    public float surfaceOffset = 0.1f;
-
+    
     [Header("Debug")]
     public bool showDebugInfo = true;
 
     private Collider2D platformCollider;
 
-    void Start()
+    [SerializeField] private TypeIdentifier identifier;
+
+    protected virtual void Start()
     {
         platformCollider = GetComponent<Collider2D>();
         if (platformCollider == null)
@@ -32,14 +26,9 @@ public class Platform : MonoBehaviour
         
         platformCollider.isTrigger = false;
 
-        if (player != null)
-        {
-            Collider2D playerCollider = player.GetComponentInChildren<Collider2D>();
-            if (playerCollider != null)
-            {
-                Physics2D.IgnoreCollision(platformCollider, playerCollider, true);
-            }
-        }
+        Collider2D playerCollider = Player.Instance.Collider;
+        if (playerCollider != null)
+            Physics2D.IgnoreCollision(platformCollider, playerCollider, true);
 
         SetupSelectiveCollisions();
 
@@ -52,27 +41,33 @@ public class Platform : MonoBehaviour
     void OnCollisionEnter2D(Collision2D collision)
     {
         LandEnemy enemy = collision.gameObject.GetComponent<LandEnemy>();
-        if (enemy != null)
+        if (identifier == enemy.landEnemyConfig.identifier)
         {
-            RegisterEnemyOnCollision(enemy);
+            if (enemy != null)
+            {
+                RegisterEnemyOnCollision(enemy);
+            }
         }
     }
 
     void OnCollisionExit2D(Collision2D collision)
     {
         LandEnemy enemy = collision.gameObject.GetComponent<LandEnemy>();
-        if (enemy != null)
+        if (identifier == enemy.landEnemyConfig.identifier)
         {
-            if (assignedEnemies.Contains(enemy))
+            if (enemy != null)
             {
-                if (showDebugInfo)
+                if (assignedEnemies.Contains(enemy))
                 {
-                    Debug.Log($"Enemy {enemy.name} LEFT platform {gameObject.name}");
+                    if (showDebugInfo)
+                    {
+                        Debug.Log($"Enemy {enemy.name} LEFT platform {gameObject.name}");
+                    }
                 }
             }
         }
     }
-    private void RegisterEnemyOnCollision(LandEnemy enemy)
+    protected virtual void RegisterEnemyOnCollision(LandEnemy enemy)
     {
         if (enemy == null) return;
         
@@ -89,6 +84,20 @@ public class Platform : MonoBehaviour
         assignedEnemies.Add(enemy);
         enemy.SetAssignedPlatform(this);
         
+        // 🚤 SMART PARENTING: Check if enemy is part of a BoatFishermanHandler
+        Transform targetToParent = enemy.transform;
+        
+        // Check if this enemy is a child of a BoatFishermanHandler
+        if (enemy.transform.parent != null && enemy.transform.parent.name.Contains("BoatFishermanHandler"))
+        {
+            targetToParent = enemy.transform.parent; // Parent the entire BoatFishermanHandler
+            if (showDebugInfo)
+                Debug.Log($"🚤 DETECTED: Parenting entire BoatFishermanHandler ({targetToParent.name}) instead of just {enemy.name}");
+        }
+        
+        // Make enemy (or entire handler) a CHILD of this platform (so they move together!)
+        targetToParent.SetParent(this.transform);
+        
         // CRITICAL: Trigger AI activation after platform assignment
         enemy.OnPlatformAssigned(this);
         
@@ -99,7 +108,7 @@ public class Platform : MonoBehaviour
         enemy.platformBoundsCalculated = true;
 
         if (showDebugInfo)
-            Debug.Log($"COLLISION ASSIGNMENT: {enemy.name} assigned to platform {gameObject.name}! Total enemies: {assignedEnemies.Count}");
+            Debug.Log($"COLLISION ASSIGNMENT: {enemy.name} assigned to platform {gameObject.name} and made CHILD! Total enemies: {assignedEnemies.Count}");
     }
 
     void SetupSelectiveCollisions()
@@ -155,12 +164,15 @@ public class Platform : MonoBehaviour
         }
     }
 
-    public void RegisterEnemyAtRuntime(LandEnemy enemy)
+    public virtual void RegisterEnemyAtRuntime(LandEnemy enemy)
     {
         if (enemy != null && !assignedEnemies.Contains(enemy))
         {
             assignedEnemies.Add(enemy);
             enemy.SetAssignedPlatform(this);
+
+            // Make enemy a CHILD of this platform (so they move together!)
+            enemy.transform.SetParent(this.transform);
 
             // Apply collision rules immediately
             Collider2D enemyCollider = enemy.GetComponent<Collider2D>();
@@ -171,7 +183,7 @@ public class Platform : MonoBehaviour
 
             if (showDebugInfo)
             {
-                Debug.Log($"Auto-assigned {enemy.name} to platform {gameObject.name}");
+                Debug.Log($"Auto-assigned {enemy.name} to platform {gameObject.name} and made CHILD");
             }
         }
     }
@@ -184,6 +196,9 @@ public class Platform : MonoBehaviour
         {
             assignedEnemies.Remove(enemy);
 
+            // Remove parent relationship when unregistering
+            enemy.transform.SetParent(null);
+
             Collider2D enemyCollider = enemy.GetComponent<Collider2D>();
             if (enemyCollider != null && platformCollider != null)
             {
@@ -192,7 +207,7 @@ public class Platform : MonoBehaviour
 
             if (showDebugInfo)
             {
-                Debug.Log($"UNREGISTERED: {enemy.name} from platform {gameObject.name}. Total enemies: {assignedEnemies.Count}");
+                Debug.Log($"UNREGISTERED: {enemy.name} from platform {gameObject.name} and removed PARENT. Total enemies: {assignedEnemies.Count}");
             }
         }
     }

@@ -1,5 +1,12 @@
 using UnityEngine;
 
+public enum TypeIdentifier
+{
+    Land,
+    Boat,
+    Water
+}
+
 [CreateAssetMenu(fileName = "LandEnemyConfig", menuName = "RevengeFishing2D/Enemy/Land Enemy Config")]
 public class LandEnemyConfig : ScriptableObject
 {
@@ -7,4 +14,7 @@ public class LandEnemyConfig : ScriptableObject
     [Range(0f, 1f)] public float idleProbability = 0.4f;
     [Range(0f, 1f)] public float walkProbability = 0.3f;
     [Range(0f, 1f)] public float runProbability = 0.3f;
+    
+    [Header("Type Identifier")]
+    public TypeIdentifier identifier;
 }

@@ -15,6 +15,7 @@ MonoBehaviour:
   sceneDatas_byGuid:
     keys:
     - c987e5987df8b2d4ea8421e21012f5fe
+    - 4a3b1b3c42ea9477c984b55c6509e444
     values:
     - goDatas_byGlobalId:
         keys:
@@ -22,6 +23,29 @@ MonoBehaviour:
         - globalObjectIdString: GlobalObjectId_V1-2-c987e5987df8b2d4ea8421e21012f5fe-207089148-0
         - globalObjectIdString: GlobalObjectId_V1-2-c987e5987df8b2d4ea8421e21012f5fe-1557581947-0
         - globalObjectIdString: GlobalObjectId_V1-2-c987e5987df8b2d4ea8421e21012f5fe-666950744-0
+        values:
+        - colorIndex: 1
+          iconNameOrGuid: Folder Icon
+          isIconRecursive: 0
+          isColorRecursive: 0
+        - colorIndex: 1
+          iconNameOrGuid: Folder Icon
+          isIconRecursive: 0
+          isColorRecursive: 0
+        - colorIndex: 1
+          iconNameOrGuid: Folder Icon
+          isIconRecursive: 0
+          isColorRecursive: 0
+        - colorIndex: 1
+          iconNameOrGuid: Folder Icon
+          isIconRecursive: 0
+          isColorRecursive: 0
+    - goDatas_byGlobalId:
+        keys:
+        - globalObjectIdString: GlobalObjectId_V1-2-4a3b1b3c42ea9477c984b55c6509e444-789715769-0
+        - globalObjectIdString: GlobalObjectId_V1-2-4a3b1b3c42ea9477c984b55c6509e444-207089148-0
+        - globalObjectIdString: GlobalObjectId_V1-2-4a3b1b3c42ea9477c984b55c6509e444-1557581947-0
+        - globalObjectIdString: GlobalObjectId_V1-2-4a3b1b3c42ea9477c984b55c6509e444-666950744-0
         values:
         - colorIndex: 1
           iconNameOrGuid: Folder Icon

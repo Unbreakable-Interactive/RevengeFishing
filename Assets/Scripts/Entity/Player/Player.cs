@@ -79,6 +79,29 @@ public class Player : Entity
     [Header("Debug")]
     public bool enableDebugLogs = false;
 
+    public static Player Instance { get; private set; }
+    
+    [Header("Components to share")] 
+    [SerializeField] private Collider2D collider;
+    
+    public Collider2D Collider => collider;
+    
+    protected override void Awake()
+    {
+        base.Awake();
+        if (Instance == null)
+        {
+            Instance = this;
+        }
+        else
+        {
+            Debug.LogWarning("Multiple Player instances found! Destroying duplicate.");
+            Destroy(gameObject);
+        }
+
+        Initialize();
+    }
+
     public override void Initialize ()
     {
         entityType = EntityType.Player; // Set entity type to Player

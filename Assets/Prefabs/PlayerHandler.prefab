@@ -134,7 +134,7 @@ PrefabInstance:
     - target: {fileID: 2849642784151798417, guid: b69f09c4e1675754487856532c9a780a, type: 3}
       propertyPath: m_Materials.Array.data[0]
       value: 
-      objectReference: {fileID: 2100000, guid: e7d10d2b86ed2e84d906ca1689cf8f7e, type: 2}
+      objectReference: {fileID: 2100000, guid: 79154a6c1f4454a83aebcb688101c6c5, type: 2}
     - target: {fileID: 4283144278362533936, guid: b69f09c4e1675754487856532c9a780a, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -175,6 +175,18 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5682015124687868118, guid: b69f09c4e1675754487856532c9a780a, type: 3}
+      propertyPath: forceCurve.m_Curve.Array.data[1].time
+      value: 0.8999939
+      objectReference: {fileID: 0}
+    - target: {fileID: 5682015124687868118, guid: b69f09c4e1675754487856532c9a780a, type: 3}
+      propertyPath: forceCurve.m_Curve.Array.data[0].value
+      value: 0.04953003
+      objectReference: {fileID: 0}
+    - target: {fileID: 5706962072255297144, guid: b69f09c4e1675754487856532c9a780a, type: 3}
+      propertyPath: collider
+      value: 
+      objectReference: {fileID: 1032848364154259681}
     - target: {fileID: 6728867108004361845, guid: b69f09c4e1675754487856532c9a780a, type: 3}
       propertyPath: m_Name
       value: Player

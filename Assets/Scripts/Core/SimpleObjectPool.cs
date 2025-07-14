@@ -12,21 +12,89 @@ public class PoolConfig
 
 public class SimpleObjectPool : MonoBehaviour
 {
+    [Header("Configuration")]
+    [SerializeField] private PoolingConfig poolingConfig;
+    [SerializeField] private bool useScriptableObjectConfig = true;
+    
+    [Header("Legacy Support (Deprecated)")]
     [SerializeField] private List<PoolConfig> poolConfigs = new List<PoolConfig>();
+    
     private Dictionary<string, Queue<GameObject>> poolDictionary = new Dictionary<string, Queue<GameObject>>();
     private Dictionary<string, int> activeCount = new Dictionary<string, int>();
+    
+    public static SimpleObjectPool Instance { get; private set; }
+
+    protected void Awake()
+    {
+        if (Instance == null)
+        {
+            Instance = this;
+        }
+        else
+        {
+            Debug.LogWarning("Multiple SimpleObjectPool instances found! Destroying duplicate.");
+            Destroy(gameObject);
+        }
+    }
 
     private void Start()
     {
         InitializePools();
     }
+    
+    public void SetPoolingConfig(PoolingConfig config)
+    {
+        poolingConfig = config;
+        useScriptableObjectConfig = true;
+        
+        // Reinitialize pools if already started
+        if (poolDictionary.Count > 0)
+        {
+            ClearAllPools();
+            InitializePools();
+        }
+    }
 
     private void InitializePools()
     {
-        foreach (var config in poolConfigs)
+        if (useScriptableObjectConfig && poolingConfig != null)
         {
-            CreatePool(config.poolName, config.prefab, config.initialSize);
+            // Use ScriptableObject configuration
+            foreach (var configData in poolingConfig.poolConfigs)
+            {
+                CreatePool(configData.poolName, configData.prefab, configData.initialSize);
+            }
+            
+            if (poolingConfig.enableDebugLogs)
+                Debug.Log($"Initialized pools from ScriptableObject config: {poolingConfig.configName}");
         }
+        else
+        {
+            // Fallback to legacy configuration
+            foreach (var config in poolConfigs)
+            {
+                CreatePool(config.poolName, config.prefab, config.initialSize);
+            }
+            
+            if (poolConfigs.Count > 0)
+                Debug.LogWarning("Using legacy pool configuration. Consider migrating to ScriptableObject configs.");
+        }
+    }
+    
+    public void ClearAllPools()
+    {
+        foreach (var pool in poolDictionary.Values)
+        {
+            while (pool.Count > 0)
+            {
+                GameObject obj = pool.Dequeue();
+                if (obj != null)
+                    DestroyImmediate(obj);
+            }
+        }
+        
+        poolDictionary.Clear();
+        activeCount.Clear();
     }
 
     private void CreatePool(string poolName, GameObject prefab, int initialSize)
@@ -69,21 +137,46 @@ public class SimpleObjectPool : MonoBehaviour
         }
         else
         {
-            var config = poolConfigs.Find(c => c.poolName == poolName);
-            if (config != null)
+            PoolingConfig.PoolConfigData configData = null;
+            PoolConfig legacyConfig = null;
+            
+            // Get config from ScriptableObject or legacy
+            if (useScriptableObjectConfig && poolingConfig != null)
             {
-                if (activeCount[poolName] >= config.maxSize)
-                {
-                    Debug.LogWarning($"Pool '{poolName}' has reached max size ({config.maxSize}). Cannot spawn more objects.");
-                    return null;
-                }
-
-                objectToSpawn = Instantiate(config.prefab, transform);
-                // Debug.Log($"Created new object for pool '{poolName}' (pool was empty). Active: {activeCount[poolName] + 1}/{config.maxSize}"); // DISABLED
+                configData = poolingConfig.GetPoolConfig(poolName);
             }
             else
             {
-                Debug.LogError($"Cannot create new object for pool '{poolName}' - config not found!");
+                legacyConfig = poolConfigs.Find(c => c.poolName == poolName);
+            }
+            
+            int maxSize = 20; // default
+            GameObject prefab = null;
+            
+            if (configData != null)
+            {
+                maxSize = configData.maxSize;
+                prefab = configData.prefab;
+            }
+            else if (legacyConfig != null)
+            {
+                maxSize = legacyConfig.maxSize;
+                prefab = legacyConfig.prefab;
+            }
+            
+            if (activeCount[poolName] >= maxSize)
+            {
+                Debug.LogWarning($"Pool '{poolName}' has reached max size ({maxSize}). Cannot spawn more objects.");
+                return null;
+            }
+
+            if (prefab != null)
+            {
+                objectToSpawn = Instantiate(prefab, transform);
+            }
+            else
+            {
+                Debug.LogError($"Cannot create new object for pool '{poolName}' - prefab not found!");
                 return null;
             }
         }

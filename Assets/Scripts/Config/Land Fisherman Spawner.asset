@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d64d34795358a49118908f747d512437, type: 3}
+  m_Name: Land Fisherman Spawner
+  m_EditorClassIdentifier: 
+  configName: Land Fisherman Spawner
+  spawnType: 0
+  poolName: Fisherman
+  spawnInterval: 5
+  maxEnemies: 5
+  minPlayerDistance: 10
+  enableAutoSpawning: 1
+  enableOnStart: 1
+  maxSpawns: -1
+  initialDelay: 0
+  spawnOnAwake: 0
+  requirePlayerProximity: 0
+  playerDetectionRange: 15
+  hideWhenPlayerFar: 0
+  usePowerLevelScaling: 1
+  basePowerLevel: 1
+  maxPowerLevel: 10
+  enableSpawnLogs: 1
+  showGizmos: 1
+  gizmoColor: {r: 0, g: 1, b: 1, a: 1}
