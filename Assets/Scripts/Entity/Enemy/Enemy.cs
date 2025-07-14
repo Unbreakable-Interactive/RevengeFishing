@@ -30,6 +30,9 @@ public abstract class Enemy : Entity
     [Header("Player Reference")]
     [SerializeField] protected Player player; // Reference to the player object
 
+    [Header("Spawn Handler Reference")]
+    [SerializeField] private SpawnHandler spawnHandler; // Cached reference to avoid FindObjectOfType calls
+
     [Header("Pull Mechanic")]
     [SerializeField] protected bool hasReceivedFirstFatigue = false;
     [SerializeField] protected bool canPullPlayer = false;
@@ -94,6 +97,12 @@ public abstract class Enemy : Entity
         {
             // player = FindObjectOfType<Player>();
             player = Player.Instance;
+        }
+
+        // Cache SpawnHandler reference to avoid FindObjectOfType calls
+        if (spawnHandler == null)
+        {
+            spawnHandler = FindObjectOfType<SpawnHandler>();
         }
 
         EnemySetup();
@@ -259,8 +268,7 @@ public abstract class Enemy : Entity
     {
         Debug.Log($"{gameObject.name} has ESCAPED! The player can no longer catch this enemy.");
 
-        // Find the SpawnHandler to properly return this enemy to the pool
-        SpawnHandler spawnHandler = FindObjectOfType<SpawnHandler>();
+        // Use cached SpawnHandler reference instead of FindObjectOfType
         if (spawnHandler != null)
         {
             // Get the root object (FishermanHandler or this object)
@@ -318,8 +326,7 @@ public abstract class Enemy : Entity
     {
         Debug.Log($"{gameObject.name} has been REVERSE FISHED!");
 
-        // Find the SpawnHandler to properly return this enemy to the pool
-        SpawnHandler spawnHandler = FindObjectOfType<SpawnHandler>();
+        // Use cached SpawnHandler reference instead of FindObjectOfType
         if (spawnHandler != null)
         {
             // Get the root object (FishermanHandler or this object)

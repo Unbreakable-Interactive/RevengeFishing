@@ -35,6 +35,12 @@ public class MemoryOptimizer : PerformanceComponentBase
     private float lastCleanupTime = 0f;
     private float lastGCTime = 0f;
     
+    // Cached object references to avoid repeated FindObjectsOfType calls
+    private GameObject[] cachedGameObjects;
+    private SpriteRenderer[] cachedSpriteRenderers;
+    private float lastObjectCacheTime = 0f;
+    private const float CACHE_REFRESH_INTERVAL = 2f; // Refresh cache every 2 seconds
+    
     // Object tracking
     private Dictionary<string, int> objectCounts = new Dictionary<string, int>();
     private Dictionary<string, int> previousObjectCounts = new Dictionary<string, int>();
@@ -115,10 +121,12 @@ public class MemoryOptimizer : PerformanceComponentBase
         // Analyze texture memory
         textureMemoryUsage = AnalyzeTextureMemory();
         
-        // Count GameObjects
-        GameObject[] allObjects = FindObjectsOfType<GameObject>();
-        int totalGameObjects = allObjects.Length;
-        int activeSpriteRenderers = FindObjectsOfType<SpriteRenderer>().Count(sr => sr.enabled);
+        // Update cached objects periodically to avoid expensive calls every frame
+        RefreshObjectCacheIfNeeded();
+        
+        // Count GameObjects using cached references
+        int totalGameObjects = cachedGameObjects?.Length ?? 0;
+        int activeSpriteRenderers = cachedSpriteRenderers?.Count(sr => sr != null && sr.enabled) ?? 0;
         
         // Generate status and recommendations
         string memoryStatus = GetMemoryStatus(currentMemoryUsage);
@@ -415,6 +423,24 @@ public class MemoryOptimizer : PerformanceComponentBase
             foreach (var leak in memoryLeakCandidates)
             {
                 Debug.Log($"  • {leak}");
+            }
+        }
+    }
+    
+    /// <summary>
+    /// Refresh cached object references if enough time has passed to avoid expensive searches every frame
+    /// </summary>
+    void RefreshObjectCacheIfNeeded()
+    {
+        if (Time.time - lastObjectCacheTime >= CACHE_REFRESH_INTERVAL)
+        {
+            cachedGameObjects = FindObjectsOfType<GameObject>();
+            cachedSpriteRenderers = FindObjectsOfType<SpriteRenderer>();
+            lastObjectCacheTime = Time.time;
+            
+            if (enableAutomaticCleanup)
+            {
+                Debug.Log($"MemoryOptimizer: Object cache refreshed - {cachedGameObjects.Length} GameObjects, {cachedSpriteRenderers.Length} SpriteRenderers");
             }
         }
     }

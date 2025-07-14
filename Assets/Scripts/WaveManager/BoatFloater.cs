@@ -23,6 +23,9 @@ public class BoatFloater : MonoBehaviour
     [SerializeField] private float minMovementTime = 2f;
     [SerializeField] private bool debugMovement = false;
 
+    [Header("Platform References")]
+    [SerializeField] private Platform[] cachedPlatforms;
+
     [Header("Buoyancy Settings")]
     [SerializeField] private float buoyancyForce = 25f;
     [SerializeField] private float waterDrag = 0.85f;
@@ -145,22 +148,31 @@ public class BoatFloater : MonoBehaviour
         }
     }
 
-    // 🚤 OPTIMIZED: Check if boat gets registered to a platform (reduced frequency)
+    // 🚤 OPTIMIZED: Check if boat gets registered to a platform (using cached references)
     private System.Collections.IEnumerator CheckForPlatformRegistration()
     {
         float checkTime = 0f;
         int checkCount = 0;
         const int MAX_CHECKS = 6; // Limit to 6 checks instead of continuous for 5 seconds
         
+        // Cache platforms at start to avoid repeated FindObjectsOfType calls
+        if (cachedPlatforms == null || cachedPlatforms.Length == 0)
+        {
+            cachedPlatforms = FindObjectsOfType<Platform>();
+            if (debugMovement)
+            {
+                Debug.Log($"🚤 BoatFloater: Cached {cachedPlatforms.Length} platforms for registration checks");
+            }
+        }
+        
         while (checkTime < 3f && checkCount < MAX_CHECKS) // Reduced from 5 seconds to 3 seconds
         {
-            // OPTIMIZED: Cache platform search and reduce frequency
+            // OPTIMIZED: Use cached platforms instead of searching every time
             if (checkCount % 2 == 0) // Only search every other check
             {
-                Platform[] platforms = FindObjectsOfType<Platform>();
-                foreach (Platform platform in platforms)
+                foreach (Platform platform in cachedPlatforms)
                 {
-                    if (platform.assignedEnemies != null)
+                    if (platform != null && platform.assignedEnemies != null)
                     {
                         foreach (var enemy in platform.assignedEnemies)
                         {
