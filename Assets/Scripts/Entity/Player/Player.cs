@@ -15,8 +15,8 @@ public class Player : Entity
     }
 
     [SerializeField] private Camera mainCamera;
-    private Vector2 lastMousePosition = Vector2.zero;
-    private Vector2 mousePosition = Vector2.zero;
+    private Vector3 lastMousePosition = Vector3.zero;
+    private Vector3 mousePosition = Vector3.zero;
     private Vector3 cachedMouseScreenPosition = Vector3.zero;
     private Vector3 cachedMouseWorldPosition = Vector3.zero;
     private Vector3 cachedPlayerPosition = Vector3.zero;
@@ -182,7 +182,7 @@ public class Player : Entity
     }
 
     //Triggers frame mouse is clicked
-    void OnMouseClick(Vector2 mousePosition)
+    void OnMouseClick(Vector3 mousePosition)
     {
         SetTargetRotation(mousePosition);
         shouldApplyForceAfterRotation = true; // Flag to apply force when rotation completes
@@ -195,7 +195,7 @@ public class Player : Entity
     }
 
     //Triggers as long as mouse is being clicked
-    void OnMouseHold(Vector2 mousePosition)
+    void OnMouseHold(Vector3 mousePosition)
     {
         // If we're not currently doing initial rotation and we're moving, this will trigger steering
         if (!shouldApplyForceAfterRotation && !isRotatingToTarget)
@@ -212,7 +212,7 @@ public class Player : Entity
     }
 
     //Triggers as long as the mouse remains unclicked
-    void WhileMouseUnheld(Vector2 lastMousePosition)
+    void WhileMouseUnheld(Vector3 lastMousePosition)
     {
         //Let object coast if mouse is released
     }
@@ -317,7 +317,7 @@ public class Player : Entity
 
             // Optional: Add resistance force when extending
             Vector3 directionToHook = (hook.spawnPoint.position - cachedPlayerPosition).normalized;
-            rb.AddForce(-directionToHook * 2f, ForceMode2D.Impulse);
+            rb.AddForce(-directionToHook * 2f, ForceMode.Impulse);
         }
         else
         {
@@ -404,12 +404,12 @@ public class Player : Entity
             transform.position = constrainedPosition;
 
             // Apply rope-like physics to velocity
-            Vector2 currentVelocity = rb.velocity;
-            Vector2 radialDirection = direction;
-            Vector2 tangentDirection = new Vector2(-radialDirection.y, radialDirection.x);
+            Vector3 currentVelocity = rb.velocity;
+            Vector3 radialDirection = direction;
+            Vector3 tangentDirection = new Vector3(-radialDirection.y, radialDirection.x);
 
             // Remove radial velocity component (can't move away from center)
-            float tangentVelocity = Vector2.Dot(currentVelocity, tangentDirection);
+            float tangentVelocity = Vector3.Dot(currentVelocity, tangentDirection);
             rb.velocity = tangentDirection * tangentVelocity;
 
             // Notify the constraining object about the violation
@@ -454,13 +454,13 @@ public class Player : Entity
     #endregion
 
     #region Movement
-    void SetTargetRotation(Vector2 mousePosition)
+    void SetTargetRotation(Vector3 mousePosition)
     {
         cachedPlayerPosition = transform.position;
 
-        Vector2 direction = mousePosition - (Vector2)cachedPlayerPosition;
+        Vector3 direction = mousePosition - (Vector3)cachedPlayerPosition;
 
-        if (direction != Vector2.zero)
+        if (direction != Vector3.zero)
         {
             float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
             targetRotation = Quaternion.AngleAxis(angle, Vector3.forward);
@@ -539,21 +539,21 @@ public class Player : Entity
     void ApplyForceInDirection()
     {
         // Get the direction the object is facing (right direction in local space)
-        Vector2 forceDirection = transform.right;
+        Vector3 forceDirection = transform.right;
 
         // Apply force in that direction
-        rb.AddForce(forceDirection * forceAmount, ForceMode2D.Impulse);
+        rb.AddForce(forceDirection * forceAmount, ForceMode.Impulse);
 
         DebugLog("Applied force in direction: " + forceDirection);
     }
 
-    void ApplySteering(Vector2 targetPosition)
+    void ApplySteering(Vector3 targetPosition)
     {
         cachedPlayerPosition = transform.position;
 
-        Vector2 direction = targetPosition - (Vector2)cachedPlayerPosition;
+        Vector3 direction = targetPosition - (Vector3)cachedPlayerPosition;
 
-        if (direction != Vector2.zero)
+        if (direction != Vector3.zero)
         {
             // Rotate toward the target
             float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
@@ -561,8 +561,8 @@ public class Player : Entity
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
 
             // Apply steering force in the direction we're facing
-            Vector2 steeringDirection = transform.right;
-            rb.AddForce(steeringDirection * steeringForce, ForceMode2D.Force);
+            Vector3 steeringDirection = transform.right;
+            rb.AddForce(steeringDirection * steeringForce, ForceMode.Force);
 
             // Apply damping to prevent infinite acceleration
             rb.velocity *= steeringDamping;
@@ -574,14 +574,14 @@ public class Player : Entity
     void ApplyConstantAccel()
     {
         // Apply small constant force in the direction the object is facing
-        Vector2 forwardDirection = transform.right;
+        Vector3 forwardDirection = transform.right;
         // Calculate how fast we're moving in the forward direction
-        float forwardVelocity = Vector2.Dot(rb.velocity, forwardDirection);
+        float forwardVelocity = Vector3.Dot(rb.velocity, forwardDirection);
 
         // Only apply constant force if we're not moving forward fast enough
         if (forwardVelocity < minForwardVelocity)
         {
-            rb.AddForce(forwardDirection * constantAccel, ForceMode2D.Force);
+            rb.AddForce(forwardDirection * constantAccel, ForceMode.Force);
             DebugLog($"Applying thrust - Forward velocity: {forwardVelocity:F2}");
         }
     }
@@ -590,17 +590,17 @@ public class Player : Entity
     {
         if (rb.velocity.magnitude < 0.1f) return; // Skip if barely moving
 
-        Vector2 forwardDirection = transform.right;
-        Vector2 currentVelocity = rb.velocity;
+        Vector3 forwardDirection = transform.right;
+        Vector3 currentVelocity = rb.velocity;
 
         // Calculate forward and sideways components of velocity
-        float forwardVelocity = Vector2.Dot(currentVelocity, forwardDirection);
-        Vector2 forwardVelocityVector = forwardDirection * forwardVelocity;
-        Vector2 sidewaysVelocityVector = currentVelocity - forwardVelocityVector;
+        float forwardVelocity = Vector3.Dot(currentVelocity, forwardDirection);
+        Vector3 forwardVelocityVector = forwardDirection * forwardVelocity;
+        Vector3 sidewaysVelocityVector = currentVelocity - forwardVelocityVector;
 
         // Reduce sideways velocity over time
         float sidewaysReduction = sidewaysDrag * Time.deltaTime;
-        sidewaysVelocityVector = Vector2.Lerp(sidewaysVelocityVector, Vector2.zero, sidewaysReduction);
+        sidewaysVelocityVector = Vector3.Lerp(sidewaysVelocityVector, Vector3.zero, sidewaysReduction);
 
         // Apply the corrected velocity
         rb.velocity = forwardVelocityVector + sidewaysVelocityVector;
@@ -646,10 +646,16 @@ public class Player : Entity
 
         // Smoothly transition to target gravity for natural feel
         currentGravityScale = Mathf.Lerp(currentGravityScale, targetGravityScale, gravityTransitionSpeed * Time.deltaTime);
-        rb.gravityScale = currentGravityScale;
+        
+        // Apply gravity using 3D physics approach
+        rb.useGravity = currentGravityScale > 0f;
+        if (currentGravityScale != 1f && rb.useGravity)
+        {
+            // Apply additional gravity force beyond normal gravity
+            rb.AddForce(Physics.gravity * (currentGravityScale - 1f), ForceMode.Acceleration);
+        }
 
         DebugLog($"Current gravity scale: {currentGravityScale:F2}, Y velocity: {rb.velocity.y:F2}");
-
     }
 
     void HandleAirborneRotation()
@@ -666,14 +672,14 @@ public class Player : Entity
 
     #region Utils
     //Determines the current position of the mouse in the context of the game world
-    Vector2 GetMouseWorldPosition()
+    Vector3 GetMouseWorldPosition()
     {
         cachedPlayerPosition = transform.position;
 
         if (mainCamera == null)
         {
             Debug.LogError("Player: Camera is null! Cannot get mouse world position.");
-            return Vector2.zero;
+            return Vector3.zero;
         }
 
         cachedMouseScreenPosition = Input.mousePosition;
@@ -693,7 +699,7 @@ public class Player : Entity
             cachedMouseWorldPosition = mainCamera.ScreenToWorldPoint(cachedMouseScreenPosition);
         }
 
-        // Reuse existing mousePosition field instead of creating new Vector2
+        // Reuse existing mousePosition field instead of creating new Vector3
         mousePosition.x = cachedMouseWorldPosition.x;
         mousePosition.y = cachedMouseWorldPosition.y;
 

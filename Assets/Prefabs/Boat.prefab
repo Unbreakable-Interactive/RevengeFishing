@@ -73,7 +73,7 @@ GameObject:
   - component: {fileID: 1782816182465293094}
   - component: {fileID: 9050843942661763293}
   - component: {fileID: 3547876444774349710}
-  - component: {fileID: 1768293168427510224}
+  - component: {fileID: 6552495956790520396}
   m_Layer: 0
   m_Name: Boat
   m_TagString: Untagged
@@ -175,33 +175,33 @@ MonoBehaviour:
   maxRollAngle: 20
   enableWaveRolling: 1
   stabilityForce: 5
---- !u!50 &1768293168427510224
-Rigidbody2D:
-  serializedVersion: 4
+--- !u!54 &6552495956790520396
+Rigidbody:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3720313222066442683}
-  m_BodyType: 0
-  m_Simulated: 1
-  m_UseFullKinematicContacts: 0
-  m_UseAutoMass: 0
+  serializedVersion: 4
   m_Mass: 1
-  m_LinearDrag: 0
+  m_Drag: 0
   m_AngularDrag: 1.2
-  m_GravityScale: 1
-  m_Material: {fileID: 0}
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
   m_IncludeLayers:
     serializedVersion: 2
     m_Bits: 0
   m_ExcludeLayers:
     serializedVersion: 2
     m_Bits: 0
-  m_Interpolate: 1
-  m_SleepingMode: 1
-  m_CollisionDetection: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
   m_Constraints: 0
+  m_CollisionDetection: 0
 --- !u!1 &5152266860827301980
 GameObject:
   m_ObjectHideFlags: 0

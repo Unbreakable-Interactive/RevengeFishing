@@ -7,7 +7,7 @@ public class MouthMagnet : MonoBehaviour
     [Header("Magnet Settings")]
     [SerializeField] private float magneticForce = 10f;
     [SerializeField] private float maxMagnetRange = 1.4f;
-    [SerializeField] private Vector2 magnetOffset = Vector2.zero;
+    [SerializeField] private Vector3 magnetOffset = Vector3.zero;
     [SerializeField] private AnimationCurve forceCurve = AnimationCurve.EaseInOut(0f, 0.1f, 1f, 1f);
 
     [Header("Debug")]
@@ -16,13 +16,13 @@ public class MouthMagnet : MonoBehaviour
     private CircleCollider2D magnetCollider;
     [SerializeField] private List<FishingProjectile> attractedProjectiles = new List<FishingProjectile>();
 
-    public Vector2 MagnetCenter
+    public Vector3 MagnetCenter
     {
         get
         {
             // Transform the local offset by the object's rotation
-            Vector2 rotatedOffset = transform.TransformDirection(magnetOffset);
-            return (Vector2)transform.position + rotatedOffset;
+            Vector3 rotatedOffset = transform.TransformDirection(magnetOffset);
+            return (Vector3)transform.position + rotatedOffset;
         }
     }
 
@@ -105,7 +105,7 @@ public class MouthMagnet : MonoBehaviour
             Rigidbody2D projectileRb = projectile.GetComponent<Rigidbody2D>();
             if (projectileRb == null) continue;
 
-            Vector2 directionToMagnet = (MagnetCenter - (Vector2)projectile.transform.position);
+            Vector3 directionToMagnet = (MagnetCenter - (Vector3)projectile.transform.position);
             float distance = directionToMagnet.magnitude;
 
             if (distance < 0.1f) continue;
@@ -115,7 +115,7 @@ public class MouthMagnet : MonoBehaviour
             float normalizedDistance = distance / maxMagnetRange;
             float forceMultiplier = forceCurve.Evaluate(1f - normalizedDistance);
 
-            Vector2 magneticPull = directionToMagnet * magneticForce * forceMultiplier;
+            Vector3 magneticPull = directionToMagnet * magneticForce * forceMultiplier;
             projectileRb.AddForce(magneticPull, ForceMode2D.Force);
 
             if (showDebugGizmos)
@@ -134,7 +134,7 @@ public class MouthMagnet : MonoBehaviour
     {
         if (showDebugGizmos)
         {
-            Vector2 magnetCenter = MagnetCenter;
+            Vector3 magnetCenter = MagnetCenter;
 
             Gizmos.color = Color.magenta;
             Gizmos.DrawWireSphere(magnetCenter, maxMagnetRange);
@@ -145,12 +145,12 @@ public class MouthMagnet : MonoBehaviour
             // Draw a small cross to show the exact center
             Gizmos.color = Color.yellow;
             float crossSize = 0.2f;
-            Gizmos.DrawLine(magnetCenter + Vector2.left * crossSize, magnetCenter + Vector2.right * crossSize);
-            Gizmos.DrawLine(magnetCenter + Vector2.up * crossSize, magnetCenter + Vector2.down * crossSize);
+            Gizmos.DrawLine(magnetCenter + Vector3.left * crossSize, magnetCenter + Vector3.right * crossSize);
+            Gizmos.DrawLine(magnetCenter + Vector3.up * crossSize, magnetCenter + Vector3.down * crossSize);
 
             // Draw the offset vector in local space
             Gizmos.color = Color.cyan;
-            Vector2 localOffsetStart = transform.position;
+            Vector3 localOffsetStart = transform.position;
             Gizmos.DrawLine(localOffsetStart, magnetCenter);
         }
     }

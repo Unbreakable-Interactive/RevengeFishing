@@ -9,7 +9,7 @@ public class WaterCheckFollow : MonoBehaviour
 
     void Start()
     {
-        GetComponent<Collider2D>().isTrigger = true;
+        GetComponent<Collider>().isTrigger = true;
 
     }
 

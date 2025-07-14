@@ -28,8 +28,8 @@ public class DroppedTool : Entity
     {
         base.Initialize();
 
-        rb.AddForce(dropForce * 20, ForceMode2D.Impulse);
-        rb.AddTorque(-dropForce.x * 8, ForceMode2D.Impulse);
+        rb.AddForce(dropForce * 20, ForceMode.Impulse);
+        rb.AddTorque(-dropForce * 8, ForceMode.Impulse);
         Debug.Log($"Tool dropped in direction {dropForce}");
     }
 
@@ -42,7 +42,7 @@ public class DroppedTool : Entity
     {
         if (!hasAntiRotated)
         {
-            rb.AddTorque(dropForce.x * 8, ForceMode2D.Impulse);
+            rb.AddTorque(dropForce * 8, ForceMode.Impulse);
             rb.drag = 2f;
             hasAntiRotated = true; // Prevents continuous anti-rotation
         }

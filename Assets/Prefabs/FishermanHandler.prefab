@@ -44,11 +44,11 @@ PrefabInstance:
     - target: {fileID: 239239663148630835, guid: d864e1d7d3d7d86458db1be6c7ac35ab, type: 3}
       propertyPath: entityMovement
       value: 
-      objectReference: {fileID: 6092571517471514807}
+      objectReference: {fileID: 5276656129347567490}
     - target: {fileID: 239239663148630835, guid: d864e1d7d3d7d86458db1be6c7ac35ab, type: 3}
       propertyPath: targetCollider
       value: 
-      objectReference: {fileID: 3479015762017106946}
+      objectReference: {fileID: 6191752971837913012}
     - target: {fileID: 314844239601557528, guid: d864e1d7d3d7d86458db1be6c7ac35ab, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -93,17 +93,9 @@ PrefabInstance:
       propertyPath: target
       value: 
       objectReference: {fileID: 2561211109777225482}
-    - target: {fileID: 7442979135199402340, guid: d864e1d7d3d7d86458db1be6c7ac35ab, type: 3}
-      propertyPath: waterSurfaceY
-      value: -0.19
-      objectReference: {fileID: 0}
     - target: {fileID: 8258166059126711420, guid: d864e1d7d3d7d86458db1be6c7ac35ab, type: 3}
       propertyPath: m_Name
       value: WaterLine
-      objectReference: {fileID: 0}
-    - target: {fileID: 8258166059126711420, guid: d864e1d7d3d7d86458db1be6c7ac35ab, type: 3}
-      propertyPath: m_Layer
-      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -177,14 +169,9 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 7667254095196824905, guid: 29c863f917d5e8846acde5d4d6a4ca7e, type: 3}
   m_PrefabInstance: {fileID: 5326827163894387267}
   m_PrefabAsset: {fileID: 0}
---- !u!61 &3479015762017106946 stripped
-BoxCollider2D:
-  m_CorrespondingSourceObject: {fileID: 8767175256861322817, guid: 29c863f917d5e8846acde5d4d6a4ca7e, type: 3}
-  m_PrefabInstance: {fileID: 5326827163894387267}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &6092571517471514807 stripped
+--- !u!114 &5276656129347567490 stripped
 MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 2117141073483461364, guid: 29c863f917d5e8846acde5d4d6a4ca7e, type: 3}
+  m_CorrespondingSourceObject: {fileID: 60451011259903425, guid: 29c863f917d5e8846acde5d4d6a4ca7e, type: 3}
   m_PrefabInstance: {fileID: 5326827163894387267}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2561211109777225482}
@@ -193,6 +180,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 74f210aa94814394cbc3a52e26206a1e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!65 &6191752971837913012 stripped
+BoxCollider:
+  m_CorrespondingSourceObject: {fileID: 2017955203756434935, guid: 29c863f917d5e8846acde5d4d6a4ca7e, type: 3}
+  m_PrefabInstance: {fileID: 5326827163894387267}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &7494490634703075726 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2444740548177980365, guid: 29c863f917d5e8846acde5d4d6a4ca7e, type: 3}

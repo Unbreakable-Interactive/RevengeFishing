@@ -1,9 +1,9 @@
 using UnityEngine;
 
-[RequireComponent(typeof(Rigidbody2D))]
+[RequireComponent(typeof(Rigidbody))]
 public abstract class Entity : MonoBehaviour
 {
-    [SerializeField] protected Rigidbody2D rb;
+    [SerializeField] protected Rigidbody rb;
 
     [Header("Character Stats")]
     [SerializeField] protected int _powerLevel;
@@ -42,20 +42,20 @@ public abstract class Entity : MonoBehaviour
 
     protected virtual void Awake()
     {
-        EnsureRigidbody2D();
+        EnsureRigidbody();
     }
 
-    private void EnsureRigidbody2D()
+    private void EnsureRigidbody()
     {
         if (rb == null)
         {
-            rb = GetComponent<Rigidbody2D>() ?? gameObject.AddComponent<Rigidbody2D>();
+            rb = GetComponent<Rigidbody>() ?? gameObject.AddComponent<Rigidbody>();
         }
     }
 
     public virtual void Initialize()
     {
-        EnsureRigidbody2D();
+        EnsureRigidbody();
 
         if (GetComponent<Player>() != null)
         {
@@ -114,8 +114,14 @@ public abstract class Entity : MonoBehaviour
     {
         if (rb != null)
         {
-            rb.gravityScale = airGravityScale;
+            rb.useGravity = airGravityScale > 0f;
             rb.drag = airDrag;
+            
+            // Apply custom gravity if needed
+            if (airGravityScale != 1f && rb.useGravity)
+            {
+                rb.AddForce(Physics.gravity * (airGravityScale - 1f), ForceMode.Acceleration);
+            }
         }
     }
 
@@ -123,8 +129,14 @@ public abstract class Entity : MonoBehaviour
     {
         if (rb != null)
         {
-            rb.gravityScale = underwaterGravityScale;
+            rb.useGravity = underwaterGravityScale > 0f;
             rb.drag = underwaterDrag;
+            
+            // Apply custom gravity if needed
+            if (underwaterGravityScale != 1f && underwaterGravityScale > 0f)
+            {
+                rb.AddForce(Physics.gravity * (underwaterGravityScale - 1f), ForceMode.Acceleration);
+            }
         }
     }
 

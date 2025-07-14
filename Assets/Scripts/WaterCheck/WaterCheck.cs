@@ -6,16 +6,16 @@ public class WaterCheck : MonoBehaviour
     [Header("Water Detection")]
     //public LayerMask playerLayerMask = -1;
     public Entity entityMovement; // Reference to the target entity movement script
-    public Collider2D targetCollider;
+    public Collider targetCollider;
 
     private void Start()
     {
         // Ensure this collider is set as a trigger
-        GetComponent<Collider2D>().isTrigger = true;
+        GetComponent<Collider>().isTrigger = true;
         
     }
 
-    private void OnTriggerExit2D(Collider2D other)
+    private void OnTriggerExit(Collider other)
     {
         if (other != targetCollider) return;
 

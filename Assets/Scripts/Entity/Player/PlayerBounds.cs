@@ -7,16 +7,16 @@ public class PlayerBounds : MonoBehaviour
     public bool allowUpwardExit = true;
 
     private Transform playerTransform;
-    private Rigidbody2D playerRb;
+    private Rigidbody playerRb;
     private Player player;
-    private BoxCollider2D boundsCollider;
+    private BoxCollider boundsCollider;
 
     void Start()
     {
-        boundsCollider = GetComponent<BoxCollider2D>();
+        boundsCollider = GetComponent<BoxCollider>();
         if (boundsCollider == null)
         {
-            boundsCollider = gameObject.AddComponent<BoxCollider2D>();
+            boundsCollider = gameObject.AddComponent<BoxCollider>();
         }
         boundsCollider.isTrigger = true;
     }
@@ -26,7 +26,7 @@ public class PlayerBounds : MonoBehaviour
         if (playerMovementScript != null)
         {
             playerTransform = playerMovementScript.transform;
-            playerRb = playerTransform.GetComponent<Rigidbody2D>();
+            playerRb = playerTransform.GetComponent<Rigidbody>();
             player = playerMovementScript;
             Debug.Log("PlayerBounds initialized with player reference");
         }
@@ -36,14 +36,14 @@ public class PlayerBounds : MonoBehaviour
         }
     }
 
-    void OnTriggerExit2D(Collider2D other)
+    void OnTriggerExit(Collider other)
     {
         // Check if it's the player's collider (either direct or child)
         bool isPlayer = player != null && (other.transform == playerTransform || other.transform.IsChildOf(playerTransform));
 
         if (isPlayer && player != null && playerRb != null)
         {
-            Vector2 playerPos = playerTransform.position;
+            Vector3 playerPos = playerTransform.position;
             Bounds bounds = boundsCollider.bounds;
 
             // Allow upward exit for jumping
@@ -54,28 +54,28 @@ public class PlayerBounds : MonoBehaviour
             }
 
             // Calculate bounce direction based on which boundary was crossed
-            Vector2 bounceDirection = Vector2.zero;
+            Vector3 bounceDirection = Vector3.zero;
 
             if (playerPos.x < bounds.min.x) // Left boundary
             {
-                bounceDirection = Vector2.right;
+                bounceDirection = Vector3.right;
                 Debug.Log("Player hit left boundary");
             }
             else if (playerPos.x > bounds.max.x) // Right boundary  
             {
-                bounceDirection = Vector2.left;
+                bounceDirection = Vector3.left;
                 Debug.Log("Player hit right boundary");
             }
             else if (playerPos.y < bounds.min.y) // Bottom boundary
             {
-                bounceDirection = Vector2.up;
+                bounceDirection = Vector3.up;
                 Debug.Log("Player hit bottom boundary");
             }
 
             // Apply bounce
-            if (bounceDirection != Vector2.zero)
+            if (bounceDirection != Vector3.zero)
             {
-                Vector2 newVelocity = Vector2.Reflect(playerRb.velocity, bounceDirection);
+                Vector3 newVelocity = Vector3.Reflect(playerRb.velocity, bounceDirection);
                 playerRb.velocity = newVelocity * bounceForce;
 
                 // Handle rotation based on current movement mode
@@ -86,7 +86,7 @@ public class PlayerBounds : MonoBehaviour
         }
     }
 
-    void HandleBounceRotation(Vector2 newVelocity)
+    void HandleBounceRotation(Vector3 newVelocity)
     {
         if (player.IsAboveWater)
         {

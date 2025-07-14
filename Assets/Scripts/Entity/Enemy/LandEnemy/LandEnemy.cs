@@ -333,7 +333,7 @@ public class LandEnemy : Enemy
 
             // Use exponential decay for natural reel feel
             float currentForceMultiplier = Mathf.Lerp(1f, 0.1f, progress * progress);
-            Vector2 frameForce = pullDirection * pullStrength * currentForceMultiplier;
+            Vector3 frameForce = pullDirection * pullStrength * currentForceMultiplier;
 
             playerRb.AddForce(frameForce, ForceMode2D.Force);
 
@@ -416,7 +416,7 @@ public class LandEnemy : Enemy
         _landMovementState = LandMovementState.Idle;
         if (rb != null)
         {
-            rb.velocity = Vector2.zero;
+            rb.velocity = Vector3.zero;
         }
 
         base.InterruptAllActions();
@@ -541,7 +541,7 @@ public class LandEnemy : Enemy
         if (currentX <= platformLeftEdge && (_landMovementState == LandMovementState.WalkLeft || _landMovementState == LandMovementState.RunLeft))
         {
             // IMMEDIATE STOP - prevent further movement
-            rb.velocity = new Vector2(0, rb.velocity.y);
+            rb.velocity = new Vector3(0, rb.velocity.y);
             _landMovementState = LandMovementState.Idle;
 
             // Choose a new action that doesn't involve going left
@@ -552,7 +552,7 @@ public class LandEnemy : Enemy
         else if (currentX >= platformRightEdge && (_landMovementState == LandMovementState.WalkRight || _landMovementState == LandMovementState.RunRight))
         {
             // IMMEDIATE STOP - prevent further movement
-            rb.velocity = new Vector2(0, rb.velocity.y);
+            rb.velocity = new Vector3(0, rb.velocity.y);
             _landMovementState = LandMovementState.Idle;
 
             // Choose a new action that doesn't involve going right
@@ -601,7 +601,7 @@ public class LandEnemy : Enemy
     {
         if (fishingToolEquipped) return;
 
-        Vector2 movement = Vector2.zero;
+        Vector3 movement = Vector3.zero;
 
         // Simple movement - no fishing tool checks here!
         switch (_landMovementState)
@@ -609,20 +609,20 @@ public class LandEnemy : Enemy
             case LandMovementState.Idle:
                 break;
             case LandMovementState.WalkLeft:
-                movement = Vector2.left * walkingSpeed;
+                movement = Vector3.left * walkingSpeed;
                 break;
             case LandMovementState.WalkRight:
-                movement = Vector2.right * walkingSpeed;
+                movement = Vector3.right * walkingSpeed;
                 break;
             case LandMovementState.RunLeft:
-                movement = Vector2.left * runningSpeed;
+                movement = Vector3.left * runningSpeed;
                 break;
             case LandMovementState.RunRight:
-                movement = Vector2.right * runningSpeed;
+                movement = Vector3.right * runningSpeed;
                 break;
         }
 
-        rb.velocity = new Vector2(movement.x, rb.velocity.y);
+        rb.velocity = new Vector3(movement.x, rb.velocity.y);
     }
 
     //used to choose a random action when at the edge of the platform

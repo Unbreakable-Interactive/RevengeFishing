@@ -331,7 +331,7 @@ public class EntityHierarchyInspector : Editor
         if (fieldType == typeof(float)) return "float";
         if (fieldType == typeof(bool)) return "bool";
         if (fieldType == typeof(string)) return "string";
-        if (fieldType == typeof(Vector2)) return "Vector2";
+        if (fieldType == typeof(Vector3)) return "Vector3";
         if (fieldType == typeof(Vector3)) return "Vector3";
         if (fieldType.IsEnum) return "enum";
         

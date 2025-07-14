@@ -20,7 +20,7 @@ public class HookSpawner : MonoBehaviour
 
     public FishingProjectile CurrentHook => currentHook;
 
-    [SerializeField] private Vector2 throwDirection = new Vector2(1f, 0.2f);
+    [SerializeField] private Vector3 throwDirection = new Vector3(1f, 0.2f, 0f);
     
     private void Awake()
     {
@@ -77,7 +77,7 @@ public class HookSpawner : MonoBehaviour
             return;
         }
         
-        throwDirection = new Vector2(Random.Range(0.2f, 1f), Random.Range(0.2f, 0.5f));
+        throwDirection = new Vector3(Random.Range(0.2f, 1f), Random.Range(0.2f, 0.5f), 0f);
 
         // hookMaxDistance = originalMaxDistance;
         hookMaxDistance = originalMaxDistance + (Random.Range(-2f, 2f));
@@ -123,7 +123,7 @@ public class HookSpawner : MonoBehaviour
         if (waterCheck != null && currentHook != null)
         {
             // Configure the water check to monitor our hook
-            waterCheck.targetCollider = currentHook.GetComponent<Collider2D>();
+            waterCheck.targetCollider = currentHook.GetComponent<Collider>();
 
             // If the hook has EntityMovement, connect it
             Entity hookMovement = currentHook.GetComponent<Entity>();

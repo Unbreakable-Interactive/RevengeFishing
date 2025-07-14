@@ -106,7 +106,7 @@ public class SimpleObjectPool : MonoBehaviour
         
         if (rb != null)
         {
-            rb.velocity = Vector2.zero;
+            rb.velocity = Vector3.zero;
             rb.angularVelocity = 0f;
             rb.gravityScale = 1f;
             rb.simulated = true; // ENSURE PHYSICS IS ENABLED
@@ -243,7 +243,7 @@ public class SimpleObjectPool : MonoBehaviour
         
         if (rb != null)
         {
-            rb.velocity = Vector2.zero;
+            rb.velocity = Vector3.zero;
             rb.angularVelocity = 0f;
             rb.gravityScale = 1f;
             rb.simulated = true;

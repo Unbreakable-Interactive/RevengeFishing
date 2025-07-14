@@ -197,8 +197,7 @@ public abstract class Enemy : Entity
 
         if (rb != null)
         {
-            rb.velocity = Vector2.zero;
-            rb.gravityScale = 1f;
+            rb.velocity = Vector3.zero;
         }
 
         Collider2D col = GetComponent<Collider2D>();

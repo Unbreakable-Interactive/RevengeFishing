@@ -13,7 +13,7 @@ public abstract class FishingProjectile : Entity
     [Header("Player Interaction")]
     [SerializeField] public bool isBeingHeld = false; //is a player biting the hook?
     [SerializeField] protected Player player; //reference to player
-    protected CircleCollider2D hookCollider;
+    protected SphereCollider hookCollider;
 
     // Event to notify fisherman
     public System.Action<bool> OnPlayerInteraction;
@@ -66,7 +66,7 @@ public abstract class FishingProjectile : Entity
 
     protected virtual void InitializeProjectile()
     {
-        hookCollider = GetComponent<CircleCollider2D>();
+        hookCollider = GetComponent<SphereCollider>();
         if (hookCollider != null)
         {
             hookCollider.isTrigger = true;
@@ -82,7 +82,7 @@ public abstract class FishingProjectile : Entity
         Debug.Log($"Hook spawn point set to: {spawnPoint}");
     }
 
-    private void OnTriggerEnter2D(Collider2D other)
+    private void OnTriggerEnter(Collider other)
     {
         if (other.CompareTag(TagNames.PLAYERCOLLIDER) && !isBeingHeld)
         {
@@ -141,12 +141,12 @@ public abstract class FishingProjectile : Entity
             transform.position = constrainedPosition;
 
             // Project velocity onto the tangent of the circle (rope physics)
-            Vector2 currentVelocity = rb.velocity;
-            Vector2 radialDirection = direction;
-            Vector2 tangentDirection = new Vector2(-radialDirection.y, radialDirection.x); // Perpendicular to radial
+            Vector3 currentVelocity = rb.velocity;
+            Vector3 radialDirection = direction;
+            Vector3 tangentDirection = new Vector3(-radialDirection.y, radialDirection.x); // Perpendicular to radial
 
             // Remove radial velocity component (can't move closer/farther from spawn point)
-            float tangentVelocity = Vector2.Dot(currentVelocity, tangentDirection);
+            float tangentVelocity = Vector3.Dot(currentVelocity, tangentDirection);
 
             // Apply only tangential velocity (creates swinging motion)
             rb.velocity = tangentDirection * tangentVelocity;
@@ -155,10 +155,10 @@ public abstract class FishingProjectile : Entity
         }
     }
 
-    public virtual void ThrowProjectile(Vector2 throwDirection, float throwForce)
+    public virtual void ThrowProjectile(Vector3 throwDirection, float throwForce)
     {
         if (rb == null) Debug.LogError("Rigidbody2D is not assigned!");
-        rb.AddForce(throwDirection.normalized * throwForce, ForceMode2D.Impulse);
+        rb.AddForce(throwDirection.normalized * throwForce, ForceMode.Impulse);
         OnProjectileThrown();
     }
 
@@ -185,7 +185,7 @@ public abstract class FishingProjectile : Entity
         float currentDistance = Vector3.Distance(player.transform.position, spawnPoint.position);
         // float totalMaxDistance = maxDistance + maxStretchDistance;
 
-        Rigidbody2D playerRb = player.GetComponent<Rigidbody2D>();
+        Rigidbody playerRb = player.GetComponent<Rigidbody>();
         if (playerRb == null) return;
 
         // Normal range - no constraint needed
@@ -223,7 +223,7 @@ public abstract class FishingProjectile : Entity
         }
     }
 
-    private void HandleStretchZone(float currentDistance, Rigidbody2D playerRb)
+    private void HandleStretchZone(float currentDistance, Rigidbody playerRb)
     {
         currentStretchAmount = (currentDistance - maxDistance) / maxStretchDistance;
         currentStretchAmount = Mathf.Clamp01(currentStretchAmount);
@@ -242,25 +242,25 @@ public abstract class FishingProjectile : Entity
         // Apply resistance force back to spawn point
         Vector3 directionToSpawn = (spawnPoint.position - player.transform.position).normalized;
         float resistanceMultiplier = stretchCurve.Evaluate(currentStretchAmount);
-        Vector2 resistanceForce = directionToSpawn * (stretchResistance * resistanceMultiplier);
+        Vector3 resistanceForce = directionToSpawn * (stretchResistance * resistanceMultiplier);
 
-        playerRb.AddForce(resistanceForce, ForceMode2D.Impulse);
+        playerRb.AddForce(resistanceForce, ForceMode.Impulse);
 
         OnLineStretching(currentStretchAmount);
         Debug.Log($"Line stretch: {currentStretchAmount:F2} | Resistance: {stretchResistance}");
     }
 
-    private void SnapPlayerBack(Rigidbody2D playerRb)
+    private void SnapPlayerBack(Rigidbody playerRb)
     {
         Vector3 directionToSpawn = (spawnPoint.position - player.transform.position).normalized;
 
         // Calculate snap force based on how much the line was stretched
         float snapMultiplier = Mathf.Lerp(1f, 2f, currentStretchAmount);
-        Vector2 snapForce = directionToSpawn * snapBackForce * snapMultiplier;
+        Vector3 snapForce = directionToSpawn * snapBackForce * snapMultiplier;
 
         // Apply snap-back force
-        playerRb.velocity = Vector2.zero; // Stop current movement
-        playerRb.AddForce(snapForce, ForceMode2D.Impulse);
+        playerRb.velocity = Vector3.zero; // Stop current movement
+        playerRb.AddForce(snapForce, ForceMode.Impulse);
 
         // Position player at max allowed distance
         Vector3 allowedPosition = spawnPoint.position + (player.transform.position - spawnPoint.position).normalized * maxDistance;
