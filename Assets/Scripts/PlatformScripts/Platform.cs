@@ -41,9 +41,9 @@ public class Platform : MonoBehaviour
     void OnCollisionEnter2D(Collision2D collision)
     {
         LandEnemy enemy = collision.gameObject.GetComponent<LandEnemy>();
-        if (identifier == enemy.landEnemyConfig.identifier)
+        if (enemy != null && enemy.landEnemyConfig != null)
         {
-            if (enemy != null)
+            if (identifier == enemy.landEnemyConfig.identifier)
             {
                 RegisterEnemyOnCollision(enemy);
             }
@@ -53,9 +53,9 @@ public class Platform : MonoBehaviour
     void OnCollisionExit2D(Collision2D collision)
     {
         LandEnemy enemy = collision.gameObject.GetComponent<LandEnemy>();
-        if (identifier == enemy.landEnemyConfig.identifier)
+        if (enemy != null && enemy.landEnemyConfig != null)
         {
-            if (enemy != null)
+            if (identifier == enemy.landEnemyConfig.identifier)
             {
                 if (assignedEnemies.Contains(enemy))
                 {
@@ -69,7 +69,7 @@ public class Platform : MonoBehaviour
     }
     protected virtual void RegisterEnemyOnCollision(LandEnemy enemy)
     {
-        if (enemy == null) return;
+        if (enemy == null || enemy.gameObject == null) return;
         
         if (assignedEnemies.Contains(enemy)) return;
         
@@ -84,19 +84,8 @@ public class Platform : MonoBehaviour
         assignedEnemies.Add(enemy);
         enemy.SetAssignedPlatform(this);
         
-        // 🚤 SMART PARENTING: Check if enemy is part of a BoatFishermanHandler
-        Transform targetToParent = enemy.transform;
-        
-        // Check if this enemy is a child of a BoatFishermanHandler
-        if (enemy.transform.parent != null && enemy.transform.parent.name.Contains("BoatFishermanHandler"))
-        {
-            targetToParent = enemy.transform.parent; // Parent the entire BoatFishermanHandler
-            if (showDebugInfo)
-                Debug.Log($"🚤 DETECTED: Parenting entire BoatFishermanHandler ({targetToParent.name}) instead of just {enemy.name}");
-        }
-        
-        // Make enemy (or entire handler) a CHILD of this platform (so they move together!)
-        targetToParent.SetParent(this.transform);
+        // Make enemy a CHILD of this platform (so they move together!)
+        enemy.transform.SetParent(this.transform);
         
         // CRITICAL: Trigger AI activation after platform assignment
         enemy.OnPlatformAssigned(this);
@@ -190,14 +179,17 @@ public class Platform : MonoBehaviour
 
     public void UnregisterEnemy(LandEnemy enemy)
     {
-        if (enemy == null) return;
+        if (enemy == null || enemy.gameObject == null) return;
 
         if (assignedEnemies.Contains(enemy))
         {
             assignedEnemies.Remove(enemy);
 
-            // Remove parent relationship when unregistering
-            enemy.transform.SetParent(null);
+            // Remove parent relationship when unregistering (with null safety)
+            if (enemy.transform != null)
+            {
+                enemy.transform.SetParent(null);
+            }
 
             Collider2D enemyCollider = enemy.GetComponent<Collider2D>();
             if (enemyCollider != null && platformCollider != null)

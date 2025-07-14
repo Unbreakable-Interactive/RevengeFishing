@@ -1,19 +1,7 @@
 using UnityEngine;
 using Utils;
 
-/// <summary>
-/// BOAT PLATFORM - Specialized platform for boats
-/// 
-/// Inherits from Platform and adds boat-specific features:
-/// - Automatically triggers boat movement when crew registers
-/// - Finds BoatFloater component in parent hierarchy
-/// - Overrides Platform methods to add boat functionality
-/// 
-/// USAGE:
-/// 1. Replace Platform component with BoatPlatform on boat platforms
-/// 2. The script automatically finds the BoatFloater in parent objects
-/// 3. When crew registers, boat movement starts automatically
-/// </summary>
+
 public class BoatPlatform : Platform
 {
     [Header("🚤 BOAT SPECIFIC SETTINGS")]
@@ -21,13 +9,10 @@ public class BoatPlatform : Platform
     [SerializeField] private bool debugBoatTriggers = true;
     [SerializeField] private BoatFloater boatFloater;
     
-    // Override Start to add boat-specific initialization
     protected override void Start()
     {
-        // Call parent Start() to maintain all Platform functionality
         base.Start();
         
-        // 🚤 IMPORTANT: Override the layer set by Platform.Start() to use BoatPlatform layer
         if (LayerMask.NameToLayer(LayerNames.BOATPLATFORM) != -1)
         {
             gameObject.layer = LayerMask.NameToLayer(LayerNames.BOATPLATFORM);
@@ -62,24 +47,103 @@ public class BoatPlatform : Platform
         }
     }
     
-    // Override the registration method to add boat movement triggering
+    // Override the registration method to add boat-specific parenting and movement triggering
     protected override void RegisterEnemyOnCollision(LandEnemy enemy)
     {
-        // Call parent method to handle all normal Platform logic
-        base.RegisterEnemyOnCollision(enemy);
+        if (enemy == null || enemy.gameObject == null) return;
+        
+        if (assignedEnemies.Contains(enemy)) return;
+        
+        Platform previousPlatform = enemy.GetAssignedPlatform();
+        if (previousPlatform != null && previousPlatform != this)
+        {
+            previousPlatform.UnregisterEnemy(enemy);
+            if (showDebugInfo)
+                Debug.Log($"Enemy {enemy.name} MOVED from {previousPlatform.name} to {gameObject.name}");
+        }
+        
+        assignedEnemies.Add(enemy);
+        enemy.SetAssignedPlatform(this);
+        
+        // 🚤 BOAT-SPECIFIC: Smart parenting for BoatFishermanHandler
+        Transform targetToParent = enemy.transform;
+        
+        // Check if this enemy is a child of a BoatFishermanHandler (with null safety)
+        if (enemy.transform.parent != null && 
+            enemy.transform.parent.gameObject != null && 
+            enemy.transform.parent.name.Contains("BoatFishermanHandler"))
+        {
+            targetToParent = enemy.transform.parent; // Parent the entire BoatFishermanHandler
+            if (debugBoatTriggers)
+                Debug.Log($"🚤 BOAT PLATFORM: Parenting entire BoatFishermanHandler ({targetToParent.name}) instead of just {enemy.name}");
+        }
+        
+        // Make enemy (or entire handler) a CHILD of this platform (so they move together!)
+        targetToParent.SetParent(this.transform);
+        
+        // CRITICAL: Trigger AI activation after platform assignment
+        enemy.OnPlatformAssigned(this);
+        
+        Collider2D enemyCollider = enemy.GetComponent<Collider2D>();
+        if (enemyCollider != null)
+        {
+            Collider2D platformCollider = GetComponent<Collider2D>();
+            if (platformCollider != null)
+                Physics2D.IgnoreCollision(platformCollider, enemyCollider, false);
+        }
+
+        enemy.platformBoundsCalculated = true;
+
+        if (debugBoatTriggers)
+            Debug.Log($"🚤 BOAT COLLISION ASSIGNMENT: {enemy.name} assigned to boat platform {gameObject.name} and made CHILD! Total enemies: {assignedEnemies.Count}");
         
         // Add boat-specific logic: trigger movement when crew registers
         TriggerBoatMovement(enemy);
     }
     
-    // Override runtime registration to also trigger boat movement
+    // Override runtime registration to also handle boat-specific parenting and trigger boat movement
     public override void RegisterEnemyAtRuntime(LandEnemy enemy)
     {
-        // Call parent method to handle all normal Platform logic
-        base.RegisterEnemyAtRuntime(enemy);
-        
-        // Add boat-specific logic: trigger movement when crew registers
-        TriggerBoatMovement(enemy);
+        if (enemy != null && !assignedEnemies.Contains(enemy))
+        {
+            assignedEnemies.Add(enemy);
+            enemy.SetAssignedPlatform(this);
+
+            // 🚤 BOAT-SPECIFIC: Smart parenting for BoatFishermanHandler
+            Transform targetToParent = enemy.transform;
+            
+            // Check if this enemy is a child of a BoatFishermanHandler (with null safety)
+            if (enemy.transform.parent != null && 
+                enemy.transform.parent.gameObject != null && 
+                enemy.transform.parent.name.Contains("BoatFishermanHandler"))
+            {
+                targetToParent = enemy.transform.parent; // Parent the entire BoatFishermanHandler
+                if (debugBoatTriggers)
+                    Debug.Log($"🚤 BOAT PLATFORM RUNTIME: Parenting entire BoatFishermanHandler ({targetToParent.name}) instead of just {enemy.name}");
+            }
+
+            // Make enemy (or entire handler) a CHILD of this platform (so they move together!)
+            targetToParent.SetParent(this.transform);
+
+            // Apply collision rules immediately
+            Collider2D enemyCollider = enemy.GetComponent<Collider2D>();
+            if (enemyCollider != null)
+            {
+                Collider2D platformCollider = GetComponent<Collider2D>();
+                if (platformCollider != null)
+                {
+                    Physics2D.IgnoreCollision(enemyCollider, platformCollider, false);
+                }
+            }
+
+            if (debugBoatTriggers)
+            {
+                Debug.Log($"🚤 BOAT RUNTIME: Auto-assigned {enemy.name} to boat platform {gameObject.name} and made CHILD");
+            }
+            
+            // Add boat-specific logic: trigger movement when crew registers
+            TriggerBoatMovement(enemy);
+        }
     }
     
     /// <summary>
