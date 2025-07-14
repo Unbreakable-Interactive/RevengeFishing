@@ -36,7 +36,7 @@ public class AudioOptimizerTool : EditorWindow
     private bool showIOSSettings = true;
     private bool showWebGLSettings = true;
 
-    [MenuItem("Tools/Audio Optimizer")]
+    [MenuItem("Tools/Optimization/Audio Optimizer")]
     public static void ShowWindow()
     {
         GetWindow<AudioOptimizerTool>("Audio Optimizer");

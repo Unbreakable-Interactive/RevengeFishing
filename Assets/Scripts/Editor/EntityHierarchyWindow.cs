@@ -9,28 +9,79 @@ public class EntityHierarchyWindow : EditorWindow
     private Vector2 scrollPosition;
     private Dictionary<System.Type, Vector2> typePositions = new Dictionary<System.Type, Vector2>();
     private static Dictionary<Color, Texture2D> textureCache = new Dictionary<Color, Texture2D>();
-    private static readonly Dictionary<System.Type, Color> TypeColors = new Dictionary<System.Type, Color>
-    {
-        { typeof(Entity), new Color(0.2f, 0.4f, 0.7f) },
-        { typeof(Player), new Color(0.2f, 0.6f, 0.3f) },
-        { typeof(Enemy), new Color(0.8f, 0.4f, 0.2f) },
-        { typeof(LandEnemy), new Color(0.7f, 0.3f, 0.5f) },
-        { typeof(Fisherman), new Color(0.5f, 0.3f, 0.7f) },
-        { typeof(FishingProjectile), new Color(0.1f, 0.5f, 0.7f)},
-        { typeof(FishingHook), new Color(0.2f, 0.5f, 0.6f) },
-        { typeof(DroppedTool), new Color(0.6f, 0.4f, 0.2f) }
-    };
+    private EntityTypeColorConfig colorConfig;
+    private List<System.Type> discoveredEntityTypes = new List<System.Type>();
+    private double lastRefreshTime = 0;
+    private bool autoRefresh = true;
 
-    [MenuItem("Tools/Entity Hierarchy Visualizer")]
+    [MenuItem("Tools/Entity System/Entity Hierarchy Visualizer")]
     public static void ShowWindow()
     {
         var window = GetWindow<EntityHierarchyWindow>("Entity Hierarchy");
         window.minSize = new Vector2(400, 300);
         window.Show();
     }
+    
+    private void OnEnable()
+    {
+        // Subscribe to entity type discovery events
+        EntityTypeAutoDiscovery.OnEntityTypesDiscovered += OnEntityTypesDiscovered;
+        EntityTypeAutoDiscovery.OnNewEntityTypeFound += OnNewEntityTypeFound;
+        
+        // Initial refresh
+        RefreshEntityTypes();
+    }
+    
+    private void OnDisable()
+    {
+        // Unsubscribe from events
+        EntityTypeAutoDiscovery.OnEntityTypesDiscovered -= OnEntityTypesDiscovered;
+        EntityTypeAutoDiscovery.OnNewEntityTypeFound -= OnNewEntityTypeFound;
+    }
+    
+    private void OnEntityTypesDiscovered(List<System.Type> types)
+    {
+        discoveredEntityTypes = types;
+        Repaint();
+    }
+    
+    private void OnNewEntityTypeFound(System.Type type)
+    {
+        Debug.Log($"🆕 EntityHierarchyWindow: New entity type detected: {type.Name}");
+        RefreshEntityTypes();
+    }
+    
+    private void RefreshEntityTypes()
+    {
+        colorConfig = EntityTypeAutoDiscovery.GetOrCreateConfig();
+        discoveredEntityTypes = EntityTypeAutoDiscovery.ScanForEntityTypes();
+        lastRefreshTime = EditorApplication.timeSinceStartup;
+        
+        if (discoveredEntityTypes.Count == 0)
+        {
+            // Fallback to hardcoded types if discovery fails
+            discoveredEntityTypes = new List<System.Type>
+            {
+                typeof(Entity),
+                typeof(Player),
+                typeof(Enemy),
+                typeof(LandEnemy),
+                typeof(Fisherman),
+                typeof(FishingProjectile),
+                typeof(FishingHook),
+                typeof(DroppedTool)
+            }.Where(t => t != null).ToList();
+        }
+    }
 
     private void OnGUI()
     {
+        // Auto-refresh check (throttled)
+        if (autoRefresh && EditorApplication.timeSinceStartup - lastRefreshTime > 10.0) // Refresh every 10 seconds max
+        {
+            RefreshEntityTypes();
+        }
+        
         DrawHeader();
         EditorGUILayout.Space(10);
         
@@ -42,6 +93,7 @@ public class EntityHierarchyWindow : EditorWindow
         
         EditorGUILayout.Space(10);
         DrawLegend();
+        DrawControls();
     }
 
     private void DrawHeader()
@@ -63,78 +115,93 @@ public class EntityHierarchyWindow : EditorWindow
 
     private void DrawHierarchyTree()
     {
-        var hierarchyTypes = new List<System.Type>
-        {
-            typeof(Entity),
-            typeof(Player),
-            typeof(Enemy),
-            typeof(LandEnemy),
-            typeof(Fisherman),
-            typeof(FishingProjectile),
-            typeof(FishingHook),
-            typeof(DroppedTool)
-        };
-
         EditorGUILayout.BeginVertical();
         
-        // Draw Entity (root)
-        DrawTypeBox(typeof(Entity), 0);
+        if (discoveredEntityTypes.Count == 0)
+        {
+            EditorGUILayout.HelpBox("No entity types discovered. Make sure you have Entity scripts in your project.", MessageType.Info);
+            if (GUILayout.Button("Refresh Entity Types"))
+            {
+                RefreshEntityTypes();
+            }
+            EditorGUILayout.EndVertical();
+            return;
+        }
         
-        // Draw connections and child types
-        EditorGUILayout.Space(20);
-        EditorGUILayout.BeginHorizontal();
+        // Build hierarchy based on inheritance
+        var rootTypes = discoveredEntityTypes.Where(t => IsRootEntityType(t)).ToList();
         
-        // Player branch
-        EditorGUILayout.BeginVertical(GUILayout.Width(140));
-        DrawConnection();
-        DrawTypeBox(typeof(Player), 1);
-        EditorGUILayout.EndVertical();
-        
-        GUILayout.FlexibleSpace();
-        
-        // Enemy branch
-        EditorGUILayout.BeginVertical(GUILayout.Width(140));
-        DrawConnection();
-        DrawTypeBox(typeof(Enemy), 1);
-        
-        EditorGUILayout.Space(20);
-        DrawConnection();
-        DrawTypeBox(typeof(LandEnemy), 2);
-        
-        EditorGUILayout.Space(20);
-        DrawConnection();
-        DrawTypeBox(typeof(Fisherman), 3);
+        foreach (var rootType in rootTypes)
+        {
+            DrawTypeHierarchy(rootType, 0);
+            EditorGUILayout.Space(20);
+        }
         
         EditorGUILayout.EndVertical();
+    }
+    
+    private bool IsRootEntityType(System.Type type)
+    {
+        // A type is root if its base type is not in our discovered entity types
+        var baseType = type.BaseType;
+        while (baseType != null && baseType != typeof(MonoBehaviour))
+        {
+            if (discoveredEntityTypes.Contains(baseType))
+            {
+                return false;
+            }
+            baseType = baseType.BaseType;
+        }
+        return true;
+    }
+    
+    private void DrawTypeHierarchy(System.Type type, int level)
+    {
+        // Draw current type
+        if (level > 0)
+        {
+            DrawConnection();
+        }
         
-        GUILayout.FlexibleSpace();
+        DrawTypeBox(type, level);
         
-        // FishingProjectile branch
-        EditorGUILayout.BeginVertical(GUILayout.Width(140));
-        DrawConnection();
-        DrawTypeBox(typeof(FishingProjectile), 1);
+        // Find and draw children
+        var children = discoveredEntityTypes.Where(t => t.BaseType == type).ToList();
         
-        EditorGUILayout.Space(20);
-        DrawConnection();
-        DrawTypeBox(typeof(FishingHook), 2);
-        
-        EditorGUILayout.EndVertical();
-        
-        GUILayout.FlexibleSpace();
-        
-        // DroppedTool branch
-        EditorGUILayout.BeginVertical(GUILayout.Width(140));
-        DrawConnection();
-        DrawTypeBox(typeof(DroppedTool), 1);
-        EditorGUILayout.EndVertical();
-        
-        EditorGUILayout.EndHorizontal();
-        EditorGUILayout.EndVertical();
+        if (children.Count > 0)
+        {
+            EditorGUILayout.Space(10);
+            
+            if (children.Count == 1)
+            {
+                // Single child - draw directly below
+                DrawTypeHierarchy(children[0], level + 1);
+            }
+            else
+            {
+                // Multiple children - draw side by side
+                EditorGUILayout.BeginHorizontal();
+                
+                foreach (var child in children)
+                {
+                    EditorGUILayout.BeginVertical(GUILayout.Width(150));
+                    DrawTypeHierarchy(child, level + 1);
+                    EditorGUILayout.EndVertical();
+                    
+                    if (child != children.Last())
+                    {
+                        GUILayout.FlexibleSpace();
+                    }
+                }
+                
+                EditorGUILayout.EndHorizontal();
+            }
+        }
     }
 
     private void DrawTypeBox(System.Type type, int level)
     {
-        Color typeColor = TypeColors.ContainsKey(type) ? TypeColors[type] : Color.white;
+        Color typeColor = GetColorForType(type);
         string icon = GetIconForType(type);
         
         var boxStyle = new GUIStyle(GUI.skin.box)
@@ -213,25 +280,76 @@ public class EntityHierarchyWindow : EditorWindow
         EditorGUILayout.BeginVertical(EditorStyles.helpBox);
         EditorGUILayout.LabelField("Legend", EditorStyles.boldLabel);
         
-        foreach (var kvp in TypeColors)
+        foreach (var type in discoveredEntityTypes.Take(10)) // Limit to first 10 to avoid clutter
         {
             EditorGUILayout.BeginHorizontal();
             
             // Color box
             var colorRect = GUILayoutUtility.GetRect(15, 15);
-            EditorGUI.DrawRect(colorRect, kvp.Value);
+            EditorGUI.DrawRect(colorRect, GetColorForType(type));
             
             // Type name
-            EditorGUILayout.LabelField($"{GetIconForType(kvp.Key)} {kvp.Key.Name}", EditorStyles.miniLabel);
+            EditorGUILayout.LabelField($"{GetIconForType(type)} {type.Name}", EditorStyles.miniLabel);
             
             EditorGUILayout.EndHorizontal();
         }
         
+        if (discoveredEntityTypes.Count > 10)
+        {
+            EditorGUILayout.LabelField($"... and {discoveredEntityTypes.Count - 10} more types", EditorStyles.miniLabel);
+        }
+        
         EditorGUILayout.EndVertical();
+    }
+    
+    private void DrawControls()
+    {
+        EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+        EditorGUILayout.LabelField("Controls", EditorStyles.boldLabel);
+        
+        EditorGUILayout.BeginHorizontal();
+        autoRefresh = EditorGUILayout.Toggle("Auto Refresh", autoRefresh);
+        
+        if (GUILayout.Button("Manual Refresh", GUILayout.Width(100)))
+        {
+            RefreshEntityTypes();
+        }
+        
+        if (GUILayout.Button("Open Color Config", GUILayout.Width(120)))
+        {
+            if (colorConfig != null)
+            {
+                Selection.activeObject = colorConfig;
+                EditorGUIUtility.PingObject(colorConfig);
+            }
+        }
+        EditorGUILayout.EndHorizontal();
+        
+        EditorGUILayout.LabelField($"Last refresh: {(EditorApplication.timeSinceStartup - lastRefreshTime):F1}s ago", EditorStyles.miniLabel);
+        EditorGUILayout.LabelField($"Discovered types: {discoveredEntityTypes.Count}", EditorStyles.miniLabel);
+        
+        EditorGUILayout.EndVertical();
+    }
+
+    private Color GetColorForType(System.Type type)
+    {
+        if (colorConfig != null)
+        {
+            return colorConfig.GetColorForType(type);
+        }
+        
+        // Fallback to default colors
+        return new Color(0.4f, 0.4f, 0.4f);
     }
 
     private string GetIconForType(System.Type type)
     {
+        if (colorConfig != null)
+        {
+            return colorConfig.GetIconForType(type);
+        }
+        
+        // Fallback icons
         if (type == typeof(Entity)) return "🏛️";
         if (type == typeof(Player)) return "🐟";
         if (type == typeof(Enemy)) return "👹";

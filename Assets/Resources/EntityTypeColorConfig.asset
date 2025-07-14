@@ -1,0 +1,97 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3be388ef15aec4b39be83730b212b531, type: 3}
+  m_Name: EntityTypeColorConfig
+  m_EditorClassIdentifier: 
+  entityTypeColors:
+  - typeName: Entity
+    color: {r: 0.2, g: 0.4, b: 0.7, a: 1}
+    icon: "\U0001F3DB\uFE0F"
+    description: Base entity class
+    isCoreType: 1
+  - typeName: Player
+    color: {r: 0.2, g: 0.6, b: 0.3, a: 1}
+    icon: "\U0001F41F"
+    description: Player character
+    isCoreType: 1
+  - typeName: Enemy
+    color: {r: 0.8, g: 0.4, b: 0.2, a: 1}
+    icon: "\U0001F479"
+    description: Base enemy class
+    isCoreType: 1
+  - typeName: LandEnemy
+    color: {r: 0.7, g: 0.3, b: 0.5, a: 1}
+    icon: "\U0001F6B6"
+    description: Land-based enemy
+    isCoreType: 1
+  - typeName: Fisherman
+    color: {r: 0.5, g: 0.3, b: 0.7, a: 1}
+    icon: "\U0001F3A3"
+    description: Fisherman character
+    isCoreType: 1
+  - typeName: FishingProjectile
+    color: {r: 0.1, g: 0.5, b: 0.7, a: 1}
+    icon: "\U0001FA9D"
+    description: Fishing projectile
+    isCoreType: 1
+  - typeName: FishingHook
+    color: {r: 0.2, g: 0.5, b: 0.6, a: 1}
+    icon: "\U0001F3AF"
+    description: Fishing hook
+    isCoreType: 1
+  - typeName: DroppedTool
+    color: {r: 0.6, g: 0.4, b: 0.2, a: 1}
+    icon: "\U0001F527"
+    description: Dropped tool item
+    isCoreType: 1
+  defaultColor: {r: 0.4, g: 0.4, b: 0.4, a: 1}
+  defaultIcon: "\U0001F4E6"
+  autoDiscoverNewTypes: 1
+  assignRandomColorsToNewTypes: 1
+  randomColorPalette:
+  - {r: 0.2, g: 0.4, b: 0.7, a: 1}
+  - {r: 0.2, g: 0.6, b: 0.3, a: 1}
+  - {r: 0.8, g: 0.4, b: 0.2, a: 1}
+  - {r: 0.7, g: 0.3, b: 0.5, a: 1}
+  - {r: 0.5, g: 0.3, b: 0.7, a: 1}
+  - {r: 0.1, g: 0.5, b: 0.7, a: 1}
+  - {r: 0.2, g: 0.5, b: 0.6, a: 1}
+  - {r: 0.6, g: 0.4, b: 0.2, a: 1}
+  - {r: 0.7, g: 0.5, b: 0.3, a: 1}
+  - {r: 0.4, g: 0.7, b: 0.2, a: 1}
+  - {r: 0.6, g: 0.2, b: 0.7, a: 1}
+  - {r: 0.8, g: 0.3, b: 0.3, a: 1}
+  iconPresets:
+  - "\U0001F3DB\uFE0F"
+  - "\U0001F41F"
+  - "\U0001F479"
+  - "\U0001F6B6"
+  - "\U0001F3A3"
+  - "\U0001FA9D"
+  - "\U0001F3AF"
+  - "\U0001F527"
+  - "\u2694\uFE0F"
+  - "\U0001F6E1\uFE0F"
+  - "\U0001F48E"
+  - "\U0001F3AA"
+  - "\U0001F31F"
+  - "\U0001F525"
+  - "\u2744\uFE0F"
+  - "\u26A1"
+  - "\U0001F30A"
+  - "\U0001F331"
+  - "\U0001F985"
+  - "\U0001F43A"
+  - "\U0001F988"
+  - "\U0001F419"
+  - "\U0001F980"
+  - "\U0001F422"

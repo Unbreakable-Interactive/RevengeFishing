@@ -32,7 +32,7 @@ public class SpriteAtlasAutoCreator : EditorWindow
     private Dictionary<string, List<string>> discoveredFolders = new Dictionary<string, List<string>>();
     private bool hasScanned = false;
 
-    [MenuItem("Tools/Sprite Atlas Auto Creator")]
+    [MenuItem("Tools/Optimization/Sprite Atlas Auto Creator")]
     public static void ShowWindow()
     {
         GetWindow<SpriteAtlasAutoCreator>("Atlas Creator");

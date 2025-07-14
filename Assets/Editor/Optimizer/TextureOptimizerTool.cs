@@ -37,7 +37,7 @@ public class TextureOptimizerTool : EditorWindow
     private bool showIOSSettings = true;
     private bool showWebGLSettings = true;
 
-    [MenuItem("Tools/Texture Optimizer")]
+    [MenuItem("Tools/Optimization/Texture Optimizer")]
     public static void ShowWindow()
     {
         GetWindow<TextureOptimizerTool>("Texture Optimizer");

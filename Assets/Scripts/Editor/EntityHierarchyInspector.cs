@@ -7,25 +7,23 @@ using System.Linq;
 [CustomEditor(typeof(Entity), true)]
 public class EntityHierarchyInspector : Editor
 {
-    private static readonly Color EntityColor = new Color(0.2f, 0.4f, 0.7f);       // Deep blue
-    private static readonly Color PlayerColor = new Color(0.2f, 0.6f, 0.3f);     // Forest green  
-    private static readonly Color EnemyColor = new Color(0.8f, 0.4f, 0.2f);      // Warm orange
-    private static readonly Color LandEnemyColor = new Color(0.7f, 0.3f, 0.5f);  // Deep rose
-    private static readonly Color FishermanColor = new Color(0.5f, 0.3f, 0.7f);  // Rich purple
-    private static readonly Color FishingProjectileColor = new Color(0.1f, 0.5f, 0.7f); // Cyan
-    private static readonly Color FishingHookColor = new Color(0.2f, 0.5f, 0.6f); // Teal
-    private static readonly Color DroppedToolColor = new Color(0.6f, 0.4f, 0.2f); // Brown
-    
     private Dictionary<System.Type, bool> foldoutStates = new Dictionary<System.Type, bool>();
     private Dictionary<System.Type, List<FieldInfo>> hierarchyFields = new Dictionary<System.Type, List<FieldInfo>>();
     private bool isInitialized = false;
+    private EntityTypeColorConfig colorConfig;
+    private double lastRefreshTime = 0;
 
     public override void OnInspectorGUI()
     {
-        if (!isInitialized)
+        // Auto-refresh check (throttled to avoid performance issues)
+        bool shouldRefresh = !isInitialized || 
+                           EditorApplication.timeSinceStartup - lastRefreshTime > 5.0; // Refresh every 5 seconds max
+        
+        if (shouldRefresh)
         {
             InitializeHierarchy();
             isInitialized = true;
+            lastRefreshTime = EditorApplication.timeSinceStartup;
         }
 
         serializedObject.Update();
@@ -48,6 +46,9 @@ public class EntityHierarchyInspector : Editor
     {
         hierarchyFields.Clear();
         foldoutStates.Clear();
+        
+        // Get color configuration
+        colorConfig = EntityTypeAutoDiscovery.GetOrCreateConfig();
 
         System.Type targetType = target.GetType();
         System.Type currentType = targetType;
@@ -255,21 +256,23 @@ public class EntityHierarchyInspector : Editor
 
     private Color GetColorForType(System.Type type)
     {
-        if (type == typeof(Entity)) return EntityColor;
-        if (type == typeof(Player)) return PlayerColor;
-        if (type == typeof(Enemy)) return EnemyColor;
-        if (type == typeof(LandEnemy)) return LandEnemyColor;
-        if (type == typeof(Fisherman)) return FishermanColor;
-        if (type == typeof(FishingProjectile)) return FishingProjectileColor;
-        if (type == typeof(FishingHook)) return FishingHookColor;
-        if (type == typeof(DroppedTool)) return DroppedToolColor;
+        if (colorConfig != null)
+        {
+            return colorConfig.GetColorForType(type);
+        }
         
-        // Default color for other types
+        // Fallback to default color if config is not available
         return new Color(0.4f, 0.4f, 0.4f);
     }
 
     private string GetIconForType(System.Type type)
     {
+        if (colorConfig != null)
+        {
+            return colorConfig.GetIconForType(type);
+        }
+        
+        // Fallback icons
         if (type == typeof(Entity)) return "🏛️";
         if (type == typeof(Player)) return "🐟";
         if (type == typeof(Enemy)) return "👹";
