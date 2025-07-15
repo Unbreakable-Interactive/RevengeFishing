@@ -158,6 +158,8 @@ public class HookSpawner : MonoBehaviour
                 // Move hook slightly toward spawn point for visual effect
                 currentHook.transform.position += direction * (retractionAmount * 0.5f);
 
+                if (newLength <= 4f) currentHook.GetComponentInChildren<CircleCollider2D>().enabled = false;
+
                 Debug.Log($"Hook being retracted gradually - remaining length: {newLength:F1}");
             }
             else

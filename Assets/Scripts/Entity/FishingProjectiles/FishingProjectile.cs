@@ -127,6 +127,8 @@ public abstract class FishingProjectile : Entity
         }
     }
 
+
+
     protected virtual void ConstrainToMaxDistance()
     {
         float currentDistance = Vector3.Distance(transform.position, spawnPoint.position);

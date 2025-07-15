@@ -84,18 +84,6 @@ public abstract class Entity : MonoBehaviour
         }
     }
 
-    protected virtual void OnEnterWater()
-    {
-        Debug.Log($"{gameObject.name} entered water");
-        SetMovementMode(false);
-    }
-
-    protected virtual void OnExitWater()
-    {
-        Debug.Log($"{gameObject.name} exited water");
-        SetMovementMode(true);
-    }
-
     public virtual void SetMovementMode(bool aboveWater)
     {
         isAboveWater = aboveWater;
