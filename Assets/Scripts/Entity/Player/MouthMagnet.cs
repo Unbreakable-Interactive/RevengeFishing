@@ -6,15 +6,23 @@ public class MouthMagnet : MonoBehaviour
 {
     [Header("Magnet Settings")]
     [SerializeField] private float magneticForce = 10f;
-    [SerializeField] private float maxMagnetRange = 1.4f;
+    [SerializeField] private float baseMagnetRange = 1.4f;
     [SerializeField] private Vector2 magnetOffset = Vector2.zero;
     [SerializeField] private AnimationCurve forceCurve = AnimationCurve.EaseInOut(0f, 0.1f, 1f, 1f);
+    
+    [Header("Scaling")]
+    [SerializeField] private bool scaleWithPlayer = true;
 
     [Header("Debug")]
     [SerializeField] private bool showDebugGizmos = true;
 
     private CircleCollider2D magnetCollider;
+    private PlayerScaler playerScaler;
     [SerializeField] private List<Entity> attractedEntities = new List<Entity>();
+    
+    public float CurrentMagnetRange => scaleWithPlayer && playerScaler != null 
+        ? baseMagnetRange * playerScaler.GetCurrentScaleMultiplier() 
+        : baseMagnetRange;
 
     public Vector2 MagnetCenter
     {
@@ -28,13 +36,36 @@ public class MouthMagnet : MonoBehaviour
 
     void Start()
     {
+        InitializeReferences();
         InitializeMagnet();
+    }
+    
+    private void InitializeReferences()
+    {
+        if (scaleWithPlayer)
+        {
+            playerScaler = GetComponentInParent<PlayerScaler>();
+            if (playerScaler == null)
+            {
+                Debug.LogWarning("MouthMagnet: scaleWithPlayer is enabled but no PlayerScaler found in parent objects!");
+            }
+        }
     }
 
     void FixedUpdate()
     {
+        UpdateMagnetRange();
         ApplyMagneticForceToEntities();
         CleanupNullReferences();
+    }
+    
+    private void UpdateMagnetRange()
+    {
+        if (magnetCollider != null && scaleWithPlayer && playerScaler != null)
+        {
+            float currentRange = CurrentMagnetRange;
+            //magnetCollider.radius = currentRange / 2f;
+        }
     }
 
     private void InitializeMagnet()
@@ -53,12 +84,13 @@ public class MouthMagnet : MonoBehaviour
             Debug.Log("MouthMagnet: Set collider to trigger mode");
         }
 
-        if (maxMagnetRange > 0)
-        {
-            magnetCollider.radius = maxMagnetRange / 2f;
-        }
+        //float currentRange = CurrentMagnetRange;
+        //if (currentRange > 0)
+        //{
+        //    magnetCollider.radius = currentRange / 2f;
+        //}
 
-        Debug.Log($"MouthMagnet initialized with range: {maxMagnetRange}");
+        //Debug.Log($"MouthMagnet initialized with range: {currentRange} (base: {baseMagnetRange})");
     }
 
     private void OnTriggerEnter2D(Collider2D other)
@@ -113,7 +145,7 @@ public class MouthMagnet : MonoBehaviour
 
             directionToMagnet.Normalize();
 
-            float normalizedDistance = distance / maxMagnetRange;
+            float normalizedDistance = distance / CurrentMagnetRange;
             float forceMultiplier = forceCurve.Evaluate(1f - normalizedDistance);
 
             Vector2 magneticPull = directionToMagnet * magneticForce * forceMultiplier;
@@ -167,12 +199,13 @@ public class MouthMagnet : MonoBehaviour
         if (showDebugGizmos)
         {
             Vector2 magnetCenter = MagnetCenter;
+            float displayRange = CurrentMagnetRange;
 
             Gizmos.color = Color.magenta;
-            Gizmos.DrawWireSphere(magnetCenter, maxMagnetRange);
+            Gizmos.DrawWireSphere(magnetCenter, displayRange);
 
             Gizmos.color = new Color(1f, 0f, 1f, 0.1f);
-            Gizmos.DrawSphere(magnetCenter, maxMagnetRange);
+            Gizmos.DrawSphere(magnetCenter, displayRange);
 
             // Draw a small cross to show the exact center
             Gizmos.color = Color.yellow;
