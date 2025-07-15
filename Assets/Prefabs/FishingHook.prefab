@@ -124,9 +124,9 @@ MonoBehaviour:
   isAboveWater: 1
   airGravityScale: 2
   airDrag: 1.5
-  airMaxSpeed: 3
-  underwaterGravityScale: 0
-  underwaterDrag: 0.5
+  airMaxSpeed: 4
+  underwaterGravityScale: 1
+  underwaterDrag: 2
   underwaterMaxSpeed: 3
   entityType: 3
   maxDistance: 8

@@ -99,10 +99,11 @@ public class HookSpawner : MonoBehaviour
 
             currentHook.maxDistance = hookMaxDistance;
             currentHook.SetSpawner(this);
-            currentHook.ThrowProjectile(throwDirection, throwForce);
 
             // Setup water detection
             SetupWaterDetection();
+
+            currentHook.ThrowProjectile(throwDirection, throwForce);
 
             Debug.Log($"Hook thrown successfully by {gameObject.name}! Spawn point: {spawnPoint.position}");
         }
@@ -123,7 +124,7 @@ public class HookSpawner : MonoBehaviour
         if (waterCheck != null && currentHook != null)
         {
             // Configure the water check to monitor our hook
-            waterCheck.targetCollider = currentHook.GetComponent<Collider2D>();
+            waterCheck.targetCollider = currentHook.GetComponentInChildren<Collider2D>();
 
             // If the hook has EntityMovement, connect it
             Entity hookMovement = currentHook.GetComponent<Entity>();
@@ -158,7 +159,7 @@ public class HookSpawner : MonoBehaviour
                 // Move hook slightly toward spawn point for visual effect
                 currentHook.transform.position += direction * (retractionAmount * 0.5f);
 
-                if (newLength <= 4f) currentHook.GetComponentInChildren<CircleCollider2D>().enabled = false;
+                if (currentHook.IsAboveWater) currentHook.GetComponentInChildren<CircleCollider2D>().enabled = false;
 
                 Debug.Log($"Hook being retracted gradually - remaining length: {newLength:F1}");
             }

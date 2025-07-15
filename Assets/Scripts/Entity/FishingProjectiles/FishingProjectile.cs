@@ -43,7 +43,14 @@ public abstract class FishingProjectile : Entity
         entityType = EntityType.FishingProjectile;
         player = GameObject.FindGameObjectWithTag("Player")?.GetComponent<Player>();
 
-        InitializeProjectile();
+        hookCollider = GetComponent<CircleCollider2D>();
+        if (hookCollider != null)
+        {
+            hookCollider.isTrigger = true;
+        }
+
+        OnProjectileSpawned();
+        Debug.Log($"Hook initialized. SpawnPoint: {spawnPoint}, Current Position: {transform.position}");
     }
 
     protected override void Update()
@@ -62,18 +69,6 @@ public abstract class FishingProjectile : Entity
             base.Update();
             ConstrainToMaxDistance();
         }
-    }
-
-    protected virtual void InitializeProjectile()
-    {
-        hookCollider = GetComponent<CircleCollider2D>();
-        if (hookCollider != null)
-        {
-            hookCollider.isTrigger = true;
-        }
-
-        OnProjectileSpawned();
-        Debug.Log($"Hook initialized. SpawnPoint: {spawnPoint}, Current Position: {transform.position}");
     }
 
     public virtual void SetSpawnPoint(Transform spawnPosition)
@@ -355,13 +350,15 @@ public abstract class FishingProjectile : Entity
     // Implement EntityMovement abstract methods
     protected override void AirborneBehavior()
     {
-        // Hook behavior when in air - could add wind effects, etc.
+        rb.gravityScale = airGravityScale;
+        rb.drag = airDrag;
         OnAirborneBehavior();
     }
 
     protected override void UnderwaterBehavior()
     {
-        // Hook behavior when underwater - could add water effects, etc.
+        rb.gravityScale = underwaterGravityScale;
+        rb.drag = underwaterDrag;
         OnUnderwaterBehavior();
     }
 
