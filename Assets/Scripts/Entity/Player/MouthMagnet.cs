@@ -14,7 +14,7 @@ public class MouthMagnet : MonoBehaviour
     [SerializeField] private bool showDebugGizmos = true;
 
     private CircleCollider2D magnetCollider;
-    [SerializeField] private List<FishingProjectile> attractedProjectiles = new List<FishingProjectile>();
+    [SerializeField] private List<Entity> attractedEntities = new List<Entity>();
 
     public Vector2 MagnetCenter
     {
@@ -33,7 +33,7 @@ public class MouthMagnet : MonoBehaviour
 
     void FixedUpdate()
     {
-        ApplyMagneticForce();
+        ApplyMagneticForceToEntities();
         CleanupNullReferences();
     }
 
@@ -63,49 +63,50 @@ public class MouthMagnet : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-        FishingProjectile projectile = other.GetComponentInParent<FishingProjectile>();
+        Entity entity = other.GetComponentInParent<Entity>();
 
-        if (projectile != null && !attractedProjectiles.Contains(projectile))
+        if (entity != null && !attractedEntities.Contains(entity))
         {
-            attractedProjectiles.Add(projectile);
-            Debug.Log($"MouthMagnet: Started attracting {projectile.name}");
-            Debug.Log($"Current attracted projectiles count: {attractedProjectiles.Count}");
+            attractedEntities.Add(entity);
+            Debug.Log($"MouthMagnet: Started attracting entity {entity.name} of type {entity.GetType().Name}");
+            Debug.Log($"Current attracted entities count: {attractedEntities.Count}");
         }
-
     }
 
     private void OnTriggerExit2D(Collider2D other)
     {
-        FishingProjectile projectile = other.GetComponentInParent<FishingProjectile>();
+        Entity entity = other.GetComponentInParent<Entity>();
 
-        if (projectile != null && attractedProjectiles.Contains(projectile))
+        if (entity != null && attractedEntities.Contains(entity))
         {
-            attractedProjectiles.Remove(projectile);
-            Debug.Log($"MouthMagnet: Stopped attracting {projectile.name}");
+            attractedEntities.Remove(entity);
+            Debug.Log($"MouthMagnet: Stopped attracting entity {entity.name}");
         }
     }
 
-    private void ApplyMagneticForce()
+    private void ApplyMagneticForceToEntities()
     {
-        for (int i = attractedProjectiles.Count - 1; i >= 0; i--)
+        for (int i = attractedEntities.Count - 1; i >= 0; i--)
         {
-            FishingProjectile projectile = attractedProjectiles[i];
+            Entity entity = attractedEntities[i];
 
-            if (projectile == null)
+            if (entity == null)
             {
-                attractedProjectiles.RemoveAt(i);
+                attractedEntities.RemoveAt(i);
                 continue;
             }
 
-            if (projectile.isBeingHeld)
+            if (!ShouldAttractEntity(entity))
             {
+                attractedEntities.RemoveAt(i);
+                Debug.Log($"MouthMagnet: Removed {entity.name} - entity no longer meets attraction criteria");
                 continue;
             }
 
-            Rigidbody2D projectileRb = projectile.GetComponent<Rigidbody2D>();
-            if (projectileRb == null) continue;
+            Rigidbody2D entityRb = entity.GetComponent<Rigidbody2D>();
+            if (entityRb == null) continue;
 
-            Vector2 directionToMagnet = (MagnetCenter - (Vector2)projectile.transform.position);
+            Vector2 directionToMagnet = (MagnetCenter - (Vector2)entity.transform.position);
             float distance = directionToMagnet.magnitude;
 
             if (distance < 0.1f) continue;
@@ -116,18 +117,49 @@ public class MouthMagnet : MonoBehaviour
             float forceMultiplier = forceCurve.Evaluate(1f - normalizedDistance);
 
             Vector2 magneticPull = directionToMagnet * magneticForce * forceMultiplier;
-            projectileRb.AddForce(magneticPull, ForceMode2D.Force);
+            entityRb.AddForce(magneticPull, ForceMode2D.Force);
 
             if (showDebugGizmos)
             {
-                Debug.DrawLine(projectile.transform.position, MagnetCenter, Color.magenta, 0.1f);
+                Color lineColor = GetDebugColorForEntity(entity);
+                Debug.DrawLine(entity.transform.position, MagnetCenter, lineColor, 0.1f);
             }
         }
     }
 
+    private bool ShouldAttractEntity(Entity entity)
+    {
+        if (entity is FishingProjectile projectile)
+        {
+            return !projectile.isBeingHeld;
+        }
+        
+        if (entity is Enemy enemy)
+        {
+            return enemy.GetState() != Enemy.EnemyState.Alive;
+        }
+
+        return false;
+    }
+
+    private Color GetDebugColorForEntity(Entity entity)
+    {
+        if (entity is FishingProjectile)
+        {
+            return Color.magenta;
+        }
+        
+        if (entity is Enemy)
+        {
+            return Color.red;
+        }
+
+        return Color.white;
+    }
+
     private void CleanupNullReferences()
     {
-        attractedProjectiles.RemoveAll(projectile => projectile == null);
+        attractedEntities.RemoveAll(entity => entity == null);
     }
 
     private void OnDrawGizmosSelected()
