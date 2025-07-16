@@ -116,22 +116,22 @@ public class IdleDetector : MonoBehaviour
         return landEnemy.MovementStateLand == LandEnemy.LandMovementState.Idle;
     }
 
-    // Optional: Visual debugging in Scene view
-    private void OnDrawGizmosSelected()
-    {
-        // Draw the detection area
-        Gizmos.color = Color.yellow;
+    //// Optional: Visual debugging in Scene view
+    //private void OnDrawGizmosSelected()
+    //{
+    //    // Draw the detection area
+    //    Gizmos.color = Color.yellow;
 
-        CircleCollider2D circleCollider = GetComponent<CircleCollider2D>();
-        if (circleCollider != null)
-        {
-            Gizmos.DrawWireSphere(transform.position, circleCollider.radius);
-        }
+    //    CircleCollider2D circleCollider = GetComponent<CircleCollider2D>();
+    //    if (circleCollider != null)
+    //    {
+    //        Gizmos.DrawWireSphere(transform.position, circleCollider.radius);
+    //    }
 
-        BoxCollider2D boxCollider = GetComponent<BoxCollider2D>();
-        if (boxCollider != null)
-        {
-            Gizmos.DrawWireCube(transform.position, boxCollider.size);
-        }
-    }
+    //    BoxCollider2D boxCollider = GetComponent<BoxCollider2D>();
+    //    if (boxCollider != null)
+    //    {
+    //        Gizmos.DrawWireCube(transform.position, boxCollider.size);
+    //    }
+    //}
 }
