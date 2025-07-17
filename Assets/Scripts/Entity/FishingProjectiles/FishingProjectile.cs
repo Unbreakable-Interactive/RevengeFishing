@@ -58,7 +58,7 @@ public abstract class FishingProjectile : Entity
         if (isBeingHeld && player != null)
         {
             // Position hook at player center
-            transform.position = player.transform.position;
+            MoveHookToFollowPlayer();
 
             // Apply same distance constraint but to player position
             ConstrainPlayerToMaxDistance();
@@ -216,7 +216,7 @@ public abstract class FishingProjectile : Entity
         if (isBeingHeld)
         {
             transform.position = player.transform.position;
-            Debug.Log($"Hook following player to position: {player.transform.position}");
+            //Debug.Log($"Hook following player to position: {player.transform.position}");
         }
     }
 

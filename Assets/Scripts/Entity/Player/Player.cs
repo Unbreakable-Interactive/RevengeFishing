@@ -84,6 +84,9 @@ public class Player : Entity
     private bool isAtMaxHookDistance = false;
     private float originalMaxSpeed;
 
+    [Header("Visual Settings")]
+    [SerializeField] private SpriteRenderer playerSpriteRenderer;
+
     [Header("Debug")]
     public bool enableDebugLogs = false;
 
@@ -107,11 +110,26 @@ public class Player : Entity
         currentGravityScale = underwaterGravityScale;
 
         originalMaxSpeed = maxSpeed;
+
+        playerSpriteRenderer = GetComponentInChildren<SpriteRenderer>();
     }
 
     protected override void Update()
     {
         base.Update(); // Call base Update to handle movement mode
+        if (transform.rotation.z > .7f || transform.rotation.z < -.7f)
+        {
+            playerSpriteRenderer.flipY = true; // Flip sprite when facing left
+            //Debug.Log(transform.rotation.z);
+            //Debug.Log("Player facing left");
+        }
+        else
+        {
+            playerSpriteRenderer.flipY = false; // Normal orientation when facing right
+            //Debug.Log(transform.rotation.z);
+            //Debug.Log("Player facing right");
+        }
+
         if (activeBitingHooks != null && activeBitingHooks.Count > 0) CheckMaxHookDistanceState();
     }
 

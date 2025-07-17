@@ -36,7 +36,7 @@ public class WaterCheck : MonoBehaviour
         // Determine if object is above or below the water line
         bool aboveWater = other.transform.position.y > transform.position.y;
 
-        if (entityMovement != null && entityMovement.GetComponent<Player>().activeBitingHooks != null && !entityMovement.IsAboveWater)
+        if (entityMovement != null && entityMovement.GetComponent<Player>() != null && !entityMovement.IsAboveWater)
         {
             GetComponent<Collider2D>().isTrigger = entityMovement.GetComponent<Player>().activeBitingHooks.Count <= 0;
         }
