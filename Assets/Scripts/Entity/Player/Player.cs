@@ -197,6 +197,7 @@ public class Player : Entity
     //Triggers as long as mouse is being clicked
     void OnMouseHold(Vector2 mousePosition)
     {
+        rb.drag = naturalDrag / 20; // Reduce drag while mouse is held to allow smoother movement
         // If we're not currently doing initial rotation and we're moving, this will trigger steering
         if (!shouldApplyForceAfterRotation && !isRotatingToTarget)
         {
@@ -215,6 +216,7 @@ public class Player : Entity
     void WhileMouseUnheld(Vector2 lastMousePosition)
     {
         //Let object coast if mouse is released
+        rb.drag = naturalDrag;
     }
     #endregion
 
