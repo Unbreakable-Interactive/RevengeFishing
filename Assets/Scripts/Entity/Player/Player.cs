@@ -74,7 +74,7 @@ public class Player : Entity
     private System.Action<Vector3> onConstraintViolation;
 
     [Header("Fishing Hook Interaction")]
-    private List<FishingProjectile> activeBitingHooks = new List<FishingProjectile>();
+    public List<FishingProjectile> activeBitingHooks = new List<FishingProjectile>();
 
     [Header("Line Extension")]
     [SerializeField] private float lineExtensionAmount = 1f; // How much to extend per pull
@@ -99,12 +99,6 @@ public class Player : Entity
 
         // safety check
         if (mainCamera == null) Debug.LogError("Player: No camera found in scene! Player won't work correctly.");
-
-        // _fatigue = 0;
-        // _maxFatigue = _powerLevel;
-
-        //hunger = 0; // hunger increases by 1 each second; player starves if hunger reaches 40
-        //maxHunger = _powerLevel;
 
         hungerHandler = new HungerHandler(_powerLevel, entityFatigue, 0);
 
