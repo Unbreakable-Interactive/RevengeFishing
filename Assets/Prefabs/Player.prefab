@@ -330,10 +330,10 @@ MonoBehaviour:
   isAboveWater: 0
   airGravityScale: 1
   airDrag: 0
-  airMaxSpeed: 10
+  airMaxSpeed: 16
   underwaterGravityScale: 0
   underwaterDrag: 0.6
-  underwaterMaxSpeed: 15
+  underwaterMaxSpeed: 16
   entityType: 1
   mainCamera: {fileID: 0}
   hungerHandler:
@@ -354,7 +354,7 @@ MonoBehaviour:
   velocityThreshold: 0.1
   forceAmount: 2
   maxSpeed: 15
-  naturalDrag: 0.2
+  naturalDrag: 0.8
   rotationDrag: 0.5
   constantAccel: 1
   minForwardVelocity: 1.5
@@ -400,7 +400,7 @@ MonoBehaviour:
   hungerUpdateInterval: 1
   fatigueRecoveryPercentageRate: 0.02
   fatigueUpdateInterval: 1
-  enableDebugLogs: 1
+  enableDebugLogs: 0
   player: {fileID: 5706962072255297144}
 --- !u!50 &5374213318811793880
 Rigidbody2D:
@@ -428,7 +428,7 @@ Rigidbody2D:
   m_Interpolate: 0
   m_SleepingMode: 1
   m_CollisionDetection: 0
-  m_Constraints: 0
+  m_Constraints: 4
 --- !u!1 &7202299424025216376
 GameObject:
   m_ObjectHideFlags: 0
