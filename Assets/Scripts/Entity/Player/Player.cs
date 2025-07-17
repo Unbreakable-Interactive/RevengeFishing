@@ -211,7 +211,7 @@ public class Player : Entity
     void WhileMouseUnheld(Vector2 lastMousePosition)
     {
         //Let object coast if mouse is released
-        if (rb.drag < naturalDrag) rb.drag += naturalDrag / 20;
+        if (rb.drag < naturalDrag) rb.drag += naturalDrag / 60;
         if (rb.drag > naturalDrag) rb.drag = naturalDrag; // Clamp to natural drag
     }
     #endregion
