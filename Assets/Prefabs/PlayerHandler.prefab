@@ -164,8 +164,16 @@ PrefabInstance:
       value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 5706962072255297144, guid: b69f09c4e1675754487856532c9a780a, type: 3}
+      propertyPath: airMaxSpeed
+      value: 16
+      objectReference: {fileID: 0}
+    - target: {fileID: 5706962072255297144, guid: b69f09c4e1675754487856532c9a780a, type: 3}
       propertyPath: naturalDrag
       value: 0.8
+      objectReference: {fileID: 0}
+    - target: {fileID: 5706962072255297144, guid: b69f09c4e1675754487856532c9a780a, type: 3}
+      propertyPath: underwaterMaxSpeed
+      value: 16
       objectReference: {fileID: 0}
     - target: {fileID: 6728867108004361845, guid: b69f09c4e1675754487856532c9a780a, type: 3}
       propertyPath: m_Name
