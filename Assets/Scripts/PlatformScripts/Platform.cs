@@ -67,6 +67,7 @@ public class Platform : MonoBehaviour
             }
         }
     }
+
     protected virtual void RegisterEnemyOnCollision(LandEnemy enemy)
     {
         if (enemy == null || enemy.gameObject == null) return;
@@ -84,8 +85,31 @@ public class Platform : MonoBehaviour
         assignedEnemies.Add(enemy);
         enemy.SetAssignedPlatform(this);
         
-        // Make enemy a CHILD of this platform (so they move together!)
-        enemy.transform.SetParent(this.transform);
+        // 🔥 CRITICAL FIX: Only apply smart parenting for LAND platforms, not boat platforms
+        if (ShouldUseSmartParenting())
+        {
+            Transform targetToParent = GetCorrectParentTarget(enemy);
+            
+            // Only parent if we found a Handler, otherwise keep current hierarchy
+            if (targetToParent != null)
+            {
+                targetToParent.SetParent(this.transform);
+                
+                if (showDebugInfo)
+                {
+                    string parentType = targetToParent == enemy.transform ? "enemy directly" : "entire handler";
+                    Debug.Log($"PLATFORM ASSIGNMENT: Parenting {parentType} ({targetToParent.name}) to platform {gameObject.name}");
+                }
+            }
+            else if (showDebugInfo)
+            {
+                Debug.Log($"PLATFORM ASSIGNMENT: Keeping {enemy.name} hierarchy unchanged (no Handler found)");
+            }
+        }
+        else if (showDebugInfo)
+        {
+            Debug.Log($"PLATFORM ASSIGNMENT: Skipping smart parenting for {gameObject.name} (boat platform detected)");
+        }
         
         // CRITICAL: Trigger AI activation after platform assignment
         enemy.OnPlatformAssigned(this);
@@ -97,7 +121,75 @@ public class Platform : MonoBehaviour
         enemy.platformBoundsCalculated = true;
 
         if (showDebugInfo)
-            Debug.Log($"COLLISION ASSIGNMENT: {enemy.name} assigned to platform {gameObject.name} and made CHILD! Total enemies: {assignedEnemies.Count}");
+            Debug.Log($"COLLISION ASSIGNMENT: {enemy.name} assigned to platform {gameObject.name}! Total enemies: {assignedEnemies.Count}");
+    }
+
+    // 🔥 NEW METHOD: Determine if this platform should use smart parenting
+    protected virtual bool ShouldUseSmartParenting()
+    {
+        // Check if this is a boat platform by layer or component type
+        bool isBoatPlatform = gameObject.layer == LayerMask.NameToLayer("BoatPlatform") || 
+                             GetComponent<BoatPlatform>() != null ||
+                             transform.name.ToLower().Contains("boat");
+        
+        if (showDebugInfo && isBoatPlatform)
+        {
+            Debug.Log($"SMART PARENTING: Detected boat platform {gameObject.name} - disabling smart parenting");
+        }
+        
+        return !isBoatPlatform; // Only use smart parenting for non-boat platforms
+    }
+
+    // 🔥 UPDATED METHOD: Smart logic to determine what should be parented to the platform
+    private Transform GetCorrectParentTarget(LandEnemy enemy)
+    {
+        // Check if this enemy is part of a FishermanHandler hierarchy
+        Transform current = enemy.transform;
+        
+        // Traverse up the hierarchy looking for FishermanHandler
+        while (current.parent != null)
+        {
+            Transform parent = current.parent;
+            
+            // Check if parent is a FishermanHandler (Land or Boat)
+            if (parent.name.Contains("FishermanHandler"))
+            {
+                // 🔥 ADDITIONAL CHECK: Don't parent BoatFishermanHandlers to land platforms
+                if (parent.name.Contains("BoatFishermanHandler"))
+                {
+                    if (showDebugInfo)
+                    {
+                        Debug.Log($"SMART PARENTING: Found BoatFishermanHandler {parent.name} - this should not be parented to land platform");
+                    }
+                    return null; // Don't parent boat handlers to land platforms
+                }
+                
+                if (showDebugInfo)
+                {
+                    Debug.Log($"SMART PARENTING: Found {parent.name} as handler for {enemy.name}");
+                }
+                return parent; // Parent the entire handler, not just the enemy
+            }
+            
+            current = parent;
+        }
+        
+        // If no FishermanHandler found, check if enemy has any meaningful parent structure
+        if (enemy.transform.parent != null)
+        {
+            if (showDebugInfo)
+            {
+                Debug.Log($"SMART PARENTING: No FishermanHandler found, but {enemy.name} has parent {enemy.transform.parent.name} - preserving hierarchy");
+            }
+            return null; // Don't change the hierarchy
+        }
+        
+        // Enemy has no parent structure, safe to parent directly
+        if (showDebugInfo)
+        {
+            Debug.Log($"SMART PARENTING: {enemy.name} has no parent - will parent directly to platform");
+        }
+        return enemy.transform;
     }
 
     void SetupSelectiveCollisions()
@@ -160,8 +252,23 @@ public class Platform : MonoBehaviour
             assignedEnemies.Add(enemy);
             enemy.SetAssignedPlatform(this);
 
-            // Make enemy a CHILD of this platform (so they move together!)
-            enemy.transform.SetParent(this.transform);
+            // 🔥 CRITICAL FIX: Only apply smart parenting for LAND platforms
+            if (ShouldUseSmartParenting())
+            {
+                Transform targetToParent = GetCorrectParentTarget(enemy);
+                
+                // Only parent if we found a Handler, otherwise keep current hierarchy
+                if (targetToParent != null)
+                {
+                    targetToParent.SetParent(this.transform);
+                    
+                    if (showDebugInfo)
+                    {
+                        string parentType = targetToParent == enemy.transform ? "enemy directly" : "entire handler";
+                        Debug.Log($"RUNTIME ASSIGNMENT: Parenting {parentType} ({targetToParent.name}) to platform {gameObject.name}");
+                    }
+                }
+            }
 
             // Apply collision rules immediately
             Collider2D enemyCollider = enemy.GetComponent<Collider2D>();
@@ -170,11 +277,64 @@ public class Platform : MonoBehaviour
                 Physics2D.IgnoreCollision(enemyCollider, platformCollider, false);
             }
 
+            // 🔥 CRITICAL FIX: Trigger OnPlatformAssigned after runtime registration
+            enemy.OnPlatformAssigned(this);
+
             if (showDebugInfo)
             {
-                Debug.Log($"Auto-assigned {enemy.name} to platform {gameObject.name} and made CHILD");
+                Debug.Log($"Auto-assigned {enemy.name} to platform {gameObject.name}");
             }
         }
+    }
+
+    // 🔥 UPDATED: ForceRegisterEnemy with smart parenting condition
+    public void ForceRegisterEnemy(LandEnemy enemy)
+    {
+        if (enemy == null || enemy.gameObject == null) return;
+        
+        if (assignedEnemies.Contains(enemy)) return;
+        
+        // Clear any previous platform assignment
+        Platform previousPlatform = enemy.GetAssignedPlatform();
+        if (previousPlatform != null && previousPlatform != this)
+        {
+            previousPlatform.UnregisterEnemy(enemy);
+            if (showDebugInfo)
+                Debug.Log($"FORCE MOVED: {enemy.name} from {previousPlatform.name} to {gameObject.name}");
+        }
+        
+        assignedEnemies.Add(enemy);
+        enemy.SetAssignedPlatform(this);
+        
+        // 🔥 CRITICAL FIX: Only apply smart parenting for LAND platforms
+        if (ShouldUseSmartParenting())
+        {
+            Transform targetToParent = GetCorrectParentTarget(enemy);
+            
+            // Only parent if we found a Handler, otherwise keep current hierarchy
+            if (targetToParent != null)
+            {
+                targetToParent.SetParent(this.transform);
+                
+                if (showDebugInfo)
+                {
+                    string parentType = targetToParent == enemy.transform ? "enemy directly" : "entire handler";
+                    Debug.Log($"FORCE ASSIGNMENT: Parenting {parentType} ({targetToParent.name}) to platform {gameObject.name}");
+                }
+            }
+        }
+        
+        // CRITICAL: Trigger AI activation after platform assignment
+        enemy.OnPlatformAssigned(this);
+        
+        Collider2D enemyCollider = enemy.GetComponent<Collider2D>();
+        if (enemyCollider != null && platformCollider != null)
+            Physics2D.IgnoreCollision(platformCollider, enemyCollider, false);
+
+        enemy.platformBoundsCalculated = true;
+
+        if (showDebugInfo)
+            Debug.Log($"FORCE ASSIGNED: {enemy.name} to platform {gameObject.name}! Total enemies: {assignedEnemies.Count}");
     }
 
     public void UnregisterEnemy(LandEnemy enemy)
@@ -185,10 +345,28 @@ public class Platform : MonoBehaviour
         {
             assignedEnemies.Remove(enemy);
 
-            // Remove parent relationship when unregistering (with null safety)
-            if (enemy.transform != null)
+            // 🔥 CRITICAL FIX: Only do smart unparenting for LAND platforms
+            if (ShouldUseSmartParenting())
             {
-                enemy.transform.SetParent(null);
+                // Smart unparenting - remove the correct object from platform hierarchy
+                Transform currentParent = enemy.transform;
+                
+                // Find what is actually parented to this platform
+                while (currentParent != null && currentParent.parent != this.transform)
+                {
+                    currentParent = currentParent.parent;
+                }
+                
+                // If we found something parented to this platform, unparent it
+                if (currentParent != null && currentParent.parent == this.transform)
+                {
+                    currentParent.SetParent(null);
+                    
+                    if (showDebugInfo)
+                    {
+                        Debug.Log($"UNREGISTERED: Removed {currentParent.name} from platform {gameObject.name} hierarchy");
+                    }
+                }
             }
 
             Collider2D enemyCollider = enemy.GetComponent<Collider2D>();
@@ -199,7 +377,7 @@ public class Platform : MonoBehaviour
 
             if (showDebugInfo)
             {
-                Debug.Log($"UNREGISTERED: {enemy.name} from platform {gameObject.name} and removed PARENT. Total enemies: {assignedEnemies.Count}");
+                Debug.Log($"UNREGISTERED: {enemy.name} from platform {gameObject.name}. Total enemies: {assignedEnemies.Count}");
             }
         }
     }

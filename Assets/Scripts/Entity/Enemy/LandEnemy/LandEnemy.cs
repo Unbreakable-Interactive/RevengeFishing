@@ -46,7 +46,6 @@ public class LandEnemy : Enemy
     // Overlapping other enemy?
     protected IdleDetector idleDetector;
 
-
     [SerializeField] protected float maxUpwardVelocity; // For when they swim upward
 
     [SerializeField] protected float weight; // How much the enemy sinks in water; varies between 60 and 100 kg
@@ -66,6 +65,9 @@ public class LandEnemy : Enemy
     [SerializeField] protected float minLineLength = 2f;      // Minimum line length
     [SerializeField] protected float maxLineReduction = 1.5f;  // Max reduction per pull
     [SerializeField] protected float lineReductionVariation = 0.4f; // Random variation
+
+    // 🔥 CRITICAL FIX: Add this property to track initial spawn positions
+    public Vector3 InitialSpawnPosition { get; set; }
 
     public bool HasStartedFloating
     {
@@ -102,8 +104,11 @@ public class LandEnemy : Enemy
         return assignedPlatform;
     }
 
+    // 🔥 CRITICAL FIX: Override OnPlatformAssigned for better integration
     public virtual void OnPlatformAssigned(Platform platform)
     {
+        assignedPlatform = platform;
+        
         if (assignedPlatform != null && !platformBoundsCalculated)
         {
             CalculatePlatformBounds();
@@ -111,10 +116,18 @@ public class LandEnemy : Enemy
 
         Debug.Log($"{gameObject.name} - Platform assigned: {platform.name}");
 
+        // 🔥 CRITICAL FIX: Ensure proper timing for next action
         if (Time.time >= nextActionTime - 0.5f)
         {
-            nextActionTime = Time.time + 0.5f;
+            nextActionTime = Time.time + Random.Range(0.5f, 1.5f);
         }
+        
+        // 🔥 CRITICAL FIX: Force state reset to ensure clean start
+        _landMovementState = LandMovementState.Idle;
+        fishingToolEquipped = false;
+        
+        // 🔥 CRITICAL FIX: Store spawn position for pooling reset
+        InitialSpawnPosition = transform.position;
     }
 
     public void ClearPlatformAssignment()
@@ -152,10 +165,27 @@ public class LandEnemy : Enemy
         base.EnemySetup();
         platformBoundsCalculated = false;
 
-        // Initialize LandEnemyConfig if not assigned in Inspector
+        // 🔥 CRITICAL FIX: Force assign LandEnemyConfig if missing
         if (landEnemyConfig == null)
         {
-            landEnemyConfig = ScriptableObject.CreateInstance<LandEnemyConfig>();
+            // Try to find a default LandEnemyConfig in Resources
+            landEnemyConfig = Resources.Load<LandEnemyConfig>("LandEnemyConfig");
+            
+            if (landEnemyConfig == null)
+            {
+                // Create a default one as last resort
+                landEnemyConfig = ScriptableObject.CreateInstance<LandEnemyConfig>();
+                landEnemyConfig.idleProbability = 0.4f;
+                landEnemyConfig.walkProbability = 0.3f;
+                landEnemyConfig.runProbability = 0.3f;
+                landEnemyConfig.identifier = TypeIdentifier.Land;
+                
+                Debug.LogWarning($"{gameObject.name}: No LandEnemyConfig assigned! Created default config.");
+            }
+            else
+            {
+                Debug.Log($"{gameObject.name}: Loaded default LandEnemyConfig from Resources");
+            }
         }
 
         nextActionTime = Time.time + Random.Range(0.5f, 2f);
@@ -178,9 +208,9 @@ public class LandEnemy : Enemy
             ChooseMovementAction();
         }
 
-
         Debug.Log($"{gameObject.name} - Enemy initialized with power level {_powerLevel}");
     }
+
     // Update is called once per frame
     protected override void Update()
     {
@@ -462,12 +492,6 @@ public class LandEnemy : Enemy
             isPullingPlayer = false;
 
             // Release player constraint if active
-            // Player player = FindObjectOfType<Player>();
-            // if (player != null)
-            // {
-            //     player.RemovePositionConstraint();
-            // }
-            
             Player player = Player.Instance;
             if (player != null)
                 player.RemovePositionConstraint();
@@ -764,7 +788,6 @@ public class LandEnemy : Enemy
             }
         }
     }
-
 
     #endregion
 }

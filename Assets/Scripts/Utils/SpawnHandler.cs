@@ -18,11 +18,6 @@ public class SpawnHandler : MonoBehaviour
     [Header("Spawn Points")]
     [SerializeField] private Transform[] configuredSpawnPoints;
 
-    // [Header("References")]
-    // [SerializeField] private SimpleObjectPool objectPool;
-    // [SerializeField] private Player playerMovement;
-    // [SerializeField] private PowerLevelScaler powerLevelScaler;
-
     [Header("Debug")]
     [SerializeField] private bool enableSpawnLogs = true;
 
@@ -32,12 +27,11 @@ public class SpawnHandler : MonoBehaviour
     private bool spawningEnabled = true;
     private int currentEnemyCount = 0;
     private float lastSpawnTime = 0f;
-    private int totalSpawnCount = 0; // For limited spawning
+    private int totalSpawnCount = 0;
     private bool hasInitialized = false;
 
     protected virtual void Awake()
     {
-        // Initialize from config if available
         if (useScriptableObjectConfig && spawnConfig != null)
         {
             ApplyConfigurationSettings();
@@ -48,7 +42,6 @@ public class SpawnHandler : MonoBehaviour
     {
         Initialize();
         
-        // Handle initial spawning for boats
         if (spawnConfig != null && spawnConfig.spawnOnAwake)
         {
             StartCoroutine(InitialSpawnDelay());
@@ -59,7 +52,6 @@ public class SpawnHandler : MonoBehaviour
     {
         if (spawnConfig == null) return;
         
-        // Apply settings from ScriptableObject
         poolName = spawnConfig.poolName;
         spawnInterval = spawnConfig.spawnInterval;
         maxEnemies = spawnConfig.maxEnemies;
@@ -78,7 +70,6 @@ public class SpawnHandler : MonoBehaviour
         useScriptableObjectConfig = true;
         ApplyConfigurationSettings();
         
-        // Reinitialize if already started
         if (hasInitialized)
         {
             Initialize();
@@ -124,7 +115,7 @@ public class SpawnHandler : MonoBehaviour
     {
         if (spawnConfig != null && spawnConfig.spawnType == SpawnHandlerConfig.SpawnType.Limited)
         {
-            int spawnCount = Random.Range(1, spawnConfig.maxEnemies + 1); // 1 or 2 for boats
+            int spawnCount = Random.Range(1, spawnConfig.maxEnemies + 1);
             for (int i = 0; i < spawnCount; i++)
             {
                 if (totalSpawnCount < spawnConfig.maxSpawns)
@@ -141,7 +132,6 @@ public class SpawnHandler : MonoBehaviour
 
     private void ValidateSpawnPoints()
     {
-        // Use configured spawn points if available, otherwise fall back to legacy
         Transform[] activeSpawnPoints = configuredSpawnPoints?.Length > 0 ? configuredSpawnPoints : spawnPoints;
         
         if (activeSpawnPoints == null || activeSpawnPoints.Length == 0)
@@ -161,7 +151,6 @@ public class SpawnHandler : MonoBehaviour
 
     void Update()
     {
-        // MANUAL SPAWNING CONTROLS
         if (Input.GetKeyDown(KeyCode.F))
         {
             if (isManualSpawning)
@@ -175,7 +164,6 @@ public class SpawnHandler : MonoBehaviour
             SpawnSingleAtRandomPoint();
         }
 
-        // AUTO SPAWNING CONTROLS
         if (Input.GetKeyDown(KeyCode.P))
         {
             ToggleAutoSpawning();
@@ -186,7 +174,6 @@ public class SpawnHandler : MonoBehaviour
             LogSpawnStats();
         }
 
-        // AUTO SPAWNING SYSTEM
         if (enableAutoSpawning && spawningEnabled)
         {
             if (spawnConfig != null)
@@ -197,7 +184,6 @@ public class SpawnHandler : MonoBehaviour
                         AutoSpawnEnemies();
                         break;
                     case SpawnHandlerConfig.SpawnType.Limited:
-                        // Limited spawning is handled in Start()
                         break;
                     case SpawnHandlerConfig.SpawnType.PlayerTriggered:
                         CheckPlayerTriggeredSpawn();
@@ -206,7 +192,7 @@ public class SpawnHandler : MonoBehaviour
             }
             else
             {
-                AutoSpawnEnemies(); // Fallback to legacy behavior
+                AutoSpawnEnemies();
             }
         }
     }
@@ -311,7 +297,6 @@ public class SpawnHandler : MonoBehaviour
         if (Time.time - lastSpawnTime < spawnInterval) return;
         if (currentEnemyCount >= maxEnemies) return;
         
-        // Check spawn limits for limited spawning
         if (spawnConfig != null && spawnConfig.maxSpawns > 0 && totalSpawnCount >= spawnConfig.maxSpawns)
             return;
             
@@ -388,7 +373,6 @@ public class SpawnHandler : MonoBehaviour
 
     private void SetEnemyPowerLevel(GameObject enemy)
     {
-        // Cache the enemy component lookup
         Enemy enemyComponent = enemy.GetComponentInChildren<Enemy>();
 
         if (enemyComponent == null || PowerLevelScaler.Instance == null)
@@ -402,15 +386,12 @@ public class SpawnHandler : MonoBehaviour
             return;
         }
 
-        // Single method call and assignment
         int newPowerLevel = PowerLevelScaler.Instance.CalculateEnemyPowerLevel();
         enemyComponent.SetPowerLevel(newPowerLevel);
 
-        // Batch the level display update with the power level setting
         LevelDisplay levelDisplay = enemy.GetComponentInChildren<LevelDisplay>();
         levelDisplay?.SetEntity(enemyComponent);
 
-        // Conditional debug logging (only in editor builds)
         if (enableSpawnLogs)
             Debug.Log($"Set {enemy.name} power level to {newPowerLevel}");
     }
@@ -423,13 +404,66 @@ public class SpawnHandler : MonoBehaviour
 
             if (enemy != null)
             {
-                // Set power level for the spawned enemy
                 SetEnemyPowerLevel(enemy);
+                
+                // 🔥 CRITICAL FIX: Force platform assignment after spawn
+                StartCoroutine(ForceAssignToPlatformAfterSpawn(enemy, position));
             }
 
             return enemy;
         }
         return null;
+    }
+
+    // 🔥 NEW METHOD: Force platform assignment after spawn
+    private IEnumerator ForceAssignToPlatformAfterSpawn(GameObject enemy, Vector3 spawnPosition)
+    {
+        // Wait one frame for physics to settle
+        yield return null;
+        
+        // Find LandEnemy component
+        LandEnemy landEnemy = enemy.GetComponentInChildren<LandEnemy>();
+        if (landEnemy == null)
+        {
+            Debug.LogError($"No LandEnemy component found in spawned object {enemy.name}");
+            yield break;
+        }
+
+        // Find nearest platform within range
+        Platform nearestPlatform = FindNearestPlatform(spawnPosition, 5f);
+        
+        if (nearestPlatform != null)
+        {
+            // Force assignment to platform
+            nearestPlatform.RegisterEnemyAtRuntime(landEnemy);
+            
+            if (enableSpawnLogs)
+                Debug.Log($"FORCE ASSIGNED: {enemy.name} to platform {nearestPlatform.name}");
+        }
+        else
+        {
+            Debug.LogWarning($"No platform found near spawn position {spawnPosition} for {enemy.name}");
+        }
+    }
+
+    // 🔥 NEW METHOD: Find nearest platform
+    private Platform FindNearestPlatform(Vector3 position, float searchRadius)
+    {
+        Platform[] allPlatforms = FindObjectsOfType<Platform>();
+        Platform nearest = null;
+        float closestDistance = searchRadius;
+
+        foreach (Platform platform in allPlatforms)
+        {
+            float distance = Vector3.Distance(position, platform.transform.position);
+            if (distance < closestDistance)
+            {
+                closestDistance = distance;
+                nearest = platform;
+            }
+        }
+
+        return nearest;
     }
 
     public void OnEnemyDestroyed(GameObject obj)
@@ -458,7 +492,6 @@ public class SpawnHandler : MonoBehaviour
     {
         if (spawnPoints == null) return;
 
-        // Draw spawn points
         Gizmos.color = Color.cyan;
         for (int i = 0; i < spawnPoints.Length; i++)
         {
@@ -467,7 +500,6 @@ public class SpawnHandler : MonoBehaviour
                 Vector3 pos = spawnPoints[i].position;
                 Gizmos.DrawWireSphere(pos, 1f);
 
-                // Draw spawn point index
                 Gizmos.color = Color.white;
                 Gizmos.DrawRay(pos, Vector3.up * 2f);
 
@@ -480,7 +512,6 @@ public class SpawnHandler : MonoBehaviour
     {
         if (spawnPoints == null) return;
 
-        // Draw spawn points with numbers when selected
         Gizmos.color = Color.yellow;
         for (int i = 0; i < spawnPoints.Length; i++)
         {
@@ -489,7 +520,6 @@ public class SpawnHandler : MonoBehaviour
                 Vector3 pos = spawnPoints[i].position;
                 Gizmos.DrawSphere(pos, 0.5f);
 
-                // Draw player distance check radius
                 if (Player.Instance != null)
                 {
                     Gizmos.color = Color.red;
