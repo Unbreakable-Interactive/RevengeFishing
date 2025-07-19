@@ -210,19 +210,6 @@ public class SimpleObjectPool : MonoBehaviour
             rb.isKinematic = false;
         }
 
-        // STEP 3: Reset all colliders to proper state
-        Collider2D[] colliders = handler.GetComponentsInChildren<Collider2D>();
-        foreach (var col in colliders)
-        {
-            if (!col.name.ToLower().Contains("trigger") && 
-                !col.name.ToLower().Contains("sensor") &&
-                !col.name.ToLower().Contains("detector"))
-            {
-                col.isTrigger = false;
-                col.enabled = true;
-            }
-        }
-
         // STEP 4: Find and reset the Enemy component
         Enemy enemy = handler.GetComponentInChildren<Enemy>();
         if (enemy != null)
@@ -230,6 +217,10 @@ public class SimpleObjectPool : MonoBehaviour
             // Reset enemy state
             enemy.ChangeState_Alive();
             enemy.ResetFatigue();
+            
+            Collider2D collider = enemy.BodyCollider;
+            collider.isTrigger = false;
+            collider.enabled = true;
             
             // Reset land enemy specific stuff
             if (enemy is LandEnemy landEnemy)
