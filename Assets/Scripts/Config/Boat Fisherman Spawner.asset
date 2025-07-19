@@ -19,9 +19,9 @@ MonoBehaviour:
   spawnEveryXSeconds: 0.00001
   keepActiveAtOnce: 2
   spawnThisManyPerCycle: 2
-  waitBetweenCycles: 45
+  waitBetweenCycles: 10
   needsUnlock: 0
-  playerLevelNeeded: 2
+  playerLevelNeeded: 1
   dontSpawnCloserThan: 10
   dontSpawnFartherThan: 50
   showLogs: 1

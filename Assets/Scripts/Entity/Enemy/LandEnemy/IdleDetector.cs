@@ -125,13 +125,13 @@ public class IdleDetector : MonoBehaviour
         CircleCollider2D circleCollider = GetComponent<CircleCollider2D>();
         if (circleCollider != null)
         {
-            Gizmos.DrawWireSphere(transform.position, circleCollider.radius);
+            Gizmos.DrawWireSphere((Vector2)transform.position + circleCollider.offset, circleCollider.radius);
         }
 
         BoxCollider2D boxCollider = GetComponent<BoxCollider2D>();
         if (boxCollider != null)
         {
-            Gizmos.DrawWireCube(transform.position, boxCollider.size);
+            Gizmos.DrawWireCube((Vector2)transform.position + boxCollider.offset, boxCollider.size);
         }
     }
 }

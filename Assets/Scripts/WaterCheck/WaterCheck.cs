@@ -22,11 +22,23 @@ public class WaterCheck : MonoBehaviour
         // Determine if object is above or below the water line
         bool aboveWater = other.transform.position.y > transform.position.y;
 
-        // FIXED: Add cooldown to prevent spam calls
         if (entityMovement != null)
         {
             entityMovement.SetMovementMode(aboveWater);
             Debug.Log($"{other.name} {(aboveWater ? "exited" : "entered")} water!");
+        }
+    }
+
+    private void OnTriggerEnter2D(Collider2D other)
+    {
+        if (other != targetCollider) return;
+
+        // Determine if object is above or below the water line
+        bool aboveWater = other.transform.position.y > transform.position.y;
+
+        if (entityMovement != null && entityMovement.GetComponent<Player>() != null && !entityMovement.IsAboveWater)
+        {
+            GetComponent<Collider2D>().isTrigger = entityMovement.GetComponent<Player>().activeBitingHooks.Count <= 0;
         }
     }
 }

@@ -21,6 +21,8 @@ TagManager:
   - IdleDetector
   - BoatPlatform
   - BoatEnemy
+  - WaterKeeper
+  - WaterLine
   - 
   - 
   - 
