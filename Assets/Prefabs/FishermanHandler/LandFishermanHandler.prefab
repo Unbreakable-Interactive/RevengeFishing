@@ -186,6 +186,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 7667254095196824905, guid: 29c863f917d5e8846acde5d4d6a4ca7e, type: 3}
   m_PrefabInstance: {fileID: 5326827163894387267}
   m_PrefabAsset: {fileID: 0}
+--- !u!61 &3479015762017106946 stripped
+BoxCollider2D:
+  m_CorrespondingSourceObject: {fileID: 8767175256861322817, guid: 29c863f917d5e8846acde5d4d6a4ca7e, type: 3}
+  m_PrefabInstance: {fileID: 5326827163894387267}
+  m_PrefabAsset: {fileID: 0}
 --- !u!114 &6092571517471514807 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 2117141073483461364, guid: 29c863f917d5e8846acde5d4d6a4ca7e, type: 3}
