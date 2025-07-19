@@ -1,4 +1,5 @@
 using UnityEngine;
+using Utils;
 
 public abstract class Enemy : Entity
 {
@@ -24,10 +25,7 @@ public abstract class Enemy : Entity
     [SerializeField] protected EnemyState _state;
 
     [Header("Player Reference")]
-    [SerializeField] protected Player player; // Reference to the player object
-
-    [Header("Spawn Handler Reference")]
-    [SerializeField] private SpawnHandler spawnHandler; // Cached reference to avoid FindObjectOfType calls
+    [SerializeField] protected Player player;
 
     [Header("Pull Mechanic")]
     [SerializeField] protected bool hasReceivedFirstFatigue = false;
@@ -36,10 +34,22 @@ public abstract class Enemy : Entity
     [SerializeField] protected float pullDuration = 1f;
 
     [Header("Decision making Timer")]
-    [SerializeField] protected float minActionTime; //Minimum seconds enemy will do an action, like walk, idle, or run
-    [SerializeField] protected float maxActionTime; //Maximum seconds enemy will do an action, like walk, idle, or run
-    [SerializeField] protected float nextActionTime; //actual seconds until next action decision
+    [SerializeField] protected float minActionTime = 1f;
+    [SerializeField] protected float maxActionTime = 4f;
+    [SerializeField] protected float nextActionTime;
 
+    [Header("Debug")]
+    [SerializeField] protected bool enableDebugMessages = false;
+
+    // NUEVAS VARIABLES QUE AÑADISTE
+    [Header("References")]
+    [SerializeField] protected Collider2D bodyCollider;
+    [SerializeField] protected GameObject parentContainer;
+
+    // Public accessors para las nuevas variables
+    public Collider2D BodyCollider => bodyCollider;
+    public GameObject ParentContainer => parentContainer;
+    
     public float NextActionTime
     {
         get { return nextActionTime; }
@@ -59,30 +69,47 @@ public abstract class Enemy : Entity
     }
 
     #region Water Enemy Variables
-
     [SerializeField] protected float swimForce;
     [SerializeField] protected float minSwimSpeed;
-    //protected float maxSwimSpeed;
-    //already assigned in EntityMovement.cs as underwaterMaxSpeed
-
     #endregion
 
     #region Base Behaviours
-
     protected virtual void Start()
     {
-        // Set entity type for water detection
         entityType = EntityType.Enemy;
-        gameObject.layer = LayerMask.NameToLayer("Enemy");
+        gameObject.layer = LayerMask.NameToLayer(LayerNames.ENEMY);
 
         if (player == null)
         {
-            // player = FindObjectOfType<Player>();
             player = Player.Instance;
         }
+
+        // FIXED: Auto-assign references if not set
+        AutoAssignReferences();
         
-        // Enemy-specific initialization
         Initialize();
+    }
+
+    /// <summary>
+    /// NUEVO: Auto-assign references if they're not set in the Inspector
+    /// </summary>
+    private void AutoAssignReferences()
+    {
+        // Auto-assign bodyCollider if not set
+        if (bodyCollider == null)
+        {
+            bodyCollider = GetComponent<Collider2D>();
+            if (enableDebugMessages && bodyCollider != null)
+                Debug.Log($"{gameObject.name}: Auto-assigned bodyCollider");
+        }
+
+        // Auto-assign parentContainer if not set (should be the Handler)
+        if (parentContainer == null)
+        {
+            parentContainer = FindMyHandler();
+            if (enableDebugMessages && parentContainer != null)
+                Debug.Log($"{gameObject.name}: Auto-assigned parentContainer to {parentContainer.name}");
+        }
     }
 
     public override void Initialize()
@@ -91,14 +118,7 @@ public abstract class Enemy : Entity
 
         if (player == null)
         {
-            // player = FindObjectOfType<Player>();
             player = Player.Instance;
-        }
-
-        // Cache SpawnHandler reference to avoid FindObjectOfType calls
-        if (spawnHandler == null)
-        {
-            spawnHandler = FindObjectOfType<SpawnHandler>();
         }
 
         EnemySetup();
@@ -106,8 +126,7 @@ public abstract class Enemy : Entity
 
     protected virtual void EnemySetup()
     {
-        // Only set default power level if it hasn't been set already by the PowerLevelScaler
-        if (_powerLevel <= 0) // Check if power level hasn't been set yet
+        if (_powerLevel <= 0)
         {
             if (player != null)
             {
@@ -119,7 +138,6 @@ public abstract class Enemy : Entity
             }
         }
 
-
         entityFatigue.fatigue = 0;
         entityFatigue.maxFatigue = _powerLevel;
         _state = EnemyState.Alive;
@@ -130,11 +148,8 @@ public abstract class Enemy : Entity
     public virtual void SetPowerLevel(int newPowerLevel)
     {
         _powerLevel = newPowerLevel;
-
-        // Update any derived stats that depend on power level
         entityFatigue.maxFatigue = _powerLevel;
-        entityFatigue.fatigue = 0; // Reset fatigue when power level changes
-
+        entityFatigue.fatigue = 0;
         Debug.Log($"{gameObject.name} power level set to {_powerLevel}");
     }
 
@@ -150,18 +165,14 @@ public abstract class Enemy : Entity
 
     protected override void Update()
     {
-        // Call base Update for water detection logic
         base.Update();
     }
 
-
     public abstract void WaterMovement();
 
-
-    // Override SetMovementMode to add enemy-specific behavior
     public override void SetMovementMode(bool aboveWater)
     {
-        base.SetMovementMode(aboveWater); // Call base implementation
+        base.SetMovementMode(aboveWater);
     }
 
     public void TakeFatigue(int playerPowerLevel)
@@ -174,21 +185,16 @@ public abstract class Enemy : Entity
             Debug.Log($"{gameObject.name} received first fatigue damage - can now pull player!");
         }
 
-        // 5% more fatigue
         entityFatigue.fatigue += (int)((float)playerPowerLevel * .05f);
 
-        // Check if enemy should be defeated
         if (entityFatigue.fatigue >= entityFatigue.maxFatigue && _state == EnemyState.Alive)
         {
             TriggerDefeat();
         }
-
-        // return Mathf.Clamp(_fatigue, 0, _maxFatigue);
     }
 
     protected virtual void OnFirstFatigueReceived()
     {
-        // Override in derived classes for specific enemy types
         Debug.Log($"{gameObject.name} can now pull the player!");
     }
 
@@ -197,165 +203,313 @@ public abstract class Enemy : Entity
         return canPullPlayer && _state == EnemyState.Alive;
     }
 
-    public virtual void TriggerAlive()
+    /// <summary>
+    /// FIXED: Reset fatigue to zero - called when spawning from pool
+    /// </summary>
+    public virtual void ResetFatigue()
     {
-        ChangeState_Alive();
+        hasReceivedFirstFatigue = false;
+        canPullPlayer = false;
         entityFatigue.fatigue = 0;
+        
+        if (enableDebugMessages)
+            Debug.Log($"{gameObject.name}: Fatigue reset to 0");
+    }
 
+    /// <summary>
+    /// FIXED: Change state to alive and reset physics - called when spawning from pool
+    /// </summary>
+    public virtual void ChangeState_Alive()
+    {
+        _state = EnemyState.Alive;
+        
+        // FIXED: Reset physics properly when changing to alive state
         if (rb != null)
         {
             rb.velocity = Vector2.zero;
-            rb.gravityScale = 1f;
+            rb.angularVelocity = 0f;
+            rb.simulated = true;
+            rb.gravityScale = 1f; // Ensure gravity is proper
         }
 
-        Collider2D col = GetComponent<Collider2D>();
-        if (col != null)
+        // FIXED: Use new bodyCollider reference instead of searching
+        if (bodyCollider != null)
         {
-            col.isTrigger = false;
+            bodyCollider.isTrigger = false;
+        }
+        
+        if (this is LandEnemy landEnemy)
+        {
+            landEnemy.HasStartedFloating = false;
+        }
+        
+        if (enableDebugMessages)
+            Debug.Log($"{gameObject.name}: State changed to Alive, physics reset");
+    }
+
+    /// <summary>
+    /// Schedule next action - required by SimpleObjectPool
+    /// </summary>
+    public virtual void ScheduleNextAction()
+    {
+        float actionDuration = UnityEngine.Random.Range(minActionTime, maxActionTime);
+        nextActionTime = Time.time + actionDuration;
+    }
+
+    /// <summary>
+    /// FIXED: Complete reset including physics
+    /// </summary>
+    public virtual void TriggerAlive()
+    {
+        ChangeState_Alive();
+        ResetFatigue();
+
+        // FIXED: More comprehensive physics reset
+        if (rb != null)
+        {
+            rb.velocity = Vector2.zero;
+            rb.angularVelocity = 0f;
+            rb.gravityScale = 1f;
+            rb.simulated = true;
+            rb.freezeRotation = true; // Prevent rotation issues
         }
 
-        Debug.Log($"{gameObject.name} state reset to Alive");
+        // FIXED: Use new bodyCollider reference
+        if (bodyCollider != null)
+        {
+            bodyCollider.isTrigger = false;
+        }
+
+        Debug.Log($"{gameObject.name} state reset to Alive with complete physics reset");
     }
 
     protected virtual void TriggerDefeat()
     {
         Debug.Log($"{gameObject.name} has been defeated!");
-
-        // Change state to defeated
         ChangeState_Defeated();
-
-        // Interrupt all current actions
         InterruptAllActions();
-
-        // Start defeat behaviors
         StartDefeatBehaviors();
     }
 
     protected virtual void TriggerEaten()
     {
         Debug.Log($"{gameObject.name} has been EATEN!");
-        // Change state to eaten
         ChangeState_Eaten();
-        // Interrupt all current actions
         InterruptAllActions();
-        // Handle any specific eaten logic (like cleanup)
-        TriggerDead(); 
-        //this will be changed later after TriggerDead() is implemented
+        TriggerDead();
     }
 
     protected virtual void TriggerDead()
     {
         Debug.Log($"{gameObject.name} has DIED!");
-        // Change state to dead
         ChangeState_Dead();
-        // Interrupt all current actions
         InterruptAllActions();
-        // Transfer portion of this enemy's power to the player
+        
         if (player != null)
         {
             player.GainPowerFromEating(_powerLevel);
             Debug.Log($"Player consumed {gameObject.name} with power level {_powerLevel}");
         }
-        // Handle any specific death logic (like cleanup)
+        
         EnemyDie();
     }
 
+    /// <summary>
+    /// Use object pool system instead of Destroy
+    /// </summary>
     protected virtual void TriggerEscape()
     {
         Debug.Log($"{gameObject.name} has ESCAPED! The player can no longer catch this enemy.");
+        ReturnToPool();
+    }
 
-        // Use cached SpawnHandler reference instead of FindObjectOfType
-        if (spawnHandler != null)
+    /// <summary>
+    /// Use object pool system instead of Destroy
+    /// </summary>
+    protected virtual void EnemyDie()
+    {
+        Debug.Log($"{gameObject.name} has been REVERSE FISHED!");
+        ReturnToPool();
+    }
+
+    /// <summary>
+    /// FIXED: Use new parentContainer reference instead of searching
+    /// </summary>
+    private void ReturnToPool()
+    {
+        // FIXED: Use the new parentContainer reference directly
+        GameObject handler = parentContainer != null ? parentContainer : FindMyHandler();
+    
+        if (handler == null)
         {
-            // Get the root object (FishermanHandler or this object)
-            GameObject objectToReturn = transform.parent != null ? transform.parent.gameObject : gameObject;
-
-            // Return to pool instead of destroying
-            spawnHandler.OnEnemyDestroyed(objectToReturn);
-            Debug.Log($"{gameObject.name} returned to pool after escape");
+            Debug.LogError($"Could not find handler for enemy {gameObject.name}! Destroying instead.");
+            Destroy(gameObject);
+            return;
+        }
+    
+        // Notify spawn handler first
+        NotifySpawnHandlerOfDeath();
+    
+        // Clean up before returning to pool
+        CleanupBeforePoolReturn();
+    
+        // Return the COMPLETE HANDLER to appropriate pool
+        if (SimpleObjectPool.Instance != null)
+        {
+            string poolName = DeterminePoolName(handler);
+            SimpleObjectPool.Instance.ReturnToPool(poolName, handler);
         }
         else
         {
-            Debug.LogWarning($"No SpawnHandler found! Destroying {gameObject.name} as fallback");
-            GameObject objectToDestroy = transform.parent != null ? transform.parent.gameObject : gameObject;
-            Destroy(objectToDestroy);
+            Debug.LogError("SimpleObjectPool not found! Destroying handler instead.");
+            Destroy(handler);
+        }
+    }
+    
+    /// <summary>
+    /// FIXED: Use parentContainer reference first, fallback to search
+    /// </summary>
+    private GameObject FindMyHandler()
+    {
+        // FIXED: Use parentContainer if available
+        if (parentContainer != null)
+        {
+            return parentContainer;
+        }
+
+        // Fallback to hierarchy search
+        Transform current = transform;
+    
+        while (current != null)
+        {
+            string name = current.name.ToLower();
+        
+            if (name.Contains("landfishermanhandler") || 
+                name.Contains("boatfishermanhandler") ||
+                name.Contains("fishermanhandler"))
+            {
+                return current.gameObject;
+            }
+        
+            current = current.parent;
+        }
+    
+        return null;
+    }
+
+    /// <summary>
+    /// Find and notify the correct spawn handler
+    /// </summary>
+    private void NotifySpawnHandlerOfDeath()
+    {
+        SpawnHandler[] allSpawnHandlers = FindObjectsOfType<SpawnHandler>();
+        
+        foreach (SpawnHandler handler in allSpawnHandlers)
+        {
+            if (ShouldNotifyHandler(handler))
+            {
+                handler.OnEnemyDestroyed(gameObject);
+                break;
+            }
         }
     }
 
     /// <summary>
-    /// Set time to next action
+    /// Determine which spawn handler should be notified
     /// </summary>
-    protected virtual void ScheduleNextAction()
+    private bool ShouldNotifyHandler(SpawnHandler handler)
     {
-        float actionDuration = UnityEngine.Random.Range(minActionTime, maxActionTime);
-        nextActionTime = Time.time + actionDuration;
+        if (handler.config == null) return false;
+        
+        bool isLandFisherman = this is LandEnemy && 
+                              handler.config.enemyType == SpawnHandlerConfig.EnemyType.LandFisherman;
+                              
+        bool isBoatFisherman = gameObject.name.ToLower().Contains("boatfisherman") && 
+                              handler.config.enemyType == SpawnHandlerConfig.EnemyType.BoatFisherman;
+        
+        return isLandFisherman || isBoatFisherman;
+    }
+
+    /// <summary>
+    /// Clean up before returning to pool
+    /// </summary>
+    protected virtual void CleanupBeforePoolReturn()
+    {
+        StopAllCoroutines();
+        
+        if (this is LandEnemy landEnemy)
+        {
+            if (landEnemy.GetAssignedPlatform() != null)
+            {
+                landEnemy.GetAssignedPlatform().UnregisterEnemy(landEnemy);
+                landEnemy.SetAssignedPlatform(null);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Determine which pool this handler belongs to
+    /// </summary>
+    private string DeterminePoolName(GameObject handler)
+    {
+        string handlerName = handler.name.ToLower();
+        
+        if (handlerName.Contains("landfishermanhandler"))
+        {
+            return "LandFisherman";
+        }
+        else if (handlerName.Contains("boatfishermanhandler"))
+        {
+            return "BoatFisherman";
+        }
+        
+        Debug.LogWarning($"Could not determine pool for handler {handler.name}, using LandFisherman as default");
+        return "LandFisherman";
     }
 
     protected virtual void InterruptAllActions()
     {
-        // Clear any scheduled actions
-        ScheduleNextAction(); // Prevent further AI decisions
-
+        ScheduleNextAction();
         Debug.Log($"{gameObject.name} - All actions interrupted due to defeat");
     }
 
+    /// <summary>
+    /// FIXED: Use new bodyCollider reference instead of searching
+    /// </summary>
     protected virtual void StartDefeatBehaviors()
     {
-        // Make enemy phase through platforms by turning collider into trigger
-        Collider2D enemyCollider = GetComponent<Collider2D>();
-
-        // If not found, look for collider in children (like your setup)
-        if (enemyCollider == null)
+        // FIXED: Use the new bodyCollider reference directly
+        if (bodyCollider != null)
         {
-            enemyCollider = GetComponentInChildren<Collider2D>();
-        }
-
-        if (enemyCollider != null)
-        {
-            enemyCollider.isTrigger = true;
-            Debug.Log($"{gameObject.name} - Collider set to trigger (phasing through platforms)");
-        }
-
-    }
-
-    protected virtual void EnemyDie()
-    {
-        Debug.Log($"{gameObject.name} has been REVERSE FISHED!");
-
-        // Use cached SpawnHandler reference instead of FindObjectOfType
-        if (spawnHandler != null)
-        {
-            // Get the root object (FishermanHandler or this object)
-            GameObject objectToReturn = transform.parent != null ? transform.parent.gameObject : gameObject;
-
-            // Return to pool instead of destroying
-            spawnHandler.OnEnemyDestroyed(objectToReturn);
-            Debug.Log($"{gameObject.name} returned to pool instead of being destroyed");
+            bodyCollider.isTrigger = true;
+            Debug.Log($"{gameObject.name} - Body collider set to trigger (phasing through platforms)");
         }
         else
         {
-            Debug.LogWarning($"No SpawnHandler found! Destroying {gameObject.name} as fallback");
-            GameObject objectToDestroy = transform.parent != null ? transform.parent.gameObject : gameObject;
-            Destroy(objectToDestroy);
+            // Fallback to old method if bodyCollider not assigned
+            Collider2D enemyCollider = GetComponent<Collider2D>();
+            if (enemyCollider == null)
+            {
+                enemyCollider = GetComponentInChildren<Collider2D>();
+            }
+
+            if (enemyCollider != null)
+            {
+                enemyCollider.isTrigger = true;
+                Debug.Log($"{gameObject.name} - Fallback collider set to trigger");
+            }
         }
     }
-
     #endregion
 
     #region State Management
-
-    // Make sure your GetState() method is public
     public EnemyState GetState() => _state;
-    
-    public virtual void ChangeState_Alive() => _state = EnemyState.Alive;
     public virtual void ChangeState_Defeated() => _state = EnemyState.Defeated;
     public virtual void ChangeState_Eaten() => _state = EnemyState.Eaten;
     public virtual void ChangeState_Dead() => _state = EnemyState.Dead;
-
     #endregion
 
     #region Actions
-
     protected virtual void OnTriggerEnter2D(Collider2D other)
     {
         if (_state == EnemyState.Defeated && other.CompareTag("PlayerCollider"))
@@ -363,12 +517,6 @@ public abstract class Enemy : Entity
             ChangeState_Eaten();
             TriggerEaten();
         }
-    }
-
-    protected virtual void OnDestroy()
-    {
-        // Cleanup any references to player or platform
-        player = null;
     }
     #endregion
 }

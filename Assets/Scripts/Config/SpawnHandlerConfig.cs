@@ -1,107 +1,160 @@
 using UnityEngine;
-using System.Collections.Generic;
 
-[CreateAssetMenu(fileName = "New SpawnHandler Config", menuName = "Spawning System/SpawnHandler Config")]
+[CreateAssetMenu(fileName = "New Spawn Config", menuName = "Fishing Game/Spawn Config")]
 public class SpawnHandlerConfig : ScriptableObject
 {
-    [Header("Basic Configuration")]
-    [Tooltip("Display name for this spawner configuration. Used for organization and debugging in the Inspector.")]
-    public string configName = "Default Spawn Config";
+    [Header("What does this spawner do?")]
+    public string configName = "Land Fisherman Spawner";
     
-    [Tooltip("HOW the spawning works:\n• Continuous: Normal behavior - keeps spawning enemies every X seconds (your current fisherman spawners)\n• Limited: Spawns only X total enemies then stops forever (NEW - perfect for boats)\n• OneTime: Spawns once when activated, then never again\n• PlayerTriggered: Only spawns when player gets close")]
+    [Space(10)]
+    [Header("Basic Settings")]
+    [Tooltip("What pool to use (must match a pool name in PoolingConfig)")]
+    public string poolName = "LandFisherman";
+    
+    [Tooltip("What type of enemy this is")]
+    public EnemyType enemyType = EnemyType.LandFisherman;
+    
+    [Space(10)]
+    [Header("How to Spawn")]
+    [Tooltip("How this spawner works")]
     public SpawnType spawnType = SpawnType.Continuous;
     
-    [Header("Spawning Settings")]
-    [Tooltip("Which pool to use from SimpleObjectPool. Must match exactly the pool name in your PoolingConfig (e.g., 'Fisherman').")]
-    public string poolName = "Fisherman";
+    [Tooltip("Spawn every X seconds")]
+    [Range(1f, 30f)]
+    public float spawnEveryXSeconds = 5f;
     
-    [Tooltip("Time in seconds between each spawn attempt. Lower = more frequent spawning. Your old spawnInterval setting.")]
-    public float spawnInterval = 5f;
+    [Tooltip("How many enemies to keep active at the same time")]
+    [Range(1, 10)]
+    public int keepActiveAtOnce = 3;
     
-    [Tooltip("Maximum number of active enemies at the same time. When limit reached, stops spawning until some die. Your old maxEnemies setting.")]
-    public int maxEnemies = 5;
+    [Space(10)]
+    [Header("Boat Settings (only for boats)")]
+    [Tooltip("For boats: spawn this many then wait")]
+    [Range(1, 3)]
+    public int spawnThisManyPerCycle = 1;
     
-    [Tooltip("Minimum distance from player before spawning. Prevents enemies spawning too close to player. Your old minPlayerDistance setting.")]
-    public float minPlayerDistance = 10f;
+    [Tooltip("For boats: wait this long before next cycle")]
+    [Range(10f, 60f)]
+    public float waitBetweenCycles = 30f;
     
-    [Header("Auto Spawning")]
-    [Tooltip("Enable automatic spawning system. If disabled, only manual spawning (F/G keys) will work. Your old enableAutoSpawning setting.")]
-    public bool enableAutoSpawning = true;
+    [Space(10)]
+    [Header("Unlock Settings")]
+    [Tooltip("Does this need to be unlocked?")]
+    public bool needsUnlock = false;
     
-    [Tooltip("Start spawning immediately when scene loads. If disabled, spawning must be activated manually.")]
-    public bool enableOnStart = true;
+    [Tooltip("Player level needed to unlock")]
+    [Range(1, 20)]
+    public int playerLevelNeeded = 1;
     
-    [Header("Limited Spawning (for Boats)")]
-    [Tooltip("Total number of enemies this spawner can create:\n• -1 = Unlimited (normal continuous spawning)\n• 1-2 = Only spawn this many enemies total, then stop forever (perfect for boats)\n• 0 = Never spawn")]
-    public int maxSpawns = -1;
+    [Space(10)]
+    [Header("Distance from Player")]
+    [Tooltip("Don't spawn closer than this")]
+    [Range(5f, 30f)]
+    public float dontSpawnCloserThan = 10f;
     
-    [Tooltip("Wait this many seconds after spawner activates before first spawn. Useful for boats that need setup time.")]
-    public float initialDelay = 0f;
+    [Tooltip("Don't spawn farther than this")]
+    [Range(20f, 100f)]
+    public float dontSpawnFartherThan = 50f;
     
-    [Tooltip("Start spawning immediately when GameObject becomes active. Perfect for boats that should spawn fishermen right away.")]
-    public bool spawnOnAwake = false;
-    
-    [Header("Player Detection")]
-    [Tooltip("Only spawn when player is within detection range. Saves performance by not spawning far away enemies.")]
-    public bool requirePlayerProximity = false;
-    
-    [Tooltip("How close player must be to trigger spawning (when using PlayerTriggered spawn type or requirePlayerProximity).")]
-    public float playerDetectionRange = 15f;
-    
-    [Tooltip("Hide spawned enemies when player moves far away. Helps with performance optimization.")]
-    public bool hideWhenPlayerFar = false;
-    
-    [Header("Power Level")]
-    [Tooltip("Use power level scaling system for spawned enemies. Enemies will get stronger as player progresses.")]
-    public bool usePowerLevelScaling = true;
-    
-    [Tooltip("Starting power level for enemies when player is at beginning of game.")]
-    public int basePowerLevel = 1;
-    
-    [Tooltip("Maximum power level enemies can reach. Higher = stronger enemies later in game.")]
-    public int maxPowerLevel = 10;
-    
-    [Header("Debug Settings")]
-    [Tooltip("Show detailed spawn messages in Console. Turn off for production to improve performance.")]
-    public bool enableSpawnLogs = true;
-    
-    [Tooltip("Draw spawn point gizmos in Scene view for easier setup and debugging.")]
+    [Space(10)]
+    [Header("Debug")]
+    public bool showLogs = true;
     public bool showGizmos = true;
-    
-    [Tooltip("Color of gizmos drawn in Scene view for this spawner's spawn points.")]
     public Color gizmoColor = Color.cyan;
-    
+
     public enum SpawnType
     {
-        Continuous,     // Normal continuous spawning
-        Limited,        // Spawn only X times (for boats)
-        OneTime,        // Spawn once and stop
-        PlayerTriggered // Spawn when player gets close
+        Continuous,    // Keep spawning to maintain count
+        Cycles,        // Spawn in cycles with breaks (good for boats)
+        OneTime        // Spawn once and stop
     }
     
-    [ContextMenu("Create Default Fisherman Config")]
-    public void CreateFishermanConfig()
+    public enum EnemyType
     {
-        configName = "Fisherman Spawner";
-        spawnType = SpawnType.Continuous;
-        poolName = "Fisherman";
-        spawnInterval = 5f;
-        maxEnemies = 5;
-        enableAutoSpawning = true;
-        maxSpawns = -1;
+        LandFisherman,
+        BoatFisherman,
+        Boat
+    }
+
+    // Helper methods
+    public float GetSpawnInterval()
+    {
+        return spawnEveryXSeconds + Random.Range(-1f, 1f);
     }
     
-    [ContextMenu("Create Boat Config")]
-    public void CreateBoatConfig()
+    public bool IsUnlocked(int playerLevel)
+    {
+        return !needsUnlock || playerLevel >= playerLevelNeeded;
+    }
+    
+    public bool IsValidDistance(Vector3 spawnPos)
+    {
+        if (Player.Instance == null) return true;
+        
+        float distance = Vector3.Distance(spawnPos, Player.Instance.transform.position);
+        return distance >= dontSpawnCloserThan && distance <= dontSpawnFartherThan;
+    }
+
+    // Quick setup buttons - CORREGIDOS CON NOMBRES DE POOLS CORRECTOS
+    [ContextMenu("Setup for Land Fisherman")]
+    private void SetupLandFisherman()
+    {
+        configName = "Land Fisherman Spawner";
+        poolName = "LandFisherman";  // CORREGIDO: era "Fisherman"
+        enemyType = EnemyType.LandFisherman;
+        spawnType = SpawnType.Continuous;
+        spawnEveryXSeconds = 4f;
+        keepActiveAtOnce = 3;
+        needsUnlock = false;
+        gizmoColor = Color.green;
+        Debug.Log("Setup para Land Fisherman - Pool: LandFisherman");
+    }
+    
+    [ContextMenu("Setup for Boat Fisherman")]
+    private void SetupBoatFisherman()
     {
         configName = "Boat Fisherman Spawner";
-        spawnType = SpawnType.Limited;
-        poolName = "Fisherman";
-        spawnInterval = 2f;
-        maxEnemies = 2;
-        enableAutoSpawning = true;
-        maxSpawns = 2; // Only spawn 1 or 2 fishermans
-        initialDelay = 1f;
-        spawnOnAwake = true;
+        poolName = "BoatFisherman";  // CORREGIDO: era "Fisherman"
+        enemyType = EnemyType.BoatFisherman;
+        spawnType = SpawnType.OneTime;
+        spawnEveryXSeconds = 2f;
+        spawnThisManyPerCycle = 2;
+        waitBetweenCycles = 45f;
+        needsUnlock = false;
+        gizmoColor = Color.blue;
+        Debug.Log("Setup para Boat Fisherman - Pool: BoatFisherman");
+    }
+    
+    [ContextMenu("Setup for Boat")]
+    private void SetupBoat()
+    {
+        configName = "Boat Spawner";
+        poolName = "Boat";  // CORRECTO: ya estaba bien
+        enemyType = EnemyType.Boat;
+        spawnType = SpawnType.Cycles;
+        spawnEveryXSeconds = 8f;
+        spawnThisManyPerCycle = 1;
+        waitBetweenCycles = 60f;
+        needsUnlock = true;
+        playerLevelNeeded = 2;
+        gizmoColor = Color.red;
+        Debug.Log("Setup para Boat - Pool: Boat");
+    }
+    
+    [ContextMenu("Setup for TESTING - Continuous Respawn")]
+    private void SetupTestingContinuousRespawn()
+    {
+        configName = "TESTING - Continuous Respawn";
+        poolName = "LandFisherman";
+        enemyType = EnemyType.LandFisherman;
+        spawnType = SpawnType.Continuous;    // FIXED: Cambiado de OneTime a Continuous
+        spawnEveryXSeconds = 8f;             // FIXED: Respawn cada 8 segundos después de morir
+        keepActiveAtOnce = 1;                // Solo 1 enemigo activo a la vez
+        needsUnlock = false;
+        dontSpawnCloserThan = 15f;
+        dontSpawnFartherThan = 25f;
+        showLogs = true;
+        gizmoColor = Color.yellow;
+        Debug.Log("⚡ TESTING MODE: Continuous respawn configured - enemy will respawn after being eaten!");
     }
 }

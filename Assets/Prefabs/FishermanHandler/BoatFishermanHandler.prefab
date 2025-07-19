@@ -61,7 +61,7 @@ Transform:
   m_GameObject: {fileID: 3707836361076467383}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: -0.4, z: 0}
+  m_LocalPosition: {x: 0, y: -0.6, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -138,7 +138,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d4e294148998141bda998e3f2a135bcd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  waterSurfaceY: -0.5
+  waterSurfaceY: -0.6
   target: {fileID: 2561211109777225482}
   minDistanceFromBoat: 1
   enableBoatSafetyCheck: 1
@@ -152,9 +152,17 @@ PrefabInstance:
     m_TransformParent: {fileID: 665198961168709930}
     m_Modifications:
     - target: {fileID: 2117141073483461364, guid: 29c863f917d5e8846acde5d4d6a4ca7e, type: 3}
+      propertyPath: bodyCollider
+      value: 
+      objectReference: {fileID: 3479015762017106946}
+    - target: {fileID: 2117141073483461364, guid: 29c863f917d5e8846acde5d4d6a4ca7e, type: 3}
       propertyPath: landEnemyConfig
       value: 
       objectReference: {fileID: 11400000, guid: 93c90735659e547458403c343be80b20, type: 2}
+    - target: {fileID: 2117141073483461364, guid: 29c863f917d5e8846acde5d4d6a4ca7e, type: 3}
+      propertyPath: parentContainer
+      value: 
+      objectReference: {fileID: 1963649820016990938}
     - target: {fileID: 2444740548177980365, guid: 29c863f917d5e8846acde5d4d6a4ca7e, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0

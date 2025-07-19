@@ -14,38 +14,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   configName: Main Game Pooling
   poolConfigs:
-  - poolName: Fisherman
+  - poolName: LandFisherman
     prefab: {fileID: 1963649820016990938, guid: a8a1f6cfed63bb145a560de9fc880833, type: 3}
-    initialSize: 8
-    maxSize: 30
-    allowDynamicExpansion: 1
-    spawnCooldown: 0.2
-    requiresPlayerDistance: 1
-    minPlayerDistance: 8
-    autoCleanup: 1
-    cleanupInterval: 45
-    cleanupThreshold: 15
-  - poolName: Boat
-    prefab: {fileID: 1725949659940357100, guid: 7470a1783ab812442b7d29a21bf9a296, type: 3}
-    initialSize: 0
-    maxSize: 3
-    allowDynamicExpansion: 1
-    spawnCooldown: 3
-    requiresPlayerDistance: 1
-    minPlayerDistance: 10
-    autoCleanup: 1
-    cleanupInterval: 0
-    cleanupThreshold: 0
+    initialSize: 1
+    maxSize: 2
   - poolName: BoatFisherman
     prefab: {fileID: 1963649820016990938, guid: c45946bf32b8a4045aad4551ca754c64, type: 3}
-    initialSize: 10
-    maxSize: 6
-    allowDynamicExpansion: 1
-    spawnCooldown: 3
-    requiresPlayerDistance: 1
-    minPlayerDistance: 10
-    autoCleanup: 1
-    cleanupInterval: 0
-    cleanupThreshold: 0
+    initialSize: 4
+    maxSize: 12
+  - poolName: Boat
+    prefab: {fileID: 1725949659940357100, guid: 7470a1783ab812442b7d29a21bf9a296, type: 3}
+    initialSize: 3
+    maxSize: 8
   enableDebugLogs: 1
-  globalMaxPoolSize: 30

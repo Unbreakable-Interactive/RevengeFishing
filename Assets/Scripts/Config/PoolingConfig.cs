@@ -1,106 +1,70 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-[CreateAssetMenu(fileName = "New Pooling Config", menuName = "Spawning System/Pooling Config")]
+[CreateAssetMenu(fileName = "New Pooling Config", menuName = "Fishing Game/Pooling Config")]
 public class PoolingConfig : ScriptableObject
 {
     [Header("Pool Configuration")]
-    [Tooltip("Display name for this pooling configuration. Used for organization and debugging.")]
-    public string configName = "Default Pool Config";
+    public string configName = "Default Pools";
     
-    [Tooltip("List of all object pools. Each pool handles one type of object (e.g., Fishermen, Boats, etc.)")]
-    public List<PoolConfigData> poolConfigs = new List<PoolConfigData>();
+    [Space(10)]
+    [Header("Enemy Pools - How many objects to create at game start")]
+    public List<PoolData> poolConfigs = new List<PoolData>();
     
-    [Header("Global Settings")]
-    [Tooltip("Show detailed pool operations in Console. Turn off for production to improve performance.")]
+    [Space(10)]
+    [Header("Debug")]
     public bool enableDebugLogs = true;
-    
-    [Tooltip("Maximum total objects across ALL pools combined. Prevents memory issues from too many pooled objects.")]
-    public int globalMaxPoolSize = 50;
-    
+
     [System.Serializable]
-    public class PoolConfigData
+    public class PoolData
     {
-        [Tooltip("Unique name for this pool. SpawnHandlers must use this exact name in their 'Pool Name' field.")]
-        public string poolName;
-        
-        [Tooltip("The GameObject prefab to spawn from this pool. Drag your Fisherman/Enemy prefab here.")]
+        [Header("Pool Settings")]
+        public string poolName = "LandFisherman";
         public GameObject prefab;
         
-        [Tooltip("How many objects to create immediately when scene starts. Higher = less lag during gameplay.")]
+        [Space(5)]
+        [Header("Pool Sizes")]
+        [Tooltip("How many objects to create when the game starts")]
         public int initialSize = 5;
         
-        [Tooltip("Maximum objects this pool can ever have. Prevents infinite spawning if something goes wrong.")]
-        public int maxSize = 20;
+        [Tooltip("Maximum objects this pool can have (when it needs to create more)")]
+        public int maxSize = 15;
+    }
+
+    // Quick setup buttons
+    [ContextMenu("Setup Default Pools")]
+    private void SetupDefaultPools()
+    {
+        poolConfigs.Clear();
         
-        [Tooltip("Allow creating new objects if pool is empty. If false, stops spawning when pool depleted.")]
-        public bool allowDynamicExpansion = true;
+        // Add Land Fisherman pool
+        PoolData landFishermanPool = new PoolData();
+        landFishermanPool.poolName = "LandFisherman";
+        landFishermanPool.initialSize = 6;
+        landFishermanPool.maxSize = 20;
+        poolConfigs.Add(landFishermanPool);
         
-        [Header("Spawn Settings")]
-        [Tooltip("Minimum time between spawns from this pool. Prevents spam spawning.")]
-        public float spawnCooldown = 0.1f;
+        // Add Boat Fisherman pool
+        PoolData boatFishermanPool = new PoolData();
+        boatFishermanPool.poolName = "BoatFisherman";
+        boatFishermanPool.initialSize = 4;
+        boatFishermanPool.maxSize = 12;
+        poolConfigs.Add(boatFishermanPool);
         
-        [Tooltip("Check player distance before spawning. Prevents spawning too close to player.")]
-        public bool requiresPlayerDistance = true;
+        // Add Boat pool  
+        PoolData boatPool = new PoolData();
+        boatPool.poolName = "Boat";
+        boatPool.initialSize = 3;
+        boatPool.maxSize = 8;
+        poolConfigs.Add(boatPool);
         
-        [Tooltip("Minimum distance from player before allowing spawn from this pool.")]
-        public float minPlayerDistance = 10f;
-        
-        [Header("Pool Behavior")]
-        [Tooltip("Automatically clean up unused objects to save memory.")]
-        public bool autoCleanup = true;
-        
-        [Tooltip("How often (in seconds) to check for cleanup opportunities.")]
-        public float cleanupInterval = 30f;
-        
-        [Tooltip("Only cleanup if this many objects are inactive. Prevents constant cleanup of small pools.")]
-        public int cleanupThreshold = 10;
+        Debug.Log("Setup 3 pools: LandFisherman, BoatFisherman, Boat");
     }
     
-    public PoolConfigData GetPoolConfig(string poolName)
+    [ContextMenu("Clear All Pools")]
+    private void ClearAllPools()
     {
-        return poolConfigs.Find(config => config.poolName == poolName);
-    }
-    
-    public bool HasPool(string poolName)
-    {
-        return poolConfigs.Exists(config => config.poolName == poolName);
-    }
-    
-    public void AddPoolConfig(PoolConfigData newConfig)
-    {
-        if (!HasPool(newConfig.poolName))
-        {
-            poolConfigs.Add(newConfig);
-        }
-        else
-        {
-            Debug.LogWarning($"Pool '{newConfig.poolName}' already exists in config '{configName}'");
-        }
-    }
-    
-    [ContextMenu("Validate Config")]
-    public void ValidateConfig()
-    {
-        for (int i = 0; i < poolConfigs.Count; i++)
-        {
-            var config = poolConfigs[i];
-            
-            if (string.IsNullOrEmpty(config.poolName))
-            {
-                Debug.LogError($"Pool at index {i} has no name!");
-            }
-            
-            if (config.prefab == null)
-            {
-                Debug.LogError($"Pool '{config.poolName}' has no prefab assigned!");
-            }
-            
-            if (config.initialSize > config.maxSize)
-            {
-                Debug.LogWarning($"Pool '{config.poolName}' initial size ({config.initialSize}) is greater than max size ({config.maxSize})");
-                config.initialSize = config.maxSize;
-            }
-        }
+        poolConfigs.Clear();
+        Debug.Log("All pools cleared. Use 'Setup Default Pools' to recreate them.");
     }
 }

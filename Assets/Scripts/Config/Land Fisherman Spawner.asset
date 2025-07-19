@@ -13,22 +13,17 @@ MonoBehaviour:
   m_Name: Land Fisherman Spawner
   m_EditorClassIdentifier: 
   configName: Land Fisherman Spawner
+  poolName: LandFisherman
+  enemyType: 0
   spawnType: 0
-  poolName: Fisherman
-  spawnInterval: 5
-  maxEnemies: 5
-  minPlayerDistance: 10
-  enableAutoSpawning: 1
-  enableOnStart: 1
-  maxSpawns: -1
-  initialDelay: 0
-  spawnOnAwake: 0
-  requirePlayerProximity: 0
-  playerDetectionRange: 15
-  hideWhenPlayerFar: 0
-  usePowerLevelScaling: 1
-  basePowerLevel: 1
-  maxPowerLevel: 10
-  enableSpawnLogs: 1
+  spawnEveryXSeconds: 4
+  keepActiveAtOnce: 3
+  spawnThisManyPerCycle: 1
+  waitBetweenCycles: 30
+  needsUnlock: 0
+  playerLevelNeeded: 1
+  dontSpawnCloserThan: 10
+  dontSpawnFartherThan: 49.636684
+  showLogs: 1
   showGizmos: 1
-  gizmoColor: {r: 0, g: 1, b: 1, a: 1}
+  gizmoColor: {r: 0, g: 1, b: 0, a: 1}

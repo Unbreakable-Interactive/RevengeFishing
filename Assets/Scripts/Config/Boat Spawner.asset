@@ -13,22 +13,17 @@ MonoBehaviour:
   m_Name: Boat Spawner
   m_EditorClassIdentifier: 
   configName: Boat Spawner
-  spawnType: 0
   poolName: Boat
-  spawnInterval: 5
-  maxEnemies: 2
-  minPlayerDistance: 30
-  enableAutoSpawning: 1
-  enableOnStart: 1
-  maxSpawns: -1
-  initialDelay: 0
-  spawnOnAwake: 0
-  requirePlayerProximity: 1
-  playerDetectionRange: 40
-  hideWhenPlayerFar: 1
-  usePowerLevelScaling: 0
-  basePowerLevel: 1
-  maxPowerLevel: 10
-  enableSpawnLogs: 1
+  enemyType: 2
+  spawnType: 1
+  spawnEveryXSeconds: 8
+  keepActiveAtOnce: 3
+  spawnThisManyPerCycle: 1
+  waitBetweenCycles: 60
+  needsUnlock: 1
+  playerLevelNeeded: 2
+  dontSpawnCloserThan: 10
+  dontSpawnFartherThan: 50
+  showLogs: 1
   showGizmos: 1
-  gizmoColor: {r: 0, g: 0.3401158, b: 1, a: 1}
+  gizmoColor: {r: 1, g: 0, b: 0, a: 1}

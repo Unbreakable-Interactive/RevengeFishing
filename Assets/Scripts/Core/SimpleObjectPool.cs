@@ -1,359 +1,415 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-[System.Serializable]
-public class PoolConfig
-{
-    public string poolName;
-    public GameObject prefab;
-    public int initialSize = 5;
-    public int maxSize = 20;
-}
-
 public class SimpleObjectPool : MonoBehaviour
 {
     [Header("Configuration")]
     [SerializeField] private PoolingConfig poolingConfig;
-    [SerializeField] private bool useScriptableObjectConfig = true;
     
-    [Header("Legacy Support (Deprecated)")]
-    [SerializeField] private List<PoolConfig> poolConfigs = new List<PoolConfig>();
+    [Header("Runtime Info (Read Only)")]
+    [SerializeField] private bool showDebugInfo = true;
     
-    private Dictionary<string, Queue<GameObject>> poolDictionary = new Dictionary<string, Queue<GameObject>>();
-    private Dictionary<string, int> activeCount = new Dictionary<string, int>();
+    // Pool structure for COMPLETE HANDLERS
+    private Dictionary<string, Queue<GameObject>> availableHandlers = new Dictionary<string, Queue<GameObject>>();
+    private Dictionary<string, List<GameObject>> usedHandlers = new Dictionary<string, List<GameObject>>();
+    private Dictionary<string, GameObject> poolContainers = new Dictionary<string, GameObject>();
     
     public static SimpleObjectPool Instance { get; private set; }
 
-    protected void Awake()
+    void Awake()
     {
         if (Instance == null)
         {
             Instance = this;
+            DontDestroyOnLoad(gameObject);
         }
         else
         {
-            Debug.LogWarning("Multiple SimpleObjectPool instances found! Destroying duplicate.");
             Destroy(gameObject);
+            return;
         }
     }
 
-    private void Start()
+    void Start()
     {
-        InitializePools();
-    }
-    
-    public void SetPoolingConfig(PoolingConfig config)
-    {
-        poolingConfig = config;
-        useScriptableObjectConfig = true;
-        
-        // Reinitialize pools if already started
-        if (poolDictionary.Count > 0)
-        {
-            ClearAllPools();
-            InitializePools();
-        }
+        CreateAllPools();
     }
 
-    private void InitializePools()
+    void CreateAllPools()
     {
-        if (useScriptableObjectConfig && poolingConfig != null)
+        if (poolingConfig == null)
         {
-            // Use ScriptableObject configuration
-            foreach (var configData in poolingConfig.poolConfigs)
-            {
-                CreatePool(configData.poolName, configData.prefab, configData.initialSize);
-            }
-            
-            if (poolingConfig.enableDebugLogs)
-                Debug.Log($"Initialized pools from ScriptableObject config: {poolingConfig.configName}");
-        }
-        else
-        {
-            // Fallback to legacy configuration
-            foreach (var config in poolConfigs)
-            {
-                CreatePool(config.poolName, config.prefab, config.initialSize);
-            }
-            
-            if (poolConfigs.Count > 0)
-                Debug.LogWarning("Using legacy pool configuration. Consider migrating to ScriptableObject configs.");
-        }
-    }
-    
-    public void ClearAllPools()
-    {
-        foreach (var pool in poolDictionary.Values)
-        {
-            while (pool.Count > 0)
-            {
-                GameObject obj = pool.Dequeue();
-                if (obj != null)
-                    DestroyImmediate(obj);
-            }
-        }
-        
-        poolDictionary.Clear();
-        activeCount.Clear();
-    }
-
-    private void CreatePool(string poolName, GameObject prefab, int initialSize)
-    {
-        if (prefab == null)
-        {
-            Debug.LogError($"Cannot create pool '{poolName}' - prefab is null!");
+            Debug.LogError("No PoolingConfig assigned to SimpleObjectPool!");
             return;
         }
 
-        Queue<GameObject> objectPool = new Queue<GameObject>();
-
-        for (int i = 0; i < initialSize; i++)
+        foreach (var poolData in poolingConfig.poolConfigs)
         {
-            GameObject obj = Instantiate(prefab, transform);
-            obj.SetActive(false);
-            objectPool.Enqueue(obj);
+            CreatePool(poolData.poolName, poolData.prefab, poolData.initialSize, poolData.maxSize);
         }
 
-        poolDictionary[poolName] = objectPool;
-        activeCount[poolName] = 0;
-
-        // Debug.Log($"Pool '{poolName}' created with {initialSize} objects"); // DISABLED for performance
+        if (poolingConfig.enableDebugLogs)
+        {
+            Debug.Log($"Created {poolingConfig.poolConfigs.Count} handler pools at game start");
+        }
     }
 
+    /// <summary>
+    /// Create a pool of COMPLETE HANDLERS
+    /// </summary>
+    void CreatePool(string poolName, GameObject handlerPrefab, int initialSize, int maxSize)
+    {
+        if (handlerPrefab == null)
+        {
+            Debug.LogError($"Cannot create pool '{poolName}' - no handler prefab assigned!");
+            return;
+        }
+
+        // Create container for organization
+        GameObject container = new GameObject($"Pool_{poolName}");
+        container.transform.SetParent(transform);
+        poolContainers[poolName] = container;
+
+        // Create the queues
+        Queue<GameObject> available = new Queue<GameObject>();
+        List<GameObject> used = new List<GameObject>();
+
+        // Create initial COMPLETE HANDLERS and put them in available queue
+        for (int i = 0; i < initialSize; i++)
+        {
+            GameObject handler = Instantiate(handlerPrefab, container.transform);
+            handler.name = $"{poolName}Handler_{i:00}";
+            handler.SetActive(false); // Deactivate the ENTIRE HANDLER
+            available.Enqueue(handler);
+        }
+
+        availableHandlers[poolName] = available;
+        usedHandlers[poolName] = used;
+
+        if (poolingConfig.enableDebugLogs)
+        {
+            Debug.Log($"Created pool '{poolName}' with {initialSize} complete handlers ready to use (max: {maxSize})");
+        }
+    }
+
+    /// <summary>
+    /// Spawn a COMPLETE HANDLER (LandFishermanHandler or BoatFishermanHandler)
+    /// </summary>
     public GameObject Spawn(string poolName, Vector3 position)
     {
-        if (!poolDictionary.ContainsKey(poolName))
+        if (!availableHandlers.ContainsKey(poolName))
         {
-            Debug.LogWarning($"Pool '{poolName}' does not exist!");
+            Debug.LogError($"Pool '{poolName}' doesn't exist! Check your PoolingConfig.");
             return null;
         }
 
-        Queue<GameObject> pool = poolDictionary[poolName];
-        GameObject objectToSpawn;
+        Queue<GameObject> available = availableHandlers[poolName];
+        List<GameObject> used = usedHandlers[poolName];
+        GameObject handlerToSpawn;
 
-        if (pool.Count > 0)
+        // Try to get a free handler first
+        if (available.Count > 0)
         {
-            objectToSpawn = pool.Dequeue();
+            handlerToSpawn = available.Dequeue();
+            
+            if (showDebugInfo)
+                Debug.Log($"Reused handler from pool '{poolName}'. Available left: {available.Count}");
         }
         else
         {
-            PoolingConfig.PoolConfigData configData = null;
-            PoolConfig legacyConfig = null;
-            
-            // Get config from ScriptableObject or legacy
-            if (useScriptableObjectConfig && poolingConfig != null)
+            // No free handlers, need to create a new one
+            var poolData = GetPoolData(poolName);
+            if (poolData != null && used.Count < poolData.maxSize)
             {
-                configData = poolingConfig.GetPoolConfig(poolName);
+                handlerToSpawn = Instantiate(poolData.prefab, poolContainers[poolName].transform);
+                handlerToSpawn.name = $"{poolName}Handler_{used.Count:00}";
+                
+                if (showDebugInfo)
+                    Debug.Log($"Created new handler for pool '{poolName}' (pool was empty). Total: {used.Count + 1}");
             }
             else
             {
-                legacyConfig = poolConfigs.Find(c => c.poolName == poolName);
-            }
-            
-            int maxSize = 20; // default
-            GameObject prefab = null;
-            
-            if (configData != null)
-            {
-                maxSize = configData.maxSize;
-                prefab = configData.prefab;
-            }
-            else if (legacyConfig != null)
-            {
-                maxSize = legacyConfig.maxSize;
-                prefab = legacyConfig.prefab;
-            }
-            
-            if (activeCount[poolName] >= maxSize)
-            {
-                Debug.LogWarning($"Pool '{poolName}' has reached max size ({maxSize}). Cannot spawn more objects.");
-                return null;
-            }
-
-            if (prefab != null)
-            {
-                objectToSpawn = Instantiate(prefab, transform);
-            }
-            else
-            {
-                Debug.LogError($"Cannot create new object for pool '{poolName}' - prefab not found!");
+                Debug.LogWarning($"Pool '{poolName}' is full! Can't create more handlers.");
                 return null;
             }
         }
 
-        // CRITICAL FIX: Reset FishermanHandler structure properly
-        // FishermanHandler (parent) -> Fisherman (child with script)
-        objectToSpawn.transform.position = position;
-        objectToSpawn.transform.rotation = Quaternion.identity;
-        objectToSpawn.transform.localScale = Vector3.one;
-
-        // Find the actual Fisherman child GameObject with the script
-        LandEnemy enemyBase = objectToSpawn.GetComponentInChildren<LandEnemy>();
-        if (enemyBase == null)
-            enemyBase = objectToSpawn.GetComponent<LandEnemy>(); // Fallback if script is on parent
-
-        // PHYSICS RESET: Get Rigidbody2D from the correct GameObject (usually the child)
-        Rigidbody2D rb = null;
-        if (enemyBase != null)
-            rb = enemyBase.GetComponent<Rigidbody2D>();
+        // Set up the COMPLETE HANDLER for use
+        handlerToSpawn.transform.position = position;
+        handlerToSpawn.transform.rotation = Quaternion.identity;
+        handlerToSpawn.transform.localScale = Vector3.one;
         
-        if (rb != null)
-        {
-            rb.velocity = Vector2.zero;
-            rb.angularVelocity = 0f;
-            rb.gravityScale = 1f;
-            rb.simulated = true; // ENSURE PHYSICS IS ENABLED
-        }
+        // Reset the COMPLETE HANDLER
+        ResetHandler(handlerToSpawn, position);
+        
+        // Move handler out of pool to world space
+        handlerToSpawn.transform.SetParent(null);
+        handlerToSpawn.SetActive(true); // Activate the ENTIRE HANDLER
+        used.Add(handlerToSpawn);
 
-        // COMPLETE STATE RESET with original spawn position
-        if (enemyBase != null)
-        {
-            CompleteEnemyReset(enemyBase, position);
-        }
-
-        objectToSpawn.SetActive(true);
-        activeCount[poolName]++;
-
-        // PROPER INITIALIZATION - Must happen AFTER positioning
-        if (enemyBase != null)
-        {
-            enemyBase.Initialize();
-            enemyBase.ChangeState_Alive();
-            
-            // FORCE CORRECT WATER STATE DETECTION
-            bool isActuallyAboveWater = CheckIfAboveWater(position);
-            enemyBase.SetMovementMode(isActuallyAboveWater);
-            
-            Debug.Log($"Spawned {poolName} at {position} - Water state: {isActuallyAboveWater}");
-        }
-
-        Debug.Log($"Spawned '{poolName}' at {position}. Active: {activeCount[poolName]}");
-        return objectToSpawn;
+        return handlerToSpawn;
     }
 
-    // Helper method to check if spawn position is above water
-    private bool CheckIfAboveWater(Vector3 position)
+    /// <summary>
+    /// Return a COMPLETE HANDLER to the pool
+    /// </summary>
+    public void ReturnToPool(string poolName, GameObject handler)
     {
-        // Simple check: if Y position is above 0, consider it above water
-        // You can adjust this based on your water level
-        return position.y > 0f;
-    }
-
-    private void CompleteEnemyReset(LandEnemy enemy, Vector3 spawnPosition)
-    {
-        // PLATFORM ASSIGNMENT CLEANUP
-        Platform oldPlatform = enemy.GetAssignedPlatform();
-        if (oldPlatform != null)
+        if (!availableHandlers.ContainsKey(poolName))
         {
-            oldPlatform.UnregisterEnemy(enemy);
-            Debug.Log($"Cleaned up old assignment: {enemy.name} removed from platform {oldPlatform.name}");
-        }
-
-        enemy.SetAssignedPlatform(null);
-        enemy.platformBoundsCalculated = false;
-        enemy.platformLeftEdge = 0f;
-        enemy.platformRightEdge = 0f;
-
-        // FLOATING STATE RESET
-        enemy.HasStartedFloating = false;
-        //enemy.FloatingStartTime = 0f;
-
-        // MOVEMENT STATE RESET
-        enemy.MovementStateLand = LandEnemy.LandMovementState.Idle;
-        enemy.fishingToolEquipped = false;
-
-        // HOOK FISHING STATE RESET (CRITICAL FIX)
-        enemy.HasThrownHook = false;
-        enemy.HookTimer = 0f;
-
-        // TIMING RESET (next action time)
-        enemy.NextActionTime = Time.time + Random.Range(0.5f, 2f);
-
-        // FISHING PULL RESET
-        enemy.HasReceivedFirstFatigue = false;
-        enemy.CanPullThePlayer = false;
-
-        enemy.StopAllCoroutines();
-
-        // // SAVE INITIAL SPAWN POSITION (THE SOLUTION TO THE MAIN PROBLEM)
-        // enemy.InitialSpawnPosition = spawnPosition;
-
-        // COLLISION RESET - ENSURE PROPER PHYSICS
-        Collider2D enemyCollider = enemy.GetComponent<Collider2D>();
-        if (enemyCollider == null)
-            enemyCollider = enemy.GetComponentInChildren<Collider2D>();
-        
-        if (enemyCollider != null)
-        {
-            enemyCollider.isTrigger = false; // RESET to solid collision
-            enemyCollider.enabled = true; // ENSURE COLLIDER IS ENABLED
-        }
-
-        // FORCE PROPER WATER STATE RESET 
-        // Use SetMovementMode instead of directly accessing protected field
-        bool shouldBeAboveWater = spawnPosition.y > 0f;
-        enemy.SetMovementMode(shouldBeAboveWater);
-        
-        Debug.Log($"Enemy {enemy.name} COMPLETELY RESET for pooling at {spawnPosition} - shouldBeAboveWater: {shouldBeAboveWater}");
-    }
-
-    public void ReturnToPool(string poolName, GameObject obj)
-    {
-        if (!poolDictionary.ContainsKey(poolName))
-        {
-            Debug.LogWarning($"Pool '{poolName}' does not exist!");
-            Destroy(obj);
+            Debug.LogError($"Pool '{poolName}' doesn't exist!");
+            Destroy(handler);
             return;
         }
 
-        // CRITICAL FIX: Handle FishermanHandler structure properly
-        // Find the actual Fisherman child GameObject with the script
-        LandEnemy enemyBase = obj.GetComponentInChildren<LandEnemy>();
-        if (enemyBase == null)
-            enemyBase = obj.GetComponent<LandEnemy>(); // Fallback if script is on parent
+        Queue<GameObject> available = availableHandlers[poolName];
+        List<GameObject> used = usedHandlers[poolName];
 
-        if (enemyBase != null)
+        // Remove from used list
+        if (used.Contains(handler))
         {
-            // RESET TO ORIGINAL SPAWN POSITION (stored in InitialSpawnPosition)
-            // Vector3 resetPosition = enemyBase.InitialSpawnPosition;
-            // obj.transform.position = resetPosition;
-            
-            // CompleteEnemyReset(enemyBase, resetPosition);
-            
-            // RESET CHILD TRANSFORM TOO (if enemy is child of handler)
-            if (enemyBase.transform != obj.transform)
-            {
-                enemyBase.transform.localPosition = Vector3.zero;
-                enemyBase.transform.localRotation = Quaternion.identity;
-                enemyBase.transform.localScale = Vector3.one;
-            }
+            used.Remove(handler);
         }
 
-        // PHYSICS AND TRANSFORM RESET on the correct GameObject
-        Rigidbody2D rb = null;
-        if (enemyBase != null)
-            rb = enemyBase.GetComponent<Rigidbody2D>();
-        
-        if (rb != null)
+        // Clean up the COMPLETE HANDLER
+        CleanupHandler(handler);
+
+        // Put back in available queue
+        handler.SetActive(false); // Deactivate the ENTIRE HANDLER
+        handler.transform.SetParent(poolContainers[poolName].transform);
+        available.Enqueue(handler);
+
+        if (showDebugInfo)
+        {
+            Debug.Log($"Returned handler to pool '{poolName}'. Available: {available.Count}, Used: {used.Count}");
+        }
+    }
+
+    /// <summary>
+    /// FIXED: Reset COMPLETE HANDLER when spawning - comprehensive physics and state reset
+    /// </summary>
+    /// <summary>
+    /// FIXED: Reset COMPLETE HANDLER when spawning - includes child local positions
+    /// </summary>
+    void ResetHandler(GameObject handler, Vector3 spawnPosition)
+    {
+        // STEP 1: RESET CHILD POSITIONS TO PREFAB VALUES FIRST
+        ResetChildPositions(handler);
+
+        // STEP 2: Reset all physics AFTER positions are corrected
+        Rigidbody2D[] rigidbodies = handler.GetComponentsInChildren<Rigidbody2D>();
+        foreach (var rb in rigidbodies)
         {
             rb.velocity = Vector2.zero;
             rb.angularVelocity = 0f;
             rb.gravityScale = 1f;
             rb.simulated = true;
+            rb.freezeRotation = true;
+            rb.drag = 0f;
+            rb.angularDrag = 0.05f;
+            rb.isKinematic = false;
         }
 
-        obj.transform.rotation = Quaternion.identity;
-        obj.transform.localScale = Vector3.one;
+        // STEP 3: Reset all colliders to proper state
+        Collider2D[] colliders = handler.GetComponentsInChildren<Collider2D>();
+        foreach (var col in colliders)
+        {
+            if (!col.name.ToLower().Contains("trigger") && 
+                !col.name.ToLower().Contains("sensor") &&
+                !col.name.ToLower().Contains("detector"))
+            {
+                col.isTrigger = false;
+                col.enabled = true;
+            }
+        }
 
-        obj.SetActive(false);
-        poolDictionary[poolName].Enqueue(obj);
-        activeCount[poolName]--;
+        // STEP 4: Find and reset the Enemy component
+        Enemy enemy = handler.GetComponentInChildren<Enemy>();
+        if (enemy != null)
+        {
+            // Reset enemy state
+            enemy.ChangeState_Alive();
+            enemy.ResetFatigue();
+            
+            // Reset land enemy specific stuff
+            if (enemy is LandEnemy landEnemy)
+            {
+                // Clear old platform assignment
+                if (landEnemy.GetAssignedPlatform() != null)
+                {
+                    landEnemy.GetAssignedPlatform().UnregisterEnemy(landEnemy);
+                    landEnemy.SetAssignedPlatform(null);
+                }
+                
+                landEnemy.platformBoundsCalculated = false;
+                landEnemy.fishingToolEquipped = false;
+                landEnemy.HasStartedFloating = false;
+                landEnemy.HasThrownHook = false;
+                landEnemy.MovementStateLand = LandEnemy.LandMovementState.Idle;
+                
+                // Set water mode based on spawn height  
+                landEnemy.SetMovementMode(spawnPosition.y > 0f);
+                
+                // Schedule next action
+                landEnemy.ScheduleNextAction();
+            }
+            
+            // FIXED: Force Initialize AFTER everything is reset
+            enemy.Initialize();
+        }
 
-        Debug.Log($"Returned '{poolName}' to pool at ORIGINAL position {obj.transform.position}. Active: {activeCount[poolName]}");
+        // STEP 5: Force Unity to refresh physics
+        Physics2D.SyncTransforms();
+
+        if (showDebugInfo)
+            Debug.Log($"Handler {handler.name} completely reset with child positions corrected at {spawnPosition}");
+    }
+
+    /// <summary>
+    /// NEW: Reset child GameObject positions to their prefab values
+    /// </summary>
+    private void ResetChildPositions(GameObject handler)
+    {
+        // FIXED: Reset specific known child positions for LandFishermanHandler
+        if (handler.name.ToLower().Contains("landfishermanhandler"))
+        {
+            ResetLandFishermanHandlerPositions(handler);
+        }
+        else if (handler.name.ToLower().Contains("boatfishermanhandler"))
+        {
+            ResetBoatFishermanHandlerPositions(handler);
+        }
+    }
+
+    /// <summary>
+    /// FIXED: Reset LandFishermanHandler child positions to prefab values
+    /// </summary>
+    private void ResetLandFishermanHandlerPositions(GameObject handler)
+    {
+        Transform handlerTransform = handler.transform;
+        
+        // Find and reset Fisherman position (should be at Y = 0 according to prefab)
+        Transform fishermanTransform = handlerTransform.Find("Fisherman");
+        if (fishermanTransform != null)
+        {
+            fishermanTransform.localPosition = new Vector3(0f, 0f, 0f);
+            fishermanTransform.localRotation = Quaternion.identity;
+            fishermanTransform.localScale = Vector3.one;
+            
+            if (showDebugInfo)
+                Debug.Log($"Reset Fisherman local position to (0, 0, 0) in {handler.name}");
+        }
+        
+        // Find and reset WaterLine position (should be at Y = -0.3 according to prefab)
+        Transform waterLineTransform = handlerTransform.Find("WaterLine");
+        if (waterLineTransform != null)
+        {
+            waterLineTransform.localPosition = new Vector3(0f, -0.3f, 0f);
+            waterLineTransform.localRotation = Quaternion.identity;
+            waterLineTransform.localScale = Vector3.one;
+            
+            if (showDebugInfo)
+                Debug.Log($"Reset WaterLine local position to (0, -0.3, 0) in {handler.name}");
+        }
+    }
+
+    /// <summary>
+    /// FIXED: Reset BoatFishermanHandler child positions (for future use)
+    /// </summary>
+    private void ResetBoatFishermanHandlerPositions(GameObject handler)
+    {
+        Transform handlerTransform = handler.transform;
+        
+        // Find and reset Fisherman position in boat handler
+        Transform fishermanTransform = handlerTransform.Find("Fisherman");
+        if (fishermanTransform != null)
+        {
+            fishermanTransform.localPosition = Vector3.zero;
+            fishermanTransform.localRotation = Quaternion.identity;
+            fishermanTransform.localScale = Vector3.one;
+            
+            if (showDebugInfo)
+                Debug.Log($"Reset Fisherman local position in {handler.name}");
+        }
+    }
+
+    /// <summary>
+    /// Clean up COMPLETE HANDLER when returning to pool
+    /// </summary>
+    void CleanupHandler(GameObject handler)
+    {
+        // Reset transform
+        handler.transform.localPosition = Vector3.zero;
+        handler.transform.localRotation = Quaternion.identity;
+        handler.transform.localScale = Vector3.one;
+
+        // Stop any coroutines in the entire handler
+        MonoBehaviour[] components = handler.GetComponentsInChildren<MonoBehaviour>();
+        foreach (var component in components)
+        {
+            if (component != null)
+                component.StopAllCoroutines();
+        }
+
+        // Clean up enemy references
+        Enemy enemy = handler.GetComponentInChildren<Enemy>();
+        if (enemy != null && enemy is LandEnemy landEnemy)
+        {
+            if (landEnemy.GetAssignedPlatform() != null)
+            {
+                landEnemy.GetAssignedPlatform().UnregisterEnemy(landEnemy);
+                landEnemy.SetAssignedPlatform(null);
+            }
+        }
+
+        if (showDebugInfo)
+            Debug.Log($"Handler {handler.name} cleaned up and returned to pool");
+    }
+
+    PoolingConfig.PoolData GetPoolData(string poolName)
+    {
+        if (poolingConfig == null) return null;
+        
+        foreach (var poolData in poolingConfig.poolConfigs)
+        {
+            if (poolData.poolName == poolName)
+                return poolData;
+        }
+        return null;
+    }
+
+    // Utility methods
+    public int GetAvailableCount(string poolName)
+    {
+        return availableHandlers.ContainsKey(poolName) ? availableHandlers[poolName].Count : 0;
+    }
+
+    public int GetUsedCount(string poolName)
+    {
+        return usedHandlers.ContainsKey(poolName) ? usedHandlers[poolName].Count : 0;
     }
 
     public int GetActiveCount(string poolName)
     {
-        return activeCount.ContainsKey(poolName) ? activeCount[poolName] : 0;
+        return GetUsedCount(poolName);
+    }
+
+    public void LogPoolStats()
+    {
+        Debug.Log("=== HANDLER POOL STATS ===");
+        foreach (string poolName in availableHandlers.Keys)
+        {
+            int available = GetAvailableCount(poolName);
+            int used = GetUsedCount(poolName);
+            Debug.Log($"Pool '{poolName}': {available} available handlers, {used} used handlers, {available + used} total");
+        }
+    }
+
+    void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.F9))
+        {
+            LogPoolStats();
+        }
     }
 }

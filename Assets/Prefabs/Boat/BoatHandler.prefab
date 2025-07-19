@@ -67,6 +67,7 @@ MonoBehaviour:
   movementChangeInterval: 3
   minMovementTime: 2
   debugMovement: 0
+  cachedPlatforms: []
   buoyancyForce: 25
   waterDrag: 0.8
   angularDrag: 0.2
@@ -115,7 +116,7 @@ Rigidbody2D:
   m_Interpolate: 1
   m_SleepingMode: 1
   m_CollisionDetection: 0
-  m_Constraints: 4
+  m_Constraints: 0
 --- !u!1 &2049951311662369099
 GameObject:
   m_ObjectHideFlags: 0
@@ -162,16 +163,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   spawnConfig: {fileID: 11400000, guid: 91157fe5d0b8746fab5225d81da8882f, type: 2}
-  useScriptableObjectConfig: 1
-  spawnPoints: []
-  spawnInterval: 5
-  poolName: Fisherman
-  enableAutoSpawning: 1
-  maxEnemies: 5
-  minPlayerDistance: 10
-  configuredSpawnPoints:
+  spawnPoints:
   - {fileID: 4120316064714226126}
-  enableSpawnLogs: 1
+  isUnlocked: 0
+  currentActive: 0
+  isActive: 1
 --- !u!1 &3197334178101885014
 GameObject:
   m_ObjectHideFlags: 0

@@ -13,22 +13,17 @@ MonoBehaviour:
   m_Name: Boat Fisherman Spawner
   m_EditorClassIdentifier: 
   configName: Boat Fisherman Spawner
-  spawnType: 1
   poolName: BoatFisherman
-  spawnInterval: 1
-  maxEnemies: 2
-  minPlayerDistance: 3
-  enableAutoSpawning: 1
-  enableOnStart: 1
-  maxSpawns: 2
-  initialDelay: 0.5
-  spawnOnAwake: 1
-  requirePlayerProximity: 0
-  playerDetectionRange: 20
-  hideWhenPlayerFar: 0
-  usePowerLevelScaling: 1
-  basePowerLevel: 1
-  maxPowerLevel: 10
-  enableSpawnLogs: 1
+  enemyType: 1
+  spawnType: 1
+  spawnEveryXSeconds: 3
+  keepActiveAtOnce: 3
+  spawnThisManyPerCycle: 1
+  waitBetweenCycles: 45
+  needsUnlock: 0
+  playerLevelNeeded: 2
+  dontSpawnCloserThan: 10
+  dontSpawnFartherThan: 50
+  showLogs: 1
   showGizmos: 1
-  gizmoColor: {r: 1, g: 0.6316457, b: 0, a: 1}
+  gizmoColor: {r: 0, g: 0, b: 1, a: 1}
