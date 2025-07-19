@@ -62,7 +62,7 @@ MonoBehaviour:
   boatSpriteRenderer: {fileID: 4981744675166538355}
   useSpriteFip: 1
   enableAutomaticMovement: 1
-  movementSpeed: 2
+  movementSpeed: 30
   maxMovementForce: 6
   movementChangeInterval: 3
   minMovementTime: 2
