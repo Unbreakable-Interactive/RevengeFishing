@@ -117,18 +117,8 @@ public class Player : Entity
     protected override void Update()
     {
         base.Update(); // Call base Update to handle movement mode
-        if (transform.rotation.z > .7f || transform.rotation.z < -.7f)
-        {
-            playerSpriteRenderer.flipY = true; // Flip sprite when facing left
-            //Debug.Log(transform.rotation.z);
-            //Debug.Log("Player facing left");
-        }
-        else
-        {
-            playerSpriteRenderer.flipY = false; // Normal orientation when facing right
-            //Debug.Log(transform.rotation.z);
-            //Debug.Log("Player facing right");
-        }
+        
+        playerSpriteRenderer.flipY = (transform.rotation.z > 0.7f || transform.rotation.z < -0.7f);
 
         if (activeBitingHooks != null && activeBitingHooks.Count > 0) CheckMaxHookDistanceState();
     }
