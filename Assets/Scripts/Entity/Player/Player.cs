@@ -74,7 +74,7 @@ public class Player : Entity
     private System.Action<Vector3> onConstraintViolation;
 
     [Header("Fishing Hook Interaction")]
-    private List<FishingProjectile> activeBitingHooks = new List<FishingProjectile>();
+    public List<FishingProjectile> activeBitingHooks = new List<FishingProjectile>();
 
     [Header("Line Extension")]
     [SerializeField] private float lineExtensionAmount = 1f; // How much to extend per pull
@@ -83,6 +83,9 @@ public class Player : Entity
     // State tracking for continuous slowdown
     private bool isAtMaxHookDistance = false;
     private float originalMaxSpeed;
+
+    [Header("Visual Settings")]
+    [SerializeField] private SpriteRenderer playerSpriteRenderer;
 
     [Header("Debug")]
     public bool enableDebugLogs = false;
@@ -100,12 +103,6 @@ public class Player : Entity
         // safety check
         if (mainCamera == null) Debug.LogError("Player: No camera found in scene! Player won't work correctly.");
 
-        // _fatigue = 0;
-        // _maxFatigue = _powerLevel;
-
-        //hunger = 0; // hunger increases by 1 each second; player starves if hunger reaches 40
-        //maxHunger = _powerLevel;
-
         hungerHandler = new HungerHandler(_powerLevel, entityFatigue, 0);
 
         rb.drag = naturalDrag;
@@ -113,11 +110,16 @@ public class Player : Entity
         currentGravityScale = underwaterGravityScale;
 
         originalMaxSpeed = maxSpeed;
+
+        playerSpriteRenderer = GetComponentInChildren<SpriteRenderer>();
     }
 
     protected override void Update()
     {
         base.Update(); // Call base Update to handle movement mode
+        
+        playerSpriteRenderer.flipY = (transform.rotation.z > 0.7f || transform.rotation.z < -0.7f);
+
         if (activeBitingHooks != null && activeBitingHooks.Count > 0) CheckMaxHookDistanceState();
     }
 
@@ -217,7 +219,7 @@ public class Player : Entity
     void WhileMouseUnheld(Vector2 lastMousePosition)
     {
         //Let object coast if mouse is released
-        if (rb.drag < naturalDrag) rb.drag += naturalDrag / 20;
+        if (rb.drag < naturalDrag) rb.drag += naturalDrag / 60;
         if (rb.drag > naturalDrag) rb.drag = naturalDrag; // Clamp to natural drag
     }
     #endregion

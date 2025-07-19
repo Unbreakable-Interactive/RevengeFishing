@@ -26,9 +26,9 @@ Transform:
   m_GameObject: {fileID: 3279007818208551999}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.4, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_LocalPosition: {x: -0.5, y: 0, z: 0}
+  m_LocalScale: {x: 0.3, y: 0.3, z: 0.3}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 4283144278362533936}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -52,7 +52,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 79154a6c1f4454a83aebcb688101c6c5, type: 2}
+  - {fileID: 2100000, guid: ad0944483d0d6ca44a05808f9f129bf1, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -73,7 +73,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: 3625043607559282579, guid: 19fb86013d8c24d6cb8410c0aadf30fa, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 31459e9f4b055d84b9c968415e9b2efe, type: 3}
   m_Color: {r: 0.4745098, g: 0.6901961, b: 0.85882354, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -165,7 +165,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   magneticForce: 100
-  baseMagnetRange: 1.6
+  baseMagnetRange: 2
   magnetOffset: {x: 0, y: 0}
   forceCurve:
     serializedVersion: 2
@@ -300,9 +300,10 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 2, y: 2, z: 2}
+  m_LocalScale: {x: 2.5, y: 2.5, z: 2.5}
   m_ConstrainProportionsScale: 1
   m_Children:
+  - {fileID: 5864446333100692346}
   - {fileID: 4480840211297593226}
   - {fileID: 5719622611857122817}
   - {fileID: 3204486526590883613}
@@ -329,10 +330,10 @@ MonoBehaviour:
   isAboveWater: 0
   airGravityScale: 1
   airDrag: 0
-  airMaxSpeed: 10
+  airMaxSpeed: 16
   underwaterGravityScale: 0
   underwaterDrag: 0.6
-  underwaterMaxSpeed: 15
+  underwaterMaxSpeed: 16
   entityType: 1
   mainCamera: {fileID: 0}
   hungerHandler:
@@ -353,16 +354,18 @@ MonoBehaviour:
   velocityThreshold: 0.1
   forceAmount: 2
   maxSpeed: 15
-  naturalDrag: 0.2
+  naturalDrag: 0.8
   rotationDrag: 0.5
   constantAccel: 1
   minForwardVelocity: 1.5
   sidewaysDrag: 2
   steeringForce: 10
   steeringDamping: 0.98
+  activeBitingHooks: []
   lineExtensionAmount: 1
   maxLineExtension: 10
   lineExtensionSpeedPenalty: 0.6
+  playerSpriteRenderer: {fileID: 0}
   enableDebugLogs: 0
 --- !u!114 &2299430188239530610
 MonoBehaviour:
@@ -377,7 +380,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   scalingConfig: {fileID: 11400000, guid: 6fe96df1e76b0514c836ad7101c30bf5, type: 2}
-  originalScale: {x: 2, y: 2, z: 2}
+  originalScale: {x: 2.5, y: 2.5, z: 2.5}
   currentPowerLevel: 0
   targetScaleMultiplier: 1
   currentScaleMultiplier: 1
@@ -397,7 +400,7 @@ MonoBehaviour:
   hungerUpdateInterval: 1
   fatigueRecoveryPercentageRate: 0.02
   fatigueUpdateInterval: 1
-  enableDebugLogs: 1
+  enableDebugLogs: 0
   player: {fileID: 5706962072255297144}
 --- !u!50 &5374213318811793880
 Rigidbody2D:
@@ -425,7 +428,74 @@ Rigidbody2D:
   m_Interpolate: 0
   m_SleepingMode: 1
   m_CollisionDetection: 0
-  m_Constraints: 0
+  m_Constraints: 4
+--- !u!1 &7202299424025216376
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5864446333100692346}
+  - component: {fileID: 7937881881710787591}
+  m_Layer: 9
+  m_Name: WaterKeeper
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5864446333100692346
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7202299424025216376}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4283144278362533936}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!58 &7937881881710787591
+CircleCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7202299424025216376}
+  m_Enabled: 1
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 0
+  m_UsedByEffector: 0
+  m_UsedByComposite: 0
+  m_Offset: {x: 0, y: 0}
+  serializedVersion: 2
+  m_Radius: 0.1
 --- !u!1 &7770335155101952962
 GameObject:
   m_ObjectHideFlags: 0

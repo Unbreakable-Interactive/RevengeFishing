@@ -19,8 +19,8 @@ TagManager:
   - Platform
   - Enemy
   - IdleDetector
-  - 
-  - 
+  - WaterKeeper
+  - WaterLine
   - 
   - 
   - 
