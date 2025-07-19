@@ -4,7 +4,8 @@ using UnityEngine;
 public abstract class Entity : MonoBehaviour
 {
     [SerializeField] protected Rigidbody2D rb;
-
+    public Rigidbody2D Rigidbody2D => rb;
+    
     [Header("Character Stats")]
     [SerializeField] protected int _powerLevel;
     [SerializeField] public EntityFatigue entityFatigue;

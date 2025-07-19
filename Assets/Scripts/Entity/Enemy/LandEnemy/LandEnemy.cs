@@ -8,8 +8,6 @@ public class LandEnemy : Enemy
     public LandEnemyConfig landEnemyConfig;
 
     #region Land Enemy Variables
-
-    // Movement states for land enemies
     public enum LandMovementState
     {
         Idle,
@@ -30,29 +28,23 @@ public class LandEnemy : Enemy
     [Header("Land Enemy Variables")]
     [SerializeField] protected float walkingSpeed;
     [SerializeField] protected float runningSpeed;
-    [SerializeField] protected float edgeBuffer; // Distance from platform edge to change direction
+    [SerializeField] protected float edgeBuffer;
 
-    // Fishing tool equip system
-    public bool fishingToolEquipped = false; // Is tool currently out?
+    public bool fishingToolEquipped = false;
 
-    // For dropping tools when defeated
-    [SerializeField] protected GameObject toolDropPrefab; // Tool to spawn when defeated
+    [SerializeField] protected GameObject toolDropPrefab;
 
-    // Platform bounds
     public float platformLeftEdge;
     public float platformRightEdge;
     public bool platformBoundsCalculated;
 
-    // Overlapping other enemy?
     protected IdleDetector idleDetector;
 
-
-    [SerializeField] protected float maxUpwardVelocity; // For when they swim upward
-
-    [SerializeField] protected float weight; // How much the enemy sinks in water; varies between 60 and 100 kg
+    [SerializeField] protected float maxUpwardVelocity;
+    [SerializeField] protected float weight;
 
     [Header("Escape System")]
-    [SerializeField] protected bool hasStartedFloating = false; // Track if enemy is floating upward
+    [SerializeField] protected bool hasStartedFloating = false;
 
     protected HookSpawner hookSpawner;
     protected bool hasThrownHook;
@@ -63,9 +55,11 @@ public class LandEnemy : Enemy
 
     [Header("Pull Mechanic")]
     [SerializeField] protected bool isPullingPlayer = false;
-    [SerializeField] protected float minLineLength = 2f;      // Minimum line length
-    [SerializeField] protected float maxLineReduction = 1.5f;  // Max reduction per pull
-    [SerializeField] protected float lineReductionVariation = 0.4f; // Random variation
+    [SerializeField] protected float minLineLength = 2f;
+    [SerializeField] protected float maxLineReduction = 1.5f;
+    [SerializeField] protected float lineReductionVariation = 0.4f;
+
+    public Vector3 InitialSpawnPosition { get; set; }
 
     public bool HasStartedFloating
     {
@@ -84,14 +78,12 @@ public class LandEnemy : Enemy
         get { return hookTimer; }
         set { hookTimer = value; }
     }
-
     #endregion
 
     #region Platform Assignment
     [Header("Platform Assignment")]
-    public Platform assignedPlatform; // For land enemies only
+    public Platform assignedPlatform;
 
-    // Method called by Platform when assigning this enemy
     public virtual void SetAssignedPlatform(Platform platform)
     {
         assignedPlatform = platform;
@@ -104,6 +96,8 @@ public class LandEnemy : Enemy
 
     public virtual void OnPlatformAssigned(Platform platform)
     {
+        assignedPlatform = platform;
+        
         if (assignedPlatform != null && !platformBoundsCalculated)
         {
             CalculatePlatformBounds();
@@ -113,8 +107,12 @@ public class LandEnemy : Enemy
 
         if (Time.time >= nextActionTime - 0.5f)
         {
-            nextActionTime = Time.time + 0.5f;
+            nextActionTime = Time.time + Random.Range(0.5f, 1.5f);
         }
+        
+        _landMovementState = LandMovementState.Idle;
+        fishingToolEquipped = false;
+        InitialSpawnPosition = transform.position;
     }
 
     public void ClearPlatformAssignment()
@@ -131,10 +129,28 @@ public class LandEnemy : Enemy
 
         Debug.Log($"{gameObject.name} platform assignment cleared");
     }
+
+    /// <summary>
+    /// FIXED: Override ScheduleNextAction with proper implementation
+    /// </summary>
+    public override void ScheduleNextAction()
+    {
+        if (landEnemyConfig != null)
+        {
+            nextActionTime = Time.time + Random.Range(1f, 3f);
+            
+            if (assignedPlatform != null && assignedPlatform.showDebugInfo)
+                Debug.Log($"{gameObject.name}: Next action scheduled for {nextActionTime:F1}");
+        }
+        else
+        {
+            // Fallback to base implementation
+            base.ScheduleNextAction();
+        }
+    }
     #endregion
 
     #region Basic Actions
-    // Start is called before the first frame update
     protected override void Start()
     {
         base.Start();
@@ -143,7 +159,6 @@ public class LandEnemy : Enemy
     public override void Initialize()
     {
         base.Initialize();
-
         EnemySetup();
     }
 
@@ -152,10 +167,24 @@ public class LandEnemy : Enemy
         base.EnemySetup();
         platformBoundsCalculated = false;
 
-        // Initialize LandEnemyConfig if not assigned in Inspector
         if (landEnemyConfig == null)
         {
-            landEnemyConfig = ScriptableObject.CreateInstance<LandEnemyConfig>();
+            landEnemyConfig = Resources.Load<LandEnemyConfig>("LandEnemyConfig");
+            
+            if (landEnemyConfig == null)
+            {
+                landEnemyConfig = ScriptableObject.CreateInstance<LandEnemyConfig>();
+                landEnemyConfig.idleProbability = 0.4f;
+                landEnemyConfig.walkProbability = 0.3f;
+                landEnemyConfig.runProbability = 0.3f;
+                landEnemyConfig.identifier = TypeIdentifier.Land;
+                
+                Debug.LogWarning($"{gameObject.name}: No LandEnemyConfig assigned! Created default config.");
+            }
+            else
+            {
+                Debug.Log($"{gameObject.name}: Loaded default LandEnemyConfig from Resources");
+            }
         }
 
         nextActionTime = Time.time + Random.Range(0.5f, 2f);
@@ -178,10 +207,9 @@ public class LandEnemy : Enemy
             ChooseMovementAction();
         }
 
-
         Debug.Log($"{gameObject.name} - Enemy initialized with power level {_powerLevel}");
     }
-    // Update is called once per frame
+
     protected override void Update()
     {
         base.Update();
@@ -194,36 +222,30 @@ public class LandEnemy : Enemy
 
         if (aboveWater)
         {
-            // If defeated enemy reaches surface while floating, they escape
             if (_state == EnemyState.Defeated && hasStartedFloating)
             {
                 Debug.Log($"{gameObject.name} - ESCAPE CONDITIONS MET! Triggering escape.");
-
                 TriggerEscape();
-                return; // Exit early since enemy will be destroyed
+                return;
             }
             else if (_state == EnemyState.Defeated)
             {
                 Debug.Log($"{gameObject.name} - Defeated but escape conditions not met: hasStartedFloating={hasStartedFloating}");
             }
 
-            hasStartedFloating = false; // Reset floating flag when above water
+            hasStartedFloating = false;
             Debug.Log($"{gameObject.name} enemy switched to AIRBORNE mode");
         }
         else
         {
-            //Enemy is automatically defeated when falling into water
             if (_state == EnemyState.Alive)
             {
                 TriggerDefeat();
             }
 
-            // When defeated enemy enters water, mark as floating
             hasStartedFloating = true;
-
             Debug.Log($"{gameObject.name} enemy switched to UNDERWATER mode");
         }
-
     }
 
     public override void WaterMovement()
@@ -245,7 +267,6 @@ public class LandEnemy : Enemy
     {
         base.OnFirstFatigueReceived();
 
-        // Start the pull mechanic if we have an active hook
         if (CanPullPlayer() && hookSpawner.HasActiveHook())
         {
             StartCoroutine(ContinuousPull());
@@ -256,14 +277,11 @@ public class LandEnemy : Enemy
     {
         Debug.Log($"{gameObject.name} starting continuous pull mechanic!");
 
-        // Continue pulling until enemy is defeated
         while (_state == EnemyState.Alive && CanPullPlayer() && hookSpawner.HasActiveHook())
         {
-            // Wait for random interval between 0.8 and 1.5 seconds
             float waitTime = Random.Range(0.8f, 1.5f);
             yield return new WaitForSeconds(waitTime);
 
-            // Check again if we should still be pulling
             if (_state == EnemyState.Alive && CanPullPlayer() && hookSpawner.HasActiveHook())
             {
                 yield return StartCoroutine(PerformSinglePull());
@@ -275,7 +293,7 @@ public class LandEnemy : Enemy
 
     private IEnumerator PerformSinglePull()
     {
-        if (isPullingPlayer) yield break; // Prevent overlapping pulls
+        if (isPullingPlayer) yield break;
 
         isPullingPlayer = true;
 
@@ -288,21 +306,16 @@ public class LandEnemy : Enemy
 
         Debug.Log($"{gameObject.name} starting fishing reel pull!");
 
-        // APPLY FATIGUE DAMAGE TO PLAYER (once per pull)
         ApplyPullFatigueDamage();
-
-        // PHASE 1: Shorten the fishing line first (this is the "reel in" action)
         float lineShortened = ShortenFishingLine();
 
         if (lineShortened > minLineLength)
         {
-            // PHASE 2: Apply physics-based pull toward the hook spawn point
             yield return StartCoroutine(ApplyReelForce(lineShortened));
         }
         else
         {
             Debug.Log($"{gameObject.name} couldn't shorten line further - applying resistance pull instead");
-            // Even if line can't be shortened, apply a small resistance pull
             yield return StartCoroutine(ApplyResistancePull());
         }
 
@@ -310,14 +323,12 @@ public class LandEnemy : Enemy
         Debug.Log($"{gameObject.name} finished fishing reel pull");
     }
 
-    // New physics-based reel force method
     private IEnumerator ApplyReelForce(float lineShortened)
     {
         Vector3 hookSpawnPoint = hookSpawner.spawnPoint.position;
         Vector3 playerPosition = player.transform.position;
         Vector3 pullDirection = (hookSpawnPoint - playerPosition).normalized;
 
-        // Use unified pullForce instead of hard-coded 8f
         float pullStrength = lineShortened * pullForce;
         float pullDuration = 0.4f;
 
@@ -331,7 +342,6 @@ public class LandEnemy : Enemy
             elapsedTime += Time.deltaTime;
             float progress = elapsedTime / pullDuration;
 
-            // Use exponential decay for natural reel feel
             float currentForceMultiplier = Mathf.Lerp(1f, 0.1f, progress * progress);
             Vector2 frameForce = pullDirection * pullStrength * currentForceMultiplier;
 
@@ -343,8 +353,6 @@ public class LandEnemy : Enemy
         Debug.Log("[REEL FORCE] Reel force application complete");
     }
 
-
-    // Small resistance pull when line can't be shortened
     private IEnumerator ApplyResistancePull()
     {
         Vector3 hookSpawnPoint = hookSpawner.spawnPoint.position;
@@ -352,8 +360,6 @@ public class LandEnemy : Enemy
         Vector3 pullDirection = (hookSpawnPoint - playerPosition).normalized;
 
         Rigidbody2D playerRb = player.GetComponent<Rigidbody2D>();
-
-        // Apply a smaller resistance force (half of main pull force)
         float resistanceForce = pullForce * 0.5f;
 
         Debug.Log($"[RESISTANCE PULL] Applying resistance force: {resistanceForce}");
@@ -370,15 +376,11 @@ public class LandEnemy : Enemy
             return;
         }
 
-        // Calculate fatigue damage as 10% of this enemy's power level
         float fatigueDamage = PowerLevel * 0.1f;
-
-        // Apply fatigue damage to the player
         player.TakeFishingFatigue(fatigueDamage);
 
         Debug.Log($"{gameObject.name} deals {fatigueDamage:F1} fatigue damage to player (from PowerLevel {PowerLevel})");
     }
-
 
     private float ShortenFishingLine()
     {
@@ -399,7 +401,6 @@ public class LandEnemy : Enemy
         {
             hookSpawner.SetLineLength(newLineLength);
             Debug.Log("Fishing line shortened.");
-
             return actualReduction;
         }
         else
@@ -409,10 +410,8 @@ public class LandEnemy : Enemy
         }
     }
 
-
     protected override void InterruptAllActions()
     {
-        // Stop any movement
         _landMovementState = LandMovementState.Idle;
         if (rb != null)
         {
@@ -425,21 +424,12 @@ public class LandEnemy : Enemy
     protected override void StartDefeatBehaviors()
     {
         base.StartDefeatBehaviors();
-
-        // If this enemy has fishing tools, clean them up
         CleanupFishingTools();
-
-        // Drop any tools they were carrying
         DropTool();
-
     }
 
-    /// <summary>
-    /// Clean hookSpawner and reset variables like finishingToolEquipped, hasThrownHook, hookTimer
-    /// </summary>
     protected virtual void CleanupFishingTools()
     {
-        // This will be overridden in FishermanScript for specific cleanup
         if (fishingToolEquipped)
         {
             fishingToolEquipped = false;
@@ -455,20 +445,15 @@ public class LandEnemy : Enemy
             subscribedHook = null;
         }
 
-        // Stop any active pulling when defeated
         if (isPullingPlayer)
         {
             StopAllCoroutines();
             isPullingPlayer = false;
 
-            // Release player constraint if active
-            Player player = FindObjectOfType<Player>();
+            Player player = Player.Instance;
             if (player != null)
-            {
                 player.RemovePositionConstraint();
-            }
         }
-
     }
 
     protected virtual void OnHookPlayerInteraction(bool isBeingHeld)
@@ -480,23 +465,15 @@ public class LandEnemy : Enemy
         }
     }
 
-    protected override void OnDestroy()
-    {
-        base.OnDestroy();
-        assignedPlatform = null;
-        // Cleanup hook subscription
-        CleanupHookSubscription();
-
-    }
+    // REMOVED OnDestroy - no longer needed for object pooling
     #endregion
 
     #region Land Movement Logic
     public virtual void LandMovement()
     {
-        // Use virtual AI decision method
         if (Time.time >= nextActionTime)
         {
-            MakeAIDecision(); // Virtual method that derived classes can override
+            MakeAIDecision();
         }
 
         ExecuteLandMovementBehaviour();
@@ -509,19 +486,23 @@ public class LandEnemy : Enemy
 
     protected virtual void MakeAIDecision()
     {
-        // Base enemy AI: simple random movement
         ChooseRandomLandAction();
         ScheduleNextAction();
     }
 
+    /// <summary>
+    /// FIXED: Use new platformCollider reference instead of searching
+    /// </summary>
     protected virtual void CalculatePlatformBounds()
     {
         if (assignedPlatform == null) return;
 
-        Collider2D platformCollider = assignedPlatform.GetComponent<Collider2D>();
-        if (platformCollider != null)
+        // SIMPLIFIED: Direct search, no fake optimization
+        Collider2D platformCol = assignedPlatform.GetComponent<Collider2D>();
+    
+        if (platformCol != null)
         {
-            Bounds bounds = platformCollider.bounds;
+            Bounds bounds = platformCol.bounds;
             platformLeftEdge = bounds.min.x + edgeBuffer;
             platformRightEdge = bounds.max.x - edgeBuffer;
             platformBoundsCalculated = true;
@@ -533,57 +514,75 @@ public class LandEnemy : Enemy
         }
     }
 
+    /// <summary>
+    /// FIXED: Override TriggerAlive with complete physics reset for LandEnemy
+    /// </summary>
+    public override void TriggerAlive()
+    {
+        base.TriggerAlive();
+    
+        // FIXED: Additional LandEnemy specific resets
+        _landMovementState = LandMovementState.Idle;
+        fishingToolEquipped = false;
+        hasStartedFloating = false;
+        hasThrownHook = false;
+    
+        // FIXED: Force complete physics refresh
+        if (rb != null)
+        {
+            rb.WakeUp();
+            rb.velocity = Vector2.zero;
+            rb.angularVelocity = 0f;
+            rb.gravityScale = 1f;
+            rb.isKinematic = false;
+        }
+    
+        // FIXED: Ensure proper collider state using new reference
+        if (bodyCollider != null)
+        {
+            bodyCollider.isTrigger = false;
+            bodyCollider.enabled = true;
+        }
+    
+        Debug.Log($"{gameObject.name} LandEnemy state completely reset to Alive");
+    }
+
     protected virtual void CheckPlatformBounds()
     {
         float currentX = transform.position.x;
 
-        // If we're near the left edge and moving left, stop or turn around
         if (currentX <= platformLeftEdge && (_landMovementState == LandMovementState.WalkLeft || _landMovementState == LandMovementState.RunLeft))
         {
-            // IMMEDIATE STOP - prevent further movement
             rb.velocity = new Vector2(0, rb.velocity.y);
             _landMovementState = LandMovementState.Idle;
-
-            // Choose a new action that doesn't involve going left
             ChooseRandomActionExcluding(LandMovementState.WalkLeft, LandMovementState.RunLeft);
             ScheduleNextAction();
         }
-        // If we're near the right edge and moving right, stop or turn around
         else if (currentX >= platformRightEdge && (_landMovementState == LandMovementState.WalkRight || _landMovementState == LandMovementState.RunRight))
         {
-            // IMMEDIATE STOP - prevent further movement
             rb.velocity = new Vector2(0, rb.velocity.y);
             _landMovementState = LandMovementState.Idle;
-
-            // Choose a new action that doesn't involve going right
             ChooseRandomActionExcluding(LandMovementState.WalkRight, LandMovementState.RunRight);
             ScheduleNextAction();
         }
     }
 
-    // Simplified LandEnemyScript.cs - remove ALL fisherman-specific code
     protected virtual void ChooseRandomLandAction()
     {
         if (fishingToolEquipped) return;
 
-        // Only handle basic enemy movement - no fishing logic!
         float randomValue = Random.value;
-
 
         Debug.Log($"Choosing random land action for {gameObject.name}. Random value = {randomValue}");
         if (randomValue < landEnemyConfig.idleProbability)
         {
-            // Only avoid idle if we're overlapping and not fishing
             if (idleDetector != null && idleDetector.ShouldAvoidIdle())
             {
                 Debug.Log($"{gameObject.name} prevented from going idle due to overlap with {idleDetector.GetOverlappingIdleEnemyCount()} idle enemy(ies)");
-
-                // Force a movement action instead of idle
                 ChooseMovementAction();
                 return;
             }
 
-            // Safe to go idle
             _landMovementState = LandMovementState.Idle;
         }
         else if (randomValue < (landEnemyConfig.idleProbability + landEnemyConfig.walkProbability))
@@ -596,14 +595,12 @@ public class LandEnemy : Enemy
         }
     }
 
-    //actually executes the action chosen by ChooseRandomLandAction
     protected virtual void ExecuteLandMovementBehaviour()
     {
         if (fishingToolEquipped) return;
 
         Vector2 movement = Vector2.zero;
 
-        // Simple movement - no fishing tool checks here!
         switch (_landMovementState)
         {
             case LandMovementState.Idle:
@@ -625,7 +622,6 @@ public class LandEnemy : Enemy
         rb.velocity = new Vector2(movement.x, rb.velocity.y);
     }
 
-    //used to choose a random action when at the edge of the platform
     protected virtual void ChooseRandomActionExcluding(params LandMovementState[] excludedStates)
     {
         LandMovementState[] allStates = {
@@ -662,7 +658,7 @@ public class LandEnemy : Enemy
         }
         else
         {
-            _landMovementState = LandMovementState.Idle; // Fallback
+            _landMovementState = LandMovementState.Idle;
         }
     }
 
@@ -671,23 +667,16 @@ public class LandEnemy : Enemy
         float movementChoice = Random.value;
         if (movementChoice < 0.8f)
         {
-            // Choose walking
             _landMovementState = (Random.value < 0.5f) ? LandMovementState.WalkLeft : LandMovementState.WalkRight;
         }
         else
         {
-            // Choose running
             _landMovementState = (Random.value < 0.5f) ? LandMovementState.RunLeft : LandMovementState.RunRight;
         }
     }
-
     #endregion
 
     #region Fishing Tool System
-
-    /// <summary>
-    /// Attempt to equip fishing tool. Only works when idle.
-    /// </summary>
     public virtual bool TryEquipFishingTool()
     {
         if (fishingToolEquipped) return false;
@@ -704,9 +693,6 @@ public class LandEnemy : Enemy
         return true;
     }
 
-    /// <summary>
-    /// Put away the fishing tool. Can only be done when tool is equipped.
-    /// </summary>
     public virtual bool TryUnequipFishingTool()
     {
         if (!fishingToolEquipped) return false;
@@ -725,33 +711,20 @@ public class LandEnemy : Enemy
         return true;
     }
 
-    /// <summary>
-    /// Called when fishing tool is equipped. Override in derived classes.
-    /// </summary>
     protected virtual void OnFishingToolEquipped()
     {
-        // Override in derived classes:
-        // - Play "equip tool" animation
-        // - Set up internal tool object (inactive, for dropping later)
+        
     }
 
-    /// <summary>
-    /// Called when fishing tool is unequipped. Override in derived classes.
-    /// </summary>
     protected virtual void OnFishingToolUnequipped()
     {
-        // Override in derived classes:
-        // - Play "put away tool" animation
+        
     }
 
-    /// <summary>
-    /// Called when enemy is defeated. Drops the tool if equipped.
-    /// </summary>
     public virtual void DropTool()
     {
         if (toolDropPrefab != null)
         {
-            // Instantiate tool only when needed
             GameObject droppedToolHandler = Instantiate(toolDropPrefab, transform.position, transform.rotation);
 
             if (assignedPlatform != null && assignedPlatform.showDebugInfo)
@@ -760,7 +733,5 @@ public class LandEnemy : Enemy
             }
         }
     }
-
-
     #endregion
 }

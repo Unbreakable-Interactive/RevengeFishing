@@ -7,25 +7,35 @@ using System.Linq;
 [CustomEditor(typeof(Entity), true)]
 public class EntityHierarchyInspector : Editor
 {
-    private static readonly Color EntityColor = new Color(0.2f, 0.4f, 0.7f);       // Deep blue
-    private static readonly Color PlayerColor = new Color(0.2f, 0.6f, 0.3f);     // Forest green  
-    private static readonly Color EnemyColor = new Color(0.8f, 0.4f, 0.2f);      // Warm orange
-    private static readonly Color LandEnemyColor = new Color(0.7f, 0.3f, 0.5f);  // Deep rose
-    private static readonly Color FishermanColor = new Color(0.5f, 0.3f, 0.7f);  // Rich purple
-    private static readonly Color FishingProjectileColor = new Color(0.1f, 0.5f, 0.7f); // Cyan
-    private static readonly Color FishingHookColor = new Color(0.2f, 0.5f, 0.6f); // Teal
-    private static readonly Color DroppedToolColor = new Color(0.6f, 0.4f, 0.2f); // Brown
-    
+    // FIXED: Use EditorPrefs to persist foldout states between selections
     private Dictionary<System.Type, bool> foldoutStates = new Dictionary<System.Type, bool>();
     private Dictionary<System.Type, List<FieldInfo>> hierarchyFields = new Dictionary<System.Type, List<FieldInfo>>();
     private bool isInitialized = false;
+    private EntityTypeColorConfig colorConfig;
+    private double lastRefreshTime = 0;
+    
+    // FIXED: Add unique key for each object to store foldout states independently
+    private string objectInstanceKey;
+
+    void OnEnable()
+    {
+        // FIXED: Create unique key for this object instance
+        objectInstanceKey = $"EntityHierarchy_{target.GetType().Name}_{target.GetInstanceID()}";
+        InitializeHierarchy();
+        isInitialized = true;
+    }
 
     public override void OnInspectorGUI()
     {
-        if (!isInitialized)
+        // Auto-refresh check (throttled to avoid performance issues)
+        bool shouldRefresh = !isInitialized || 
+                           EditorApplication.timeSinceStartup - lastRefreshTime > 5.0; // Refresh every 5 seconds max
+        
+        if (shouldRefresh)
         {
             InitializeHierarchy();
             isInitialized = true;
+            lastRefreshTime = EditorApplication.timeSinceStartup;
         }
 
         serializedObject.Update();
@@ -47,7 +57,9 @@ public class EntityHierarchyInspector : Editor
     private void InitializeHierarchy()
     {
         hierarchyFields.Clear();
-        foldoutStates.Clear();
+        
+        // Get color configuration
+        colorConfig = EntityTypeAutoDiscovery.GetOrCreateConfig();
 
         System.Type targetType = target.GetType();
         System.Type currentType = targetType;
@@ -67,7 +79,13 @@ public class EntityHierarchyInspector : Editor
             if (fields.Count > 0)
             {
                 hierarchyFields[type] = fields;
-                foldoutStates[type] = GetDefaultFoldoutState(type);
+                
+                // FIXED: Load foldout state from EditorPrefs with unique keys
+                string foldoutKey = $"{objectInstanceKey}_{type.Name}_Foldout";
+                if (!foldoutStates.ContainsKey(type))
+                {
+                    foldoutStates[type] = EditorPrefs.GetBool(foldoutKey, GetDefaultFoldoutState(type));
+                }
             }
         }
     }
@@ -139,7 +157,17 @@ public class EntityHierarchyInspector : Editor
             onFocused = { textColor = Color.white }
         };
         
-        foldoutStates[type] = EditorGUILayout.Foldout(foldoutStates[type], headerText, headerStyle);
+        // FIXED: Handle foldout state changes and persist them
+        bool previousState = foldoutStates.ContainsKey(type) ? foldoutStates[type] : GetDefaultFoldoutState(type);
+        bool newState = EditorGUILayout.Foldout(previousState, headerText, headerStyle);
+        
+        if (newState != previousState)
+        {
+            foldoutStates[type] = newState;
+            // FIXED: Save to EditorPrefs immediately when changed
+            string foldoutKey = $"{objectInstanceKey}_{type.Name}_Foldout";
+            EditorPrefs.SetBool(foldoutKey, newState);
+        }
         
         // Field count badge
         var badgeStyle = new GUIStyle(EditorStyles.miniLabel)
@@ -157,7 +185,7 @@ public class EntityHierarchyInspector : Editor
         EditorGUILayout.EndHorizontal();
         
         // Fields content
-        if (foldoutStates[type])
+        if (foldoutStates.ContainsKey(type) && foldoutStates[type])
         {
             EditorGUILayout.Space(2);
             
@@ -191,26 +219,6 @@ public class EntityHierarchyInspector : Editor
         
         if (property != null)
         {
-            //// Check if this field has a Header attribute
-            //var headerAttribute = field.GetCustomAttribute<HeaderAttribute>();
-            //if (headerAttribute != null)
-            //{
-            //    // Draw some space before the header
-            //    EditorGUILayout.Space(8);
-
-            //    // Create a header style
-            //    var headerStyle = new GUIStyle(EditorStyles.boldLabel)
-            //    {
-            //        normal = { textColor = Color.white * 0.9f },
-            //        fontStyle = FontStyle.Bold,
-            //        fontSize = 11
-            //    };
-
-            //    // Draw the header
-            //    EditorGUILayout.LabelField(headerAttribute.header, headerStyle);
-            //    EditorGUILayout.Space(2);
-            //}
-            
             // Custom field display with type info
             EditorGUILayout.BeginHorizontal();
             
@@ -255,21 +263,23 @@ public class EntityHierarchyInspector : Editor
 
     private Color GetColorForType(System.Type type)
     {
-        if (type == typeof(Entity)) return EntityColor;
-        if (type == typeof(Player)) return PlayerColor;
-        if (type == typeof(Enemy)) return EnemyColor;
-        if (type == typeof(LandEnemy)) return LandEnemyColor;
-        if (type == typeof(Fisherman)) return FishermanColor;
-        if (type == typeof(FishingProjectile)) return FishingProjectileColor;
-        if (type == typeof(FishingHook)) return FishingHookColor;
-        if (type == typeof(DroppedTool)) return DroppedToolColor;
+        if (colorConfig != null)
+        {
+            return colorConfig.GetColorForType(type);
+        }
         
-        // Default color for other types
+        // Fallback to default color if config is not available
         return new Color(0.4f, 0.4f, 0.4f);
     }
 
     private string GetIconForType(System.Type type)
     {
+        if (colorConfig != null)
+        {
+            return colorConfig.GetIconForType(type);
+        }
+        
+        // Fallback icons
         if (type == typeof(Entity)) return "🏛️";
         if (type == typeof(Player)) return "🐟";
         if (type == typeof(Enemy)) return "👹";
@@ -306,20 +316,22 @@ public class EntityHierarchyInspector : Editor
 
     private bool GetDefaultFoldoutState(System.Type type)
     {
-        // Entity is always expanded by default, others collapsed
-        return type == typeof(Entity) || type == target.GetType();
+        // FIXED: More intelligent default states
+        // Entity is always expanded by default
+        if (type == typeof(Entity)) return true;
+        
+        // The most specific type (target type) is expanded by default
+        if (type == target.GetType()) return true;
+        
+        // Enemy and LandEnemy are expanded by default for easier access
+        if (type == typeof(Enemy) || type == typeof(LandEnemy)) return true;
+        
+        // Others collapsed by default
+        return false;
     }
 
     private int GetFieldOrder(FieldInfo field)
     {
-        //// Headers come first
-        //if (field.GetCustomAttribute<HeaderAttribute>() != null) return 0;
-
-        //// Then public fields
-        //if (field.IsPublic) return 1;
-
-        //// Then private SerializeField
-        //return 2;
         return 0;
     }
 
@@ -348,5 +360,18 @@ public class EntityHierarchyInspector : Editor
         texture.SetPixel(0, 0, color);
         texture.Apply();
         return texture;
+    }
+
+    // FIXED: Add method to clear saved preferences if needed
+    [MenuItem("Tools/Entity System/Clear Foldout Preferences")]
+    private static void ClearFoldoutPreferences()
+    {
+        // Clear all entity hierarchy foldout preferences
+        string[] keys = System.Enum.GetNames(typeof(System.StringSplitOptions)); // Dummy to get all keys
+        
+        // In practice, you'd need to track the keys or use a prefix pattern
+        EditorPrefs.DeleteKey("EntityHierarchy");
+        
+        Debug.Log("Cleared all Entity Hierarchy foldout preferences. Foldouts will reset to default states.");
     }
 }

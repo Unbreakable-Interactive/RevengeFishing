@@ -14,6 +14,7 @@ public class Player : Entity
         Slain
     }
 
+    [Header("Camera Reference")]
     [SerializeField] private Camera mainCamera;
     private Vector2 lastMousePosition = Vector2.zero;
     private Vector2 mousePosition = Vector2.zero;
@@ -90,15 +91,44 @@ public class Player : Entity
     [Header("Debug")]
     public bool enableDebugLogs = false;
 
+    public static Player Instance { get; private set; }
+    
+    [Header("Components to share")] 
+    [SerializeField] private Collider2D collider;
+    
+    public Collider2D Collider => collider;
+    
+    protected override void Awake()
+    {
+        base.Awake();
+        if (Instance == null)
+        {
+            Instance = this;
+        }
+        else
+        {
+            Debug.LogWarning("Multiple Player instances found! Destroying duplicate.");
+            Destroy(gameObject);
+        }
+
+        Initialize();
+    }
+
     public override void Initialize ()
     {
         entityType = EntityType.Player; // Set entity type to Player
 
         base.Initialize(); // Call base Initialize to set up Rigidbody2D and movement mode
 
-        // Try to find MainCamera first, then any camera as fallback
-        mainCamera = GameObject.FindGameObjectWithTag("MainCamera")?.GetComponent<Camera>();
-        if (mainCamera == null) mainCamera = FindObjectOfType<Camera>();
+        // Use cached camera reference or fallback to Camera.main for singleton pattern
+        if (mainCamera == null)
+        {
+            mainCamera = Camera.main;
+            if (mainCamera == null)
+            {
+                Debug.LogWarning("No main camera found! Please assign camera reference in Player component.");
+            }
+        }
 
         // safety check
         if (mainCamera == null) Debug.LogError("Player: No camera found in scene! Player won't work correctly.");

@@ -3,7 +3,7 @@ using UnityEngine;
 public class GameBootstrap : MonoBehaviour
 {
     [Header("Core Game Systems")]
-    [SerializeField] private Player playerMovement;
+    // [SerializeField] private Player playerMovement;
     [SerializeField] private PlayerBounds playerBounds;
     [SerializeField] private Camera gameCamera;
 
@@ -46,10 +46,9 @@ public class GameBootstrap : MonoBehaviour
     
     private void InitializePlayerSystemsPhase()
     {
-        if (playerMovement != null) playerMovement.Initialize();
+        // if (playerMovement != null) playerMovement.Initialize();
         
-        if (playerBounds != null && playerMovement != null) playerBounds.Initialize(playerMovement);
-
+        if (playerBounds != null) playerBounds.Initialize(Player.Instance);
     }
 
     private void InitializeSpawnSystemsPhase()
@@ -57,12 +56,12 @@ public class GameBootstrap : MonoBehaviour
         if (spawnHandler != null) spawnHandler.Initialize();
     }
     
-    void Update()
-    {
-        if (Input.GetKeyDown(KeyCode.R) && enableBootstrapLogs)
-        {
-            Debug.Log("GameBootstrap: Manual restart");
-            InitializeGameSystems();
-        }
-    }
+    // void Update()
+    // {
+    //     if (Input.GetKeyDown(KeyCode.R) && enableBootstrapLogs)
+    //     {
+    //         Debug.Log("GameBootstrap: Manual restart");
+    //         InitializeGameSystems();
+    //     }
+    // }
 }

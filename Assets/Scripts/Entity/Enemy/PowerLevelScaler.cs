@@ -24,8 +24,8 @@ public class PowerLevelScaler : MonoBehaviour
     [Header("Power Level Distribution")]
     [SerializeField] private EnemyPowerTier[] powerTiers;
 
-    [Header("References")]
-    [SerializeField] private Player player;
+    // [Header("References")]
+        // [SerializeField] private Player player;
 
     [Header("Optimization")]
     [SerializeField] private bool cachePlayerPowerLevel = true;
@@ -56,25 +56,25 @@ public class PowerLevelScaler : MonoBehaviour
         {
             Debug.LogWarning("Multiple PowerLevelScaler instances found! Destroying duplicate.");
             Destroy(gameObject);
-            return;
         }
     }
 
     private void Start()
     {
-        if (player == null)
-            player = FindObjectOfType<Player>();
-
-        if (player == null)
-        {
-            Debug.LogError("PowerLevelScaler: Could not find Player in scene!");
-            return;
-        }
+        // if (player == null)
+        //     player = FindObjectOfType<Player>();
+        // player = Player.instance;
+        //
+        // if (player == null)
+        // {
+        //     Debug.LogError("PowerLevelScaler: Could not find Player in scene!");
+        //     return;
+        // }
 
         ValidateAndCachePowerTiers();
 
         // Subscribe to player power changes if available
-        if (player != null)
+        if (Player.Instance != null)
         {
             // Cache initial power level
             UpdateCachedPowerLevel(true);
@@ -92,11 +92,11 @@ public class PowerLevelScaler : MonoBehaviour
     /// <summary>
     /// Get player power level with caching optimization
     /// </summary>
-    private int GetPlayerPowerLevel()
+    public int GetPlayerPowerLevel()
     {
         if (!cachePlayerPowerLevel)
         {
-            return player?.PowerLevel ?? 1000;
+            return Player.Instance?.PowerLevel ?? 1000;
         }
 
         // Update cache if enough time has passed
@@ -113,9 +113,9 @@ public class PowerLevelScaler : MonoBehaviour
     /// </summary>
     private void UpdateCachedPowerLevel(bool forceUpdate = false)
     {
-        if (player == null) return;
+        if (Player.Instance == null) return;
 
-        int newPowerLevel = player.PowerLevel;
+        int newPowerLevel = Player.Instance.PowerLevel;
 
         if (forceUpdate || newPowerLevel != cachedPlayerPowerLevel)
         {
@@ -137,7 +137,7 @@ public class PowerLevelScaler : MonoBehaviour
     /// </summary>
     public int CalculateEnemyPowerLevel()
     {
-        if (player == null)
+        if (Player.Instance == null)
         {
             Debug.LogError("PowerLevelScaler: No Player reference!");
             return 100;

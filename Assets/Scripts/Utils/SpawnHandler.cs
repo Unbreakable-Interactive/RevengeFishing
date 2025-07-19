@@ -1,378 +1,474 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class SpawnHandler : MonoBehaviour
 {
+    [Header("Configuration")]
+    [SerializeField] private SpawnHandlerConfig spawnConfig;
+    
     [Header("Spawn Points")]
     [SerializeField] private Transform[] spawnPoints;
-    [SerializeField] private float spawnInterval = 5f;
-    
-    [Header("Object Pool")]
-    [SerializeField] private SimpleObjectPool objectPool;
-    [SerializeField] private string poolName = "Fisherman";
-    
-    [Header("Auto Spawning")]
-    [SerializeField] private bool enableAutoSpawning = true;
-    [SerializeField] private int maxEnemies = 5;
-    [SerializeField] private float minPlayerDistance = 10f;
-    
-    [Header("Player Reference")]
-    [SerializeField] private Player playerMovement;
-    
-    [Header("Debug")]
-    [SerializeField] private bool enableSpawnLogs = true;
-    
-    private bool isManualSpawning = false;
-    private Coroutine manualSpawnCoroutine;
-    private bool spawningEnabled = true;
-    private int currentEnemyCount = 0;
-    private float lastSpawnTime = 0f;
 
-    [Header("Power Level Scaling")]
-    [SerializeField] private PowerLevelScaler powerLevelScaler;
+    [Header("Current State (Read Only)")]
+    [SerializeField] private bool isUnlocked = false;
+    [SerializeField] private int currentActive = 0;
+    [SerializeField] private bool isActive = true;
 
-    private void SetupPowerLevelScaler()
-    {
-        // Use null-conditional operator for cleaner code
-        if (powerLevelScaler == null)
-        {
-            powerLevelScaler = FindObjectOfType<PowerLevelScaler>();
+    // Private variables
+    private float nextSpawnTime;
+    private int spawnedThisCycle = 0;
+    private bool inCooldown = false;
+    private float cooldownEndTime;
+    
+    // FIXED: Track if OneTime spawning already completed
+    private bool oneTimeCompleted = false;
 
-            if (enableSpawnLogs)
-            {
-                Debug.Log(powerLevelScaler != null
-                    ? "PowerLevelScaler found and assigned"
-                    : "PowerLevelScaler not found in scene!");
-            }
-        }
-    }
+    // Public property to access config from other scripts
+    public SpawnHandlerConfig config => spawnConfig;
 
     void Start()
     {
         Initialize();
     }
 
-    public void Initialize()
+    void Update()
     {
-        if (objectPool == null)
-            objectPool = FindObjectOfType<SimpleObjectPool>();
-        
-        if (playerMovement == null)
-            playerMovement = FindObjectOfType<Player>();
+        if (!isActive || spawnConfig == null) return;
+    
+        CheckUnlockStatus();
 
-        SetupPowerLevelScaler();
+        if (!isUnlocked) return;
 
-        ValidateSpawnPoints();
-        Debug.Log("SpawnHandler initialized successfully");
+        HandleSpawning();
+    
+        // Debug keys para testing
+        if (Input.GetKeyDown(KeyCode.F)) 
+        {
+            Debug.Log($"🎮 Manual spawn triggered for {spawnConfig.configName}!");
+            SpawnOne();
+        }
+    
+        if (Input.GetKeyDown(KeyCode.G)) LogStats();
+
+        // NUEVAS TECLAS PARA TESTING
+        if (Input.GetKeyDown(KeyCode.R)) ResetAllEnemiesOfThisType();
+        if (Input.GetKeyDown(KeyCode.T)) TestEnemyDefeatOfThisType();
     }
 
     /// <summary>
-    /// Check if there's no spawnpoints and shows an error
+    /// PUBLIC: Initialize method for GameBootstrap
     /// </summary>
-    private void ValidateSpawnPoints()
+    public void Initialize()
     {
-        if (spawnPoints == null || spawnPoints.Length == 0)
+        if (spawnConfig == null)
         {
-            Debug.LogError($"SpawnHandler on {gameObject.name} has NO SPAWN POINTS! Add spawn point transforms to the array!");
-        }
-        else
-        {
-            Debug.Log($"SpawnHandler found {spawnPoints.Length} spawn points");
-        }
-    }
-
-    void Update()
-    {
-        // MANUAL SPAWNING CONTROLS
-        if (Input.GetKeyDown(KeyCode.F))
-        {
-            if (isManualSpawning)
-                StopManualSpawning();
-            else
-                StartManualSpawning();
-        }
-
-        if (Input.GetKeyDown(KeyCode.G))
-        {
-            SpawnSingleAtRandomPoint();
-        }
-        
-        // AUTO SPAWNING CONTROLS
-        if (Input.GetKeyDown(KeyCode.P))
-        {
-            ToggleAutoSpawning();
-        }
-        
-        if (Input.GetKeyDown(KeyCode.T))
-        {
-            LogSpawnStats();
-        }
-        
-        // AUTO SPAWNING SYSTEM
-        if (enableAutoSpawning && spawningEnabled)
-        {
-            AutoSpawnEnemies();
-        }
-    }
-
-    #region Manual Spawning System
-    
-    public void StartManualSpawning()
-    {
-        if (!isManualSpawning && objectPool != null && HasValidSpawnPoints())
-        {
-            isManualSpawning = true;
-            manualSpawnCoroutine = StartCoroutine(ManualSpawnRoutine());
-            Debug.Log("Started manual continuous spawning");
-        }
-    }
-
-    public void StopManualSpawning()
-    {
-        if (isManualSpawning)
-        {
-            isManualSpawning = false;
-            if (manualSpawnCoroutine != null)
-            {
-                StopCoroutine(manualSpawnCoroutine);
-                manualSpawnCoroutine = null;
-            }
-            Debug.Log("Stopped manual continuous spawning");
-        }
-    }
-
-    public void SpawnSingleAtRandomPoint()
-    {
-        if (!HasValidSpawnPoints()) return;
-        
-        Vector3 spawnPos = GetRandomSpawnPoint();
-        GameObject spawned = SpawnAtPosition(spawnPos);
-        
-        if (spawned != null)
-        {
-            currentEnemyCount++;
-            Debug.Log($"Manual spawn at {spawnPos}: {spawned.name}");
-        }
-    }
-
-    public void SpawnAtSpecificPoint(int pointIndex)
-    {
-        if (!HasValidSpawnPoints() || pointIndex < 0 || pointIndex >= spawnPoints.Length) return;
-        
-        Vector3 spawnPos = spawnPoints[pointIndex].position;
-        GameObject spawned = SpawnAtPosition(spawnPos);
-        
-        if (spawned != null)
-        {
-            currentEnemyCount++;
-            Debug.Log($"Manual spawn at point {pointIndex}: {spawned.name}");
-        }
-    }
-
-    private IEnumerator ManualSpawnRoutine()
-    {
-        while (isManualSpawning)
-        {
-            Vector3 spawnPos = GetRandomSpawnPoint();
-            GameObject spawned = SpawnAtPosition(spawnPos);
-            
-            if (spawned != null)
-            {
-                currentEnemyCount++;
-            }
-            
-            yield return new WaitForSeconds(spawnInterval);
-        }
-    }
-    
-    #endregion
-
-    #region Auto Spawning System
-    
-    private void ToggleAutoSpawning()
-    {
-        spawningEnabled = !spawningEnabled;
-        Debug.Log($"Auto Spawning: {(spawningEnabled ? "ENABLED" : "DISABLED")}");
-    }
-    
-    private void LogSpawnStats()
-    {
-        Debug.Log($"=== SPAWN STATS ===");
-        Debug.Log($"Active Enemies: {currentEnemyCount}/{maxEnemies}");
-        Debug.Log($"Spawn Points: {(spawnPoints?.Length ?? 0)}");
-        Debug.Log($"Auto Spawning: {(enableAutoSpawning && spawningEnabled ? "ON" : "OFF")}");
-        Debug.Log($"Manual Spawning: {(isManualSpawning ? "ON" : "OFF")}");
-        
-        if (objectPool != null)
-        {
-            int poolCount = objectPool.GetActiveCount(poolName);
-            Debug.Log($"Pool '{poolName}': {poolCount} active objects");
-        }
-    }
-    
-    private void AutoSpawnEnemies()
-    {
-        if (Time.time - lastSpawnTime < spawnInterval) return;
-        if (currentEnemyCount >= maxEnemies) return;
-        if (!HasValidSpawnPoints()) return;
-        
-        Vector3 spawnPos = GetRandomSpawnPoint();
-        if (IsValidSpawnPosition(spawnPos))
-        {
-            GameObject enemy = SpawnAtPosition(spawnPos);
-            if (enemy != null)
-            {
-                currentEnemyCount++;
-                lastSpawnTime = Time.time;
-                
-                if (enableSpawnLogs)
-                    Debug.Log($"Auto-spawned at {spawnPos}. Total: {currentEnemyCount}");
-            }
-        }
-    }
-    
-    #endregion
-
-    #region Spawn Point Management
-    
-    private bool HasValidSpawnPoints()
-    {
-        if (spawnPoints == null || spawnPoints.Length == 0)
-        {
-            Debug.LogWarning("No spawn points configured!");
-            return false;
-        }
-        return true;
-    }
-    
-    private Vector3 GetRandomSpawnPoint()
-    {
-        if (!HasValidSpawnPoints()) return Vector3.zero;
-        
-        Transform randomPoint = spawnPoints[Random.Range(0, spawnPoints.Length)];
-        return randomPoint != null ? randomPoint.position : Vector3.zero;
-    }
-    
-    private bool IsValidSpawnPosition(Vector3 position)
-    {
-        if (playerMovement != null)
-        {
-            float distance = Vector3.Distance(position, playerMovement.transform.position);
-            return distance >= minPlayerDistance;
-        }
-        return true;
-    }
-
-    #endregion
-
-    #region Core Spawning
-
-    private void SetEnemyPowerLevel(GameObject enemy)
-    {
-        // Cache the enemy component lookup
-        Enemy enemyComponent = enemy.GetComponentInChildren<Enemy>();
-
-        if (enemyComponent == null || powerLevelScaler == null)
-        {
-            if (enableSpawnLogs)
-            {
-                Debug.LogWarning($"Cannot set power level for {enemy.name}! " +
-                               $"Enemy Component: {enemyComponent != null}, " +
-                               $"PowerLevelScaler: {powerLevelScaler != null}");
-            }
+            Debug.LogError($"SpawnHandler on {gameObject.name} needs a config!");
             return;
         }
 
-        // Single method call and assignment
-        int newPowerLevel = powerLevelScaler.CalculateEnemyPowerLevel();
-        enemyComponent.SetPowerLevel(newPowerLevel);
-
-        // Batch the level display update with the power level setting
-        LevelDisplay levelDisplay = enemy.GetComponentInChildren<LevelDisplay>();
-        levelDisplay?.SetEntity(enemyComponent);
-
-        // Conditional debug logging (only in editor builds)
-        if (enableSpawnLogs)
-            Debug.Log($"Set {enemy.name} power level to {newPowerLevel}");
-    }
-
-    private GameObject SpawnAtPosition(Vector3 position)
-    {
-        if (objectPool != null && spawningEnabled)
+        if (spawnPoints == null || spawnPoints.Length == 0)
         {
-            GameObject enemy = objectPool.Spawn(poolName, position);
-
-            if (enemy != null)
-            {
-                // Set power level for the spawned enemy
-                SetEnemyPowerLevel(enemy);
-            }
-
-            return enemy;
+            Debug.LogError($"SpawnHandler on {gameObject.name} needs spawn points!");
+            return;
         }
-        return null;
-    }
-    
-    public void OnEnemyDestroyed(GameObject obj)
-    {
-        objectPool.ReturnToPool(poolName,obj);
-        currentEnemyCount--;
-        if (currentEnemyCount < 0) currentEnemyCount = 0;
-        
-        if (enableSpawnLogs)
-            Debug.Log($"Enemy destroyed. Remaining: {currentEnemyCount}");
-    }
-    
-    #endregion
 
-    #region Editor Helpers
-    
-    void OnDrawGizmos()
-    {
-        if (spawnPoints == null) return;
-        
-        // Draw spawn points
-        Gizmos.color = Color.cyan;
-        for (int i = 0; i < spawnPoints.Length; i++)
+        nextSpawnTime = Time.time + 2f; // Initial delay
+        oneTimeCompleted = false; // FIXED: Reset oneTime flag
+
+        if (spawnConfig.showLogs)
         {
-            if (spawnPoints[i] != null)
-            {
-                Vector3 pos = spawnPoints[i].position;
-                Gizmos.DrawWireSphere(pos, 1f);
-                
-                // Draw spawn point index
-                Gizmos.color = Color.white;
-                Gizmos.DrawRay(pos, Vector3.up * 2f);
-                
-                Gizmos.color = Color.cyan;
-            }
+            Debug.Log($"SpawnHandler ready: {spawnConfig.configName}");
         }
     }
-    
-    void OnDrawGizmosSelected()
+
+    void HandleSpawning()
     {
-        if (spawnPoints == null) return;
-        
-        // Draw spawn points with numbers when selected
-        Gizmos.color = Color.yellow;
-        for (int i = 0; i < spawnPoints.Length; i++)
+        switch (spawnConfig.spawnType)
         {
-            if (spawnPoints[i] != null)
-            {
-                Vector3 pos = spawnPoints[i].position;
-                Gizmos.DrawSphere(pos, 0.5f);
+            case SpawnHandlerConfig.SpawnType.Continuous:
+                HandleContinuousSpawning();
+                break;
                 
-                // Draw player distance check radius
-                if (playerMovement != null)
+            case SpawnHandlerConfig.SpawnType.Cycles:
+                HandleCycleSpawning();
+                break;
+                
+            case SpawnHandlerConfig.SpawnType.OneTime:
+                HandleOneTimeSpawning();
+                break;
+        }
+    }
+
+    void HandleContinuousSpawning()
+    {
+        if (Time.time >= nextSpawnTime)
+        {
+            if (currentActive < spawnConfig.keepActiveAtOnce)
+            {
+                if (TrySpawnEnemy())
                 {
-                    Gizmos.color = Color.red;
-                    Gizmos.DrawWireSphere(pos, minPlayerDistance);
-                    Gizmos.color = Color.yellow;
+                    ScheduleNextSpawn();
                 }
             }
         }
     }
+
+    void HandleCycleSpawning()
+    {
+        // Handle cooldown period
+        if (inCooldown)
+        {
+            if (Time.time >= cooldownEndTime)
+            {
+                inCooldown = false;
+                spawnedThisCycle = 0;
+                
+                if (spawnConfig.showLogs)
+                    Debug.Log($"{spawnConfig.configName}: Cooldown ended, starting new cycle");
+            }
+            return;
+        }
+
+        // Normal spawning in cycle
+        if (Time.time >= nextSpawnTime)
+        {
+            if (spawnedThisCycle < spawnConfig.spawnThisManyPerCycle)
+            {
+                if (TrySpawnEnemy())
+                {
+                    spawnedThisCycle++;
+                    ScheduleNextSpawn();
+
+                    // Check if cycle complete
+                    if (spawnedThisCycle >= spawnConfig.spawnThisManyPerCycle)
+                    {
+                        StartCooldown();
+                    }
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// FIXED: OneTime spawning that doesn't prevent respawning when enemies die
+    /// </summary>
+    void HandleOneTimeSpawning()
+    {
+        // FIXED: Only spawn initially once, but don't stop spawning when enemies die
+        if (Time.time >= nextSpawnTime && !oneTimeCompleted)
+        {
+            if (TrySpawnEnemy())
+            {
+                oneTimeCompleted = true;
+                
+                if (spawnConfig.showLogs)
+                    Debug.Log($"{spawnConfig.configName}: Initial OneTime spawn completed");
+            }
+        }
+        
+        // FIXED: Allow respawning after enemies die, but maintain the limit
+        else if (oneTimeCompleted && currentActive < spawnConfig.keepActiveAtOnce)
+        {
+            if (Time.time >= nextSpawnTime)
+            {
+                if (TrySpawnEnemy())
+                {
+                    ScheduleNextSpawn();
+                    
+                    if (spawnConfig.showLogs)
+                        Debug.Log($"{spawnConfig.configName}: OneTime respawn after enemy death");
+                }
+            }
+        }
+    }
+
+    void StartCooldown()
+    {
+        inCooldown = true;
+        cooldownEndTime = Time.time + spawnConfig.waitBetweenCycles;
+        
+        if (spawnConfig.showLogs)
+            Debug.Log($"{spawnConfig.configName}: Starting cooldown for {spawnConfig.waitBetweenCycles} seconds");
+    }
+
+    bool TrySpawnEnemy()
+    {
+        Vector3 spawnPos = GetValidSpawnPosition();
+        if (spawnPos == Vector3.zero) return false;
+
+        GameObject enemy = SimpleObjectPool.Instance.Spawn(spawnConfig.poolName, spawnPos);
+        if (enemy != null)
+        {
+            currentActive++;
+            SetupEnemy(enemy, spawnPos);
+
+            if (spawnConfig.showLogs)
+                Debug.Log($"Spawned {spawnConfig.enemyType} at {spawnPos}. Active: {currentActive}");
+
+            return true;
+        }
+
+        return false;
+    }
+
+    Vector3 GetValidSpawnPosition()
+    {
+        for (int i = 0; i < 10; i++) // Try 10 times
+        {
+            Vector3 pos = spawnPoints[Random.Range(0, spawnPoints.Length)].position;
+            if (spawnConfig.IsValidDistance(pos))
+            {
+                return pos;
+            }
+        }
+
+        if (spawnConfig.showLogs)
+            Debug.LogWarning($"{spawnConfig.configName}: Couldn't find valid spawn position");
+        
+        return Vector3.zero;
+    }
+
+    void SetupEnemy(GameObject enemy, Vector3 spawnPos)
+    {
+        // Set power level
+        if (PowerLevelScaler.Instance != null)
+        {
+            Enemy enemyComp = enemy.GetComponentInChildren<Enemy>();
+            if (enemyComp != null)
+            {
+                int powerLevel = PowerLevelScaler.Instance.CalculateEnemyPowerLevel();
+                enemyComp.SetPowerLevel(powerLevel);
+
+                LevelDisplay levelDisplay = enemy.GetComponentInChildren<LevelDisplay>();
+                levelDisplay?.SetEntity(enemyComp);
+            }
+        }
+
+        // Handle platform assignment for land enemies
+        if (spawnConfig.enemyType == SpawnHandlerConfig.EnemyType.LandFisherman)
+        {
+            StartCoroutine(AssignToPlatform(enemy, spawnPos));
+        }
+    }
+
+    IEnumerator AssignToPlatform(GameObject enemy, Vector3 spawnPos)
+    {
+        yield return null; // Wait one frame
+
+        LandEnemy landEnemy = enemy.GetComponentInChildren<LandEnemy>();
+        if (landEnemy != null)
+        {
+            Platform platform = FindNearestPlatform(spawnPos);
+            if (platform != null)
+            {
+                platform.RegisterEnemyAtRuntime(landEnemy);
+            }
+        }
+    }
+
+    Platform FindNearestPlatform(Vector3 position)
+    {
+        Platform[] platforms = FindObjectsOfType<Platform>();
+        Platform nearest = null;
+        float closestDistance = 15f;
+
+        foreach (Platform platform in platforms)
+        {
+            float distance = Vector3.Distance(position, platform.transform.position);
+            if (distance < closestDistance)
+            {
+                closestDistance = distance;
+                nearest = platform;
+            }
+        }
+
+        return nearest;
+    }
+
+    void ScheduleNextSpawn()
+    {
+        nextSpawnTime = Time.time + spawnConfig.GetSpawnInterval();
+    }
+
+    void CheckUnlockStatus()
+    {
+        if (!spawnConfig.needsUnlock)
+        {
+            isUnlocked = true;
+            return;
+        }
+
+        if (PowerLevelScaler.Instance != null)
+        {
+            int playerLevel = PowerLevelScaler.Instance.GetPlayerPowerLevel();
+            bool wasUnlocked = isUnlocked;
+            isUnlocked = spawnConfig.IsUnlocked(playerLevel);
+
+            if (!wasUnlocked && isUnlocked && spawnConfig.showLogs)
+            {
+                Debug.Log($"{spawnConfig.configName} UNLOCKED! Player level: {playerLevel}");
+            }
+        }
+    }
+
+    /// <summary>
+    /// Called when enemy dies - basic version for compatibility
+    /// </summary>
+    public void OnEnemyDestroyed()
+    {
+        currentActive--;
+        if (currentActive < 0) currentActive = 0;
+
+        if (spawnConfig != null && spawnConfig.showLogs)
+            Debug.Log($"Enemy destroyed for {spawnConfig.configName}. Active: {currentActive}");
+    }
+
+    /// <summary>
+    /// FIXED: Called when enemy dies with enemy reference for better tracking
+    /// </summary>
+    public void OnEnemyDestroyed(GameObject enemyObj)
+    {
+        currentActive--;
+        if (currentActive < 0) currentActive = 0;
+
+        if (spawnConfig != null && spawnConfig.showLogs)
+            Debug.Log($"Enemy {enemyObj.name} returned to pool for {spawnConfig.configName}. Active: {currentActive}");
+        
+        // FIXED: For OneTime spawners, schedule next spawn after enemy death
+        if (spawnConfig.spawnType == SpawnHandlerConfig.SpawnType.OneTime && oneTimeCompleted)
+        {
+            ScheduleNextSpawn();
+        }
+    }
+
+    /// <summary>
+    /// PUBLIC: Spawn single at random point for ProgressionManager
+    /// </summary>
+    public void SpawnSingleAtRandomPoint()
+    {
+        TrySpawnEnemy();
+    }
+
+    /// <summary>
+    /// Manual spawn for testing
+    /// </summary>
+    public void SpawnOne()
+    {
+        TrySpawnEnemy();
+    }
+
+    /// <summary>
+    /// FIXED: Reset oneTime flag for testing
+    /// </summary>
+    public void ResetSpawner()
+    {
+        oneTimeCompleted = false;
+        currentActive = 0;
+        spawnedThisCycle = 0;
+        inCooldown = false;
+        nextSpawnTime = Time.time + 2f;
+        
+        if (spawnConfig.showLogs)
+            Debug.Log($"🔄 {spawnConfig.configName} spawner reset");
+    }
+
+    void LogStats()
+    {
+        Debug.Log($"=== {spawnConfig.configName} ===");
+        Debug.Log($"Active: {currentActive}, Unlocked: {isUnlocked}, In Cooldown: {inCooldown}");
+        Debug.Log($"Spawned this cycle: {spawnedThisCycle}, OneTime completed: {oneTimeCompleted}");
+    }
     
-    #endregion
+    /// <summary>
+    /// TESTING: Reset all enemies of this spawner's type
+    /// </summary>
+    private void ResetAllEnemiesOfThisType()
+    {
+        Enemy[] allEnemies = FindObjectsOfType<Enemy>();
+        int resetCount = 0;
+    
+        foreach (Enemy enemy in allEnemies)
+        {
+            if (enemy.gameObject.activeInHierarchy && ShouldManageThisEnemy(enemy))
+            {
+                enemy.TriggerAlive();
+                resetCount++;
+                Debug.Log($"🔄 Reset enemy: {enemy.gameObject.name}");
+            }
+        }
+        Debug.Log($"🔄 Reset {resetCount} enemies of type {spawnConfig.enemyType}");
+    }
+
+    /// <summary>
+    /// TESTING: Force defeat on first enemy of this type
+    /// </summary>
+    private void TestEnemyDefeatOfThisType()
+    {
+        Enemy[] allEnemies = FindObjectsOfType<Enemy>();
+    
+        foreach (Enemy enemy in allEnemies)
+        {
+            if (enemy.gameObject.activeInHierarchy && 
+                enemy.GetState() == Enemy.EnemyState.Alive && 
+                ShouldManageThisEnemy(enemy))
+            {
+                Debug.Log($"💀 Forcing defeat on: {enemy.gameObject.name} (Type: {spawnConfig.enemyType})");
+                // Simulate enough fatigue to defeat
+                enemy.TakeFatigue(enemy.entityFatigue.maxFatigue);
+                break;
+            }
+        }
+    }
+
+    /// <summary>
+    /// FIXED: Check if this spawner should manage this enemy
+    /// </summary>
+    private bool ShouldManageThisEnemy(Enemy enemy)
+    {
+        if (spawnConfig.enemyType == SpawnHandlerConfig.EnemyType.LandFisherman)
+        {
+            return enemy is LandEnemy;
+        }
+        else if (spawnConfig.enemyType == SpawnHandlerConfig.EnemyType.BoatFisherman)
+        {
+            return enemy.gameObject.name.ToLower().Contains("boatfisherman");
+        }
+    
+        return false;
+    }
+
+    // Gizmos
+    void OnDrawGizmos()
+    {
+        if (spawnConfig == null || !spawnConfig.showGizmos || spawnPoints == null) return;
+
+        Gizmos.color = isUnlocked ? spawnConfig.gizmoColor : Color.red;
+        
+        foreach (Transform point in spawnPoints)
+        {
+            if (point != null)
+            {
+                Gizmos.DrawWireSphere(point.position, 1f);
+            }
+        }
+    }
+
+    void OnDrawGizmosSelected()
+    {
+        if (spawnConfig == null || spawnPoints == null) return;
+
+        foreach (Transform point in spawnPoints)
+        {
+            if (point != null)
+            {
+                // Min distance (red)
+                Gizmos.color = Color.red;
+                Gizmos.DrawWireSphere(point.position, spawnConfig.dontSpawnCloserThan);
+                
+                // Max distance (blue)
+                Gizmos.color = Color.blue;
+                Gizmos.DrawWireSphere(point.position, spawnConfig.dontSpawnFartherThan);
+            }
+        }
+    }
 }

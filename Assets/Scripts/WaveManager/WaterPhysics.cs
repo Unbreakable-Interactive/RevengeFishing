@@ -55,10 +55,8 @@ public class WaterPhysics : MonoBehaviour
     
     void Update()
     {
-        // Limpiar ondas viejas
         interactiveWaves.RemoveAll(wave => Time.time - wave.timeCreated > waveDecayTime);
         
-        // Generar ondas automáticas
         if (generateWaves && Time.time >= nextWaveTime)
         {
             GenerateRandomWave();
@@ -70,14 +68,12 @@ public class WaterPhysics : MonoBehaviour
     {
         float height = waterLevel;
         
-        // Ondas base sinusoidales
         float time = Time.time * waveSpeed;
         height += Mathf.Sin((position.x / waveLength) + time) * waveHeight * 0.4f;
         height += Mathf.Sin((position.x / waveLength * 0.7f) + time * 1.3f) * waveHeight * 0.3f;
         height += Mathf.Sin((position.x / waveLength * 1.2f) + time * 0.8f) * waveHeight * 0.2f;
         height += Mathf.Sin((position.y / waveLength * 0.8f) + time * 0.9f) * waveHeight * 0.1f;
         
-        // Ondas interactivas
         foreach (var wave in interactiveWaves)
         {
             float distance = Vector2.Distance(position, wave.position);
@@ -127,11 +123,9 @@ public class WaterPhysics : MonoBehaviour
     
     void OnDrawGizmosSelected()
     {
-        // Dibujar área de generación de ondas
         Gizmos.color = Color.cyan;
         Gizmos.DrawWireCube(transform.position, new Vector3(waveArea.x, waveArea.y, 0));
         
-        // Dibujar ondas activas
         Gizmos.color = Color.blue;
         foreach (var wave in interactiveWaves)
         {
@@ -139,7 +133,6 @@ public class WaterPhysics : MonoBehaviour
             Gizmos.DrawWireSphere(wave.position, waveRadius);
         }
         
-        // Dibujar nivel del agua
         Gizmos.color = Color.green;
         Vector3 waterLine = new Vector3(transform.position.x, waterLevel, transform.position.z);
         Gizmos.DrawLine(waterLine + Vector3.left * waveArea.x, waterLine + Vector3.right * waveArea.x);
