@@ -4,7 +4,7 @@ using Utils;
 
 public class BoatPlatform : Platform
 {
-    [Header("🚤 BOAT SPECIFIC SETTINGS")]
+    [Header("BOAT SPECIFIC SETTINGS")]
     [SerializeField] private bool autoStartMovementOnRegistration = true;
     [SerializeField] private bool debugBoatTriggers = true;
     [SerializeField] private BoatFloater boatFloater;
@@ -18,12 +18,12 @@ public class BoatPlatform : Platform
             gameObject.layer = LayerMask.NameToLayer(LayerNames.BOATPLATFORM);
             if (debugBoatTriggers)
             {
-                Debug.Log($"🚤 BoatPlatform: Set layer to BoatPlatform (layer {gameObject.layer})");
+                Debug.Log($"BoatPlatform: Set layer to BoatPlatform (layer {gameObject.layer})");
             }
         }
         else
         {
-            Debug.LogWarning($"🚤 BoatPlatform: 'BoatPlatform' layer not found! Using Platform layer instead.");
+            Debug.LogWarning($"BoatPlatform: 'BoatPlatform' layer not found! Using Platform layer instead.");
         }
         
         // Find BoatFloater in parent hierarchy if not manually assigned
@@ -33,17 +33,17 @@ public class BoatPlatform : Platform
             
             if (boatFloater != null && debugBoatTriggers)
             {
-                Debug.Log($"🚤 BoatPlatform: Auto-found BoatFloater in {boatFloater.name}");
+                Debug.Log($"BoatPlatform: Auto-found BoatFloater in {boatFloater.name}");
             }
             else if (debugBoatTriggers)
             {
-                Debug.LogWarning($"🚤 BoatPlatform: No BoatFloater found in parent hierarchy for {gameObject.name}");
+                Debug.LogWarning($"BoatPlatform: No BoatFloater found in parent hierarchy for {gameObject.name}");
             }
         }
         
         if (debugBoatTriggers)
         {
-            Debug.Log($"🚤 BoatPlatform: Initialized on {gameObject.name}");
+            Debug.Log($"BoatPlatform: Initialized on {gameObject.name}");
         }
     }
     
@@ -65,7 +65,7 @@ public class BoatPlatform : Platform
         assignedEnemies.Add(enemy);
         enemy.SetAssignedPlatform(this);
         
-        // 🚤 BOAT-SPECIFIC: Smart parenting for BoatFishermanHandler
+        // BOAT-SPECIFIC: Smart parenting for BoatFishermanHandler
         Transform targetToParent = enemy.transform;
         
         // Check if this enemy is a child of a BoatFishermanHandler (with null safety)
@@ -75,7 +75,7 @@ public class BoatPlatform : Platform
         {
             targetToParent = enemy.transform.parent; // Parent the entire BoatFishermanHandler
             if (debugBoatTriggers)
-                Debug.Log($"🚤 BOAT PLATFORM: Parenting entire BoatFishermanHandler ({targetToParent.name}) instead of just {enemy.name}");
+                Debug.Log($"BOAT PLATFORM: Parenting entire BoatFishermanHandler ({targetToParent.name}) instead of just {enemy.name}");
         }
         
         // Make enemy (or entire handler) a CHILD of this platform (so they move together!)
@@ -95,7 +95,7 @@ public class BoatPlatform : Platform
         enemy.platformBoundsCalculated = true;
 
         if (debugBoatTriggers)
-            Debug.Log($"🚤 BOAT COLLISION ASSIGNMENT: {enemy.name} assigned to boat platform {gameObject.name} and made CHILD! Total enemies: {assignedEnemies.Count}");
+            Debug.Log($"BOAT COLLISION ASSIGNMENT: {enemy.name} assigned to boat platform {gameObject.name} and made CHILD! Total enemies: {assignedEnemies.Count}");
         
         // Add boat-specific logic: trigger movement when crew registers
         TriggerBoatMovement(enemy);
@@ -109,7 +109,7 @@ public class BoatPlatform : Platform
             assignedEnemies.Add(enemy);
             enemy.SetAssignedPlatform(this);
 
-            // 🚤 BOAT-SPECIFIC: Smart parenting for BoatFishermanHandler
+            // BOAT-SPECIFIC: Smart parenting for BoatFishermanHandler
             Transform targetToParent = enemy.transform;
             
             // Check if this enemy is a child of a BoatFishermanHandler (with null safety)
@@ -119,7 +119,7 @@ public class BoatPlatform : Platform
             {
                 targetToParent = enemy.transform.parent; // Parent the entire BoatFishermanHandler
                 if (debugBoatTriggers)
-                    Debug.Log($"🚤 BOAT PLATFORM RUNTIME: Parenting entire BoatFishermanHandler ({targetToParent.name}) instead of just {enemy.name}");
+                    Debug.Log($"BOAT PLATFORM RUNTIME: Parenting entire BoatFishermanHandler ({targetToParent.name}) instead of just {enemy.name}");
             }
 
             // Make enemy (or entire handler) a CHILD of this platform (so they move together!)
@@ -138,7 +138,7 @@ public class BoatPlatform : Platform
 
             if (debugBoatTriggers)
             {
-                Debug.Log($"🚤 BOAT RUNTIME: Auto-assigned {enemy.name} to boat platform {gameObject.name} and made CHILD");
+                Debug.Log($"BOAT RUNTIME: Auto-assigned {enemy.name} to boat platform {gameObject.name} and made CHILD");
             }
             
             // Add boat-specific logic: trigger movement when crew registers
@@ -155,7 +155,7 @@ public class BoatPlatform : Platform
         
         if (boatFloater != null)
         {
-            // 🚤 NEW: Recalculate buoyancy when enemy mass is added to boat
+            // NEW: Recalculate buoyancy when enemy mass is added to boat
             boatFloater.RecalculateBuoyancy();
             
             // Trigger boat movement through the BoatFloater
@@ -163,12 +163,12 @@ public class BoatPlatform : Platform
             
             if (debugBoatTriggers)
             {
-                Debug.Log($"🚤 BoatPlatform: Triggered boat movement for {enemy.name} on boat {boatFloater.name}");
+                Debug.Log($"BoatPlatform: Triggered boat movement for {enemy.name} on boat {boatFloater.name}");
             }
         }
         else if (debugBoatTriggers)
         {
-            Debug.LogWarning($"🚤 BoatPlatform: Cannot trigger boat movement - BoatFloater not found!");
+            Debug.LogWarning($"BoatPlatform: Cannot trigger boat movement - BoatFloater not found!");
         }
     }
     
@@ -181,7 +181,7 @@ public class BoatPlatform : Platform
         
         if (debugBoatTriggers)
         {
-            Debug.Log($"🚤 BoatPlatform: BoatFloater manually assigned: {floater.name}");
+            Debug.Log($"BoatPlatform: BoatFloater manually assigned: {floater.name}");
         }
     }
     
@@ -221,7 +221,7 @@ public class BoatPlatform : Platform
             
             if (debugBoatTriggers)
             {
-                Debug.Log("🚤 BoatPlatform: Force started boat movement");
+                Debug.Log("BoatPlatform: Force started boat movement");
             }
         }
     }
@@ -237,7 +237,7 @@ public class BoatPlatform : Platform
             
             if (debugBoatTriggers)
             {
-                Debug.Log("🚤 BoatPlatform: Stopped boat movement");
+                Debug.Log("BoatPlatform: Stopped boat movement");
             }
         }
     }

@@ -8,12 +8,15 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/MainMenu.unity
     guid: 87e5fe36369bb214c8442a019adf9dbc
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/SurfaceScene.unity
     guid: c987e5987df8b2d4ea8421e21012f5fe
   - enabled: 0
     path: Assets/Scenes/UnUsed Samples/Testing.unity
     guid: 2cc48032158394295af393f9ba5314e4
+  - enabled: 1
+    path: Assets/Scenes/SurfaceScene-WaterTesting.unity
+    guid: 4a3b1b3c42ea9477c984b55c6509e444
   - enabled: 1
     path: Assets/Scenes/GameOver.unity
     guid: c88c35c36520a094a8ba8bf162ecd1e8
