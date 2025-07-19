@@ -15,10 +15,10 @@ MonoBehaviour:
   configName: Boat Fisherman Spawner
   poolName: BoatFisherman
   enemyType: 1
-  spawnType: 1
-  spawnEveryXSeconds: 3
-  keepActiveAtOnce: 3
-  spawnThisManyPerCycle: 1
+  spawnType: 2
+  spawnEveryXSeconds: 0.00001
+  keepActiveAtOnce: 2
+  spawnThisManyPerCycle: 2
   waitBetweenCycles: 45
   needsUnlock: 0
   playerLevelNeeded: 2

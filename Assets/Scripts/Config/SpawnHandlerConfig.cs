@@ -20,7 +20,7 @@ public class SpawnHandlerConfig : ScriptableObject
     public SpawnType spawnType = SpawnType.Continuous;
     
     [Tooltip("Spawn every X seconds")]
-    [Range(1f, 30f)]
+    [Range(0f, 30f)]
     public float spawnEveryXSeconds = 5f;
     
     [Tooltip("How many enemies to keep active at the same time")]
@@ -76,11 +76,22 @@ public class SpawnHandlerConfig : ScriptableObject
         Boat
     }
 
-    // Helper methods
+    /// <summary>
+    /// FIXED: GetSpawnInterval que respeta valores pequeños y no añade delay aleatorio innecesario
+    /// </summary>
     public float GetSpawnInterval()
     {
-        return spawnEveryXSeconds + Random.Range(-1f, 1f);
+        // FIXED: Para valores muy pequeños (spawn inmediato), no añadir randomness
+        if (spawnEveryXSeconds <= 0.1f)
+        {
+            return Mathf.Max(0f, spawnEveryXSeconds); // Ensure no negative values
+        }
+    
+        // FIXED: Para valores normales, añadir menos randomness
+        float randomVariation = Mathf.Min(spawnEveryXSeconds * 0.2f, 0.5f); // Max 20% variation or 0.5s
+        return spawnEveryXSeconds + Random.Range(-randomVariation, randomVariation);
     }
+
     
     public bool IsUnlocked(int playerLevel)
     {
@@ -117,7 +128,7 @@ public class SpawnHandlerConfig : ScriptableObject
         poolName = "BoatFisherman";  // CORREGIDO: era "Fisherman"
         enemyType = EnemyType.BoatFisherman;
         spawnType = SpawnType.OneTime;
-        spawnEveryXSeconds = 2f;
+        spawnEveryXSeconds = 0.1f;
         spawnThisManyPerCycle = 2;
         waitBetweenCycles = 45f;
         needsUnlock = false;
@@ -129,16 +140,17 @@ public class SpawnHandlerConfig : ScriptableObject
     private void SetupBoat()
     {
         configName = "Boat Spawner";
-        poolName = "Boat";  // CORRECTO: ya estaba bien
+        poolName = "Boat";
         enemyType = EnemyType.Boat;
-        spawnType = SpawnType.Cycles;
-        spawnEveryXSeconds = 8f;
-        spawnThisManyPerCycle = 1;
-        waitBetweenCycles = 60f;
-        needsUnlock = true;
-        playerLevelNeeded = 2;
-        gizmoColor = Color.red;
-        Debug.Log("Setup para Boat - Pool: Boat");
+        spawnType = SpawnType.OneTime;     // FIXED: Solo aparece una vez
+        spawnEveryXSeconds = 5f;           // Delay inicial
+        keepActiveAtOnce = 2;              // Máximo 2 botes activos
+        needsUnlock = false;               // Sin unlock para testing
+        dontSpawnCloserThan = 20f;
+        dontSpawnFartherThan = 60f;
+        showLogs = true;
+        gizmoColor = Color.cyan;
+        Debug.Log("🚤 BOAT CONFIG: OneTime spawn with initial crew!");
     }
     
     [ContextMenu("Setup for TESTING - Continuous Respawn")]

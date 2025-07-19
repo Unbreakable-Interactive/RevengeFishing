@@ -67,7 +67,8 @@ MonoBehaviour:
   movementChangeInterval: 3
   minMovementTime: 2
   debugMovement: 0
-  cachedPlatforms: []
+  cachedPlatforms:
+  - {fileID: 8531477562920402828}
   buoyancyForce: 25
   waterDrag: 0.8
   angularDrag: 0.2
