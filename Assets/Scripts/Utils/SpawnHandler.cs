@@ -5,7 +5,7 @@ public class SpawnHandler : MonoBehaviour
 {
     [Header("Configuration")]
     [SerializeField] private SpawnHandlerConfig spawnConfig;
-    
+
     [Header("Spawn Points")]
     [SerializeField] private Transform[] spawnPoints;
 
@@ -19,7 +19,7 @@ public class SpawnHandler : MonoBehaviour
     private int spawnedThisCycle = 0;
     private bool inCooldown = false;
     private float cooldownEndTime;
-    
+
     // FIXED: Track if OneTime spawning already completed
     private bool oneTimeCompleted = false;
 
@@ -34,20 +34,20 @@ public class SpawnHandler : MonoBehaviour
     void Update()
     {
         if (!isActive || spawnConfig == null) return;
-    
+
         CheckUnlockStatus();
 
         if (!isUnlocked) return;
 
         HandleSpawning();
-    
+
         // Debug keys para testing
-        if (Input.GetKeyDown(KeyCode.F)) 
+        if (Input.GetKeyDown(KeyCode.F))
         {
             Debug.Log($"🎮 Manual spawn triggered for {spawnConfig.configName}!");
             SpawnOne();
         }
-    
+
         if (Input.GetKeyDown(KeyCode.G)) LogStats();
 
         // NUEVAS TECLAS PARA TESTING
@@ -88,11 +88,11 @@ public class SpawnHandler : MonoBehaviour
             case SpawnHandlerConfig.SpawnType.Continuous:
                 HandleContinuousSpawning();
                 break;
-                
+
             case SpawnHandlerConfig.SpawnType.Cycles:
                 HandleCycleSpawning();
                 break;
-                
+
             case SpawnHandlerConfig.SpawnType.OneTime:
                 HandleOneTimeSpawning();
                 break;
@@ -122,7 +122,7 @@ public class SpawnHandler : MonoBehaviour
             {
                 inCooldown = false;
                 spawnedThisCycle = 0;
-                
+
                 if (spawnConfig.showLogs)
                     Debug.Log($"{spawnConfig.configName}: Cooldown ended, starting new cycle");
             }
@@ -160,12 +160,12 @@ public class SpawnHandler : MonoBehaviour
             if (TrySpawnEnemy())
             {
                 oneTimeCompleted = true;
-                
+
                 if (spawnConfig.showLogs)
                     Debug.Log($"{spawnConfig.configName}: Initial OneTime spawn completed");
             }
         }
-        
+
         // FIXED: Allow respawning after enemies die, but maintain the limit
         else if (oneTimeCompleted && currentActive < spawnConfig.keepActiveAtOnce)
         {
@@ -174,7 +174,7 @@ public class SpawnHandler : MonoBehaviour
                 if (TrySpawnEnemy())
                 {
                     ScheduleNextSpawn();
-                    
+
                     if (spawnConfig.showLogs)
                         Debug.Log($"{spawnConfig.configName}: OneTime respawn after enemy death");
                 }
@@ -186,7 +186,7 @@ public class SpawnHandler : MonoBehaviour
     {
         inCooldown = true;
         cooldownEndTime = Time.time + spawnConfig.waitBetweenCycles;
-        
+
         if (spawnConfig.showLogs)
             Debug.Log($"{spawnConfig.configName}: Starting cooldown for {spawnConfig.waitBetweenCycles} seconds");
     }
@@ -224,7 +224,7 @@ public class SpawnHandler : MonoBehaviour
 
         if (spawnConfig.showLogs)
             Debug.LogWarning($"{spawnConfig.configName}: Couldn't find valid spawn position");
-        
+
         return Vector3.zero;
     }
 
@@ -246,6 +246,12 @@ public class SpawnHandler : MonoBehaviour
 
         // Handle platform assignment for land enemies
         if (spawnConfig.enemyType == SpawnHandlerConfig.EnemyType.LandFisherman)
+        {
+            StartCoroutine(AssignToPlatform(enemy, spawnPos));
+        }
+
+        // Handle platform assignment for boat enemies
+        if (spawnConfig.enemyType == SpawnHandlerConfig.EnemyType.BoatFisherman)
         {
             StartCoroutine(AssignToPlatform(enemy, spawnPos));
         }
@@ -333,7 +339,7 @@ public class SpawnHandler : MonoBehaviour
 
         if (spawnConfig != null && spawnConfig.showLogs)
             Debug.Log($"Enemy {enemyObj.name} returned to pool for {spawnConfig.configName}. Active: {currentActive}");
-        
+
         // FIXED: For OneTime spawners, schedule next spawn after enemy death
         if (spawnConfig.spawnType == SpawnHandlerConfig.SpawnType.OneTime && oneTimeCompleted)
         {
@@ -367,7 +373,7 @@ public class SpawnHandler : MonoBehaviour
         spawnedThisCycle = 0;
         inCooldown = false;
         nextSpawnTime = Time.time + 2f;
-        
+
         if (spawnConfig.showLogs)
             Debug.Log($"🔄 {spawnConfig.configName} spawner reset");
     }
@@ -378,7 +384,7 @@ public class SpawnHandler : MonoBehaviour
         Debug.Log($"Active: {currentActive}, Unlocked: {isUnlocked}, In Cooldown: {inCooldown}");
         Debug.Log($"Spawned this cycle: {spawnedThisCycle}, OneTime completed: {oneTimeCompleted}");
     }
-    
+
     /// <summary>
     /// TESTING: Reset all enemies of this spawner's type
     /// </summary>
@@ -386,7 +392,7 @@ public class SpawnHandler : MonoBehaviour
     {
         Enemy[] allEnemies = FindObjectsOfType<Enemy>();
         int resetCount = 0;
-    
+
         foreach (Enemy enemy in allEnemies)
         {
             if (enemy.gameObject.activeInHierarchy && ShouldManageThisEnemy(enemy))
@@ -405,11 +411,11 @@ public class SpawnHandler : MonoBehaviour
     private void TestEnemyDefeatOfThisType()
     {
         Enemy[] allEnemies = FindObjectsOfType<Enemy>();
-    
+
         foreach (Enemy enemy in allEnemies)
         {
-            if (enemy.gameObject.activeInHierarchy && 
-                enemy.GetState() == Enemy.EnemyState.Alive && 
+            if (enemy.gameObject.activeInHierarchy &&
+                enemy.GetState() == Enemy.EnemyState.Alive &&
                 ShouldManageThisEnemy(enemy))
             {
                 Debug.Log($"💀 Forcing defeat on: {enemy.gameObject.name} (Type: {spawnConfig.enemyType})");
@@ -433,7 +439,7 @@ public class SpawnHandler : MonoBehaviour
         {
             return enemy.gameObject.name.ToLower().Contains("boatfisherman");
         }
-    
+
         return false;
     }
 
@@ -443,7 +449,7 @@ public class SpawnHandler : MonoBehaviour
         if (spawnConfig == null || !spawnConfig.showGizmos || spawnPoints == null) return;
 
         Gizmos.color = isUnlocked ? spawnConfig.gizmoColor : Color.red;
-        
+
         foreach (Transform point in spawnPoints)
         {
             if (point != null)
@@ -464,7 +470,7 @@ public class SpawnHandler : MonoBehaviour
                 // Min distance (red)
                 Gizmos.color = Color.red;
                 Gizmos.DrawWireSphere(point.position, spawnConfig.dontSpawnCloserThan);
-                
+
                 // Max distance (blue)
                 Gizmos.color = Color.blue;
                 Gizmos.DrawWireSphere(point.position, spawnConfig.dontSpawnFartherThan);

@@ -152,6 +152,10 @@ PrefabInstance:
     m_TransformParent: {fileID: 665198961168709930}
     m_Modifications:
     - target: {fileID: 2117141073483461364, guid: 29c863f917d5e8846acde5d4d6a4ca7e, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2117141073483461364, guid: 29c863f917d5e8846acde5d4d6a4ca7e, type: 3}
       propertyPath: bodyCollider
       value: 
       objectReference: {fileID: 3479015762017106946}
@@ -242,13 +246,85 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 7667254095196824905, guid: 29c863f917d5e8846acde5d4d6a4ca7e, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 9104482056078928496}
   m_SourcePrefab: {fileID: 100100000, guid: 29c863f917d5e8846acde5d4d6a4ca7e, type: 3}
+--- !u!1 &301955498427423036 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5610486745833245567, guid: 29c863f917d5e8846acde5d4d6a4ca7e, type: 3}
+  m_PrefabInstance: {fileID: 5326827163894387267}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &2561211109777225482 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 7667254095196824905, guid: 29c863f917d5e8846acde5d4d6a4ca7e, type: 3}
   m_PrefabInstance: {fileID: 5326827163894387267}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &9104482056078928496
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2561211109777225482}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b4ff782ae5fe444b54c7613016d864, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rb: {fileID: 8723077445984565078}
+  _powerLevel: 0
+  entityFatigue:
+    fatigue: 0
+    maxFatigue: 0
+  isAboveWater: 1
+  airGravityScale: 2
+  airDrag: 1.5
+  airMaxSpeed: 3
+  underwaterGravityScale: -0.2
+  underwaterDrag: 1
+  underwaterMaxSpeed: 5
+  entityType: 0
+  _tier: 0
+  _state: 0
+  player: {fileID: 0}
+  hasReceivedFirstFatigue: 0
+  canPullPlayer: 0
+  pullForce: 0.5
+  pullDuration: 0.1
+  minActionTime: 1
+  maxActionTime: 4
+  nextActionTime: 0
+  enableDebugMessages: 0
+  bodyCollider: {fileID: 3479015762017106946}
+  parentContainer: {fileID: 1963649820016990938}
+  swimForce: 0
+  minSwimSpeed: 0
+  landEnemyConfig: {fileID: 11400000, guid: 93c90735659e547458403c343be80b20, type: 2}
+  _landMovementState: 0
+  walkingSpeed: 1.5
+  runningSpeed: 3
+  edgeBuffer: 0.5
+  fishingToolEquipped: 0
+  toolDropPrefab: {fileID: 301955498427423036}
+  platformLeftEdge: 0
+  platformRightEdge: 0
+  platformBoundsCalculated: 0
+  maxUpwardVelocity: 5
+  weight: 6
+  hasStartedFloating: 0
+  hookTimer: 1
+  hookDuration: 8
+  isPullingPlayer: 0
+  minLineLength: 2
+  maxLineReduction: 1.5
+  lineReductionVariation: 0.4
+  assignedPlatform: {fileID: 0}
+  fishermanConfig: {fileID: 11400000, guid: 876c88f03b9414e67960bdc874e7d116, type: 2}
+  useManualBounds: 1
+  manualLeftEdge: -1
+  manualRightEdge: 1
 --- !u!61 &3479015762017106946 stripped
 BoxCollider2D:
   m_CorrespondingSourceObject: {fileID: 8767175256861322817, guid: 29c863f917d5e8846acde5d4d6a4ca7e, type: 3}
@@ -260,7 +336,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 5326827163894387267}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2561211109777225482}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 74f210aa94814394cbc3a52e26206a1e, type: 3}
   m_Name: 
@@ -268,5 +344,10 @@ MonoBehaviour:
 --- !u!4 &7494490634703075726 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2444740548177980365, guid: 29c863f917d5e8846acde5d4d6a4ca7e, type: 3}
+  m_PrefabInstance: {fileID: 5326827163894387267}
+  m_PrefabAsset: {fileID: 0}
+--- !u!50 &8723077445984565078 stripped
+Rigidbody2D:
+  m_CorrespondingSourceObject: {fileID: 3522423683038717205, guid: 29c863f917d5e8846acde5d4d6a4ca7e, type: 3}
   m_PrefabInstance: {fileID: 5326827163894387267}
   m_PrefabAsset: {fileID: 0}

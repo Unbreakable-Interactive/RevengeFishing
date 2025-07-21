@@ -53,6 +53,11 @@ MonoBehaviour:
     icon: "\U0001F527"
     description: Dropped tool item
     isCoreType: 1
+  - typeName: BoatFisherman
+    color: {r: 0.2, g: 0.5, b: 0.6, a: 1}
+    icon: "\U0001F420"
+    description: 'Auto-discovered entity type: BoatFisherman (inherits from LandEnemy)'
+    isCoreType: 0
   defaultColor: {r: 0.4, g: 0.4, b: 0.4, a: 1}
   defaultIcon: "\U0001F4E6"
   autoDiscoverNewTypes: 1
