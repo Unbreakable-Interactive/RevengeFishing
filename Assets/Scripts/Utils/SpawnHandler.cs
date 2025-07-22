@@ -267,7 +267,7 @@ public class SpawnHandler : MonoBehaviour
             Platform platform = FindNearestPlatform(spawnPos);
             if (platform != null)
             {
-                platform.RegisterEnemyAtRuntime(landEnemy);
+            //    platform.RegisterEnemyAtRuntime(landEnemy);
             }
         }
     }
