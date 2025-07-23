@@ -49,6 +49,8 @@ public abstract class Enemy : Entity
     // Public accessors para las nuevas variables
     public Collider2D BodyCollider => bodyCollider;
     public GameObject ParentContainer => parentContainer;
+
+    public EnemyState State => _state;
     
     public float NextActionTime
     {
