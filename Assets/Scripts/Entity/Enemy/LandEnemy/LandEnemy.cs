@@ -739,12 +739,14 @@ public class LandEnemy : Enemy
     protected virtual void OnFishingToolEquipped()
     {
         animator?.SetBool("rodEquipped", true);
+        //remove following line when animations are fixed
         GetComponentInChildren<SpriteRenderer>().gameObject.transform.position += new Vector3(0.242f * transform.localScale.x, 0.702f, 0f); // Adjust position to avoid overlap
     }
 
     protected virtual void OnFishingToolUnequipped()
     {
         animator?.SetBool("rodEquipped", false);
+        //remove following line when animations are fixed
         GetComponentInChildren<SpriteRenderer>().gameObject.transform.position -= new Vector3(0.242f * transform.localScale.x, 0.702f, 0f); // Adjust position to avoid overlap
 
     }
