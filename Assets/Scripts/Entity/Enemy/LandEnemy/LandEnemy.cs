@@ -476,6 +476,7 @@ public class LandEnemy : Enemy
             MakeAIDecision();
         }
 
+        CalculatePlatformBounds();
         ExecuteLandMovementBehaviour();
 
         if (platformBoundsCalculated)
@@ -606,15 +607,19 @@ public class LandEnemy : Enemy
             case LandMovementState.Idle:
                 break;
             case LandMovementState.WalkLeft:
+                transform.localScale = new Vector3(-1f, 1f, 1f);
                 movement = Vector2.left * walkingSpeed;
                 break;
             case LandMovementState.WalkRight:
+                transform.localScale = new Vector3(1f, 1f, 1f);
                 movement = Vector2.right * walkingSpeed;
                 break;
             case LandMovementState.RunLeft:
+                transform.localScale = new Vector3(-1f, 1f, 1f);
                 movement = Vector2.left * runningSpeed;
                 break;
             case LandMovementState.RunRight:
+                transform.localScale = new Vector3(1f, 1f, 1f);
                 movement = Vector2.right * runningSpeed;
                 break;
         }

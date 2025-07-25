@@ -148,7 +148,15 @@ public class Player : Entity
     {
         base.Update(); // Call base Update to handle movement mode
         
-        playerSpriteRenderer.flipY = (transform.rotation.z > 0.7f || transform.rotation.z < -0.7f);
+        //playerSpriteRenderer.flipY = (transform.rotation.z > 0.7f || transform.rotation.z < -0.7f);
+        if (transform.rotation.z > 0.7f || transform.rotation.z < -0.7f)
+        {
+            transform.localScale = new Vector3(transform.localScale.x, -Mathf.Abs(transform.localScale.y), transform.localScale.z); // Flip sprite vertically
+        }
+        else
+        {
+            transform.localScale = new Vector3(transform.localScale.x, Mathf.Abs(transform.localScale.y), transform.localScale.z); // Flip sprite vertically
+        }
 
         if (activeBitingHooks != null && activeBitingHooks.Count > 0) CheckMaxHookDistanceState();
     }
