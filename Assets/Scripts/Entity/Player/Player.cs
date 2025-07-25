@@ -159,6 +159,7 @@ public class Player : Entity
         }
 
         if (activeBitingHooks != null && activeBitingHooks.Count > 0) CheckMaxHookDistanceState();
+        if (activeBitingHooks != null && activeBitingHooks.Count <= 0) maxSpeed = originalMaxSpeed;
     }
 
     protected override void UnderwaterBehavior()
