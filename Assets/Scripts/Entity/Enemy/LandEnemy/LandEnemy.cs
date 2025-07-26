@@ -59,6 +59,8 @@ public class LandEnemy : Enemy
     [SerializeField] protected float maxLineReduction = 1.5f;
     [SerializeField] protected float lineReductionVariation = 0.4f;
 
+    Animator animator;
+
     public Vector3 InitialSpawnPosition { get; set; }
 
     public bool HasStartedFloating
@@ -207,7 +209,10 @@ public class LandEnemy : Enemy
             ChooseMovementAction();
         }
 
+        animator = GetComponent<Animator>();
+
         Debug.Log($"{gameObject.name} - Enemy initialized with power level {_powerLevel}");
+        Debug.Log($"{animator != null}");
     }
 
     protected override void Update()
@@ -476,6 +481,7 @@ public class LandEnemy : Enemy
             MakeAIDecision();
         }
 
+        CalculatePlatformBounds();
         ExecuteLandMovementBehaviour();
 
         if (platformBoundsCalculated)
@@ -604,17 +610,36 @@ public class LandEnemy : Enemy
         switch (_landMovementState)
         {
             case LandMovementState.Idle:
+                animator?.SetBool("isWalking", false);
+                animator?.SetBool("isRunning", false);
+                animator?.SetBool("isIdle", true);
                 break;
             case LandMovementState.WalkLeft:
+                animator?.SetBool("isWalking", true);
+                animator?.SetBool("isRunning", false);
+                animator?.SetBool("isIdle", false);
+                transform.localScale = new Vector3(-1f, 1f, 1f);
                 movement = Vector2.left * walkingSpeed;
                 break;
             case LandMovementState.WalkRight:
+                animator?.SetBool("isWalking", true);
+                animator?.SetBool("isRunning", false);
+                animator?.SetBool("isIdle", false);
+                transform.localScale = new Vector3(1f, 1f, 1f);
                 movement = Vector2.right * walkingSpeed;
                 break;
             case LandMovementState.RunLeft:
+                animator?.SetBool("isWalking", false);
+                animator?.SetBool("isRunning", true);
+                animator?.SetBool("isIdle", false);
+                transform.localScale = new Vector3(-1f, 1f, 1f);
                 movement = Vector2.left * runningSpeed;
                 break;
             case LandMovementState.RunRight:
+                animator?.SetBool("isWalking", false);
+                animator?.SetBool("isRunning", true);
+                animator?.SetBool("isIdle", false);
+                transform.localScale = new Vector3(1f, 1f, 1f);
                 movement = Vector2.right * runningSpeed;
                 break;
         }
@@ -713,12 +738,17 @@ public class LandEnemy : Enemy
 
     protected virtual void OnFishingToolEquipped()
     {
-        
+        animator?.SetBool("rodEquipped", true);
+        //remove following line when animations are fixed
+        GetComponentInChildren<SpriteRenderer>().gameObject.transform.position += new Vector3(0.242f * transform.localScale.x, 0.702f, 0f); // Adjust position to avoid overlap
     }
 
     protected virtual void OnFishingToolUnequipped()
     {
-        
+        animator?.SetBool("rodEquipped", false);
+        //remove following line when animations are fixed
+        GetComponentInChildren<SpriteRenderer>().gameObject.transform.position -= new Vector3(0.242f * transform.localScale.x, 0.702f, 0f); // Adjust position to avoid overlap
+
     }
 
     public virtual void DropTool()
