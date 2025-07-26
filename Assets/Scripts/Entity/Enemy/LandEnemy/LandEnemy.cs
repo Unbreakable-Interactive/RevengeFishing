@@ -553,6 +553,13 @@ public class LandEnemy : Enemy
         Debug.Log($"{gameObject.name} LandEnemy state completely reset to Alive");
     }
 
+    protected override void TriggerDefeat()
+    {
+        base.TriggerDefeat();
+
+        OnFishingToolUnequipped();
+    }
+
     protected virtual void CheckPlatformBounds()
     {
         float currentX = transform.position.x;
