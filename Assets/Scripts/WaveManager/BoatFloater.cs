@@ -2,13 +2,17 @@ using UnityEngine;
 
 public class BoatFloater : MonoBehaviour
 {
+    [SerializeField] private float horizontalForce = 0f;
+    [SerializeField] private float maxHorizontalForce = 5f;
+    [SerializeField] private float movementSpeed = 2f;
+    [SerializeField] private float maxMovementForce = 6f;
+    
+    
     [Header("Float Points")]
     public Transform[] floatPoints = new Transform[3];
 
     [Header("Movement Control")]
     [SerializeField] private bool enableFloaterMovement = true;
-    [SerializeField] private float horizontalForce = 0f;
-    [SerializeField] private float maxHorizontalForce = 5f;
     [SerializeField] private bool adaptToScaleDirection = true;
 
     [Header("Visual Direction")]
@@ -17,8 +21,6 @@ public class BoatFloater : MonoBehaviour
 
     [Header("BOAT MOVEMENT SYSTEM")]
     [SerializeField] private bool enableAutomaticMovement = true;
-    [SerializeField] private float movementSpeed = 2f;
-    [SerializeField] private float maxMovementForce = 6f;
     [SerializeField] private float movementChangeInterval = 3f;
     [SerializeField] private float minMovementTime = 2f;
     [SerializeField] private bool debugMovement = false;
@@ -82,12 +84,23 @@ public class BoatFloater : MonoBehaviour
     private float lastKnownMass = 0f;
     private float effectiveBuoyancyForce = 6f;
     private float massCheckTimer = 0f;
-    private const float MASS_CHECK_INTERVAL = 0.1f; // Check every 0.1 seconds instead of every frame
+    private const float MASS_CHECK_INTERVAL = 0.1f; 
     private Rigidbody2D[] cachedChildRigidbodies;
     private Enemy[] cachedEnemies;
     private bool componentsCached = false;
 
-    void Start()
+    [Header("BOUNDARY-BASED MOVEMENT")]
+    [SerializeField] private Transform leftBoundary;
+    [SerializeField] private Transform rightBoundary;
+    [SerializeField] private float boundaryBuffer = 1f;
+    
+    public void InitializeBoundaries(Transform _leftBoundary, Transform _rightBoundary)
+    {
+        leftBoundary = _leftBoundary;
+        rightBoundary = _rightBoundary;
+    }
+    
+    public void Initialize()
     {
         rb = GetComponent<Rigidbody2D>();
         waterPhysics = WaterPhysics.Instance;
@@ -97,13 +110,11 @@ public class BoatFloater : MonoBehaviour
             Debug.LogError("BoatFloater: Float Points not assigned in inspector.");
         }
         
-        // Initialize mass tracking with initial cache
         baseMass = rb.mass;
-        RefreshComponentCache(); // Cache components immediately
+        RefreshComponentCache();
         lastKnownMass = CalculateTotalMassOptimized();
         effectiveBuoyancyForce = buoyancyForce;
         
-        // CRITICAL: Ensure buoyancy can overcome gravity for this mass
         float requiredBuoyancy = rb.mass * Physics2D.gravity.magnitude * 1.5f; // 1.5x gravity for good floating
         if (effectiveBuoyancyForce < requiredBuoyancy)
         {
@@ -116,7 +127,6 @@ public class BoatFloater : MonoBehaviour
             Debug.Log($"BoatFloater: Initial mass setup - Base: {baseMass}, Total: {lastKnownMass}, Buoyancy: {effectiveBuoyancyForce}");
         }
 
-        // Auto-find boat sprite renderer if not assigned
         if (boatSpriteRenderer == null && useSpriteFip)
         {
             SpriteRenderer[] renderers = GetComponentsInChildren<SpriteRenderer>();
@@ -139,7 +149,6 @@ public class BoatFloater : MonoBehaviour
 
         UpdateDirectionMultiplier();
         
-        // NEW: Check if already registered to platform (for prefabs that start on platforms)
         StartCoroutine(CheckForPlatformRegistration());
         
         if (debugMovement)
@@ -148,14 +157,12 @@ public class BoatFloater : MonoBehaviour
         }
     }
 
-    // OPTIMIZED: Check if boat gets registered to a platform (using cached references)
     private System.Collections.IEnumerator CheckForPlatformRegistration()
     {
         float checkTime = 0f;
         int checkCount = 0;
-        const int MAX_CHECKS = 6; // Limit to 6 checks instead of continuous for 5 seconds
+        const int MAX_CHECKS = 6; 
         
-        // Cache platforms at start to avoid repeated FindObjectsOfType calls
         if (cachedPlatforms == null || cachedPlatforms.Length == 0)
         {
             cachedPlatforms = FindObjectsOfType<Platform>();
@@ -165,10 +172,9 @@ public class BoatFloater : MonoBehaviour
             }
         }
         
-        while (checkTime < 3f && checkCount < MAX_CHECKS) // Reduced from 5 seconds to 3 seconds
+        while (checkTime < 3f && checkCount < MAX_CHECKS) 
         {
-            // OPTIMIZED: Use cached platforms instead of searching every time
-            if (checkCount % 2 == 0) // Only search every other check
+            if (checkCount % 2 == 0) 
             {
                 foreach (Platform platform in cachedPlatforms)
                 {
@@ -198,7 +204,6 @@ public class BoatFloater : MonoBehaviour
         StartMovement();
     }
 
-    // NEW: Called when boat crew gets registered to a platform
     public void OnRegisteredToPlatform(Platform platform)
     {
         if (isRegisteredToPlatform) return;
@@ -214,7 +219,6 @@ public class BoatFloater : MonoBehaviour
         StartMovement();
     }
 
-    // NEW: Start the boat movement system
     public void StartMovement()
     {
         if (movementActive) return;
@@ -229,13 +233,10 @@ public class BoatFloater : MonoBehaviour
         }
     }
 
-    // NEW: Choose a new random movement direction
     void ChooseNewMovementDirection()
     {
-        // Random direction: -1 (left) or 1 (right)
         currentMovementDirection = Random.Range(0, 2) == 0 ? -1f : 1f;
         
-        // Update visual direction
         if (useSpriteFip && boatSpriteRenderer != null)
         {
             boatSpriteRenderer.flipX = currentMovementDirection < 0;
@@ -254,19 +255,16 @@ public class BoatFloater : MonoBehaviour
 
         previousVelocity = rb.velocity;
 
-        // OPTIMIZED: Update buoyancy less frequently for performance
         if (enableDynamicBuoyancy)
         {
             UpdateDynamicBuoyancyOptimized();
         }
 
-        // Update direction multiplier if scale changes
         if (adaptToScaleDirection)
         {
             UpdateDirectionMultiplier();
         }
 
-        // NEW: Handle automatic boat movement
         if (enableAutomaticMovement && movementActive)
         {
             HandleBoatMovement();
@@ -294,34 +292,29 @@ public class BoatFloater : MonoBehaviour
         }
     }
 
-    // NEW: Handle boat movement system
     void HandleBoatMovement()
     {
-        // Check if it's time to change direction
-        if (Time.time - lastMovementChange > movementChangeInterval)
+        if (!IsInWater()) return;
+    
+        bool nearLeftBoundary = leftBoundary != null && transform.position.x <= leftBoundary.position.x + boundaryBuffer;
+        bool nearRightBoundary = rightBoundary != null && transform.position.x >= rightBoundary.position.x - boundaryBuffer;
+    
+        if (nearLeftBoundary && currentMovementDirection < 0)
         {
-            if (Time.time - lastMovementChange > minMovementTime)
-            {
-                ChooseNewMovementDirection();
-                lastMovementChange = Time.time;
-            }
+            currentMovementDirection = 1f; 
+            // UpdateVisualDirection();
         }
-
-        // Apply movement force in current direction
-        if (IsInWater())
+        else if (nearRightBoundary && currentMovementDirection > 0)
         {
-            Vector2 moveForce = Vector2.right * currentMovementDirection * movementSpeed;
-            moveForce = Vector2.ClampMagnitude(moveForce, maxMovementForce);
-            
-            rb.AddForce(moveForce);
-
-            if (debugMovement)
-            {
-                Debug.DrawRay(transform.position, moveForce.normalized * 2f, Color.cyan);
-            }
+            currentMovementDirection = -1f;
+            // UpdateVisualDirection();
         }
+    
+        Vector2 moveForce = Vector2.right * (currentMovementDirection * movementSpeed);
+        moveForce = Vector2.ClampMagnitude(moveForce, maxMovementForce);
+        rb.AddForce(moveForce);
     }
-
+    
     void UpdateDirectionMultiplier()
     {
         if (useSpriteFip && boatSpriteRenderer != null)
@@ -339,7 +332,7 @@ public class BoatFloater : MonoBehaviour
         if (Mathf.Abs(horizontalForce) > 0.01f && IsInWater())
         {
             float effectiveForce = Mathf.Clamp(horizontalForce, -maxHorizontalForce, maxHorizontalForce);
-            
+
             if (adaptToScaleDirection)
             {
                 effectiveForce *= currentDirectionMultiplier;
@@ -374,14 +367,11 @@ public class BoatFloater : MonoBehaviour
                     speedFactor = Mathf.Lerp(1f, smoothBuoyancy, rb.velocity.y / maxVerticalSpeed);
                 }
 
-                // NEW: Use dynamic buoyancy force instead of fixed buoyancy
                 float force = submersion * effectiveBuoyancyForce * speedFactor;
                 
-                // Apply direction consideration to buoyancy distribution
                 if (adaptToScaleDirection && currentDirectionMultiplier < 0)
                 {
-                    // Slightly modify buoyancy distribution when facing opposite direction
-                    force *= 0.95f; // Small adjustment to prevent instability
+                    force *= 0.95f; 
                 }
                 
                 totalForce += Vector2.up * force;
@@ -390,7 +380,6 @@ public class BoatFloater : MonoBehaviour
 
         if (submergedPoints > 0)
         {
-            // Apply force protection before adding to rigidbody
             if (enableForceProtection)
             {
                 totalForce = Vector2.ClampMagnitude(totalForce, maxTotalForce * (effectiveBuoyancyForce / buoyancyForce));
@@ -496,13 +485,11 @@ public class BoatFloater : MonoBehaviour
 
         float stabilityTorque = -currentAngle * stabilityForce * Time.fixedDeltaTime;
         
-        // Apply direction-aware stability adjustments
         if (adaptToScaleDirection && currentDirectionMultiplier < 0)
         {
-            stabilityTorque *= 1.3f; // Increase stability when direction changes
+            stabilityTorque *= 1.3f; 
         }
         
-        // Apply force protection to stability torque
         if (enableForceProtection)
         {
             stabilityTorque = Mathf.Clamp(stabilityTorque, -maxTorqueLimit * 0.5f, maxTorqueLimit * 0.5f);
@@ -513,25 +500,21 @@ public class BoatFloater : MonoBehaviour
 
     void ApplyForceProtection()
     {
-        // Limit angular velocity to prevent excessive spinning
         if (Mathf.Abs(rb.angularVelocity) > maxAngularVelocity)
         {
             rb.angularVelocity = Mathf.Sign(rb.angularVelocity) * maxAngularVelocity;
         }
 
-        // Clamp total velocity magnitude
         if (rb.velocity.magnitude > maxTotalForce)
         {
             rb.velocity = rb.velocity.normalized * maxTotalForce;
         }
 
-        // Prevent extreme rotations that could cause breakage
         float currentAngle = transform.eulerAngles.z;
         if (currentAngle > 180f) currentAngle -= 360f;
         
         if (Mathf.Abs(currentAngle) > 45f)
         {
-            // Apply corrective torque to prevent excessive rotation
             float correctionTorque = -currentAngle * 0.1f;
             rb.AddTorque(correctionTorque);
         }
@@ -551,7 +534,6 @@ public class BoatFloater : MonoBehaviour
         return false;
     }
 
-    // NEW: Public methods for boat control
     public void SetMovementEnabled(bool enabled)
     {
         enableFloaterMovement = enabled;

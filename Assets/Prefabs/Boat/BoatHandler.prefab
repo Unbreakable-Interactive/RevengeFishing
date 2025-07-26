@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 5056142362256130071}
   - component: {fileID: 3157742320908821756}
   - component: {fileID: 8390708431503078412}
+  - component: {fileID: 6631260583467594784}
   m_Layer: 9
   m_Name: BoatHandler
   m_TagString: Untagged
@@ -51,19 +52,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3421946b488440f49a6fee39a888f9b5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  horizontalForce: 0
+  maxHorizontalForce: 0
+  movementSpeed: 60
+  maxMovementForce: 60
   floatPoints:
   - {fileID: 7097401271740460365}
   - {fileID: 6699438916111739493}
   - {fileID: 3643950951084485024}
   enableFloaterMovement: 1
-  horizontalForce: 5
-  maxHorizontalForce: 5
   adaptToScaleDirection: 1
   boatSpriteRenderer: {fileID: 4981744675166538355}
   useSpriteFip: 1
   enableAutomaticMovement: 1
-  movementSpeed: 30
-  maxMovementForce: 6
   movementChangeInterval: 3
   minMovementTime: 2
   debugMovement: 0
@@ -91,6 +92,9 @@ MonoBehaviour:
   verticalDamping: 0.8
   enableSpeedLimit: 1
   smoothBuoyancy: 0.5
+  leftBoundary: {fileID: 0}
+  rightBoundary: {fileID: 0}
+  boundaryBuffer: 1
 --- !u!50 &8390708431503078412
 Rigidbody2D:
   serializedVersion: 4
@@ -118,6 +122,32 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 0
+--- !u!114 &6631260583467594784
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1725949659940357100}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6999758537aed416690b2ed86486b5b2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  currentIntegrity: 0
+  maxIntegrity: 0
+  isBoatDestroyed: 0
+  boatFloater: {fileID: 3157742320908821756}
+  boatPlatform: {fileID: 8531477562920402828}
+  boatFishermanPrefab: {fileID: 1963649820016990938, guid: c45946bf32b8a4045aad4551ca754c64, type: 3}
+  crewSpawnPoints:
+  - {fileID: 4120316064714226126}
+  - {fileID: 7554559386534790929}
+  maxCrewMembers: 2
+  maxInactiveCrewMembers: 1
+  allCrewMembers: []
+  leftBoundary: {fileID: 0}
+  rightBoundary: {fileID: 0}
 --- !u!1 &2049951311662369099
 GameObject:
   m_ObjectHideFlags: 0
@@ -127,7 +157,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7460143873047510890}
-  - component: {fileID: 6137141318906147728}
   m_Layer: 9
   m_Name: Crew
   m_TagString: Untagged
@@ -149,26 +178,9 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 4120316064714226126}
+  - {fileID: 7554559386534790929}
   m_Father: {fileID: 5056142362256130071}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &6137141318906147728
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2049951311662369099}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6619afe99ea13c448ba91b91f036be20, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  spawnConfig: {fileID: 11400000, guid: 91157fe5d0b8746fab5225d81da8882f, type: 2}
-  spawnPoints:
-  - {fileID: 4120316064714226126}
-  isUnlocked: 0
-  currentActive: 0
-  isActive: 1
 --- !u!1 &3197334178101885014
 GameObject:
   m_ObjectHideFlags: 0
@@ -309,7 +321,7 @@ Transform:
   m_GameObject: {fileID: 5146365903586071778}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.09, z: 0}
+  m_LocalPosition: {x: -0.873, y: 0.09, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -442,6 +454,37 @@ BoxCollider2D:
   serializedVersion: 2
   m_Size: {x: 2.3, y: 0.09502788}
   m_EdgeRadius: 0
+--- !u!1 &7448978560766399938
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7554559386534790929}
+  m_Layer: 9
+  m_Name: SpawnPoint (1)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7554559386534790929
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7448978560766399938}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.763, y: 0.09, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 7460143873047510890}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &7971325245123593272
 GameObject:
   m_ObjectHideFlags: 0

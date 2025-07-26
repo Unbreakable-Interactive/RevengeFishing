@@ -23,7 +23,8 @@ public abstract class Enemy : Entity
 
     [SerializeField] protected Tier _tier;
     [SerializeField] protected EnemyState _state;
-
+    public EnemyState State => _state;
+    
     [Header("Player Reference")]
     [SerializeField] protected Player player;
 

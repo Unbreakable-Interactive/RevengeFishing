@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   configName: Boat Spawner
   poolName: Boat
+  spawnHandlerType: 1
   enemyType: 2
   spawnType: 1
   spawnEveryXSeconds: 8
@@ -25,5 +26,4 @@ MonoBehaviour:
   dontSpawnCloserThan: 10
   dontSpawnFartherThan: 50
   showLogs: 1
-  showGizmos: 1
   gizmoColor: {r: 1, g: 0, b: 0, a: 1}
