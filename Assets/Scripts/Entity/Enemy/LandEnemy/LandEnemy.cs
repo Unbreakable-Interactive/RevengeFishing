@@ -105,7 +105,7 @@ public class LandEnemy : Enemy
             CalculatePlatformBounds();
         }
 
-        Debug.Log($"{gameObject.name} - Platform assigned: {platform.name}");
+        //Debug.Log($"{gameObject.name} - Platform assigned: {platform.name}");
 
         if (Time.time >= nextActionTime - 0.5f)
         {
@@ -280,7 +280,7 @@ public class LandEnemy : Enemy
 
     private IEnumerator ContinuousPull()
     {
-        Debug.Log($"{gameObject.name} starting continuous pull mechanic!");
+        //Debug.Log($"{gameObject.name} starting continuous pull mechanic!");
 
         while (_state == EnemyState.Alive && CanPullPlayer() && hookSpawner.HasActiveHook())
         {
@@ -293,7 +293,7 @@ public class LandEnemy : Enemy
             }
         }
 
-        Debug.Log($"{gameObject.name} stopped continuous pulling - enemy defeated or hook lost");
+        //Debug.Log($"{gameObject.name} stopped continuous pulling - enemy defeated or hook lost");
     }
 
     private IEnumerator PerformSinglePull()
@@ -309,7 +309,7 @@ public class LandEnemy : Enemy
             yield break;
         }
 
-        Debug.Log($"{gameObject.name} starting fishing reel pull!");
+        //Debug.Log($"{gameObject.name} starting fishing reel pull!");
 
         ApplyPullFatigueDamage();
         float lineShortened = ShortenFishingLine();
@@ -320,12 +320,12 @@ public class LandEnemy : Enemy
         }
         else
         {
-            Debug.Log($"{gameObject.name} couldn't shorten line further - applying resistance pull instead");
+            //Debug.Log($"{gameObject.name} couldn't shorten line further - applying resistance pull instead");
             yield return StartCoroutine(ApplyResistancePull());
         }
 
         isPullingPlayer = false;
-        Debug.Log($"{gameObject.name} finished fishing reel pull");
+        //Debug.Log($"{gameObject.name} finished fishing reel pull");
     }
 
     private IEnumerator ApplyReelForce(float lineShortened)
@@ -355,7 +355,7 @@ public class LandEnemy : Enemy
             yield return null;
         }
 
-        Debug.Log("[REEL FORCE] Reel force application complete");
+        //Debug.Log("[REEL FORCE] Reel force application complete");
     }
 
     private IEnumerator ApplyResistancePull()
@@ -384,7 +384,7 @@ public class LandEnemy : Enemy
         float fatigueDamage = PowerLevel * 0.1f;
         player.TakeFishingFatigue(fatigueDamage);
 
-        Debug.Log($"{gameObject.name} deals {fatigueDamage:F1} fatigue damage to player (from PowerLevel {PowerLevel})");
+        //Debug.Log($"{gameObject.name} deals {fatigueDamage:F1} fatigue damage to player (from PowerLevel {PowerLevel})");
     }
 
     private float ShortenFishingLine()
@@ -395,7 +395,7 @@ public class LandEnemy : Enemy
             return 0f;
         }
 
-        Debug.Log("Shortening fishing line.");
+        //Debug.Log("Shortening fishing line.");
         float currentLineLength = hookSpawner.GetLineLength();
         float baseReduction = Random.Range(maxLineReduction - lineReductionVariation, maxLineReduction);
         float newLineLength = Mathf.Max(currentLineLength - baseReduction, minLineLength);
@@ -405,12 +405,12 @@ public class LandEnemy : Enemy
         if (actualReduction > 0)
         {
             hookSpawner.SetLineLength(newLineLength);
-            Debug.Log("Fishing line shortened.");
+            //Debug.Log("Fishing line shortened.");
             return actualReduction;
         }
         else
         {
-            Debug.Log($"Line already at minimum length ({minLineLength:F1}) - cannot shorten further.");
+            //Debug.Log($"Line already at minimum length ({minLineLength:F1}) - cannot shorten further.");
             return 0f;
         }
     }
@@ -466,7 +466,7 @@ public class LandEnemy : Enemy
         if (hookSpawner.CurrentHook != null)
         {
             hookSpawner.CurrentHook.isBeingHeld = isBeingHeld;
-            Debug.Log($"Fisherman: Hook is being held: {isBeingHeld}");
+            //Debug.Log($"Fisherman: Hook is being held: {isBeingHeld}");
         }
     }
 
@@ -515,7 +515,7 @@ public class LandEnemy : Enemy
 
             if (assignedPlatform.showDebugInfo)
             {
-                Debug.Log($"Platform bounds calculated for {gameObject.name}: Left={platformLeftEdge}, Right={platformRightEdge}");
+                //Debug.Log($"Platform bounds calculated for {gameObject.name}: Left={platformLeftEdge}, Right={platformRightEdge}");
             }
         }
     }
@@ -693,10 +693,12 @@ public class LandEnemy : Enemy
         if (movementChoice < 0.8f)
         {
             _landMovementState = (Random.value < 0.5f) ? LandMovementState.WalkLeft : LandMovementState.WalkRight;
+            ExecuteLandMovementBehaviour();
         }
         else
         {
             _landMovementState = (Random.value < 0.5f) ? LandMovementState.RunLeft : LandMovementState.RunRight;
+            ExecuteLandMovementBehaviour();
         }
     }
     #endregion
