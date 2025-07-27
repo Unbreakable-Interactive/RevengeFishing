@@ -1,6 +1,8 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 public class LandEnemy : Enemy
 {
@@ -484,10 +486,11 @@ public class LandEnemy : Enemy
         CalculatePlatformBounds();
         ExecuteLandMovementBehaviour();
 
-        if (platformBoundsCalculated)
-        {
-            CheckPlatformBounds();
-        }
+        // ! Testing
+        // if (platformBoundsCalculated)
+        // {
+        //     CheckPlatformBounds();
+        // }
     }
 
     protected virtual void MakeAIDecision()
@@ -567,6 +570,8 @@ public class LandEnemy : Enemy
         if (currentX <= platformLeftEdge && (_landMovementState == LandMovementState.WalkLeft || _landMovementState == LandMovementState.RunLeft))
         {
             rb.velocity = new Vector2(0, rb.velocity.y);
+            rb.angularVelocity = 0f;
+            rb.constraints = RigidbodyConstraints2D.FreezePositionX | RigidbodyConstraints2D.FreezeRotation;
             _landMovementState = LandMovementState.Idle;
             ChooseRandomActionExcluding(LandMovementState.WalkLeft, LandMovementState.RunLeft);
             ScheduleNextAction();
@@ -574,8 +579,24 @@ public class LandEnemy : Enemy
         else if (currentX >= platformRightEdge && (_landMovementState == LandMovementState.WalkRight || _landMovementState == LandMovementState.RunRight))
         {
             rb.velocity = new Vector2(0, rb.velocity.y);
+            rb.angularVelocity = 0f;
+            rb.constraints = RigidbodyConstraints2D.FreezePositionX | RigidbodyConstraints2D.FreezeRotation;
             _landMovementState = LandMovementState.Idle;
             ChooseRandomActionExcluding(LandMovementState.WalkRight, LandMovementState.RunRight);
+            ScheduleNextAction();
+        }
+    }
+
+    // Not working yet
+    protected void OnCollisionEnter2D(Collision2D other)
+    {
+        if (gameObject.name.ToLower().Contains("boatfisherman") && other.gameObject.CompareTag("Bound"))
+        {
+            rb.velocity = new Vector2(0, rb.velocity.y);
+            rb.angularVelocity = 0f;
+            rb.constraints = RigidbodyConstraints2D.FreezePositionX | RigidbodyConstraints2D.FreezeRotation;
+            _landMovementState = LandMovementState.Idle;
+            ChooseRandomActionExcluding(LandMovementState.WalkLeft, LandMovementState.RunLeft);
             ScheduleNextAction();
         }
     }
@@ -687,10 +708,12 @@ public class LandEnemy : Enemy
         if (validStates.Count > 0)
         {
             _landMovementState = validStates[Random.Range(0, validStates.Count)];
+            rb.constraints = RigidbodyConstraints2D.FreezeRotation;
         }
         else
         {
             _landMovementState = LandMovementState.Idle;
+            rb.constraints = RigidbodyConstraints2D.FreezeRotation;
         }
     }
 

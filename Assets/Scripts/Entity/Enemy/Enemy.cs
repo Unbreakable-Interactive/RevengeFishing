@@ -78,7 +78,7 @@ public abstract class Enemy : Entity
     protected virtual void Start()
     {
         entityType = EntityType.Enemy;
-        gameObject.layer = LayerMask.NameToLayer(LayerNames.ENEMY);
+        // gameObject.layer = LayerMask.NameToLayer(LayerNames.ENEMY);
 
         if (player == null)
         {

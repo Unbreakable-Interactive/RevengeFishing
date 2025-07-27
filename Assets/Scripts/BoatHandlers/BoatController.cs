@@ -57,6 +57,7 @@ public class BoatController : MonoBehaviour
         {
             yield return StartCoroutine(InstantiateAndAssignCrewMember(crewSpawnPoints[0].position, i));
         }
+        boatFloater.InitializeCrew(allCrewMembers);
     
         yield return null;
     
