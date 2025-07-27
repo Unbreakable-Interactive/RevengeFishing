@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using Utils;
 
@@ -51,6 +52,8 @@ public abstract class Enemy : Entity
     public Collider2D BodyCollider => bodyCollider;
     public GameObject ParentContainer => parentContainer;
     
+    public Action<Enemy> OnEnemyDied;
+    
     public float NextActionTime
     {
         get { return nextActionTime; }
@@ -78,6 +81,10 @@ public abstract class Enemy : Entity
     protected virtual void Start()
     {
         entityType = EntityType.Enemy;
+        // ! NOTE: Commented this line because thinking in just 1 type of fisherman, it breaks some behaviours of boat
+        // Enemy layer collides with Platform / BoatEnemy layer collides with BoatPlatform 
+        // With this line all fisherman will be Enemy Layer and will break the collisions in boat
+        // Layers already setup in each prefab: LandFisherman has Enemy Layer assigned and BaatFisherman has BoatEnemy layer assigned
         // gameObject.layer = LayerMask.NameToLayer(LayerNames.ENEMY);
 
         if (player == null)
@@ -85,18 +92,13 @@ public abstract class Enemy : Entity
             player = Player.Instance;
         }
 
-        // FIXED: Auto-assign references if not set
         AutoAssignReferences();
         
         Initialize();
     }
 
-    /// <summary>
-    /// NUEVO: Auto-assign references if they're not set in the Inspector
-    /// </summary>
     private void AutoAssignReferences()
     {
-        // Auto-assign bodyCollider if not set
         if (bodyCollider == null)
         {
             bodyCollider = GetComponent<Collider2D>();
@@ -104,7 +106,6 @@ public abstract class Enemy : Entity
                 Debug.Log($"{gameObject.name}: Auto-assigned bodyCollider");
         }
 
-        // Auto-assign parentContainer if not set (should be the Handler)
         if (parentContainer == null)
         {
             parentContainer = FindMyHandler();
@@ -330,6 +331,9 @@ public abstract class Enemy : Entity
     protected virtual void EnemyDie()
     {
         Debug.Log($"{gameObject.name} has been REVERSE FISHED!");
+        
+        OnEnemyDied?.Invoke(this);
+        
         ReturnToPool();
     }
 

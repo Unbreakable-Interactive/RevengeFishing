@@ -1,6 +1,8 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 public class BoatController : MonoBehaviour
 {
@@ -12,7 +14,6 @@ public class BoatController : MonoBehaviour
     
     [SerializeField] private BoatFloater boatFloater;
     [SerializeField] private BoatPlatform boatPlatform;
-    
     
     [Header("Crew Properties")]
     [SerializeField] private GameObject boatFishermanPrefab;
@@ -26,6 +27,8 @@ public class BoatController : MonoBehaviour
     [SerializeField] private Transform leftBoundary;
     [SerializeField] private Transform rightBoundary;
     
+    public Action<float, float> OnIntegrityChanged;
+    public Action OnBoatDestroyed;
     
     public void Initialize(Transform _leftBoundary, Transform _rightBoundary)
     {
@@ -44,7 +47,7 @@ public class BoatController : MonoBehaviour
         }
         else
         {
-            // StartCoroutine(ResetExistingCrew());
+            StartCoroutine(ResetExistingCrew());
         }
     }
     
@@ -84,8 +87,9 @@ public class BoatController : MonoBehaviour
                 int powerLevel = PowerLevelScaler.Instance.CalculateEnemyPowerLevel();
                 fisherman.SetPowerLevel(powerLevel);
             }
+            
+            SubscribeToCrewMember(fisherman);
         
-            // fisherman.InitializeForBoat(boatPlatform, boatPlatform.PlatformCollider);
             yield return StartCoroutine(AssignToBoatPlatform(fisherman));
         
             allCrewMembers.Add(fisherman);
@@ -95,6 +99,31 @@ public class BoatController : MonoBehaviour
             Debug.LogError($"Instantiated BoatFishermanHandler doesn't contain Fisherman component!");
             Destroy(crewHandlerObj);
         }
+    }
+    
+    void SubscribeToCrewMember(Fisherman fisherman)
+    {
+        if (fisherman != null)
+        {
+            // Desuscribirse primero para evitar duplicados
+            fisherman.OnEnemyDied -= OnCrewMemberDied;
+            // Suscribirse al evento de muerte
+            fisherman.OnEnemyDied += OnCrewMemberDied;
+        }
+    }
+    
+    void OnCrewMemberDied(Enemy deadCrew)
+    {
+        // Recalcular integridad después de un frame
+        StartCoroutine(DelayedIntegrityRecalculation());
+    }
+    
+    IEnumerator DelayedIntegrityRecalculation()
+    {
+        yield return null; 
+        
+        CalculateBoatIntegrity();
+        CheckBoatDestruction();
     }
 
     IEnumerator AssignToBoatPlatform(LandEnemy landEnemy)
@@ -152,7 +181,8 @@ public class BoatController : MonoBehaviour
     void CalculateBoatIntegrity()
     {
         float totalCrewPower = 0f;
-    
+        int activeCrewCount = 0;
+        
         foreach (Fisherman crew in allCrewMembers)
         {
             if (crew != null && 
@@ -161,13 +191,14 @@ public class BoatController : MonoBehaviour
                 crew.State == Enemy.EnemyState.Alive)
             {
                 totalCrewPower += crew.PowerLevel;
+                activeCrewCount++;
             }
         }
     
         maxIntegrity = totalCrewPower;
         currentIntegrity = maxIntegrity;
     
-        // OnIntegrityChanged?.Invoke(currentIntegrity, maxIntegrity);
+        OnIntegrityChanged?.Invoke(currentIntegrity, maxIntegrity);
     }
     
     int GetActiveCrewCount()
@@ -194,18 +225,92 @@ public class BoatController : MonoBehaviour
         maxIntegrity = 0f;
         isBoatDestroyed = false;
         
+        foreach (Fisherman crew in allCrewMembers)
+        {
+            if (crew != null)
+            {
+                crew.OnEnemyDied -= OnCrewMemberDied;
+            }
+        }
+        
         if (allCrewMembers.Count == 0)
         {
             StartCoroutine(InitializeBoatWithCrew());
         }
         else
         {
-            // StartCoroutine(ResetExistingCrew());
+            StartCoroutine(ResetExistingCrew());
         }
+    }
+    
+    IEnumerator ResetExistingCrew()
+    {
+        yield return null;
+        
+        foreach (Fisherman fisherman in allCrewMembers)
+        {
+            if (fisherman != null)
+            {
+                fisherman.ParentContainer.SetActive(true);
+                fisherman.TriggerAlive();
+                fisherman.ScheduleNextAction();
+
+                SubscribeToCrewMember(fisherman);
+                
+                yield return StartCoroutine(AssignToBoatPlatform(fisherman));
+            }
+        }
+        
+        yield return null;
+        
+        RandomlyDeactivateCrewMembers();
+        CalculateBoatIntegrity();
     }
 
     public float GetCurrentIntegrity() => currentIntegrity;
     public float GetMaxIntegrity() => maxIntegrity;
     public List<Fisherman> GetAllCrewMembers() => new List<Fisherman>(allCrewMembers);
 
+    void CheckBoatDestruction()
+    {
+        int aliveCrewCount = GetActiveCrewCount();
+        
+        if (aliveCrewCount == 0 || currentIntegrity <= 0f)
+        {
+            DestroyBoat();
+        }
+    }
+    
+    void DestroyBoat()
+    {
+        if (isBoatDestroyed) return;
+        
+        isBoatDestroyed = true;
+        
+        foreach (Fisherman crew in allCrewMembers)
+        {
+            if (crew != null)
+            {
+                crew.OnEnemyDied -= OnCrewMemberDied;
+            }
+        }
+        
+        OnBoatDestroyed?.Invoke();
+        
+        StartCoroutine(DestroyBoatDelayed());
+    }
+    
+    IEnumerator DestroyBoatDelayed()
+    {
+        yield return new WaitForSeconds(1f);
+        
+        if (SimpleObjectPool.Instance != null)
+        {
+            SimpleObjectPool.Instance.ReturnToPool("Boat", gameObject);
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+    }
 }

@@ -1,5 +1,5 @@
+using System.Collections;
 using System.Collections.Generic;
-using JetBrains.Annotations;
 using UnityEngine;
 
 public class BoatFloater : MonoBehaviour
@@ -77,7 +77,6 @@ public class BoatFloater : MonoBehaviour
     private bool isRegisteredToPlatform = false;
     private bool movementActive = false;
     private float currentMovementDirection = 1f;
-    private float lastMovementChange = 0f;
     private Vector2 currentMovementTarget;
     private Platform assignedPlatform;
     
@@ -166,7 +165,7 @@ public class BoatFloater : MonoBehaviour
         }
     }
 
-    private System.Collections.IEnumerator CheckForPlatformRegistration()
+    private IEnumerator CheckForPlatformRegistration()
     {
         float checkTime = 0f;
         int checkCount = 0;
@@ -233,7 +232,6 @@ public class BoatFloater : MonoBehaviour
         if (movementActive) return;
         
         movementActive = true;
-        lastMovementChange = Time.time;
         ChooseNewMovementDirection();
         
         if (debugMovement)
@@ -612,22 +610,6 @@ public class BoatFloater : MonoBehaviour
         }
     }
 
-    // public void SetMovementDirection(float direction)
-    // {
-    //     currentMovementDirection = Mathf.Sign(direction);
-    //     
-    //     if (useSpriteFlip && boatSpriteRenderer != null)
-    //     {
-    //         boatSpriteRenderer.flipX = currentMovementDirection < 0;
-    //     }
-    //     
-    //     if (debugMovement)
-    //     {
-    //         string dir = currentMovementDirection > 0 ? "RIGHT" : "LEFT";
-    //         Debug.Log($"BoatFloater: Movement direction set to {dir}");
-    //     }
-    // }
-    
     float CalculateTotalMassOptimized()
     {
         if (!componentsCached)
@@ -658,8 +640,6 @@ public class BoatFloater : MonoBehaviour
     
     void RefreshComponentCache()
     {
-        // cachedChildRigidbodies = GetComponentsInChildren<Rigidbody2D>();
-        // cachedEnemies = GetComponentsInChildren<Enemy>();
         componentsCached = true;
         
         if (debugMassChanges)

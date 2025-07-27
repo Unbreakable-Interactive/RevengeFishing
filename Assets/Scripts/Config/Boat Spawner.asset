@@ -17,7 +17,7 @@ MonoBehaviour:
   spawnHandlerType: 1
   enemyType: 2
   spawnType: 1
-  spawnEveryXSeconds: 8
+  spawnEveryXSeconds: 2
   keepActiveAtOnce: 3
   spawnThisManyPerCycle: 1
   waitBetweenCycles: 60

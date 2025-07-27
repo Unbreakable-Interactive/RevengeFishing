@@ -109,7 +109,6 @@ public class SpawnHandler : MonoBehaviour
 
     void HandleCycleSpawning()
     {
-        // Handle cooldown period
         if (inCooldown)
         {
             if (Time.time >= cooldownEndTime)
@@ -123,7 +122,6 @@ public class SpawnHandler : MonoBehaviour
             return;
         }
 
-        // Normal spawning in cycle
         if (Time.time >= nextSpawnTime)
         {
             if (spawnedThisCycle < spawnConfig.spawnThisManyPerCycle)
@@ -133,7 +131,6 @@ public class SpawnHandler : MonoBehaviour
                     spawnedThisCycle++;
                     ScheduleNextSpawn();
 
-                    // Check if cycle complete
                     if (spawnedThisCycle >= spawnConfig.spawnThisManyPerCycle)
                     {
                         StartCooldown();
@@ -350,9 +347,6 @@ public class SpawnHandler : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Called when enemy dies - basic version for compatibility
-    /// </summary>
     public void OnEnemyDestroyed()
     {
         currentActive--;
@@ -362,9 +356,6 @@ public class SpawnHandler : MonoBehaviour
             Debug.Log($"Enemy destroyed for {spawnConfig.configName}. Active: {currentActive}");
     }
 
-    /// <summary>
-    /// Called when enemy dies with enemy reference for better tracking
-    /// </summary>
     public void OnEnemyDestroyed(GameObject enemyObj)
     {
         currentActive--;
@@ -379,25 +370,16 @@ public class SpawnHandler : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Spawn single at random point for ProgressionManager
-    /// </summary>
     public void SpawnSingleAtRandomPoint()
     {
         TrySpawnEnemy();
     }
 
-    /// <summary>
-    /// Manual spawn for testing
-    /// </summary>
     public void SpawnOne()
     {
         TrySpawnEnemy();
     }
 
-    /// <summary>
-    /// Reset oneTime flag for testing
-    /// </summary>
     public void ResetSpawner()
     {
         oneTimeCompleted = false;
@@ -417,9 +399,6 @@ public class SpawnHandler : MonoBehaviour
         Debug.Log($"Spawned this cycle: {spawnedThisCycle}, OneTime completed: {oneTimeCompleted}");
     }
 
-    /// <summary>
-    /// Reset all enemies of this spawner's type
-    /// </summary>
     private void ResetAllEnemiesOfThisType()
     {
         Enemy[] allEnemies = FindObjectsOfType<Enemy>();
@@ -437,9 +416,6 @@ public class SpawnHandler : MonoBehaviour
         Debug.Log($"🔄 Reset {resetCount} enemies of type {spawnConfig.enemyType}");
     }
 
-    /// <summary>
-    /// TESTING: Force defeat on first enemy of this type
-    /// </summary>
     private void TestEnemyDefeatOfThisType()
     {
         Enemy[] allEnemies = FindObjectsOfType<Enemy>();
@@ -451,16 +427,12 @@ public class SpawnHandler : MonoBehaviour
                 ShouldManageThisEnemy(enemy))
             {
                 Debug.Log($"💀 Forcing defeat on: {enemy.gameObject.name} (Type: {spawnConfig.enemyType})");
-                // Simulate enough fatigue to defeat
                 enemy.TakeFatigue(enemy.entityFatigue.maxFatigue);
                 break;
             }
         }
     }
 
-    /// <summary>
-    /// Check if this spawner should manage this enemy
-    /// </summary>
     private bool ShouldManageThisEnemy(Enemy enemy)
     {
         if (spawnConfig.enemyType == SpawnHandlerConfig.EnemyType.LandFisherman)

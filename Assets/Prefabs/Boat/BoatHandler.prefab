@@ -140,7 +140,7 @@ MonoBehaviour:
   enableFloaterMovement: 1
   adaptToScaleDirection: 1
   boatSpriteRenderer: {fileID: 4981744675166538355}
-  useSpriteFip: 1
+  useSpriteFlip: 1
   enableAutomaticMovement: 1
   movementChangeInterval: 3
   minMovementTime: 2
