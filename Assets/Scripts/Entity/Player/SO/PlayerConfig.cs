@@ -17,8 +17,8 @@ public class PlayerConfig : ScriptableObject
 [System.Serializable]
 public class PhaseThresholds
 {
-    public long juvenile = 10000;
-    public long adult = 1000000;
-    public long beast = 100000000;
-    public long monster = 10000000000;
+    public long juvenile = 1000;
+    public long adult = 10000;
+    public long beast = 100000;
+    public long monster = 1000000;
 }

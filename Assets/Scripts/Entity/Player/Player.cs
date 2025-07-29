@@ -6,6 +6,15 @@ using static Enemy;
 
 public class Player : Entity
 {
+    public enum Phase
+    {
+        Infant,
+        Juvenile,
+        Adult,
+        Beast,
+        Monster
+    }
+
     public enum Status
     {
         Alive,
@@ -13,6 +22,9 @@ public class Player : Entity
         Starved,
         Slain
     }
+
+    [Header("Player Settings")]
+    [SerializeField] private PlayerConfig playerConfig;
 
     [Header("Camera Reference")]
     [SerializeField] private Camera mainCamera;
@@ -28,13 +40,13 @@ public class Player : Entity
     private bool shouldApplyForceAfterRotation = false;
     private bool hasAppliedBoost = false; // Track if boost was already applied
 
-    // [SerializeField] protected int hunger;
-    // [SerializeField] protected int maxHunger;
     [SerializeField] protected HungerHandler hungerHandler;
 
     public HungerHandler HungerHandler => hungerHandler;
 
     [SerializeField] protected Status status;
+    [SerializeField] protected Phase currentPhase;
+    [SerializeField] protected long nextPowerLevel; //minimum power level to reach next phase
 
     [Header("Rotation Settings")]
     [SerializeField] protected float rotationSpeed = 10f;
@@ -94,9 +106,9 @@ public class Player : Entity
     public static Player Instance { get; private set; }
     
     [Header("Components to share")] 
-    [SerializeField] private Collider2D collider;
+    [SerializeField] private Collider2D colliderToShare;
     
-    public Collider2D Collider => collider;
+    public Collider2D Collider => colliderToShare;
     
     protected override void Awake()
     {
@@ -133,6 +145,9 @@ public class Player : Entity
         // safety check
         if (mainCamera == null) Debug.LogError("Player: No camera found in scene! Player won't work correctly.");
 
+        currentPhase = Phase.Infant; // Start in the Infant phase
+        nextPowerLevel = playerConfig.phaseThresholds.juvenile; // Set next phase threshold
+
         hungerHandler = new HungerHandler(_powerLevel, entityFatigue, 0);
 
         rb.drag = naturalDrag;
@@ -160,6 +175,8 @@ public class Player : Entity
 
         if (activeBitingHooks != null && activeBitingHooks.Count > 0) CheckMaxHookDistanceState();
         if (activeBitingHooks != null && activeBitingHooks.Count <= 0) maxSpeed = originalMaxSpeed;
+
+        if (CanMature()) Mature();
     }
 
     protected override void UnderwaterBehavior()
@@ -198,6 +215,41 @@ public class Player : Entity
         }
 
         maxSpeed = isAtMaxHookDistance ? originalMaxSpeed * lineExtensionSpeedPenalty : originalMaxSpeed;
+    }
+
+
+    protected bool CanMature()
+    {
+        return (_powerLevel >= nextPowerLevel);
+    }
+
+    protected void Mature()
+    {
+        switch (currentPhase)
+        {
+            case Phase.Infant:
+                currentPhase = Phase.Juvenile;
+                nextPowerLevel = playerConfig.phaseThresholds.adult;
+                DebugLog("Player matured to Juvenile phase!");
+                break;
+            case Phase.Juvenile:
+                currentPhase = Phase.Adult;
+                nextPowerLevel = playerConfig.phaseThresholds.beast;
+                DebugLog("Player matured to Adult phase!");
+                break;
+            case Phase.Adult:
+                currentPhase = Phase.Beast;
+                nextPowerLevel = playerConfig.phaseThresholds.monster;
+                DebugLog("Player matured to Beast phase!");
+                break;
+            case Phase.Beast:
+                currentPhase = Phase.Monster;
+                nextPowerLevel = long.MaxValue; //Change this to the desired value for winning the game
+                DebugLog("Player matured to Monster phase!");
+                break;
+            default:
+                break;
+        }
     }
 
     #region Input Handling

@@ -335,12 +335,14 @@ MonoBehaviour:
   underwaterDrag: 0.6
   underwaterMaxSpeed: 16
   entityType: 1
+  playerConfig: {fileID: 11400000, guid: 519c911c847b744d88f2a8e10d6d8f27, type: 2}
   mainCamera: {fileID: 0}
   hungerHandler:
     _hunger: 0
     _maxHunger: 0
     _maxHungerBonus: 0
   status: 0
+  currentPhase: 0
   rotationSpeed: 10
   rotationThreshold: 10
   boostThreshold: 15
@@ -367,7 +369,7 @@ MonoBehaviour:
   lineExtensionSpeedPenalty: 0.6
   playerSpriteRenderer: {fileID: 0}
   enableDebugLogs: 0
-  collider: {fileID: 0}
+  colliderToShare: {fileID: 0}
 --- !u!114 &2299430188239530610
 MonoBehaviour:
   m_ObjectHideFlags: 0
