@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class LandEnemy : Enemy
@@ -218,6 +219,11 @@ public class LandEnemy : Enemy
     protected override void Update()
     {
         base.Update();
+
+        if (hasStartedFloating && rb.velocity.y > 0)
+        {
+            if (!animator.GetBool("isRising")) animator?.SetBool("isRising", true);
+        }
     }
 
     public override void SetMovementMode(bool aboveWater)
@@ -558,6 +564,7 @@ public class LandEnemy : Enemy
         base.TriggerDefeat();
 
         OnFishingToolUnequipped();
+        animator?.SetBool("isSinking", true);
     }
 
     protected virtual void CheckPlatformBounds()
