@@ -4,7 +4,7 @@ using UnityEngine;
 public class PlayerConfig : ScriptableObject
 {
     [Header("Power System")]
-    public long startingPowerLevel = 100;
+    public int startingPowerLevel = 100;
     public PhaseThresholds phaseThresholds;
     
     [Header("Survival Stats")]
@@ -17,8 +17,8 @@ public class PlayerConfig : ScriptableObject
 [System.Serializable]
 public class PhaseThresholds
 {
-    public long juvenile = 1000;
-    public long adult = 10000;
-    public long beast = 100000;
-    public long monster = 1000000;
+    public int juvenile = 101;
+    public int adult = 1001;
+    public int beast = 10001;
+    public int monster = 100001;
 }

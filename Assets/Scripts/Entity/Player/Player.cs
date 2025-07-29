@@ -46,7 +46,7 @@ public class Player : Entity
 
     [SerializeField] protected Status status;
     [SerializeField] protected Phase currentPhase;
-    [SerializeField] protected long nextPowerLevel; //minimum power level to reach next phase
+    [SerializeField] protected int nextPowerLevel; //minimum power level to reach next phase
 
     [Header("Rotation Settings")]
     [SerializeField] protected float rotationSpeed = 10f;
@@ -108,7 +108,7 @@ public class Player : Entity
     [Header("Components to share")] 
     [SerializeField] private Collider2D colliderToShare;
     
-    public Collider2D Collider => colliderToShare;
+    public Collider2D ColliderToShare => colliderToShare;
     
     protected override void Awake()
     {
@@ -142,11 +142,9 @@ public class Player : Entity
             }
         }
 
-        // safety check
-        if (mainCamera == null) Debug.LogError("Player: No camera found in scene! Player won't work correctly.");
-
         currentPhase = Phase.Infant; // Start in the Infant phase
-        nextPowerLevel = playerConfig.phaseThresholds.juvenile; // Set next phase threshold
+        //change the next line once an actual fix is found for player threshold not assigning properly
+        nextPowerLevel = 500; // Set next phase threshold
 
         hungerHandler = new HungerHandler(_powerLevel, entityFatigue, 0);
 
@@ -229,23 +227,23 @@ public class Player : Entity
         {
             case Phase.Infant:
                 currentPhase = Phase.Juvenile;
-                nextPowerLevel = playerConfig.phaseThresholds.adult;
-                DebugLog("Player matured to Juvenile phase!");
+                nextPowerLevel = 2500;
+                Debug.Log("Player matured to Juvenile phase!");
                 break;
             case Phase.Juvenile:
                 currentPhase = Phase.Adult;
-                nextPowerLevel = playerConfig.phaseThresholds.beast;
-                DebugLog("Player matured to Adult phase!");
+                nextPowerLevel = 12500;
+                Debug.Log("Player matured to Adult phase!");
                 break;
             case Phase.Adult:
                 currentPhase = Phase.Beast;
-                nextPowerLevel = playerConfig.phaseThresholds.monster;
-                DebugLog("Player matured to Beast phase!");
+                nextPowerLevel = 62500;
+                Debug.Log("Player matured to Beast phase!");
                 break;
             case Phase.Beast:
                 currentPhase = Phase.Monster;
-                nextPowerLevel = long.MaxValue; //Change this to the desired value for winning the game
-                DebugLog("Player matured to Monster phase!");
+                nextPowerLevel = int.MaxValue; //Change this to the desired value for winning the game
+                Debug.Log("Player matured to Monster phase!");
                 break;
             default:
                 break;
