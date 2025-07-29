@@ -14,10 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   startingPowerLevel: 100
   phaseThresholds:
-    juvenile: 10000
-    adult: 1000000
-    beast: 100000000
-    monster: 10000000000
+    juvenile: 500
+    adult: 2500
+    beast: 12500
+    monster: 62500
+    victory: 312500
   maxHunger: 100
   maxFatigue: 100
   hungerDecayRate: 1

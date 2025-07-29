@@ -144,7 +144,7 @@ public class Player : Entity
 
         currentPhase = Phase.Infant; // Start in the Infant phase
         //change the next line once an actual fix is found for player threshold not assigning properly
-        nextPowerLevel = 500; // Set next phase threshold
+        nextPowerLevel = playerConfig.phaseThresholds.juvenile; // Set next phase threshold
 
         hungerHandler = new HungerHandler(_powerLevel, entityFatigue, 0);
 
@@ -227,23 +227,28 @@ public class Player : Entity
         {
             case Phase.Infant:
                 currentPhase = Phase.Juvenile;
-                nextPowerLevel = 2500;
+                nextPowerLevel = playerConfig.phaseThresholds.adult;
                 Debug.Log("Player matured to Juvenile phase!");
                 break;
             case Phase.Juvenile:
                 currentPhase = Phase.Adult;
-                nextPowerLevel = 12500;
+                nextPowerLevel = playerConfig.phaseThresholds.beast;
                 Debug.Log("Player matured to Adult phase!");
                 break;
             case Phase.Adult:
                 currentPhase = Phase.Beast;
-                nextPowerLevel = 62500;
+                nextPowerLevel = playerConfig.phaseThresholds.monster;
                 Debug.Log("Player matured to Beast phase!");
                 break;
             case Phase.Beast:
                 currentPhase = Phase.Monster;
-                nextPowerLevel = int.MaxValue; //Change this to the desired value for winning the game
+                nextPowerLevel = playerConfig.phaseThresholds.victory; //Change this to the desired value for winning the game
                 Debug.Log("Player matured to Monster phase!");
+                break;
+            case Phase.Monster:
+                Debug.Log("Victory!");
+                //transition to victory scene
+                SceneManager.LoadScene("Victory");
                 break;
             default:
                 break;
