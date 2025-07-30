@@ -1,13 +1,32 @@
 using UnityEngine;
 using Utils;
 
-
-public class BoatPlatform : Platform
+public class BoatPlatform : Platform, IBoatComponent
 {
+    [Header("Boat Identity - ASSIGN IN EDITOR")]
+    [SerializeField] private BoatID boatID = new BoatID();
+    
+    [Header("Required References - ASSIGN IN EDITOR")]
+    [SerializeField] private BoatCrewManager crewManager;
+    
     [Header("BOAT SPECIFIC SETTINGS")]
     [SerializeField] private bool autoStartMovementOnRegistration = true;
     [SerializeField] private bool debugBoatTriggers = true;
     [SerializeField] private BoatFloater boatFloater;
+    
+    public string GetBoatID() => boatID.UniqueID;
+    public void SetBoatID(BoatID newBoatID) => boatID = newBoatID;
+    
+    private void Awake()
+    {
+        ValidateRequiredReferences();
+    }
+    
+    private void ValidateRequiredReferences()
+    {
+        if (crewManager == null)
+            throw new System.Exception($"BoatPlatform on {gameObject.name}: crewManager must be assigned in editor!");
+    }
     
     protected override void Start()
     {
@@ -43,14 +62,27 @@ public class BoatPlatform : Platform
         
         if (debugBoatTriggers)
         {
-            Debug.Log($"BoatPlatform: Initialized on {gameObject.name}");
+            Debug.Log($"BoatPlatform: Initialized on {gameObject.name} with ID {boatID}");
         }
     }
     
-    // Override the registration method to add boat-specific parenting and movement triggering
+    /// <summary>
+    /// FILTRO PRINCIPAL: Solo procesar fishermen que pertenecen a ESTE barco por ID
+    /// </summary>
     protected override void RegisterEnemyOnCollision(LandEnemy enemy)
     {
         if (enemy == null || enemy.gameObject == null) return;
+        
+        // CRÍTICO: Solo procesar fishermen que pertenecen a ESTE barco por ID único
+        if (!DoesEnemyBelongToThisBoat(enemy))
+        {
+            if (debugBoatTriggers)
+            {
+                string enemyID = enemy is IBoatComponent comp ? comp.GetBoatID() : "NO_ID";
+                Debug.Log($"BoatPlatform: Ignoring {enemy.name} (ID: {enemyID}) - doesn't belong to this boat (ID: {boatID})");
+            }
+            return;
+        }
         
         if (assignedEnemies.Contains(enemy)) return;
         
@@ -65,21 +97,8 @@ public class BoatPlatform : Platform
         assignedEnemies.Add(enemy);
         enemy.SetAssignedPlatform(this);
         
-        // BOAT-SPECIFIC: Smart parenting for BoatFishermanHandler
-        Transform targetToParent = enemy.transform;
-        
-        // Check if this enemy is a child of a BoatFishermanHandler (with null safety)
-        if (enemy.transform.parent != null && 
-            enemy.transform.parent.gameObject != null && 
-            enemy.transform.parent.name.Contains("BoatFishermanHandler"))
-        {
-            targetToParent = enemy.transform.parent; // Parent the entire BoatFishermanHandler
-            if (debugBoatTriggers)
-                Debug.Log($"BOAT PLATFORM: Parenting entire BoatFishermanHandler ({targetToParent.name}) instead of just {enemy.name}");
-        }
-        
-        // Make enemy (or entire handler) a CHILD of this platform (so they move together!)
-        targetToParent.SetParent(this.transform);
+        // CRÍTICO: NO MÁS SetParent automático - los fishermen YA están en jerarquía correcta
+        // Los BoatFishermanHandler ya son hijos del BoatHandler por diseño
         
         // CRITICAL: Trigger AI activation after platform assignment
         enemy.OnPlatformAssigned(this);
@@ -95,35 +114,58 @@ public class BoatPlatform : Platform
         enemy.platformBoundsCalculated = true;
 
         if (debugBoatTriggers)
-            Debug.Log($"BOAT COLLISION ASSIGNMENT: {enemy.name} assigned to boat platform {gameObject.name} and made CHILD! Total enemies: {assignedEnemies.Count}");
+            Debug.Log($"BOAT COLLISION ASSIGNMENT: {enemy.name} assigned to boat platform {gameObject.name} (ID: {boatID}). Total enemies: {assignedEnemies.Count}");
         
-        // Add boat-specific logic: trigger movement when crew registers
         TriggerBoatMovement(enemy);
     }
     
-    // Override runtime registration to also handle boat-specific parenting and trigger boat movement
+    /// <summary>
+    /// VERIFICACIÓN POR ID ÚNICO: Verificar si el enemy pertenece a ESTE barco
+    /// </summary>
+    private bool DoesEnemyBelongToThisBoat(LandEnemy enemy)
+    {
+        if (enemy is IBoatComponent boatComponent)
+        {
+            bool matches = boatID.Matches(boatComponent.GetBoatID());
+            
+            if (debugBoatTriggers)
+            {
+                Debug.Log($"BoatPlatform ID Check: Enemy {enemy.name} (ID: {boatComponent.GetBoatID()}) vs Platform (ID: {boatID}) = {matches}");
+            }
+            
+            return matches;
+        }
+        
+        if (debugBoatTriggers)
+        {
+            Debug.Log($"BoatPlatform: Enemy {enemy.name} doesn't implement IBoatComponent - rejecting");
+        }
+        
+        return false;
+    }
+    
+    /// <summary>
+    /// Override runtime registration - también con filtro por ID
+    /// </summary>
     public override void RegisterEnemyAtRuntime(LandEnemy enemy)
     {
         if (enemy != null && !assignedEnemies.Contains(enemy))
         {
+            // FILTRO: Solo procesar si pertenece a este barco por ID
+            if (!DoesEnemyBelongToThisBoat(enemy))
+            {
+                if (debugBoatTriggers)
+                {
+                    string enemyID = enemy is IBoatComponent comp ? comp.GetBoatID() : "NO_ID";
+                    Debug.Log($"BoatPlatform RUNTIME: Ignoring {enemy.name} (ID: {enemyID}) - doesn't belong to this boat (ID: {boatID})");
+                }
+                return;
+            }
+            
             assignedEnemies.Add(enemy);
             enemy.SetAssignedPlatform(this);
 
-            // BOAT-SPECIFIC: Smart parenting for BoatFishermanHandler
-            Transform targetToParent = enemy.transform;
-            
-            // Check if this enemy is a child of a BoatFishermanHandler (with null safety)
-            if (enemy.transform.parent != null && 
-                enemy.transform.parent.gameObject != null && 
-                enemy.transform.parent.name.Contains("BoatFishermanHandler"))
-            {
-                targetToParent = enemy.transform.parent; // Parent the entire BoatFishermanHandler
-                if (debugBoatTriggers)
-                    Debug.Log($"BOAT PLATFORM RUNTIME: Parenting entire BoatFishermanHandler ({targetToParent.name}) instead of just {enemy.name}");
-            }
-
-            // Make enemy (or entire handler) a CHILD of this platform (so they move together!)
-            targetToParent.SetParent(this.transform);
+            // CRÍTICO: NO MÁS SetParent en runtime tampoco
 
             // Apply collision rules immediately
             Collider2D enemyCollider = enemy.GetComponent<Collider2D>();
@@ -138,10 +180,9 @@ public class BoatPlatform : Platform
 
             if (debugBoatTriggers)
             {
-                Debug.Log($"BOAT RUNTIME: Auto-assigned {enemy.name} to boat platform {gameObject.name} and made CHILD");
+                Debug.Log($"BOAT RUNTIME: Auto-assigned {enemy.name} to boat platform {gameObject.name} (ID: {boatID})");
             }
             
-            // Add boat-specific logic: trigger movement when crew registers
             TriggerBoatMovement(enemy);
         }
     }
@@ -155,10 +196,7 @@ public class BoatPlatform : Platform
         
         if (boatFloater != null)
         {
-            // NEW: Recalculate buoyancy when enemy mass is added to boat
             boatFloater.RecalculateBuoyancy();
-            
-            // Trigger boat movement through the BoatFloater
             boatFloater.OnRegisteredToPlatform(this);
             
             if (debugBoatTriggers)
@@ -172,9 +210,6 @@ public class BoatPlatform : Platform
         }
     }
     
-    /// <summary>
-    /// Public method to manually assign BoatFloater (for special cases)
-    /// </summary>
     public void SetBoatFloater(BoatFloater floater)
     {
         boatFloater = floater;
@@ -185,17 +220,11 @@ public class BoatPlatform : Platform
         }
     }
     
-    /// <summary>
-    /// Get the current BoatFloater reference
-    /// </summary>
     public BoatFloater GetBoatFloater()
     {
         return boatFloater;
     }
     
-    /// <summary>
-    /// Manual boat movement trigger (for testing or special events)
-    /// </summary>
     [ContextMenu("🧪 TEST: Trigger Boat Movement")]
     public void ManualTriggerBoatMovement()
     {
@@ -210,9 +239,6 @@ public class BoatPlatform : Platform
         }
     }
     
-    /// <summary>
-    /// Force start boat movement (for special events)
-    /// </summary>
     public void ForceStartBoatMovement()
     {
         if (boatFloater != null)
@@ -226,9 +252,6 @@ public class BoatPlatform : Platform
         }
     }
     
-    /// <summary>
-    /// Stop boat movement
-    /// </summary>
     public void StopBoatMovement()
     {
         if (boatFloater != null)
@@ -242,9 +265,6 @@ public class BoatPlatform : Platform
         }
     }
     
-    /// <summary>
-    /// Check if boat is currently moving
-    /// </summary>
     public bool IsBoatMoving()
     {
         return boatFloater != null && boatFloater.IsMovementActive();

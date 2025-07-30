@@ -1,0 +1,59 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class BoatLifecycleManager : MonoBehaviour
+{
+    public Action OnBoatDestroyed;
+    
+    private BoatController boatController;
+    private BoatCrewManager crewManager;
+    
+    public void Initialize(BoatController controller)
+    {
+        boatController = controller;
+        crewManager = GetComponent<BoatCrewManager>();
+    }
+    
+    public void DestroyBoat()
+    {
+        // Unsubscribe from all crew events
+        if (crewManager != null)
+        {
+            var allCrewMembers = crewManager.GetAllCrewMembers();
+            foreach (Fisherman crew in allCrewMembers)
+            {
+                if (crew != null)
+                {
+                    crew.OnEnemyDied -= crewManager.OnCrewMemberDied;
+                }
+            }
+        }
+        
+        OnBoatDestroyed?.Invoke();
+        
+        StartCoroutine(DestroyBoatDelayed());
+    }
+    
+    private IEnumerator DestroyBoatDelayed()
+    {
+        yield return new WaitForSeconds(1f);
+        
+        if (SimpleObjectPool.Instance != null)
+        {
+            SimpleObjectPool.Instance.ReturnToPool("Boat", boatController.gameObject);
+        }
+        else
+        {
+            Destroy(boatController.gameObject);
+        }
+    }
+    
+    public void Reset()
+    {
+        // Reset any lifecycle-specific state
+        // This method is called when the boat is reset for pooling
+    }
+}
+

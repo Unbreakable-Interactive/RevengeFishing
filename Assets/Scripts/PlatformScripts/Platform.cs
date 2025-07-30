@@ -124,19 +124,18 @@ public class Platform : MonoBehaviour
             Debug.Log($"COLLISION ASSIGNMENT: {enemy.name} assigned to platform {gameObject.name}! Total enemies: {assignedEnemies.Count}");
     }
 
-    // 🔥 NEW METHOD: Determine if this platform should use smart parenting
     protected virtual bool ShouldUseSmartParenting()
     {
         // Check if this is a boat platform by layer or component type
         bool isBoatPlatform = gameObject.layer == LayerMask.NameToLayer("BoatPlatform") || 
-                             GetComponent<BoatPlatform>() != null ||
-                             transform.name.ToLower().Contains("boat");
-        
+                              GetComponent<BoatPlatform>() != null ||
+                              transform.name.ToLower().Contains("boat");
+    
         if (showDebugInfo && isBoatPlatform)
         {
             Debug.Log($"SMART PARENTING: Detected boat platform {gameObject.name} - disabling smart parenting");
         }
-        
+    
         return !isBoatPlatform; // Only use smart parenting for non-boat platforms
     }
 
