@@ -38,6 +38,9 @@ public class BoatLifecycleManager : MonoBehaviour
     
     private IEnumerator DestroyBoatDelayed()
     {
+        // Add 3 pieces of boat to fall
+        // Afet N seconds it dies (already done)
+        
         yield return new WaitForSeconds(1f);
         
         if (SimpleObjectPool.Instance != null)

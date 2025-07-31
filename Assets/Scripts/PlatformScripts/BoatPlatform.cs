@@ -17,47 +17,13 @@ public class BoatPlatform : Platform, IBoatComponent
     public string GetBoatID() => boatID.UniqueID;
     public void SetBoatID(BoatID newBoatID) => boatID = newBoatID;
     
-    private void Awake()
-    {
-        ValidateRequiredReferences();
-    }
-    
-    private void ValidateRequiredReferences()
-    {
-        if (crewManager == null)
-            throw new System.Exception($"BoatPlatform on {gameObject.name}: crewManager must be assigned in editor!");
-    }
-    
     protected override void Start()
     {
         base.Start();
         
-        if (LayerMask.NameToLayer(LayerNames.BOATPLATFORM) != -1)
-        {
-            gameObject.layer = LayerMask.NameToLayer(LayerNames.BOATPLATFORM);
-            if (debugBoatTriggers)
-            {
-                Debug.Log($"BoatPlatform: Set layer to BoatPlatform (layer {gameObject.layer})");
-            }
-        }
-        else
-        {
-            Debug.LogWarning($"BoatPlatform: 'BoatPlatform' layer not found! Using Platform layer instead.");
-        }
-        
-        // Find BoatFloater in parent hierarchy if not manually assigned
         if (boatFloater == null)
         {
             boatFloater = GetComponentInParent<BoatFloater>();
-            
-            if (boatFloater != null && debugBoatTriggers)
-            {
-                Debug.Log($"BoatPlatform: Auto-found BoatFloater in {boatFloater.name}");
-            }
-            else if (debugBoatTriggers)
-            {
-                Debug.LogWarning($"BoatPlatform: No BoatFloater found in parent hierarchy for {gameObject.name}");
-            }
         }
         
         if (debugBoatTriggers)
@@ -66,20 +32,38 @@ public class BoatPlatform : Platform, IBoatComponent
         }
     }
     
-    /// <summary>
-    /// FILTRO PRINCIPAL: Solo procesar fishermen que pertenecen a ESTE barco por ID
-    /// </summary>
+    void OnCollisionEnter2D(Collision2D collision)
+    {
+        LandEnemy enemy = collision.gameObject.GetComponent<LandEnemy>();
+        if (enemy != null && enemy.landEnemyConfig != null)
+        {
+            if (!DoesEnemyBelongToThisBoat(enemy))
+            {
+                if (debugBoatTriggers)
+                {
+                    string enemyID = enemy is IBoatComponent comp ? comp.GetBoatID() : "NO_ID";
+                    Debug.Log($"BoatPlatform: STRICT BLOCK - {enemy.name} (ID: {enemyID}) rejected by boat (ID: {GetBoatID()})");
+                }
+                return;
+            }
+            
+            if (identifier == enemy.landEnemyConfig.identifier)
+            {
+                RegisterEnemyOnCollision(enemy);
+            }
+        }
+    }
+    
     protected override void RegisterEnemyOnCollision(LandEnemy enemy)
     {
         if (enemy == null || enemy.gameObject == null) return;
         
-        // CRÍTICO: Solo procesar fishermen que pertenecen a ESTE barco por ID único
         if (!DoesEnemyBelongToThisBoat(enemy))
         {
             if (debugBoatTriggers)
             {
                 string enemyID = enemy is IBoatComponent comp ? comp.GetBoatID() : "NO_ID";
-                Debug.Log($"BoatPlatform: Ignoring {enemy.name} (ID: {enemyID}) - doesn't belong to this boat (ID: {boatID})");
+                Debug.Log($"BoatPlatform: REGISTRATION DENIED - {enemy.name} (ID: {enemyID}) cannot register on boat (ID: {boatID})");
             }
             return;
         }
@@ -89,6 +73,16 @@ public class BoatPlatform : Platform, IBoatComponent
         Platform previousPlatform = enemy.GetAssignedPlatform();
         if (previousPlatform != null && previousPlatform != this)
         {
+            if (previousPlatform is BoatPlatform otherBoatPlatform)
+            {
+                if (otherBoatPlatform.GetBoatID() != GetBoatID())
+                {
+                    if (debugBoatTriggers)
+                        Debug.Log($"BoatPlatform: BOAT TRANSFER BLOCKED - {enemy.name} cannot switch boats");
+                    return;
+                }
+            }
+            
             previousPlatform.UnregisterEnemy(enemy);
             if (showDebugInfo)
                 Debug.Log($"Enemy {enemy.name} MOVED from {previousPlatform.name} to {gameObject.name}");
@@ -97,10 +91,6 @@ public class BoatPlatform : Platform, IBoatComponent
         assignedEnemies.Add(enemy);
         enemy.SetAssignedPlatform(this);
         
-        // CRÍTICO: NO MÁS SetParent automático - los fishermen YA están en jerarquía correcta
-        // Los BoatFishermanHandler ya son hijos del BoatHandler por diseño
-        
-        // CRITICAL: Trigger AI activation after platform assignment
         enemy.OnPlatformAssigned(this);
         
         Collider2D enemyCollider = enemy.GetComponent<Collider2D>();
@@ -114,14 +104,11 @@ public class BoatPlatform : Platform, IBoatComponent
         enemy.platformBoundsCalculated = true;
 
         if (debugBoatTriggers)
-            Debug.Log($"BOAT COLLISION ASSIGNMENT: {enemy.name} assigned to boat platform {gameObject.name} (ID: {boatID}). Total enemies: {assignedEnemies.Count}");
+            Debug.Log($"BOAT ASSIGNMENT SUCCESS: {enemy.name} assigned to boat platform {gameObject.name} (ID: {boatID}). Total: {assignedEnemies.Count}");
         
         TriggerBoatMovement(enemy);
     }
     
-    /// <summary>
-    /// VERIFICACIÓN POR ID ÚNICO: Verificar si el enemy pertenece a ESTE barco
-    /// </summary>
     private bool DoesEnemyBelongToThisBoat(LandEnemy enemy)
     {
         if (enemy is IBoatComponent boatComponent)
@@ -130,7 +117,7 @@ public class BoatPlatform : Platform, IBoatComponent
             
             if (debugBoatTriggers)
             {
-                Debug.Log($"BoatPlatform ID Check: Enemy {enemy.name} (ID: {boatComponent.GetBoatID()}) vs Platform (ID: {boatID}) = {matches}");
+                Debug.Log($"BoatPlatform OWNERSHIP CHECK: Enemy {enemy.name} (ID: {boatComponent.GetBoatID()}) vs Platform (ID: {boatID}) = {matches}");
             }
             
             return matches;
@@ -138,26 +125,22 @@ public class BoatPlatform : Platform, IBoatComponent
         
         if (debugBoatTriggers)
         {
-            Debug.Log($"BoatPlatform: Enemy {enemy.name} doesn't implement IBoatComponent - rejecting");
+            Debug.Log($"BoatPlatform: Enemy {enemy.name} has no boat component - rejected");
         }
         
         return false;
     }
     
-    /// <summary>
-    /// Override runtime registration - también con filtro por ID
-    /// </summary>
     public override void RegisterEnemyAtRuntime(LandEnemy enemy)
     {
         if (enemy != null && !assignedEnemies.Contains(enemy))
         {
-            // FILTRO: Solo procesar si pertenece a este barco por ID
             if (!DoesEnemyBelongToThisBoat(enemy))
             {
                 if (debugBoatTriggers)
                 {
                     string enemyID = enemy is IBoatComponent comp ? comp.GetBoatID() : "NO_ID";
-                    Debug.Log($"BoatPlatform RUNTIME: Ignoring {enemy.name} (ID: {enemyID}) - doesn't belong to this boat (ID: {boatID})");
+                    Debug.Log($"BoatPlatform RUNTIME: DENIED {enemy.name} (ID: {enemyID}) - wrong boat (ID: {boatID})");
                 }
                 return;
             }
@@ -165,9 +148,6 @@ public class BoatPlatform : Platform, IBoatComponent
             assignedEnemies.Add(enemy);
             enemy.SetAssignedPlatform(this);
 
-            // CRÍTICO: NO MÁS SetParent en runtime tampoco
-
-            // Apply collision rules immediately
             Collider2D enemyCollider = enemy.GetComponent<Collider2D>();
             if (enemyCollider != null)
             {
@@ -180,16 +160,13 @@ public class BoatPlatform : Platform, IBoatComponent
 
             if (debugBoatTriggers)
             {
-                Debug.Log($"BOAT RUNTIME: Auto-assigned {enemy.name} to boat platform {gameObject.name} (ID: {boatID})");
+                Debug.Log($"BOAT RUNTIME SUCCESS: {enemy.name} assigned to boat platform {gameObject.name} (ID: {boatID})");
             }
             
             TriggerBoatMovement(enemy);
         }
     }
     
-    /// <summary>
-    /// Triggers boat movement when an enemy registers to this platform
-    /// </summary>
     private void TriggerBoatMovement(LandEnemy enemy)
     {
         if (!autoStartMovementOnRegistration) return;
@@ -223,20 +200,6 @@ public class BoatPlatform : Platform, IBoatComponent
     public BoatFloater GetBoatFloater()
     {
         return boatFloater;
-    }
-    
-    [ContextMenu("🧪 TEST: Trigger Boat Movement")]
-    public void ManualTriggerBoatMovement()
-    {
-        if (boatFloater != null)
-        {
-            boatFloater.OnRegisteredToPlatform(this);
-            Debug.Log("🧪 BoatPlatform: Manual boat movement triggered!");
-        }
-        else
-        {
-            Debug.LogWarning("🧪 BoatPlatform: Cannot trigger - BoatFloater not found!");
-        }
     }
     
     public void ForceStartBoatMovement()

@@ -68,6 +68,8 @@ public class BoatIntegrityManager : MonoBehaviour
     {
         if (crewManager == null) return;
         
+        // Filter by enemy Type 
+        
         int aliveCrewCount = crewManager.GetActiveCrewCount();
         
         if (aliveCrewCount == 0 || currentIntegrity <= 0f)

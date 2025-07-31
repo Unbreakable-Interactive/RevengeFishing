@@ -34,6 +34,11 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
         ValidateRequiredReferences();
     }
     
+    private void Start()
+    {
+        SetupBoatPhysicsIsolation();
+    }
+    
     private void ValidateRequiredReferences()
     {
         if (boatPlatform == null)
@@ -46,45 +51,44 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
             throw new System.Exception($"BoatCrewManager on {gameObject.name}: rightBoundary must be assigned in editor!");
     }
     
+    private void SetupBoatPhysicsIsolation()
+    {
+        BoatCrewManager[] allBoats = FindObjectsOfType<BoatCrewManager>();
+        
+        foreach (BoatCrewManager otherBoat in allBoats)
+        {
+            if (otherBoat == this) continue;
+            
+            Collider2D[] myColliders = GetComponentsInChildren<Collider2D>();
+            Collider2D[] otherColliders = otherBoat.GetComponentsInChildren<Collider2D>();
+            
+            foreach (Collider2D myCollider in myColliders)
+            {
+                foreach (Collider2D otherCollider in otherColliders)
+                {
+                    Physics2D.IgnoreCollision(myCollider, otherCollider, true);
+                }
+            }
+            
+            Debug.Log($"BoatCrewManager: ISOLATED boat physics between {gameObject.name} and {otherBoat.gameObject.name}");
+        }
+    }
+    
     public void Initialize(BoatPlatform platform, BoatIntegrityManager integrity)
     {
         integrityManager = integrity;
         boatFloater = GetComponent<BoatController>().BoatFloater;
         
-        // Configurar IDs únicos para todos los componentes del barco
         ConfigureBoatComponentIDs();
-        ConfigureBoatUniqueLayer();
     }
     
     private void ConfigureBoatComponentIDs()
     {
-        // Asignar el mismo ID a todos los componentes del barco
         boatPlatform.SetBoatID(boatID);
         leftBoundary.SetBoatID(boatID);
         rightBoundary.SetBoatID(boatID);
         
         Debug.Log($"BoatCrewManager: Configured boat ID {boatID} for all components");
-    }
-    
-    private void ConfigureBoatUniqueLayer()
-    {
-        int layerToUse = Mathf.Abs(boatID.UniqueID.GetHashCode()) % 16;
-        if (layerToUse == 9) layerToUse = 12;
-        if (layerToUse == 10) layerToUse = 13;
-        
-        gameObject.layer = layerToUse;
-        
-        if (boatPlatform != null)
-        {
-            boatPlatform.gameObject.layer = layerToUse;
-            
-            foreach (Transform child in boatPlatform.transform)
-            {
-                child.gameObject.layer = layerToUse;
-            }
-        }
-        
-        Debug.Log($"BoatCrewManager: {gameObject.name} configured with unique layer {layerToUse} and ID {boatID}");
     }
     
     public void StartCrewInitialization()
@@ -101,41 +105,62 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
     
     private IEnumerator InitializeBoatWithCrew()
     {
-        yield return null;
-        
         allCrewMembers.Clear();
+        
+        Vector3 platformPosition = boatPlatform.transform.position;
+        platformPosition.y += 0.5f;
+        
+        List<Fisherman> newCrewMembers = new List<Fisherman>();
         
         for (int i = 0; i < maxCrewMembers; i++)
         {
-            yield return StartCoroutine(InstantiateAndAssignCrewMember(crewSpawnPoints[0].position, i));
+            Vector3 spawnPosition = platformPosition + new Vector3(i * 0.8f - 0.4f, 0, 0);
+            Fisherman fisherman = InstantiateCrewMember(spawnPosition, i);
+            
+            if (fisherman != null)
+            {
+                newCrewMembers.Add(fisherman);
+            }
         }
+        
+        yield return new WaitForEndOfFrame();
+        
+        foreach (Fisherman fisherman in newCrewMembers)
+        {
+            ConfigureFishermanForBoatLife(fisherman);
+            boatPlatform.RegisterEnemyAtRuntime(fisherman);
+            fisherman.OnPlatformAssigned(boatPlatform);
+            SubscribeToCrewMember(fisherman);
+            allCrewMembers.Add(fisherman);
+        }
+        
+        yield return new WaitForEndOfFrame();
+        
+        ConfigureCrewPhysicsIsolation(newCrewMembers);
         
         if (boatFloater != null)
         {
             boatFloater.InitializeCrew(allCrewMembers);
         }
         
-        yield return null;
-        
         RandomlyDeactivateCrewMembers();
         integrityManager.CalculateBoatIntegrity();
     }
     
-    private IEnumerator InstantiateAndAssignCrewMember(Vector3 spawnPoint, int index)
+    private Fisherman InstantiateCrewMember(Vector3 spawnPosition, int index)
     {
         if (boatFishermanPrefab == null)
         {
             Debug.LogError($"No boatFishermanPrefab assigned to {gameObject.name}!");
-            yield break;
+            return null;
         }
         
-        GameObject crewHandlerObj = Instantiate(boatFishermanPrefab, spawnPoint, Quaternion.identity);
+        GameObject crewHandlerObj = Instantiate(boatFishermanPrefab, spawnPosition, Quaternion.identity);
         crewHandlerObj.transform.SetParent(transform);
         
         Fisherman fisherman = crewHandlerObj.GetComponentInChildren<Fisherman>();
         if (fisherman != null)
         {
-            // CRÍTICO: Asignar ID del barco al fisherman
             fisherman.SetBoatID(boatID);
             
             if (PowerLevelScaler.Instance != null)
@@ -144,17 +169,20 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
                 fisherman.SetPowerLevel(powerLevel);
             }
             
-            SubscribeToCrewMember(fisherman);
-            yield return StartCoroutine(AssignToBoatPlatform(fisherman));
-            allCrewMembers.Add(fisherman);
+            Rigidbody2D fishermanRb = fisherman.GetComponent<Rigidbody2D>();
+            if (fishermanRb != null)
+            {
+                fishermanRb.velocity = Vector2.zero;
+                fishermanRb.angularVelocity = 0f;
+            }
             
-            ConfigureFishermanForBoatLife(fisherman);
-            ConfigureFishermanCollisions(fisherman);
+            return fisherman;
         }
         else
         {
             Debug.LogError($"Instantiated BoatFishermanHandler doesn't contain Fisherman component!");
             Destroy(crewHandlerObj);
+            return null;
         }
     }
     
@@ -171,70 +199,67 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
             fishermanRb.gravityScale = 1f;
             fishermanRb.constraints = RigidbodyConstraints2D.FreezeRotation;
             fishermanRb.interpolation = RigidbodyInterpolation2D.Interpolate;
+            fishermanRb.velocity = Vector2.zero;
+            fishermanRb.angularVelocity = 0f;
         }
     }
     
-    private void ConfigureFishermanCollisions(LandEnemy fisherman)
+    private void ConfigureCrewPhysicsIsolation(List<Fisherman> crewMembers)
     {
-        SetLayerRecursively(fisherman.gameObject, gameObject.layer);
-        fisherman.gameObject.layer = 10; // Mantener Layer 10 para BoatEnemy
+        BoatCrewManager[] allBoats = FindObjectsOfType<BoatCrewManager>();
         
-        Collider2D fishermanCollider = fisherman.GetComponent<Collider2D>();
-        if (fishermanCollider == null) return;
-        
-        StartCoroutine(DelayedCollisionSetup(fisherman, fishermanCollider));
-    }
-    
-    private IEnumerator DelayedCollisionSetup(LandEnemy fisherman, Collider2D fishermanCollider)
-    {
-        yield return new WaitForSeconds(0.1f);
-        
-        // Encontrar todos los otros BoatCrewManagers
-        BoatCrewManager[] allBoatManagers = FindObjectsOfType<BoatCrewManager>();
-        
-        foreach (BoatCrewManager otherBoatManager in allBoatManagers)
+        foreach (Fisherman fisherman in crewMembers)
         {
-            if (otherBoatManager == this) continue;
+            Collider2D fishermanCollider = fisherman.GetComponent<Collider2D>();
+            if (fishermanCollider == null) continue;
             
-            // Ignorar colisiones con platform de otros barcos
-            if (otherBoatManager.boatPlatform != null)
+            foreach (BoatCrewManager otherBoat in allBoats)
             {
-                Collider2D otherPlatformCollider = otherBoatManager.boatPlatform.GetComponent<Collider2D>();
-                if (otherPlatformCollider != null)
+                if (otherBoat == this) continue;
+                
+                string otherBoatID = otherBoat.GetBoatID();
+                if (otherBoatID != GetBoatID())
                 {
-                    Physics2D.IgnoreCollision(fishermanCollider, otherPlatformCollider, true);
-                    Debug.Log($"BoatCrew: {fisherman.name} DISABLED collision with other boat platform {otherBoatManager.name}");
+                    Collider2D[] otherBoatColliders = otherBoat.GetComponentsInChildren<Collider2D>();
+                    foreach (Collider2D otherCollider in otherBoatColliders)
+                    {
+                        Physics2D.IgnoreCollision(fishermanCollider, otherCollider, true);
+                    }
+                    
+                    foreach (Fisherman otherFisherman in otherBoat.allCrewMembers)
+                    {
+                        if (otherFisherman != null)
+                        {
+                            Collider2D otherFishermanCollider = otherFisherman.GetComponent<Collider2D>();
+                            if (otherFishermanCollider != null)
+                            {
+                                Physics2D.IgnoreCollision(fishermanCollider, otherFishermanCollider, true);
+                            }
+                        }
+                    }
                 }
             }
             
-            Collider2D[] otherBoatColliders = otherBoatManager.GetComponentsInChildren<Collider2D>();
-            foreach (Collider2D otherCollider in otherBoatColliders)
+            foreach (Fisherman otherCrewMember in crewMembers)
             {
-                if (otherCollider.gameObject.layer == otherBoatManager.gameObject.layer)
+                if (otherCrewMember != fisherman)
                 {
-                    Physics2D.IgnoreCollision(fishermanCollider, otherCollider, true);
+                    Collider2D otherCrewCollider = otherCrewMember.GetComponent<Collider2D>();
+                    if (otherCrewCollider != null)
+                    {
+                        Physics2D.IgnoreCollision(fishermanCollider, otherCrewCollider, true);
+                    }
                 }
             }
-        }
-        
-        // Habilitar colisión con nuestra propia plataforma
-        if (boatPlatform != null)
-        {
-            Collider2D myPlatformCollider = boatPlatform.GetComponent<Collider2D>();
-            if (myPlatformCollider != null)
+            
+            if (boatPlatform != null)
             {
-                Physics2D.IgnoreCollision(fishermanCollider, myPlatformCollider, false);
-                Debug.Log($"BoatCrew: {fisherman.name} ENABLED collision with own platform {boatPlatform.name}");
+                Collider2D platformCollider = boatPlatform.GetComponent<Collider2D>();
+                if (platformCollider != null)
+                {
+                    Physics2D.IgnoreCollision(fishermanCollider, platformCollider, false);
+                }
             }
-        }
-    }
-    
-    private void SetLayerRecursively(GameObject obj, int layer)
-    {
-        obj.layer = layer;
-        for (int i = 0; i < obj.transform.childCount; i++)
-        {
-            SetLayerRecursively(obj.transform.GetChild(i).gameObject, layer);
         }
     }
     
@@ -258,24 +283,6 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
         
         integrityManager.CalculateBoatIntegrity();
         integrityManager.CheckBoatDestruction();
-    }
-    
-    private IEnumerator AssignToBoatPlatform(LandEnemy landEnemy)
-    {
-        yield return null;
-        
-        if (boatPlatform == null)
-        {
-            Debug.LogError($"No BoatPlatform found for {gameObject.name}!");
-            yield break;
-        }
-        
-        if (landEnemy != null)
-        {
-            boatPlatform.RegisterEnemyAtRuntime(landEnemy);
-            landEnemy.OnPlatformAssigned(boatPlatform);
-            yield return null;
-        }
     }
     
     private void RandomlyDeactivateCrewMembers()
@@ -314,14 +321,25 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
     
     private IEnumerator ResetExistingCrew()
     {
-        yield return null;
+        Vector3 platformPosition = boatPlatform.transform.position;
+        platformPosition.y += 0.5f;
         
-        foreach (Fisherman fisherman in allCrewMembers)
+        for (int i = 0; i < allCrewMembers.Count; i++)
         {
+            Fisherman fisherman = allCrewMembers[i];
             if (fisherman != null)
             {
-                // Asegurar que mantenga el ID del barco
                 fisherman.SetBoatID(boatID);
+                
+                Vector3 resetPosition = platformPosition + new Vector3(i * 0.8f - 0.4f, 0, 0);
+                fisherman.transform.position = resetPosition;
+                
+                Rigidbody2D fishermanRb = fisherman.GetComponent<Rigidbody2D>();
+                if (fishermanRb != null)
+                {
+                    fishermanRb.velocity = Vector2.zero;
+                    fishermanRb.angularVelocity = 0f;
+                }
                 
                 if (fisherman.ParentContainer != null)
                 {
@@ -331,13 +349,17 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
                 fisherman.TriggerAlive();
                 fisherman.ScheduleNextAction();
                 
-                SubscribeToCrewMember(fisherman);
-                yield return StartCoroutine(AssignToBoatPlatform(fisherman));
-                
                 ConfigureFishermanForBoatLife(fisherman);
-                ConfigureFishermanCollisions(fisherman);
+                SubscribeToCrewMember(fisherman);
+                
+                boatPlatform.RegisterEnemyAtRuntime(fisherman);
+                fisherman.OnPlatformAssigned(boatPlatform);
             }
         }
+        
+        yield return new WaitForEndOfFrame();
+        
+        ConfigureCrewPhysicsIsolation(allCrewMembers);
         
         yield return null;
         
@@ -377,14 +399,10 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
         StartCrewInitialization();
     }
 
-    /// <summary>
-    /// MÉTODO PRINCIPAL: Verificar si un LandEnemy pertenece a ESTE barco usando ID único
-    /// </summary>
     public bool LandEnemyBelongToBoat(LandEnemy enemy)
     {
         if (enemy == null) return false;
         
-        // Verificación directa por ID único
         if (enemy is IBoatComponent boatComponent)
         {
             return boatID.Matches(boatComponent.GetBoatID());
@@ -393,25 +411,18 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
         return false;
     }
 
-    /// <summary>
-    /// Método para regenerar ID (útil para testing/debugging)
-    /// </summary>
     [ContextMenu("🔄 Generate New Boat ID")]
     public void GenerateNewBoatID()
     {
         boatID.GenerateNewID();
         Debug.Log($"Generated new boat ID: {boatID}");
         
-        // Reconfigurar todos los componentes con el nuevo ID
         if (Application.isPlaying)
         {
             ConfigureBoatComponentIDs();
         }
     }
     
-    /// <summary>
-    /// Debug info sobre el barco
-    /// </summary>
     [ContextMenu("🔍 Debug Boat Info")]
     public void DebugBoatInfo()
     {
@@ -431,3 +442,4 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
         }
     }
 }
+

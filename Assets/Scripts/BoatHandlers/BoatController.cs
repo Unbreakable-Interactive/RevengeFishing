@@ -16,7 +16,8 @@ public class BoatController : MonoBehaviour
     [SerializeField] private Transform leftBoundary;
     [SerializeField] private Transform rightBoundary;
     
-    // Public Events (expuestos desde los managers)
+    private bool isInitialized = false;
+    
     public Action<float, float> OnIntegrityChanged => integrityManager.OnIntegrityChanged;
     public Action OnBoatDestroyed => lifecycleManager.OnBoatDestroyed;
     
@@ -25,17 +26,38 @@ public class BoatController : MonoBehaviour
         leftBoundary = _leftBoundary;
         rightBoundary = _rightBoundary;
         
-        // Initialize components in order
         integrityManager.Initialize();
         crewManager.Initialize(boatPlatform, integrityManager);
         lifecycleManager.Initialize(this);
         
         boatFloater.InitializeBoundaries(_leftBoundary, _rightBoundary);
+        
+        isInitialized = true;
+        
+        if (gameObject.activeInHierarchy)
+        {
+            StartCrewInitialization();
+        }
     }
     
     void OnEnable()
     {
         boatFloater.Initialize();
+        
+        if (isInitialized)
+        {
+            StartCrewInitialization();
+        }
+    }
+    
+    private void StartCrewInitialization()
+    {
+        if (leftBoundary == null || rightBoundary == null)
+        {
+            Debug.LogError($"BoatController {gameObject.name}: Cannot start crew - boundaries not set! Call Initialize() first.");
+            return;
+        }
+        
         crewManager.StartCrewInitialization();
     }
     
@@ -44,9 +66,9 @@ public class BoatController : MonoBehaviour
         integrityManager.Reset();
         crewManager.Reset();
         lifecycleManager.Reset();
+        isInitialized = false;
     }
     
-    // Public API methods
     public float GetCurrentIntegrity() => integrityManager.CurrentIntegrity;
     public float GetMaxIntegrity() => integrityManager.MaxIntegrity;
     public System.Collections.Generic.List<Fisherman> GetAllCrewMembers() => crewManager.GetAllCrewMembers();

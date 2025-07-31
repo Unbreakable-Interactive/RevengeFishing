@@ -34,13 +34,11 @@ public class BoatBoundaryTrigger : MonoBehaviour, IBoatComponent
     
     private void OnTriggerEnter2D(Collider2D other)
     {
-        // FILTRO INMEDIATO: Solo Layer 10 (BoatEnemy)
-        if (other.gameObject.layer != 10) return;
+        if (other.gameObject.layer != 6) return;
         
         if (debugTriggers)
-            Debug.Log($"BoatBoundaryTrigger: Layer 10 object detected - {other.gameObject.name}");
+            Debug.Log($"BoatBoundaryTrigger: Enemy layer object detected - {other.gameObject.name}");
         
-        // BUSCAR LandEnemy en el GameObject Y sus padres
         LandEnemy enemy = FindLandEnemyInHierarchy(other.gameObject);
         
         if (enemy == null)
@@ -53,7 +51,6 @@ public class BoatBoundaryTrigger : MonoBehaviour, IBoatComponent
         if (debugTriggers)
             Debug.Log($"BoatBoundaryTrigger: Found LandEnemy {enemy.name}");
         
-        // VERIFICACIÓN PRINCIPAL POR ID ÚNICO
         if (ShouldProcess(enemy))
         {
             if (debugTriggers)
@@ -72,8 +69,7 @@ public class BoatBoundaryTrigger : MonoBehaviour, IBoatComponent
     
     private void OnTriggerStay2D(Collider2D other)
     {
-        // FILTRO INMEDIATO: Solo Layer 10
-        if (other.gameObject.layer != 10) return;
+        if (other.gameObject.layer != 6) return;
         
         LandEnemy enemy = FindLandEnemyInHierarchy(other.gameObject);
         if (enemy != null && ShouldProcess(enemy))
@@ -82,16 +78,11 @@ public class BoatBoundaryTrigger : MonoBehaviour, IBoatComponent
         }
     }
     
-    /// <summary>
-    /// BUSCAR LandEnemy en el GameObject o sus padres
-    /// </summary>
     private LandEnemy FindLandEnemyInHierarchy(GameObject obj)
     {
-        // Primero buscar en el objeto mismo
         LandEnemy enemy = obj.GetComponent<LandEnemy>();
         if (enemy != null) return enemy;
         
-        // Buscar en los padres
         Transform current = obj.transform;
         while (current != null)
         {
@@ -108,9 +99,6 @@ public class BoatBoundaryTrigger : MonoBehaviour, IBoatComponent
         return null;
     }
     
-    /// <summary>
-    /// FILTRO PRINCIPAL: Verificación por ID único
-    /// </summary>
     private bool ShouldProcess(LandEnemy enemy)
     {
         if (enemy == null)
@@ -120,7 +108,6 @@ public class BoatBoundaryTrigger : MonoBehaviour, IBoatComponent
             return false;
         }
         
-        // Verificación por ID único
         if (enemy is IBoatComponent boatComponent)
         {
             bool belongsToThisBoat = boatID.Matches(boatComponent.GetBoatID());
@@ -141,9 +128,6 @@ public class BoatBoundaryTrigger : MonoBehaviour, IBoatComponent
         return false;
     }
     
-    /// <summary>
-    /// DETENER movimiento del fisherman hacia este boundary
-    /// </summary>
     private void StopEnemyMovement(LandEnemy enemy)
     {
         var currentState = enemy.MovementStateLand;
@@ -151,7 +135,6 @@ public class BoatBoundaryTrigger : MonoBehaviour, IBoatComponent
         if (debugTriggers)
             Debug.Log($"BoatBoundaryTrigger: StopEnemyMovement called for {enemy.name}, current state: {currentState}");
         
-        // VERIFICAR si se mueve hacia este boundary
         bool shouldStop = false;
         
         if (isLeftBoundary && (currentState == LandEnemy.LandMovementState.WalkLeft || currentState == LandEnemy.LandMovementState.RunLeft))
@@ -203,7 +186,6 @@ public class BoatBoundaryTrigger : MonoBehaviour, IBoatComponent
                 Debug.LogError($"BoatBoundaryTrigger: {enemy.name} has NO Rigidbody2D!");
             }
             
-            // PROGRAMAR NUEVA ACCIÓN
             LandEnemy.LandMovementState[] excludedStates;
             if (isLeftBoundary)
             {

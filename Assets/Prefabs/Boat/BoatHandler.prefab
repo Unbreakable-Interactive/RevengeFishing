@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 6494389302615841685}
   - component: {fileID: 7688847597208608555}
   - component: {fileID: 1736860403605829746}
-  m_Layer: 9
+  m_Layer: 6
   m_Name: LimitLeftBox
   m_TagString: Bound
   m_Icon: {fileID: -5442936267250999957, guid: 0000000000000000d000000000000000, type: 0}
@@ -90,9 +90,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e1082162df3af433ba7940f07dfaea8b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  boatID:
+    _uniqueID: Boat_1bb50b88
+  crewManager: {fileID: 2578428894357833174}
   isLeftBoundary: 1
   debugTriggers: 1
-  crewManager: {fileID: 2578428894357833174}
 --- !u!1 &1725949659940357100
 GameObject:
   m_ObjectHideFlags: 0
@@ -112,7 +114,7 @@ GameObject:
   - component: {fileID: 1897361587495017}
   - component: {fileID: 2834074616371703089}
   - component: {fileID: 4779696966928160392}
-  m_Layer: 9
+  m_Layer: 6
   m_Name: BoatHandler
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -171,6 +173,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 16bcba11d4bc14d5182514465279d494, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  boatID:
+    _uniqueID: Boat_1bb50b88
+  boatPlatform: {fileID: 8531477562920402828}
+  leftBoundary: {fileID: 1736860403605829746}
+  rightBoundary: {fileID: 8710223552841239171}
   boatFishermanPrefab: {fileID: 1963649820016990938, guid: c45946bf32b8a4045aad4551ca754c64, type: 3}
   crewSpawnPoints:
   - {fileID: 4120316064714226126}
@@ -343,7 +350,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7460143873047510890}
-  m_Layer: 9
+  m_Layer: 6
   m_Name: Crew
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -377,7 +384,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5221161365901039543}
   - component: {fileID: 4981744675166538355}
-  m_Layer: 9
+  m_Layer: 6
   m_Name: Boat
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -460,7 +467,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3643950951084485024}
-  m_Layer: 9
+  m_Layer: 6
   m_Name: FloatingPoint_Stern
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -491,7 +498,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4120316064714226126}
-  m_Layer: 9
+  m_Layer: 6
   m_Name: SpawnPoint
   m_TagString: Untagged
   m_Icon: {fileID: 3306451490063965843, guid: 0000000000000000d000000000000000, type: 0}
@@ -522,7 +529,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6699438916111739493}
-  m_Layer: 9
+  m_Layer: 6
   m_Name: FloatingPoint_Center
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -555,7 +562,7 @@ GameObject:
   - component: {fileID: 4258909243440121205}
   - component: {fileID: 984008673899448584}
   - component: {fileID: 8710223552841239171}
-  m_Layer: 9
+  m_Layer: 6
   m_Name: LimitRightBox
   m_TagString: Bound
   m_Icon: {fileID: -5442936267250999957, guid: 0000000000000000d000000000000000, type: 0}
@@ -634,9 +641,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e1082162df3af433ba7940f07dfaea8b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  boatID:
+    _uniqueID: Boat_1bb50b88
+  crewManager: {fileID: 2578428894357833174}
   isLeftBoundary: 0
   debugTriggers: 1
-  crewManager: {fileID: 2578428894357833174}
 --- !u!1 &6629729176795069028
 GameObject:
   m_ObjectHideFlags: 0
@@ -648,7 +657,7 @@ GameObject:
   - component: {fileID: 8270591348819111864}
   - component: {fileID: 8531477562920402828}
   - component: {fileID: 611578597188868134}
-  m_Layer: 9
+  m_Layer: 6
   m_Name: Platform
   m_TagString: Untagged
   m_Icon: {fileID: -5442936267250999957, guid: 0000000000000000d000000000000000, type: 0}
@@ -687,10 +696,12 @@ MonoBehaviour:
   assignedEnemies: []
   showDebugInfo: 1
   identifier: 1
+  boatID:
+    _uniqueID: Boat_1bb50b88
+  crewManager: {fileID: 2578428894357833174}
   autoStartMovementOnRegistration: 1
   debugBoatTriggers: 1
   boatFloater: {fileID: 3157742320908821756}
-  crewManager: {fileID: 2578428894357833174}
 --- !u!61 &611578597188868134
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -745,7 +756,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7554559386534790929}
-  m_Layer: 9
+  m_Layer: 6
   m_Name: SpawnPoint (1)
   m_TagString: Untagged
   m_Icon: {fileID: 3306451490063965843, guid: 0000000000000000d000000000000000, type: 0}
@@ -776,7 +787,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7097401271740460365}
-  m_Layer: 9
+  m_Layer: 6
   m_Name: FloatingPoint_Bow
   m_TagString: Untagged
   m_Icon: {fileID: 0}
