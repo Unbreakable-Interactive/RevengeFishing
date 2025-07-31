@@ -100,6 +100,8 @@ public class Player : Entity
     [Header("Visual Settings")]
     [SerializeField] private SpriteRenderer playerSpriteRenderer;
 
+    Animator animator;
+
     [Header("Debug")]
     public bool enableDebugLogs = false;
 
@@ -141,6 +143,8 @@ public class Player : Entity
                 Debug.LogWarning("No main camera found! Please assign camera reference in Player component.");
             }
         }
+
+        animator = GetComponent<Animator>();
 
         currentPhase = Phase.Infant; // Start in the Infant phase
         //change the next line once an actual fix is found for player threshold not assigning properly
@@ -227,6 +231,8 @@ public class Player : Entity
         {
             case Phase.Infant:
                 currentPhase = Phase.Juvenile;
+                animator?.SetBool("isInfant", false);
+                animator?.SetBool("isJuvie", true);
                 nextPowerLevel = playerConfig.phaseThresholds.adult;
                 Debug.Log("Player matured to Juvenile phase!");
                 break;

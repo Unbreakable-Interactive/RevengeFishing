@@ -9,7 +9,7 @@ EditorBuildSettings:
     path: Assets/Scenes/MainMenu.unity
     guid: 87e5fe36369bb214c8442a019adf9dbc
   - enabled: 0
-    path: Assets/Scenes/SurfaceScene.unity
+    path: Assets/Scenes/Old/SurfaceScene.unity
     guid: c987e5987df8b2d4ea8421e21012f5fe
   - enabled: 0
     path: Assets/Scenes/UnUsed Samples/Testing.unity
