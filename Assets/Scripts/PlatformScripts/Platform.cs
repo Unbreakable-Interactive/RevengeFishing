@@ -26,7 +26,7 @@ public class Platform : MonoBehaviour
         
         platformCollider.isTrigger = false;
 
-        Collider2D playerCollider = Player.Instance.Collider;
+        Collider2D playerCollider = Player.Instance.ColliderToShare;
         if (playerCollider != null)
             Physics2D.IgnoreCollision(platformCollider, playerCollider, true);
 

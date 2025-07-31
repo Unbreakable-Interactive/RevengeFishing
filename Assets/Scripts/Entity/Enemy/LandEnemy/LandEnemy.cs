@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
@@ -204,6 +205,11 @@ public class LandEnemy : Enemy, IBoatComponent
     protected override void Update()
     {
         base.Update();
+
+        if (hasStartedFloating && rb.velocity.y > 0)
+        {
+            if (!animator.GetBool("isRising")) animator?.SetBool("isRising", true);
+        }
     }
 
     public override void SetMovementMode(bool aboveWater)
@@ -491,6 +497,7 @@ public class LandEnemy : Enemy, IBoatComponent
     {
         base.TriggerDefeat();
         OnFishingToolUnequipped();
+        animator?.SetBool("isSinking", true);
     }
 
     protected virtual void CheckPlatformBounds()
