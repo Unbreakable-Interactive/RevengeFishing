@@ -44,7 +44,7 @@ public class SpawnHandler : MonoBehaviour
         // Debug keys para testing
         if (Input.GetKeyDown(KeyCode.F)) 
         {
-            Debug.Log($"🎮 Manual spawn triggered for {spawnConfig.configName}!");
+            Debug.Log($"Manual spawn triggered for {spawnConfig.configName}!");
             SpawnOne();
         }
     
