@@ -17,15 +17,13 @@ public class BoatBuoyancySystem : MonoBehaviour
     private Transform[] floatPoints;
     private BoatVisualSystem visualSystem;
     
-    // Dynamic buoyancy state
     private float lastKnownMass = 0f;
     private float effectiveBuoyancyForce = 6f;
     private float massCheckTimer = 0f;
     private const float MASS_CHECK_INTERVAL = 0.1f;
     
-    // Crew references
     private List<Rigidbody2D> cachedChildRigidbodies = new List<Rigidbody2D>();
-    private Fisherman[] cachedEnemies;
+    private Enemy[] cachedEnemies;
     private bool componentsCached = false;
     
     public void Initialize(Rigidbody2D rigidbody, WaterPhysics physics, Transform[] points)
@@ -57,9 +55,9 @@ public class BoatBuoyancySystem : MonoBehaviour
         }
     }
     
-    public void InitializeCrew(List<Fisherman> fishermans)
+    public void InitializeCrew(List<Enemy> crewMembers)
     {
-        cachedEnemies = fishermans.ToArray();
+        cachedEnemies = crewMembers.ToArray();
         cachedChildRigidbodies.Clear();
         
         foreach (var enemy in cachedEnemies)
@@ -94,7 +92,6 @@ public class BoatBuoyancySystem : MonoBehaviour
         
             Vector2 worldPos = point.position;
         
-            // ✅ FIXED: Pasar referencia del barco para isolación
             float waterHeight = waterPhysics.GetWaterHeightAt(worldPos, this.transform);
             float submersion = waterHeight - worldPos.y;
         

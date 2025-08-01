@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class BoatFloater : MonoBehaviour
@@ -64,9 +65,9 @@ public class BoatFloater : MonoBehaviour
 
     #region Public Methods
 
-    public void InitializeCrew(System.Collections.Generic.List<Fisherman> fishermans)
+    public void InitializeCrew(List<Enemy> crewMembers)
     {
-        buoyancySystem.InitializeCrew(fishermans);
+        buoyancySystem.InitializeCrew(crewMembers);
     }
     
     public void InitializeBoundaries(Transform leftBoundary, Transform rightBoundary)
@@ -86,7 +87,6 @@ public class BoatFloater : MonoBehaviour
 
     #endregion
     
-    // public void SetMovementEnabled(bool enabled) => movementSystem.SetMovementEnabled(enabled);
     public void SetAutomaticMovementEnabled(bool enabled) => movementSystem.SetAutomaticMovementEnabled(enabled);
     public void ForceStartMovement() => movementSystem.ForceStartMovement();
     public void StopMovement() => movementSystem.StopMovement();

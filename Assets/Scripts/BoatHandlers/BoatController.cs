@@ -1,77 +1,93 @@
-using System;
 using UnityEngine;
 
 public class BoatController : MonoBehaviour
 {
-    [Header("Core Components")]
+    [Header("Required Managers")]
     [SerializeField] private BoatIntegrityManager integrityManager;
     [SerializeField] private BoatCrewManager crewManager;
     [SerializeField] private BoatLifecycleManager lifecycleManager;
-    
-    [Header("Boat References")]
     [SerializeField] private BoatFloater boatFloater;
     [SerializeField] private BoatPlatform boatPlatform;
     
-    [Header("Boundaries")]
-    [SerializeField] private Transform leftBoundary;
-    [SerializeField] private Transform rightBoundary;
+    [Header("Boundary References")]
+    [SerializeField] private BoatBoundaryTrigger leftBoundary;
+    [SerializeField] private BoatBoundaryTrigger rightBoundary;
     
-    private bool isInitialized = false;
-    
-    public Action<float, float> OnIntegrityChanged => integrityManager.OnIntegrityChanged;
-    public Action OnBoatDestroyed => lifecycleManager.OnBoatDestroyed;
-    
-    public void Initialize(Transform _leftBoundary, Transform _rightBoundary)
+    private void Awake()
     {
-        leftBoundary = _leftBoundary;
-        rightBoundary = _rightBoundary;
-        
-        integrityManager.Initialize();
+        ValidateComponents();
+    }
+    
+    private void ValidateComponents()
+    {
+        if (integrityManager == null)
+            integrityManager = GetComponent<BoatIntegrityManager>();
+            
+        if (crewManager == null)
+            crewManager = GetComponent<BoatCrewManager>();
+            
+        if (lifecycleManager == null)
+            lifecycleManager = GetComponent<BoatLifecycleManager>();
+            
+        if (boatFloater == null)
+            boatFloater = GetComponent<BoatFloater>();
+            
+        if (boatPlatform == null)
+            boatPlatform = GetComponentInChildren<BoatPlatform>();
+    }
+    
+    public void Initialize(Transform leftBoundaryTransform, Transform rightBoundaryTransform)
+    {
+        // Initialize all boat systems
+        boatFloater.Initialize();
         crewManager.Initialize(boatPlatform, integrityManager);
+        integrityManager.Initialize();
         lifecycleManager.Initialize(this);
         
-        boatFloater.InitializeBoundaries(_leftBoundary, _rightBoundary);
-        
-        isInitialized = true;
-        
-        if (gameObject.activeInHierarchy)
+        // Set up boundaries
+        if (leftBoundaryTransform != null && rightBoundaryTransform != null)
         {
-            StartCrewInitialization();
+            boatFloater.InitializeBoundaries(leftBoundaryTransform, rightBoundaryTransform);
+            
+            leftBoundary = leftBoundaryTransform.GetComponent<BoatBoundaryTrigger>();
+            rightBoundary = rightBoundaryTransform.GetComponent<BoatBoundaryTrigger>();
         }
+        
+        // ¡¡¡AQUÍ ESTABA EL PROBLEMA!!! - FALTABA ESTA LÍNEA
+        StartCrewInitialization();
     }
     
-    void OnEnable()
+    public void StartCrewInitialization()
     {
-        boatFloater.Initialize();
-        
-        if (isInitialized)
-        {
-            StartCrewInitialization();
-        }
-    }
-    
-    private void StartCrewInitialization()
-    {
-        if (leftBoundary == null || rightBoundary == null)
-        {
-            Debug.LogError($"BoatController {gameObject.name}: Cannot start crew - boundaries not set! Call Initialize() first.");
-            return;
-        }
-        
         crewManager.StartCrewInitialization();
     }
     
-    public void ResetForPooling()
+    public void ResetBoat()
     {
         integrityManager.Reset();
         crewManager.Reset();
         lifecycleManager.Reset();
-        isInitialized = false;
+    }
+    
+    public void DestroyBoat()
+    {
+        lifecycleManager.DestroyBoat();
     }
     
     public float GetCurrentIntegrity() => integrityManager.CurrentIntegrity;
     public float GetMaxIntegrity() => integrityManager.MaxIntegrity;
-    public System.Collections.Generic.List<Fisherman> GetAllCrewMembers() => crewManager.GetAllCrewMembers();
+    
+    public System.Collections.Generic.List<Enemy> GetAllCrewMembers()
+    {
+        var boatCrew = crewManager.GetAllCrewMembers();
+        var enemyCrew = new System.Collections.Generic.List<Enemy>();
+        foreach (var crew in boatCrew)
+        {
+            enemyCrew.Add((Enemy)crew);
+        }
+        return enemyCrew;
+    }
+    
     public bool IsDestroyed() => integrityManager.IsDestroyed;
     
     internal BoatFloater BoatFloater => boatFloater;

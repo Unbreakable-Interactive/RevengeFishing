@@ -1,9 +1,4 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-
-using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -24,7 +19,6 @@ public class BoatIntegrityManager : MonoBehaviour
     
     public void Initialize()
     {
-        // Get crew manager from same GameObject
         crewManager = GetComponent<BoatCrewManager>();
         if (crewManager == null)
         {
@@ -39,9 +33,9 @@ public class BoatIntegrityManager : MonoBehaviour
         float totalCrewPower = 0f;
         int activeCrewCount = 0;
         
-        List<Fisherman> allCrewMembers = crewManager.GetAllCrewMembers();
+        List<BoatLandEnemy> allCrewMembers = crewManager.GetAllCrewMembers();
         
-        foreach (Fisherman crew in allCrewMembers)
+        foreach (BoatLandEnemy crew in allCrewMembers)
         {
             if (IsCrewMemberActive(crew))
             {
@@ -56,7 +50,7 @@ public class BoatIntegrityManager : MonoBehaviour
         OnIntegrityChanged?.Invoke(currentIntegrity, maxIntegrity);
     }
     
-    private bool IsCrewMemberActive(Fisherman crew)
+    private bool IsCrewMemberActive(BoatLandEnemy crew)
     {
         return crew != null && 
                crew.ParentContainer != null && 
@@ -84,7 +78,6 @@ public class BoatIntegrityManager : MonoBehaviour
         
         isBoatDestroyed = true;
         
-        // Get lifecycle manager and trigger destruction
         BoatLifecycleManager lifecycleManager = GetComponent<BoatLifecycleManager>();
         if (lifecycleManager != null)
         {

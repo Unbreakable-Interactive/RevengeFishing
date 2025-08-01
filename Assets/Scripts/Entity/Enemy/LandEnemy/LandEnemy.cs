@@ -324,7 +324,7 @@ public class LandEnemy : Enemy, IBoatComponent
             elapsedTime += Time.deltaTime;
             float progress = elapsedTime / pullDuration;
             float currentForceMultiplier = Mathf.Lerp(1f, 0.1f, progress * progress);
-            Vector2 frameForce = pullDirection * pullStrength * currentForceMultiplier;
+            Vector2 frameForce = pullDirection * (pullStrength * currentForceMultiplier);
             playerRb.AddForce(frameForce, ForceMode2D.Force);
             yield return null;
         }

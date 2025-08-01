@@ -18,11 +18,10 @@ public class BoatLifecycleManager : MonoBehaviour
     
     public void DestroyBoat()
     {
-        // Unsubscribe from all crew events
         if (crewManager != null)
         {
             var allCrewMembers = crewManager.GetAllCrewMembers();
-            foreach (Fisherman crew in allCrewMembers)
+            foreach (BoatLandEnemy crew in allCrewMembers)
             {
                 if (crew != null)
                 {
@@ -59,4 +58,3 @@ public class BoatLifecycleManager : MonoBehaviour
         // This method is called when the boat is reset for pooling
     }
 }
-

@@ -6,10 +6,10 @@ using Random = UnityEngine.Random;
 
 public class BoatCrewManager : MonoBehaviour, IBoatComponent
 {
-    [Header("Boat Identity - ASSIGN IN EDITOR")]
+    [Header("Boat Identity")]
     [SerializeField] private BoatID boatID = new BoatID();
     
-    [Header("Required References - ASSIGN IN EDITOR")]
+    [Header("Required References")]
     [SerializeField] private BoatPlatform boatPlatform;
     [SerializeField] private BoatBoundaryTrigger leftBoundary;
     [SerializeField] private BoatBoundaryTrigger rightBoundary;
@@ -21,7 +21,7 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
     [SerializeField] private int maxInactiveCrewMembers = 1;
     
     [Space]
-    [SerializeField] private List<Fisherman> allCrewMembers = new List<Fisherman>();
+    [SerializeField] private List<BoatLandEnemy> allCrewMembers = new List<BoatLandEnemy>();
     
     private BoatIntegrityManager integrityManager;
     private BoatFloater boatFloater;
@@ -110,28 +110,28 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
         Vector3 platformPosition = boatPlatform.transform.position;
         platformPosition.y += 0.5f;
         
-        List<Fisherman> newCrewMembers = new List<Fisherman>();
+        List<BoatLandEnemy> newCrewMembers = new List<BoatLandEnemy>();
         
         for (int i = 0; i < maxCrewMembers; i++)
         {
             Vector3 spawnPosition = platformPosition + new Vector3(i * 0.8f - 0.4f, 0, 0);
-            Fisherman fisherman = InstantiateCrewMember(spawnPosition, i);
+            BoatLandEnemy boatFisherman = InstantiateCrewMember(spawnPosition, i);
             
-            if (fisherman != null)
+            if (boatFisherman != null)
             {
-                newCrewMembers.Add(fisherman);
+                newCrewMembers.Add(boatFisherman);
             }
         }
         
         yield return new WaitForEndOfFrame();
         
-        foreach (Fisherman fisherman in newCrewMembers)
+        foreach (BoatLandEnemy boatFisherman in newCrewMembers)
         {
-            ConfigureFishermanForBoatLife(fisherman);
-            boatPlatform.RegisterEnemyAtRuntime(fisherman);
-            fisherman.OnPlatformAssigned(boatPlatform);
-            SubscribeToCrewMember(fisherman);
-            allCrewMembers.Add(fisherman);
+            ConfigureFishermanForBoatLife(boatFisherman);
+            boatPlatform.RegisterEnemyAtRuntime(boatFisherman);
+            boatFisherman.OnPlatformAssigned(boatPlatform);
+            SubscribeToCrewMember(boatFisherman);
+            allCrewMembers.Add(boatFisherman);
         }
         
         yield return new WaitForEndOfFrame();
@@ -140,14 +140,19 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
         
         if (boatFloater != null)
         {
-            boatFloater.InitializeCrew(allCrewMembers);
+            List<Enemy> enemyCrew = new List<Enemy>();
+            foreach (BoatLandEnemy crew in allCrewMembers)
+            {
+                enemyCrew.Add(crew);
+            }
+            boatFloater.InitializeCrew(enemyCrew);
         }
         
         RandomlyDeactivateCrewMembers();
         integrityManager.CalculateBoatIntegrity();
     }
     
-    private Fisherman InstantiateCrewMember(Vector3 spawnPosition, int index)
+    private BoatLandEnemy InstantiateCrewMember(Vector3 spawnPosition, int index)
     {
         if (boatFishermanPrefab == null)
         {
@@ -158,39 +163,39 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
         GameObject crewHandlerObj = Instantiate(boatFishermanPrefab, spawnPosition, Quaternion.identity);
         crewHandlerObj.transform.SetParent(transform);
         
-        Fisherman fisherman = crewHandlerObj.GetComponentInChildren<Fisherman>();
-        if (fisherman != null)
+        BoatLandEnemy boatFisherman = crewHandlerObj.GetComponentInChildren<BoatLandEnemy>();
+        if (boatFisherman != null)
         {
-            fisherman.SetBoatID(boatID);
+            boatFisherman.SetBoatID(boatID);
             
             if (PowerLevelScaler.Instance != null)
             {
                 int powerLevel = PowerLevelScaler.Instance.CalculateEnemyPowerLevel();
-                fisherman.SetPowerLevel(powerLevel);
+                boatFisherman.SetPowerLevel(powerLevel);
             }
             
-            Rigidbody2D fishermanRb = fisherman.GetComponent<Rigidbody2D>();
+            Rigidbody2D fishermanRb = boatFisherman.GetComponent<Rigidbody2D>();
             if (fishermanRb != null)
             {
                 fishermanRb.velocity = Vector2.zero;
                 fishermanRb.angularVelocity = 0f;
             }
             
-            return fisherman;
+            return boatFisherman;
         }
         else
         {
-            Debug.LogError($"Instantiated BoatFishermanHandler doesn't contain Fisherman component!");
+            Debug.LogError($"Instantiated BoatFishermanHandler doesn't contain BoatLandEnemy component!");
             Destroy(crewHandlerObj);
             return null;
         }
     }
     
-    private void ConfigureFishermanForBoatLife(Fisherman fisherman)
+    private void ConfigureFishermanForBoatLife(BoatLandEnemy boatFisherman)
     {
-        fisherman.isOnBoat = true;
-    
-        Rigidbody2D fishermanRb = fisherman.GetComponent<Rigidbody2D>();
+        boatFisherman.isOnBoat = true;
+        
+        Rigidbody2D fishermanRb = boatFisherman.GetComponent<Rigidbody2D>();
         if (fishermanRb != null)
         {
             fishermanRb.mass = 0.8f;
@@ -204,13 +209,13 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
         }
     }
     
-    private void ConfigureCrewPhysicsIsolation(List<Fisherman> crewMembers)
+    private void ConfigureCrewPhysicsIsolation(List<BoatLandEnemy> crewMembers)
     {
         BoatCrewManager[] allBoats = FindObjectsOfType<BoatCrewManager>();
         
-        foreach (Fisherman fisherman in crewMembers)
+        foreach (BoatLandEnemy boatFisherman in crewMembers)
         {
-            Collider2D fishermanCollider = fisherman.GetComponent<Collider2D>();
+            Collider2D fishermanCollider = boatFisherman.GetComponent<Collider2D>();
             if (fishermanCollider == null) continue;
             
             foreach (BoatCrewManager otherBoat in allBoats)
@@ -226,7 +231,7 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
                         Physics2D.IgnoreCollision(fishermanCollider, otherCollider, true);
                     }
                     
-                    foreach (Fisherman otherFisherman in otherBoat.allCrewMembers)
+                    foreach (BoatLandEnemy otherFisherman in otherBoat.allCrewMembers)
                     {
                         if (otherFisherman != null)
                         {
@@ -240,9 +245,9 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
                 }
             }
             
-            foreach (Fisherman otherCrewMember in crewMembers)
+            foreach (BoatLandEnemy otherCrewMember in crewMembers)
             {
-                if (otherCrewMember != fisherman)
+                if (otherCrewMember != boatFisherman)
                 {
                     Collider2D otherCrewCollider = otherCrewMember.GetComponent<Collider2D>();
                     if (otherCrewCollider != null)
@@ -263,12 +268,12 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
         }
     }
     
-    private void SubscribeToCrewMember(Fisherman fisherman)
+    private void SubscribeToCrewMember(BoatLandEnemy boatFisherman)
     {
-        if (fisherman != null)
+        if (boatFisherman != null)
         {
-            fisherman.OnEnemyDied -= OnCrewMemberDied;
-            fisherman.OnEnemyDied += OnCrewMemberDied;
+            boatFisherman.OnEnemyDied -= OnCrewMemberDied;
+            boatFisherman.OnEnemyDied += OnCrewMemberDied;
         }
     }
     
@@ -289,7 +294,7 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
     {
         if (allCrewMembers.Count == 0) return;
         
-        foreach (Fisherman crew in allCrewMembers)
+        foreach (BoatLandEnemy crew in allCrewMembers)
         {
             if (crew != null && crew.ParentContainer != null)
                 crew.ParentContainer.SetActive(true);
@@ -299,14 +304,14 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
         
         if (inactiveCount > 0)
         {
-            List<Fisherman> availableToDeactivate = new List<Fisherman>(allCrewMembers);
+            List<BoatLandEnemy> availableToDeactivate = new List<BoatLandEnemy>(allCrewMembers);
             
             for (int i = 0; i < inactiveCount; i++)
             {
                 if (availableToDeactivate.Count > 0)
                 {
                     int randomIndex = Random.Range(0, availableToDeactivate.Count);
-                    Fisherman toDeactivate = availableToDeactivate[randomIndex];
+                    BoatLandEnemy toDeactivate = availableToDeactivate[randomIndex];
                     
                     if (toDeactivate.ParentContainer != null)
                     {
@@ -326,34 +331,34 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
         
         for (int i = 0; i < allCrewMembers.Count; i++)
         {
-            Fisherman fisherman = allCrewMembers[i];
-            if (fisherman != null)
+            BoatLandEnemy boatFisherman = allCrewMembers[i];
+            if (boatFisherman != null)
             {
-                fisherman.SetBoatID(boatID);
+                boatFisherman.SetBoatID(boatID);
                 
                 Vector3 resetPosition = platformPosition + new Vector3(i * 0.8f - 0.4f, 0, 0);
-                fisherman.transform.position = resetPosition;
+                boatFisherman.transform.position = resetPosition;
                 
-                Rigidbody2D fishermanRb = fisherman.GetComponent<Rigidbody2D>();
+                Rigidbody2D fishermanRb = boatFisherman.GetComponent<Rigidbody2D>();
                 if (fishermanRb != null)
                 {
                     fishermanRb.velocity = Vector2.zero;
                     fishermanRb.angularVelocity = 0f;
                 }
                 
-                if (fisherman.ParentContainer != null)
+                if (boatFisherman.ParentContainer != null)
                 {
-                    fisherman.ParentContainer.SetActive(true);
+                    boatFisherman.ParentContainer.SetActive(true);
                 }
                 
-                fisherman.TriggerAlive();
-                fisherman.ScheduleNextAction();
+                boatFisherman.TriggerAlive();
+                boatFisherman.ScheduleNextAction();
                 
-                ConfigureFishermanForBoatLife(fisherman);
-                SubscribeToCrewMember(fisherman);
+                ConfigureFishermanForBoatLife(boatFisherman);
+                SubscribeToCrewMember(boatFisherman);
                 
-                boatPlatform.RegisterEnemyAtRuntime(fisherman);
-                fisherman.OnPlatformAssigned(boatPlatform);
+                boatPlatform.RegisterEnemyAtRuntime(boatFisherman);
+                boatFisherman.OnPlatformAssigned(boatPlatform);
             }
         }
         
@@ -371,7 +376,7 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
     {
         int count = 0;
         
-        foreach (Fisherman crew in allCrewMembers)
+        foreach (BoatLandEnemy crew in allCrewMembers)
         {
             if (crew != null && 
                 crew.ParentContainer != null && 
@@ -384,11 +389,11 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
         return count;
     }
     
-    public List<Fisherman> GetAllCrewMembers() => new List<Fisherman>(allCrewMembers);
+    public List<BoatLandEnemy> GetAllCrewMembers() => new List<BoatLandEnemy>(allCrewMembers);
     
     public void Reset()
     {
-        foreach (Fisherman crew in allCrewMembers)
+        foreach (BoatLandEnemy crew in allCrewMembers)
         {
             if (crew != null)
             {
@@ -399,47 +404,9 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
         StartCrewInitialization();
     }
 
-    public bool LandEnemyBelongToBoat(LandEnemy enemy)
+    public bool BoatEnemyBelongToBoat(BoatLandEnemy enemy)
     {
         if (enemy == null) return false;
-        
-        if (enemy is IBoatComponent boatComponent)
-        {
-            return boatID.Matches(boatComponent.GetBoatID());
-        }
-        
-        return false;
-    }
-
-    [ContextMenu("🔄 Generate New Boat ID")]
-    public void GenerateNewBoatID()
-    {
-        boatID.GenerateNewID();
-        Debug.Log($"Generated new boat ID: {boatID}");
-        
-        if (Application.isPlaying)
-        {
-            ConfigureBoatComponentIDs();
-        }
-    }
-    
-    [ContextMenu("🔍 Debug Boat Info")]
-    public void DebugBoatInfo()
-    {
-        Debug.Log($"=== BOAT INFO ===");
-        Debug.Log($"Boat ID: {boatID}");
-        Debug.Log($"Crew Members: {allCrewMembers.Count}");
-        Debug.Log($"Platform: {boatPlatform?.name ?? "NULL"}");
-        Debug.Log($"Left Boundary: {leftBoundary?.name ?? "NULL"}");
-        Debug.Log($"Right Boundary: {rightBoundary?.name ?? "NULL"}");
-        
-        foreach (Fisherman crew in allCrewMembers)
-        {
-            if (crew != null && crew is IBoatComponent component)
-            {
-                Debug.Log($"Crew {crew.name}: ID = {component.GetBoatID()}");
-            }
-        }
+        return boatID.Matches(enemy.GetBoatID());
     }
 }
-
