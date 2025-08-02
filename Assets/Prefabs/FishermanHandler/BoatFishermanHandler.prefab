@@ -337,7 +337,7 @@ MonoBehaviour:
   minActionTime: 1
   maxActionTime: 4
   nextActionTime: 0
-  enableDebugMessages: 0
+  enableDebugMessages: 1
   bodyCollider: {fileID: 3479015762017106946}
   parentContainer: {fileID: 1963649820016990938}
   swimForce: 0

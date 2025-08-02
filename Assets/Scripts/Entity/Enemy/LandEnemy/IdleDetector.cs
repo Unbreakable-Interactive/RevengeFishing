@@ -25,17 +25,28 @@ public class IdleDetector : MonoBehaviour
 
     public bool ShouldAvoidIdle()
     {
+        bool canAvoidBasedOnTool = false;
+        bool isOnBoat = false;
+    
         if (parentEnemy is LandEnemy landEnemy)
         {
-            return !landEnemy.fishingToolEquipped;
+            canAvoidBasedOnTool = !landEnemy.fishingToolEquipped;
+            isOnBoat = landEnemy.assignedPlatform is BoatPlatform;
         }
         else if (parentEnemy is BoatLandEnemy boatEnemy)
         {
-            return !boatEnemy.fishingToolEquipped;
+            canAvoidBasedOnTool = !boatEnemy.fishingToolEquipped;
+            isOnBoat = true;
         }
-        
-        return false;
+    
+        if (isOnBoat)
+        {
+            return false; 
+        }
+    
+        return canAvoidBasedOnTool && IsOverlappingWithIdleEnemy();
     }
+
 
     public bool IsOverlappingWithIdleEnemy()
     {
