@@ -24,6 +24,6 @@ MonoBehaviour:
     maxSize: 12
   - poolName: Boat
     prefab: {fileID: 1725949659940357100, guid: 7470a1783ab812442b7d29a21bf9a296, type: 3}
-    initialSize: 3
-    maxSize: 8
+    initialSize: 5
+    maxSize: 10
   enableDebugLogs: 1
