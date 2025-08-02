@@ -9,7 +9,7 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
     [Header("Boat Specific Physics")]
     [SerializeField] private bool useKinematicBoatPhysics = true;
     [SerializeField] private float kinematicGravityForce = 9.8f;
-    [SerializeField] private LayerMask groundCheckLayers = -1;
+    [SerializeField] private LayerMask groundCheckLayers = (1 << 5);
     [SerializeField] private float groundCheckDistance = 0.3f;
     
     [Header("Gravity Transitions")]
@@ -19,9 +19,12 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
     
     [Header("Collision Safety")]
     [SerializeField] private float maxMoveDistance = 0.05f;
-    [SerializeField] private LayerMask platformLayers = 1 << 5;
+    [SerializeField] private LayerMask platformLayers = (1 << 5);
     [SerializeField] private float collisionSafetyMargin = 0.1f;
-    [SerializeField] private float platformStickDistance = 0.05f;
+    [SerializeField] private float platformStickDistance = 0.2f;
+    
+    [Header("Boat Fishing Configuration")]
+    [SerializeField] protected FishermanConfig fishermanConfig;
     
     private Vector2 simulatedVelocity;
     private bool isGrounded;
@@ -32,6 +35,7 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
     private bool isStuckToPlatform = false;
     
     private Vector3 lastPlatformPosition;
+    private Vector3 lastValidPlatformPosition;
     private float relativeYOffsetToPlatform = 0f;
     private bool trackingPlatformMovement = false;
     
@@ -45,6 +49,15 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
         
         currentGravityScale = isAboveWater ? kinematicAirGravity : kinematicUnderwaterGravity;
         targetGravityScale = currentGravityScale;
+        
+        if (fishermanConfig == null)
+        {
+            fishermanConfig = Resources.Load<FishermanConfig>("FishermanConfig");
+            if (fishermanConfig == null)
+            {
+                Debug.LogWarning($"BoatLandEnemy {gameObject.name}: No FishermanConfig found! Fishing behavior will not work.");
+            }
+        }
     }
 
     private void SetupBoatPhysics()
@@ -65,7 +78,7 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
             Invoke(nameof(ForceInitialGroundCheck), 0.2f);
             
             if (enableDebugMessages)
-                Debug.Log($"BoatLandEnemy {gameObject.name}: Set to Kinematic with Continuous collision detection");
+                Debug.Log($"BoatLandEnemy {gameObject.name}: Physics setup - Kinematic with mass {boatCrewMass}");
         }
     }
     
@@ -96,6 +109,44 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
         }
     }
 
+    protected override void Update()
+    {
+        base.Update();
+
+        if (hasThrownHook) HandleActiveHook();
+    }
+
+    private void HandleActiveHook()
+    {
+        if (!hasThrownHook) return;
+
+        hookTimer += Time.deltaTime;
+
+        if (hookSpawner.CurrentHook != null &&
+            hookTimer >= hookDuration &&
+            !hookSpawner.CurrentHook.isBeingHeld)
+        {
+            if (hookSpawner.HasActiveHook())
+            {
+                float retractionSpeed = 2f;
+                hookSpawner.RetractHook(retractionSpeed * Time.deltaTime);
+            }
+        }
+
+        if (!hookSpawner.HasActiveHook())
+        {
+            CleanupHookSubscription();
+
+            hasThrownHook = false;
+            hookTimer = 0f;
+
+            if (fishermanConfig != null && Random.value < fishermanConfig.unequipToolChance)
+            {
+                TryUnequipFishingTool();
+            }
+        }
+    }
+
     private void FixedUpdate()
     {
         if (rb == null) return;
@@ -114,6 +165,16 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
         UpdatePlatformTracking();
         CheckPlatformSticking();
         CheckGroundStatus();
+        
+        if (!platformBoundsCalculated && assignedPlatform != null)
+        {
+            CalculatePlatformBounds();
+        }
+
+        if ((isGrounded || isStuckToPlatform) && Time.time >= nextActionTime)
+        {
+            MakeAIDecision();
+        }
 
         if (!isGrounded && !isStuckToPlatform)
         {
@@ -136,6 +197,90 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
             ApplyHorizontalMovement();
             CheckPlatformBounds();
             ApplySafeKinematicMovement();
+        }
+    }
+
+    protected override void MakeAIDecision()
+    {
+        if (_state == EnemyState.Defeated) return;
+
+        if (fishermanConfig == null)
+        {
+            base.MakeAIDecision();
+            return;
+        }
+
+        if (_landMovementState == LandMovementState.Idle && !hasThrownHook)
+        {
+            if (!fishingToolEquipped)
+            {
+                if (Random.value < fishermanConfig.equipToolChance)
+                {
+                    ScheduleNextAction();
+                    TryEquipFishingTool();
+                    if (enableDebugMessages)
+                        Debug.Log($"BoatLandEnemy {gameObject.name}: Equipped fishing tool");
+                    return;
+                }
+            }
+            else
+            {
+                float random = Random.value;
+                if (random < fishermanConfig.hookThrowChance)
+                {
+                    if (hookSpawner?.CanThrowHook() == true)
+                    {
+                        hookSpawner.ThrowHook();
+                        hasThrownHook = true;
+                        hookTimer = 0f;
+
+                        SubscribeToHookEvents();
+                        
+                        if (enableDebugMessages)
+                            Debug.Log($"BoatLandEnemy {gameObject.name}: Threw fishing hook!");
+                    }
+                }
+                else if (random < (fishermanConfig.hookThrowChance + fishermanConfig.unequipToolChance))
+                {
+                    ScheduleNextAction();
+                    TryUnequipFishingTool();
+                    if (enableDebugMessages)
+                        Debug.Log($"BoatLandEnemy {gameObject.name}: Unequipped fishing tool");
+                    return;
+                }
+            }
+            ScheduleNextAction();
+            return;
+        }
+
+        base.MakeAIDecision();
+    }
+
+    private void SubscribeToHookEvents()
+    {
+        CleanupHookSubscription();
+
+        if (hookSpawner.CurrentHook is FishingProjectile fishingHook)
+        {
+            subscribedHook = fishingHook;
+            fishingHook.OnPlayerInteraction += OnHookPlayerInteraction;
+        }
+    }
+
+    protected override void CleanupFishingTools()
+    {
+        base.CleanupFishingTools();
+
+        if (hookSpawner != null && hookSpawner.HasActiveHook())
+        {
+            CleanupHookSubscription();
+
+            hookSpawner.OnHookDestroyed();
+
+            hasThrownHook = false;
+            hookTimer = 0f;
+
+            Debug.Log($"BoatLandEnemy {gameObject.name} - Hook handler destroyed due to defeat");
         }
     }
 
@@ -175,15 +320,35 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
         isGrounded = true;
         simulatedVelocity.y = 0;
         trackingPlatformMovement = true;
-        
+
         Vector3 platformSurface = platformCollider.bounds.max;
-        relativeYOffsetToPlatform = 0.02f;
-        lastPlatformPosition = platformSurface;
+    
+        if (BodyCollider != null)
+        {
+            float enemyHeight = BodyCollider.bounds.size.y;
+            relativeYOffsetToPlatform = -(enemyHeight / 2f) + 0.25f;
         
+            if (enableDebugMessages)
+            {
+                Debug.Log($"BoatLandEnemy {gameObject.name}: Calculated dynamic offset using BodyCollider. Enemy height: {enemyHeight}, Offset: {relativeYOffsetToPlatform}");
+            }
+        }
+        else
+        {
+            relativeYOffsetToPlatform = -0.15f;
+        
+            if (enableDebugMessages)
+            {
+                Debug.LogWarning($"BoatLandEnemy {gameObject.name}: BodyCollider not assigned, using fallback offset: {relativeYOffsetToPlatform}");
+            }
+        }
+
+        lastPlatformPosition = platformSurface;
+
         Vector3 adjustedPosition = transform.position;
         adjustedPosition.y = platformSurface.y + relativeYOffsetToPlatform;
         transform.position = adjustedPosition;
-        
+
         if (enableDebugMessages)
         {
             Debug.Log($"BoatLandEnemy {gameObject.name}: Started tracking platform movement. Y offset: {relativeYOffsetToPlatform}");
@@ -258,7 +423,7 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
 
         if (enableDebugMessages && wasGrounded != isGrounded)
         {
-            Debug.Log($"BoatLandEnemy {gameObject.name}: Ground status changed to {isGrounded}");
+            Debug.Log($"BoatLandEnemy {gameObject.name}: Ground status changed to {isGrounded}, hit: {hit.collider?.name}");
         }
     }
 
@@ -497,7 +662,7 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
             }
         }
         
-        if (aboveWater && wasKinematicBeforeFall && rb.bodyType == RigidbodyType2D.Dynamic)
+        if (aboveWater && wasKinematicBeforeFall && rb.bodyType == RigidbodyType2D.Dynamic && _state == EnemyState.Alive)
         {
             StartCoroutine(DelayedKinematicReturn());
         }
@@ -515,8 +680,6 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
             rb.velocity = simulatedVelocity;
             rb.mass = boatCrewMass;
             rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
-            
-            SetMovementMode(false);
             
             if (enableDebugMessages)
                 Debug.Log($"BoatLandEnemy {gameObject.name}: Switched to Dynamic physics");
@@ -541,7 +704,7 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
     {
         yield return new WaitForSeconds(0.5f);
         
-        if (assignedPlatform is BoatPlatform)
+        if (assignedPlatform is BoatPlatform && _state == EnemyState.Alive)
         {
             SwitchToKinematicPhysics();
         }
@@ -580,5 +743,41 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
                 SwitchToDynamicPhysics();
             }
         }
+    }
+
+    public override void Initialize()
+    {
+        base.Initialize();
+        
+        SetupBoatPhysics();
+        
+        simulatedVelocity = Vector2.zero;
+        wasKinematicBeforeFall = true;
+        isStuckToPlatform = false;
+        trackingPlatformMovement = false;
+        lastValidPlatformPosition = Vector3.zero;
+        
+        if (enableDebugMessages)
+            Debug.Log($"BoatLandEnemy {gameObject.name}: Initialize() - Reset to Kinematic physics and cleared tracking state");
+    }
+
+    protected override void TriggerDefeat()
+    {
+        SwitchToDynamicPhysics();
+        
+        base.TriggerDefeat();
+        
+        if (enableDebugMessages)
+            Debug.Log($"BoatLandEnemy {gameObject.name}: Switched to Dynamic physics on defeat - will fall to water");
+    }
+
+    protected override void StartDefeatBehaviors()
+    {
+        base.StartDefeatBehaviors();
+        
+        StopTrackingPlatformMovement();
+        
+        if (enableDebugMessages)
+            Debug.Log($"BoatLandEnemy {gameObject.name}: Defeat behaviors started - ready to fall");
     }
 }

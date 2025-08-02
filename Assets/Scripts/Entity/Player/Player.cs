@@ -381,8 +381,9 @@ public class Player : Entity
                     float hookMaxDistanceSqr = hook.maxDistance * hook.maxDistance;
 
                     // Player is pulling against this fishing line!
-                    Fisherman fisherman = hook.spawner?.GetComponent<Fisherman>();
-
+                    // Fisherman fisherman = hook.spawner?.GetComponent<Fisherman>();
+                    Enemy enemy = hook.spawner?.GetComponent<Enemy>();
+                    
                     // If player is at or near max distance, try extending the fishing line
                     if (currentDistanceSqr >= hookMaxDistanceSqr * (0.99f * 0.99f)) // At 99% or more of max distance
                     {
@@ -392,12 +393,17 @@ public class Player : Entity
                     // If player is at or near max distance, deal fatigue damage
                     if (currentDistanceSqr >= hookMaxDistanceSqr * (0.9f * 0.9f)) // 90% of max distance
                     {
-                        if (fisherman != null)
-                        {
-                            fisherman.TakeFatigue(PowerLevel);
-                            DebugLog($"Player pulls against {fisherman.name}'s fishing line - fisherman suffers fatigue!");
-                        }
+                        // if (fisherman != null)
+                        // {
+                        //     fisherman.TakeFatigue(PowerLevel);
+                        //     DebugLog($"Player pulls against {fisherman.name}'s fishing line - fisherman suffers fatigue!");
+                        // }
 
+                        if (enemy != null)
+                        {
+                            enemy.TakeFatigue(PowerLevel);
+                            DebugLog($"Player pulls against {enemy.name}'s fishing line - enemy suffers fatigue!");
+                        }
                     }
 
                 }

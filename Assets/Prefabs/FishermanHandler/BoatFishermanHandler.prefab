@@ -380,6 +380,7 @@ MonoBehaviour:
     m_Bits: 64
   collisionSafetyMargin: 0.05
   platformStickDistance: 0.15
+  fishermanConfig: {fileID: 11400000, guid: 876c88f03b9414e67960bdc874e7d116, type: 2}
   boatCrewMass: 0.5
 --- !u!114 &4143942327312340731
 MonoBehaviour:
