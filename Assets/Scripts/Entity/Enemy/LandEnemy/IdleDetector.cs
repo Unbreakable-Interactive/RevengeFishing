@@ -4,13 +4,12 @@ using UnityEngine;
 
 public class IdleDetector : MonoBehaviour
 {
-    private LandEnemy parentEnemy;
+    private Enemy parentEnemy;
     private Collider2D detectorCollider;
 
     private void Awake()
     {
-        // Get the parent enemy components
-        parentEnemy = GetComponentInParent<LandEnemy>();
+        parentEnemy = GetComponentInParent<Enemy>();
         detectorCollider = GetComponent<Collider2D>();
 
         if (parentEnemy == null)
@@ -24,33 +23,35 @@ public class IdleDetector : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Check if this enemy should avoid going idle due to overlapping with other idle enemies.
-    /// Only non-fishing enemies will be prevented from going idle.
-    /// </summary>
-    /// <returns>True if this enemy should NOT go idle due to overlaps</returns>
     public bool ShouldAvoidIdle()
     {
-        // If this enemy is fishing, they have priority and should not be moved
-        if (parentEnemy != null && parentEnemy.fishingToolEquipped)
+        bool canAvoidBasedOnTool = false;
+        bool isOnBoat = false;
+    
+        if (parentEnemy is LandEnemy landEnemy)
         {
-            return false;
+            canAvoidBasedOnTool = !landEnemy.fishingToolEquipped;
+            isOnBoat = landEnemy.assignedPlatform is BoatPlatform;
         }
-
-        // Check for overlaps with other idle enemies
-        return IsOverlappingWithIdleEnemy();
+        else if (parentEnemy is BoatLandEnemy boatEnemy)
+        {
+            canAvoidBasedOnTool = !boatEnemy.fishingToolEquipped;
+            isOnBoat = true;
+        }
+    
+        if (isOnBoat)
+        {
+            return false; 
+        }
+    
+        return canAvoidBasedOnTool && IsOverlappingWithIdleEnemy();
     }
 
-    /// <summary>
-    /// Perform an immediate overlap check to see if we're overlapping with any idle enemies.
-    /// This is called on-demand rather than every frame.
-    /// </summary>
-    /// <returns>True if overlapping with at least one idle enemy</returns>
+
     public bool IsOverlappingWithIdleEnemy()
     {
         if (detectorCollider == null) return false;
 
-        // Get all overlapping colliders in the IdleDetector layer
         ContactFilter2D filter = new ContactFilter2D();
         filter.SetLayerMask(1 << LayerMask.NameToLayer("IdleDetector"));
         filter.useTriggers = true;
@@ -60,13 +61,11 @@ public class IdleDetector : MonoBehaviour
 
         foreach (Collider2D overlappingCollider in overlappingColliders)
         {
-            // Skip if it's our own collider
             if (overlappingCollider == detectorCollider) continue;
 
             IdleDetector otherDetector = overlappingCollider.GetComponent<IdleDetector>();
             if (otherDetector != null && otherDetector.parentEnemy != null)
             {
-                // Check if the other enemy is idle and alive
                 if (IsEnemyIdle(otherDetector.parentEnemy))
                 {
                     Debug.Log($"{parentEnemy.name} found overlap with idle enemy {otherDetector.parentEnemy.name}");
@@ -78,10 +77,6 @@ public class IdleDetector : MonoBehaviour
         return false;
     }
 
-    /// <summary>
-    /// Get count of overlapping idle enemies for debugging purposes
-    /// </summary>
-    /// <returns>Number of overlapping idle enemies</returns>
     public int GetOverlappingIdleEnemyCount()
     {
         if (detectorCollider == null) return 0;
@@ -108,18 +103,26 @@ public class IdleDetector : MonoBehaviour
         return count;
     }
 
-    private bool IsEnemyIdle(LandEnemy landEnemy)
+    private bool IsEnemyIdle(Enemy enemy)
     {
-        if (landEnemy == null) return false;
-        if (landEnemy.GetState() != Enemy.EnemyState.Alive) return false;
+        if (enemy == null) return false;
+        if (enemy.GetState() != Enemy.EnemyState.Alive) return false;
 
-        return landEnemy.MovementStateLand == LandEnemy.LandMovementState.Idle;
+        // CAMBIO: Manejar ambos tipos de enemigos
+        if (enemy is LandEnemy landEnemy)
+        {
+            return landEnemy.MovementStateLand == LandEnemy.LandMovementState.Idle;
+        }
+        else if (enemy is BoatLandEnemy boatEnemy)
+        {
+            return boatEnemy.MovementStateLand == BoatLandEnemy.LandMovementState.Idle;
+        }
+
+        return false;
     }
 
-    // Optional: Visual debugging in Scene view
     private void OnDrawGizmosSelected()
     {
-        // Draw the detection area
         Gizmos.color = Color.yellow;
 
         CircleCollider2D circleCollider = GetComponent<CircleCollider2D>();

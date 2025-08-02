@@ -1,5 +1,12 @@
 using UnityEngine;
 
+public enum SpawnHandlerType
+{
+    PerPoint,
+    Zone
+}
+
+
 [CreateAssetMenu(fileName = "New Spawn Config", menuName = "Fishing Game/Spawn Config")]
 public class SpawnHandlerConfig : ScriptableObject
 {
@@ -10,6 +17,10 @@ public class SpawnHandlerConfig : ScriptableObject
     [Header("Basic Settings")]
     [Tooltip("What pool to use (must match a pool name in PoolingConfig)")]
     public string poolName = "LandFisherman";
+    
+    [Header("Spawn Handler Type")]
+    [Tooltip("For PerPoint type you can have multiple SpawnPoints /nFor Zone type you MUST HAVE ONLY 2 SPAWNPOINTS TO MAKE A SPAWN ZONE")]
+    public SpawnHandlerType spawnHandlerType;
     
     [Tooltip("What type of enemy this is")]
     public EnemyType enemyType = EnemyType.LandFisherman;
@@ -59,14 +70,13 @@ public class SpawnHandlerConfig : ScriptableObject
     [Space(10)]
     [Header("Debug")]
     public bool showLogs = true;
-    public bool showGizmos = true;
     public Color gizmoColor = Color.cyan;
 
     public enum SpawnType
     {
-        Continuous,    // Keep spawning to maintain count
-        Cycles,        // Spawn in cycles with breaks (good for boats)
-        OneTime        // Spawn once and stop
+        Continuous, 
+        Cycles, 
+        OneTime
     }
     
     public enum EnemyType
@@ -76,19 +86,14 @@ public class SpawnHandlerConfig : ScriptableObject
         Boat
     }
 
-    /// <summary>
-    /// FIXED: GetSpawnInterval que respeta valores pequeños y no añade delay aleatorio innecesario
-    /// </summary>
     public float GetSpawnInterval()
     {
-        // FIXED: Para valores muy pequeños (spawn inmediato), no añadir randomness
         if (spawnEveryXSeconds <= 0.1f)
         {
-            return Mathf.Max(0f, spawnEveryXSeconds); // Ensure no negative values
+            return Mathf.Max(0f, spawnEveryXSeconds);
         }
-    
-        // FIXED: Para valores normales, añadir menos randomness
-        float randomVariation = Mathf.Min(spawnEveryXSeconds * 0.2f, 0.5f); // Max 20% variation or 0.5s
+
+        float randomVariation = Mathf.Min(spawnEveryXSeconds * 0.2f, 0.5f);
         return spawnEveryXSeconds + Random.Range(-randomVariation, randomVariation);
     }
 
@@ -106,12 +111,11 @@ public class SpawnHandlerConfig : ScriptableObject
         return distance >= dontSpawnCloserThan && distance <= dontSpawnFartherThan;
     }
 
-    // Quick setup buttons - CORREGIDOS CON NOMBRES DE POOLS CORRECTOS
     [ContextMenu("Setup for Land Fisherman")]
     private void SetupLandFisherman()
     {
         configName = "Land Fisherman Spawner";
-        poolName = "LandFisherman";  // CORREGIDO: era "Fisherman"
+        poolName = "LandFisherman"; 
         enemyType = EnemyType.LandFisherman;
         spawnType = SpawnType.Continuous;
         spawnEveryXSeconds = 4f;
@@ -125,7 +129,7 @@ public class SpawnHandlerConfig : ScriptableObject
     private void SetupBoatFisherman()
     {
         configName = "Boat Fisherman Spawner";
-        poolName = "BoatFisherman";  // CORREGIDO: era "Fisherman"
+        poolName = "BoatFisherman"; 
         enemyType = EnemyType.BoatFisherman;
         spawnType = SpawnType.OneTime;
         spawnEveryXSeconds = 0.1f;
@@ -142,10 +146,10 @@ public class SpawnHandlerConfig : ScriptableObject
         configName = "Boat Spawner";
         poolName = "Boat";
         enemyType = EnemyType.Boat;
-        spawnType = SpawnType.OneTime;     // FIXED: Solo aparece una vez
-        spawnEveryXSeconds = 5f;           // Delay inicial
-        keepActiveAtOnce = 2;              // Máximo 2 botes activos
-        needsUnlock = false;               // Sin unlock para testing
+        spawnType = SpawnType.OneTime;
+        spawnEveryXSeconds = 5f;
+        keepActiveAtOnce = 2;
+        needsUnlock = false;
         dontSpawnCloserThan = 20f;
         dontSpawnFartherThan = 60f;
         showLogs = true;
@@ -159,9 +163,9 @@ public class SpawnHandlerConfig : ScriptableObject
         configName = "TESTING - Continuous Respawn";
         poolName = "LandFisherman";
         enemyType = EnemyType.LandFisherman;
-        spawnType = SpawnType.Continuous;    // FIXED: Cambiado de OneTime a Continuous
-        spawnEveryXSeconds = 8f;             // FIXED: Respawn cada 8 segundos después de morir
-        keepActiveAtOnce = 1;                // Solo 1 enemigo activo a la vez
+        spawnType = SpawnType.Continuous; 
+        spawnEveryXSeconds = 8f; 
+        keepActiveAtOnce = 1; 
         needsUnlock = false;
         dontSpawnCloserThan = 15f;
         dontSpawnFartherThan = 25f;

@@ -9,6 +9,7 @@ TagManager:
   - FishingRod
   - DropTool
   - WaterSurface
+  - Bound
   layers:
   - Default
   - TransparentFX
@@ -23,8 +24,6 @@ TagManager:
   - BoatEnemy
   - WaterKeeper
   - WaterLine
-  - 
-  - 
   - 
   - 
   - 

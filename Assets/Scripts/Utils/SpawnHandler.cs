@@ -5,7 +5,7 @@ public class SpawnHandler : MonoBehaviour
 {
     [Header("Configuration")]
     [SerializeField] private SpawnHandlerConfig spawnConfig;
-    
+
     [Header("Spawn Points")]
     [SerializeField] private Transform[] spawnPoints;
 
@@ -14,16 +14,13 @@ public class SpawnHandler : MonoBehaviour
     [SerializeField] private int currentActive = 0;
     [SerializeField] private bool isActive = true;
 
-    // Private variables
     private float nextSpawnTime;
     private int spawnedThisCycle = 0;
     private bool inCooldown = false;
     private float cooldownEndTime;
-    
-    // FIXED: Track if OneTime spawning already completed
+
     private bool oneTimeCompleted = false;
 
-    // Public property to access config from other scripts
     public SpawnHandlerConfig config => spawnConfig;
 
     void Start()
@@ -34,30 +31,27 @@ public class SpawnHandler : MonoBehaviour
     void Update()
     {
         if (!isActive || spawnConfig == null) return;
-    
+
         CheckUnlockStatus();
 
         if (!isUnlocked) return;
 
         HandleSpawning();
-    
-        // Debug keys para testing
-        if (Input.GetKeyDown(KeyCode.F)) 
-        {
-            Debug.Log($"Manual spawn triggered for {spawnConfig.configName}!");
-            SpawnOne();
-        }
-    
-        if (Input.GetKeyDown(KeyCode.G)) LogStats();
 
-        // NUEVAS TECLAS PARA TESTING
-        if (Input.GetKeyDown(KeyCode.R)) ResetAllEnemiesOfThisType();
-        if (Input.GetKeyDown(KeyCode.T)) TestEnemyDefeatOfThisType();
+        // // Debug keys para testing
+        // if (Input.GetKeyDown(KeyCode.F))
+        // {
+        //     Debug.Log($"🎮 Manual spawn triggered for {spawnConfig.configName}!");
+        //     SpawnOne();
+        // }
+        //
+        // if (Input.GetKeyDown(KeyCode.G)) LogStats();
+        //
+        // // NUEVAS TECLAS PARA TESTING
+        // if (Input.GetKeyDown(KeyCode.R)) ResetAllEnemiesOfThisType();
+        // if (Input.GetKeyDown(KeyCode.T)) TestEnemyDefeatOfThisType();
     }
 
-    /// <summary>
-    /// PUBLIC: Initialize method for GameBootstrap
-    /// </summary>
     public void Initialize()
     {
         if (spawnConfig == null)
@@ -88,11 +82,11 @@ public class SpawnHandler : MonoBehaviour
             case SpawnHandlerConfig.SpawnType.Continuous:
                 HandleContinuousSpawning();
                 break;
-                
+
             case SpawnHandlerConfig.SpawnType.Cycles:
                 HandleCycleSpawning();
                 break;
-                
+
             case SpawnHandlerConfig.SpawnType.OneTime:
                 HandleOneTimeSpawning();
                 break;
@@ -115,21 +109,19 @@ public class SpawnHandler : MonoBehaviour
 
     void HandleCycleSpawning()
     {
-        // Handle cooldown period
         if (inCooldown)
         {
             if (Time.time >= cooldownEndTime)
             {
                 inCooldown = false;
                 spawnedThisCycle = 0;
-                
+
                 if (spawnConfig.showLogs)
                     Debug.Log($"{spawnConfig.configName}: Cooldown ended, starting new cycle");
             }
             return;
         }
 
-        // Normal spawning in cycle
         if (Time.time >= nextSpawnTime)
         {
             if (spawnedThisCycle < spawnConfig.spawnThisManyPerCycle)
@@ -139,7 +131,6 @@ public class SpawnHandler : MonoBehaviour
                     spawnedThisCycle++;
                     ScheduleNextSpawn();
 
-                    // Check if cycle complete
                     if (spawnedThisCycle >= spawnConfig.spawnThisManyPerCycle)
                     {
                         StartCooldown();
@@ -149,24 +140,20 @@ public class SpawnHandler : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// FIXED: OneTime spawning that doesn't prevent respawning when enemies die
-    /// </summary>
+
     void HandleOneTimeSpawning()
     {
-        // FIXED: Only spawn initially once, but don't stop spawning when enemies die
         if (Time.time >= nextSpawnTime && !oneTimeCompleted)
         {
             if (TrySpawnEnemy())
             {
                 oneTimeCompleted = true;
-                
+
                 if (spawnConfig.showLogs)
                     Debug.Log($"{spawnConfig.configName}: Initial OneTime spawn completed");
             }
         }
-        
-        // FIXED: Allow respawning after enemies die, but maintain the limit
+
         else if (oneTimeCompleted && currentActive < spawnConfig.keepActiveAtOnce)
         {
             if (Time.time >= nextSpawnTime)
@@ -174,7 +161,7 @@ public class SpawnHandler : MonoBehaviour
                 if (TrySpawnEnemy())
                 {
                     ScheduleNextSpawn();
-                    
+
                     if (spawnConfig.showLogs)
                         Debug.Log($"{spawnConfig.configName}: OneTime respawn after enemy death");
                 }
@@ -186,7 +173,7 @@ public class SpawnHandler : MonoBehaviour
     {
         inCooldown = true;
         cooldownEndTime = Time.time + spawnConfig.waitBetweenCycles;
-        
+
         if (spawnConfig.showLogs)
             Debug.Log($"{spawnConfig.configName}: Starting cooldown for {spawnConfig.waitBetweenCycles} seconds");
     }
@@ -213,24 +200,39 @@ public class SpawnHandler : MonoBehaviour
 
     Vector3 GetValidSpawnPosition()
     {
-        for (int i = 0; i < 10; i++) // Try 10 times
+        if (spawnConfig.spawnHandlerType == SpawnHandlerType.PerPoint)
         {
-            Vector3 pos = spawnPoints[Random.Range(0, spawnPoints.Length)].position;
-            if (spawnConfig.IsValidDistance(pos))
+            for (int i = 0; i < 10; i++)
             {
-                return pos;
+                Vector3 pos = spawnPoints[Random.Range(0, spawnPoints.Length)].position;
+                if (spawnConfig.IsValidDistance(pos))
+                {
+                    return pos;
+                }
             }
+        }
+        else
+        {
+            if (spawnPoints.Length != 2)
+            {
+                Debug.LogError("Spawn handler type Zone only supports 2 SpawnPoints");
+            }
+
+            Vector3 tempPos = spawnPoints[0].position;
+            float xPosition = Random.Range(tempPos.x, spawnPoints[1].position.x);
+            Vector3 pos = new Vector3(xPosition,tempPos.y,0);
+
+            return pos;
         }
 
         if (spawnConfig.showLogs)
             Debug.LogWarning($"{spawnConfig.configName}: Couldn't find valid spawn position");
-        
+
         return Vector3.zero;
     }
 
     void SetupEnemy(GameObject enemy, Vector3 spawnPos)
     {
-        // Set power level
         if (PowerLevelScaler.Instance != null)
         {
             Enemy enemyComp = enemy.GetComponentInChildren<Enemy>();
@@ -244,16 +246,50 @@ public class SpawnHandler : MonoBehaviour
             }
         }
 
-        // Handle platform assignment for land enemies
         if (spawnConfig.enemyType == SpawnHandlerConfig.EnemyType.LandFisherman)
         {
             StartCoroutine(AssignToPlatform(enemy, spawnPos));
         }
+
+        if (spawnConfig.enemyType == SpawnHandlerConfig.EnemyType.BoatFisherman)
+        {
+            StartCoroutine(AssignToPlatform(enemy, spawnPos));
+        }
+    
+        if (spawnConfig.enemyType == SpawnHandlerConfig.EnemyType.Boat)
+        {
+            StartCoroutine(InitializeBoatController(enemy, spawnPoints));
+        }
     }
+    
+    IEnumerator InitializeBoatController(GameObject boatObject, Transform[] spawnPoints)
+    {
+        yield return null;
+    
+        BoatController boatController = boatObject.GetComponent<BoatController>();
+        if (boatController != null)
+        {
+            Transform leftBoundary = spawnPoints[0];
+            Transform rightBoundary = spawnPoints[1];
+        
+            boatController.Initialize(leftBoundary, rightBoundary);
+        
+            if (spawnConfig.showLogs)
+            {
+                Debug.Log($"BoatController initialized for {boatObject.name} with boundaries L:{leftBoundary?.name} R:{rightBoundary?.name}");
+            }
+        }
+        else
+        {
+            Debug.LogError($"Spawned boat {boatObject.name} doesn't have BoatController component!");
+        }
+    }
+
+
 
     IEnumerator AssignToPlatform(GameObject enemy, Vector3 spawnPos)
     {
-        yield return null; // Wait one frame
+        yield return null;
 
         LandEnemy landEnemy = enemy.GetComponentInChildren<LandEnemy>();
         if (landEnemy != null)
@@ -261,7 +297,7 @@ public class SpawnHandler : MonoBehaviour
             Platform platform = FindNearestPlatform(spawnPos);
             if (platform != null)
             {
-                platform.RegisterEnemyAtRuntime(landEnemy);
+                // platform.RegisterEnemyAtRuntime(landEnemy);
             }
         }
     }
@@ -311,9 +347,6 @@ public class SpawnHandler : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Called when enemy dies - basic version for compatibility
-    /// </summary>
     public void OnEnemyDestroyed()
     {
         currentActive--;
@@ -323,9 +356,6 @@ public class SpawnHandler : MonoBehaviour
             Debug.Log($"Enemy destroyed for {spawnConfig.configName}. Active: {currentActive}");
     }
 
-    /// <summary>
-    /// FIXED: Called when enemy dies with enemy reference for better tracking
-    /// </summary>
     public void OnEnemyDestroyed(GameObject enemyObj)
     {
         currentActive--;
@@ -333,33 +363,23 @@ public class SpawnHandler : MonoBehaviour
 
         if (spawnConfig != null && spawnConfig.showLogs)
             Debug.Log($"Enemy {enemyObj.name} returned to pool for {spawnConfig.configName}. Active: {currentActive}");
-        
-        // FIXED: For OneTime spawners, schedule next spawn after enemy death
+
         if (spawnConfig.spawnType == SpawnHandlerConfig.SpawnType.OneTime && oneTimeCompleted)
         {
             ScheduleNextSpawn();
         }
     }
 
-    /// <summary>
-    /// PUBLIC: Spawn single at random point for ProgressionManager
-    /// </summary>
     public void SpawnSingleAtRandomPoint()
     {
         TrySpawnEnemy();
     }
 
-    /// <summary>
-    /// Manual spawn for testing
-    /// </summary>
     public void SpawnOne()
     {
         TrySpawnEnemy();
     }
 
-    /// <summary>
-    /// FIXED: Reset oneTime flag for testing
-    /// </summary>
     public void ResetSpawner()
     {
         oneTimeCompleted = false;
@@ -367,7 +387,7 @@ public class SpawnHandler : MonoBehaviour
         spawnedThisCycle = 0;
         inCooldown = false;
         nextSpawnTime = Time.time + 2f;
-        
+
         if (spawnConfig.showLogs)
             Debug.Log($"🔄 {spawnConfig.configName} spawner reset");
     }
@@ -378,15 +398,12 @@ public class SpawnHandler : MonoBehaviour
         Debug.Log($"Active: {currentActive}, Unlocked: {isUnlocked}, In Cooldown: {inCooldown}");
         Debug.Log($"Spawned this cycle: {spawnedThisCycle}, OneTime completed: {oneTimeCompleted}");
     }
-    
-    /// <summary>
-    /// TESTING: Reset all enemies of this spawner's type
-    /// </summary>
+
     private void ResetAllEnemiesOfThisType()
     {
         Enemy[] allEnemies = FindObjectsOfType<Enemy>();
         int resetCount = 0;
-    
+
         foreach (Enemy enemy in allEnemies)
         {
             if (enemy.gameObject.activeInHierarchy && ShouldManageThisEnemy(enemy))
@@ -399,30 +416,23 @@ public class SpawnHandler : MonoBehaviour
         Debug.Log($"🔄 Reset {resetCount} enemies of type {spawnConfig.enemyType}");
     }
 
-    /// <summary>
-    /// TESTING: Force defeat on first enemy of this type
-    /// </summary>
     private void TestEnemyDefeatOfThisType()
     {
         Enemy[] allEnemies = FindObjectsOfType<Enemy>();
-    
+
         foreach (Enemy enemy in allEnemies)
         {
-            if (enemy.gameObject.activeInHierarchy && 
-                enemy.GetState() == Enemy.EnemyState.Alive && 
+            if (enemy.gameObject.activeInHierarchy &&
+                enemy.GetState() == Enemy.EnemyState.Alive &&
                 ShouldManageThisEnemy(enemy))
             {
                 Debug.Log($"💀 Forcing defeat on: {enemy.gameObject.name} (Type: {spawnConfig.enemyType})");
-                // Simulate enough fatigue to defeat
                 enemy.TakeFatigue(enemy.entityFatigue.maxFatigue);
                 break;
             }
         }
     }
 
-    /// <summary>
-    /// FIXED: Check if this spawner should manage this enemy
-    /// </summary>
     private bool ShouldManageThisEnemy(Enemy enemy)
     {
         if (spawnConfig.enemyType == SpawnHandlerConfig.EnemyType.LandFisherman)
@@ -433,24 +443,8 @@ public class SpawnHandler : MonoBehaviour
         {
             return enemy.gameObject.name.ToLower().Contains("boatfisherman");
         }
-    
+
         return false;
-    }
-
-    // Gizmos
-    void OnDrawGizmos()
-    {
-        if (spawnConfig == null || !spawnConfig.showGizmos || spawnPoints == null) return;
-
-        Gizmos.color = isUnlocked ? spawnConfig.gizmoColor : Color.red;
-        
-        foreach (Transform point in spawnPoints)
-        {
-            if (point != null)
-            {
-                Gizmos.DrawWireSphere(point.position, 1f);
-            }
-        }
     }
 
     void OnDrawGizmosSelected()
@@ -464,7 +458,7 @@ public class SpawnHandler : MonoBehaviour
                 // Min distance (red)
                 Gizmos.color = Color.red;
                 Gizmos.DrawWireSphere(point.position, spawnConfig.dontSpawnCloserThan);
-                
+
                 // Max distance (blue)
                 Gizmos.color = Color.blue;
                 Gizmos.DrawWireSphere(point.position, spawnConfig.dontSpawnFartherThan);

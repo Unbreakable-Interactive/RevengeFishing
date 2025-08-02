@@ -5,15 +5,17 @@ using Utils;
 public class Platform : MonoBehaviour
 {
     [Header("Assigned Enemies")]
-    public List<LandEnemy> assignedEnemies = new List<LandEnemy>();
+    public List<Enemy> assignedEnemies = new List<Enemy>();
     
     [Header("Debug")]
     public bool showDebugInfo = true;
 
     private Collider2D platformCollider;
 
-    [SerializeField] private TypeIdentifier identifier;
+    [SerializeField] protected TypeIdentifier identifier;
 
+    public Collider2D PlatformCollider => platformCollider;
+    
     protected virtual void Start()
     {
         platformCollider = GetComponent<Collider2D>();
@@ -40,41 +42,25 @@ public class Platform : MonoBehaviour
 
     void OnCollisionEnter2D(Collision2D collision)
     {
-        LandEnemy enemy = collision.gameObject.GetComponent<LandEnemy>();
-        if (enemy != null && enemy.landEnemyConfig != null)
+        Enemy enemy = collision.gameObject.GetComponent<Enemy>();
+        if (enemy != null && enemy is LandEnemy landEnemy)
         {
-            if (identifier == enemy.landEnemyConfig.identifier)
+            if (landEnemy.landEnemyConfig != null && identifier == landEnemy.landEnemyConfig.identifier)
             {
                 RegisterEnemyOnCollision(enemy);
             }
         }
     }
 
-    void OnCollisionExit2D(Collision2D collision)
-    {
-        LandEnemy enemy = collision.gameObject.GetComponent<LandEnemy>();
-        if (enemy != null && enemy.landEnemyConfig != null)
-        {
-            if (identifier == enemy.landEnemyConfig.identifier)
-            {
-                if (assignedEnemies.Contains(enemy))
-                {
-                    if (showDebugInfo)
-                    {
-                        Debug.Log($"Enemy {enemy.name} LEFT platform {gameObject.name}");
-                    }
-                }
-            }
-        }
-    }
-
-    protected virtual void RegisterEnemyOnCollision(LandEnemy enemy)
+    protected virtual void RegisterEnemyOnCollision(Enemy enemy)
     {
         if (enemy == null || enemy.gameObject == null) return;
         
+        if (!(enemy is LandEnemy landEnemy)) return;
+        
         if (assignedEnemies.Contains(enemy)) return;
         
-        Platform previousPlatform = enemy.GetAssignedPlatform();
+        Platform previousPlatform = landEnemy.GetAssignedPlatform();
         if (previousPlatform != null && previousPlatform != this)
         {
             previousPlatform.UnregisterEnemy(enemy);
@@ -83,202 +69,42 @@ public class Platform : MonoBehaviour
         }
         
         assignedEnemies.Add(enemy);
-        enemy.SetAssignedPlatform(this);
+        landEnemy.SetAssignedPlatform(this);
         
-        // 🔥 CRITICAL FIX: Only apply smart parenting for LAND platforms, not boat platforms
-        if (ShouldUseSmartParenting())
-        {
-            Transform targetToParent = GetCorrectParentTarget(enemy);
-            
-            // Only parent if we found a Handler, otherwise keep current hierarchy
-            if (targetToParent != null)
-            {
-                targetToParent.SetParent(this.transform);
-                
-                if (showDebugInfo)
-                {
-                    string parentType = targetToParent == enemy.transform ? "enemy directly" : "entire handler";
-                    Debug.Log($"PLATFORM ASSIGNMENT: Parenting {parentType} ({targetToParent.name}) to platform {gameObject.name}");
-                }
-            }
-            else if (showDebugInfo)
-            {
-                Debug.Log($"PLATFORM ASSIGNMENT: Keeping {enemy.name} hierarchy unchanged (no Handler found)");
-            }
-        }
-        else if (showDebugInfo)
-        {
-            Debug.Log($"PLATFORM ASSIGNMENT: Skipping smart parenting for {gameObject.name} (boat platform detected)");
-        }
+        landEnemy.OnPlatformAssigned(this);
         
-        // CRITICAL: Trigger AI activation after platform assignment
-        enemy.OnPlatformAssigned(this);
-        
-        Collider2D enemyCollider = enemy.GetComponent<Collider2D>();
-        if (enemyCollider != null && platformCollider != null)
-            Physics2D.IgnoreCollision(platformCollider, enemyCollider, false);
-
-        enemy.platformBoundsCalculated = true;
-
-        if (showDebugInfo)
-            Debug.Log($"COLLISION ASSIGNMENT: {enemy.name} assigned to platform {gameObject.name}! Total enemies: {assignedEnemies.Count}");
-    }
-
-    // 🔥 NEW METHOD: Determine if this platform should use smart parenting
-    protected virtual bool ShouldUseSmartParenting()
-    {
-        // Check if this is a boat platform by layer or component type
-        bool isBoatPlatform = gameObject.layer == LayerMask.NameToLayer("BoatPlatform") || 
-                             GetComponent<BoatPlatform>() != null ||
-                             transform.name.ToLower().Contains("boat");
-        
-        if (showDebugInfo && isBoatPlatform)
-        {
-            Debug.Log($"SMART PARENTING: Detected boat platform {gameObject.name} - disabling smart parenting");
-        }
-        
-        return !isBoatPlatform; // Only use smart parenting for non-boat platforms
-    }
-
-    // 🔥 UPDATED METHOD: Smart logic to determine what should be parented to the platform
-    private Transform GetCorrectParentTarget(LandEnemy enemy)
-    {
-        // Check if this enemy is part of a FishermanHandler hierarchy
-        Transform current = enemy.transform;
-        
-        // Traverse up the hierarchy looking for FishermanHandler
-        while (current.parent != null)
-        {
-            Transform parent = current.parent;
-            
-            // Check if parent is a FishermanHandler (Land or Boat)
-            if (parent.name.Contains("FishermanHandler"))
-            {
-                // 🔥 ADDITIONAL CHECK: Don't parent BoatFishermanHandlers to land platforms
-                if (parent.name.Contains("BoatFishermanHandler"))
-                {
-                    if (showDebugInfo)
-                    {
-                        Debug.Log($"SMART PARENTING: Found BoatFishermanHandler {parent.name} - this should not be parented to land platform");
-                    }
-                    return null; // Don't parent boat handlers to land platforms
-                }
-                
-                if (showDebugInfo)
-                {
-                    Debug.Log($"SMART PARENTING: Found {parent.name} as handler for {enemy.name}");
-                }
-                return parent; // Parent the entire handler, not just the enemy
-            }
-            
-            current = parent;
-        }
-        
-        // If no FishermanHandler found, check if enemy has any meaningful parent structure
-        if (enemy.transform.parent != null)
-        {
-            if (showDebugInfo)
-            {
-                Debug.Log($"SMART PARENTING: No FishermanHandler found, but {enemy.name} has parent {enemy.transform.parent.name} - preserving hierarchy");
-            }
-            return null; // Don't change the hierarchy
-        }
-        
-        // Enemy has no parent structure, safe to parent directly
-        if (showDebugInfo)
-        {
-            Debug.Log($"SMART PARENTING: {enemy.name} has no parent - will parent directly to platform");
-        }
-        return enemy.transform;
-    }
-
-    void SetupSelectiveCollisions()
-    {
-        // Find all enemies in scene
-        LandEnemy[] allEnemies = FindObjectsOfType<LandEnemy>();
-
-        foreach (LandEnemy enemy in allEnemies)
-        {
-            Collider2D enemyCollider = enemy.GetComponent<Collider2D>();
-            if (enemyCollider != null)
-            {
-                if (assignedEnemies.Contains(enemy))
-                {
-                    // Allow collision with assigned enemies
-                    Physics2D.IgnoreCollision(platformCollider, enemyCollider, false);
-                    enemy.assignedPlatform = this;
-                }
-                else
-                {
-                    // Ignore collision with non-assigned enemies
-                    Physics2D.IgnoreCollision(platformCollider, enemyCollider, true);
-                }
-            }
-        }
-    }
-
-    public void UpdateEnemyCollision(LandEnemy enemy, bool shouldCollide)
-    {
         Collider2D enemyCollider = enemy.GetComponent<Collider2D>();
         if (enemyCollider != null)
         {
-            // When enemy is defeated, ignore collision so they fall through
-            Physics2D.IgnoreCollision(platformCollider, enemyCollider, !shouldCollide);
+            Collider2D platformCollider = GetComponent<Collider2D>();
+            if (platformCollider != null)
+                Physics2D.IgnoreCollision(platformCollider, enemyCollider, false);
         }
+
+        landEnemy.platformBoundsCalculated = true;
+
+        if (showDebugInfo)
+            Debug.Log($"Enemy {enemy.name} assigned to platform {gameObject.name}. Total enemies: {assignedEnemies.Count}");
     }
 
-    public void ScanForNewEnemies(float radius = 10f)
-    {
-        Collider2D[] nearbyColliders = Physics2D.OverlapCircleAll(transform.position, radius);
-
-        foreach (Collider2D col in nearbyColliders)
-        {
-            LandEnemy enemy = col.GetComponent<LandEnemy>();
-            if (enemy != null && !assignedEnemies.Contains(enemy))
-            {
-                // Check if enemy doesn't already have a platform assigned
-                if (enemy.GetAssignedPlatform() == null)
-                {
-                    RegisterEnemyAtRuntime(enemy);
-                }
-            }
-        }
-    }
-
-    public virtual void RegisterEnemyAtRuntime(LandEnemy enemy)
+    public virtual void RegisterEnemyAtRuntime(Enemy enemy)
     {
         if (enemy != null && !assignedEnemies.Contains(enemy))
         {
+            if (!(enemy is LandEnemy landEnemy)) return;
+            
             assignedEnemies.Add(enemy);
-            enemy.SetAssignedPlatform(this);
+            landEnemy.SetAssignedPlatform(this);
 
-            // 🔥 CRITICAL FIX: Only apply smart parenting for LAND platforms
-            if (ShouldUseSmartParenting())
+            Collider2D enemyCollider = enemy.GetComponent<Collider2D>();
+            if (enemyCollider != null)
             {
-                Transform targetToParent = GetCorrectParentTarget(enemy);
-                
-                // Only parent if we found a Handler, otherwise keep current hierarchy
-                if (targetToParent != null)
+                Collider2D platformCollider = GetComponent<Collider2D>();
+                if (platformCollider != null)
                 {
-                    targetToParent.SetParent(this.transform);
-                    
-                    if (showDebugInfo)
-                    {
-                        string parentType = targetToParent == enemy.transform ? "enemy directly" : "entire handler";
-                        Debug.Log($"RUNTIME ASSIGNMENT: Parenting {parentType} ({targetToParent.name}) to platform {gameObject.name}");
-                    }
+                    Physics2D.IgnoreCollision(enemyCollider, platformCollider, false);
                 }
             }
-
-            // Apply collision rules immediately
-            Collider2D enemyCollider = enemy.GetComponent<Collider2D>();
-            if (enemyCollider != null && platformCollider != null)
-            {
-                Physics2D.IgnoreCollision(enemyCollider, platformCollider, false);
-            }
-
-            // 🔥 CRITICAL FIX: Trigger OnPlatformAssigned after runtime registration
-            enemy.OnPlatformAssigned(this);
 
             if (showDebugInfo)
             {
@@ -287,98 +113,44 @@ public class Platform : MonoBehaviour
         }
     }
 
-    // 🔥 UPDATED: ForceRegisterEnemy with smart parenting condition
-    public void ForceRegisterEnemy(LandEnemy enemy)
+    private void SetupSelectiveCollisions()
     {
-        if (enemy == null || enemy.gameObject == null) return;
+        Collider2D[] allEnemyColliders = FindObjectsOfType<Collider2D>();
         
-        if (assignedEnemies.Contains(enemy)) return;
-        
-        // Clear any previous platform assignment
-        Platform previousPlatform = enemy.GetAssignedPlatform();
-        if (previousPlatform != null && previousPlatform != this)
+        foreach (Collider2D enemyCollider in allEnemyColliders)
         {
-            previousPlatform.UnregisterEnemy(enemy);
-            if (showDebugInfo)
-                Debug.Log($"FORCE MOVED: {enemy.name} from {previousPlatform.name} to {gameObject.name}");
-        }
-        
-        assignedEnemies.Add(enemy);
-        enemy.SetAssignedPlatform(this);
-        
-        // 🔥 CRITICAL FIX: Only apply smart parenting for LAND platforms
-        if (ShouldUseSmartParenting())
-        {
-            Transform targetToParent = GetCorrectParentTarget(enemy);
-            
-            // Only parent if we found a Handler, otherwise keep current hierarchy
-            if (targetToParent != null)
+            Enemy enemy = enemyCollider.GetComponent<Enemy>();
+            if (enemy != null && enemy is LandEnemy landEnemy && landEnemy.landEnemyConfig != null)
             {
-                targetToParent.SetParent(this.transform);
-                
-                if (showDebugInfo)
-                {
-                    string parentType = targetToParent == enemy.transform ? "enemy directly" : "entire handler";
-                    Debug.Log($"FORCE ASSIGNMENT: Parenting {parentType} ({targetToParent.name}) to platform {gameObject.name}");
-                }
+                bool shouldCollide = identifier == landEnemy.landEnemyConfig.identifier;
+                SetCollisionWithEnemy(enemyCollider, shouldCollide);
             }
         }
-        
-        // CRITICAL: Trigger AI activation after platform assignment
-        enemy.OnPlatformAssigned(this);
-        
-        Collider2D enemyCollider = enemy.GetComponent<Collider2D>();
-        if (enemyCollider != null && platformCollider != null)
-            Physics2D.IgnoreCollision(platformCollider, enemyCollider, false);
-
-        enemy.platformBoundsCalculated = true;
-
-        if (showDebugInfo)
-            Debug.Log($"FORCE ASSIGNED: {enemy.name} to platform {gameObject.name}! Total enemies: {assignedEnemies.Count}");
     }
 
-    public void UnregisterEnemy(LandEnemy enemy)
+    private void SetCollisionWithEnemy(Collider2D enemyCollider, bool shouldCollide)
     {
-        if (enemy == null || enemy.gameObject == null) return;
+        if (enemyCollider != null && platformCollider != null)
+        {
+            Physics2D.IgnoreCollision(platformCollider, enemyCollider, !shouldCollide);
+        }
+    }
 
+    public virtual void UnregisterEnemy(Enemy enemy)
+    {
         if (assignedEnemies.Contains(enemy))
         {
             assignedEnemies.Remove(enemy);
-
-            // 🔥 CRITICAL FIX: Only do smart unparenting for LAND platforms
-            if (ShouldUseSmartParenting())
+            
+            if (enemy is LandEnemy landEnemy)
             {
-                // Smart unparenting - remove the correct object from platform hierarchy
-                Transform currentParent = enemy.transform;
-                
-                // Find what is actually parented to this platform
-                while (currentParent != null && currentParent.parent != this.transform)
-                {
-                    currentParent = currentParent.parent;
-                }
-                
-                // If we found something parented to this platform, unparent it
-                if (currentParent != null && currentParent.parent == this.transform)
-                {
-                    currentParent.SetParent(null);
-                    
-                    if (showDebugInfo)
-                    {
-                        Debug.Log($"UNREGISTERED: Removed {currentParent.name} from platform {gameObject.name} hierarchy");
-                    }
-                }
-            }
-
-            Collider2D enemyCollider = enemy.GetComponent<Collider2D>();
-            if (enemyCollider != null && platformCollider != null)
-            {
-                Physics2D.IgnoreCollision(enemyCollider, platformCollider, true);
-            }
-
-            if (showDebugInfo)
-            {
-                Debug.Log($"UNREGISTERED: {enemy.name} from platform {gameObject.name}. Total enemies: {assignedEnemies.Count}");
+                landEnemy.SetAssignedPlatform(null);
             }
         }
+    }
+
+    public void UnregisterEnemy(LandEnemy landEnemy)
+    {
+        UnregisterEnemy((Enemy)landEnemy);
     }
 }
