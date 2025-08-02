@@ -6,6 +6,15 @@ using static Enemy;
 
 public class Player : Entity
 {
+    public enum Phase
+    {
+        Infant,
+        Juvenile,
+        Adult,
+        Beast,
+        Monster
+    }
+
     public enum Status
     {
         Alive,
@@ -13,6 +22,9 @@ public class Player : Entity
         Starved,
         Slain
     }
+
+    [Header("Player Settings")]
+    [SerializeField] private PlayerConfig playerConfig;
 
     [Header("Camera Reference")]
     [SerializeField] private Camera mainCamera;
@@ -28,13 +40,13 @@ public class Player : Entity
     private bool shouldApplyForceAfterRotation = false;
     private bool hasAppliedBoost = false; // Track if boost was already applied
 
-    // [SerializeField] protected int hunger;
-    // [SerializeField] protected int maxHunger;
     [SerializeField] protected HungerHandler hungerHandler;
 
     public HungerHandler HungerHandler => hungerHandler;
 
     [SerializeField] protected Status status;
+    [SerializeField] protected Phase currentPhase;
+    [SerializeField] protected int nextPowerLevel; //minimum power level to reach next phase
 
     [Header("Rotation Settings")]
     [SerializeField] protected float rotationSpeed = 10f;
@@ -88,15 +100,17 @@ public class Player : Entity
     [Header("Visual Settings")]
     [SerializeField] private SpriteRenderer playerSpriteRenderer;
 
+    Animator animator;
+
     [Header("Debug")]
     public bool enableDebugLogs = false;
 
     public static Player Instance { get; private set; }
     
     [Header("Components to share")] 
-    [SerializeField] private Collider2D collider;
+    [SerializeField] private Collider2D colliderToShare;
     
-    public Collider2D Collider => collider;
+    public Collider2D ColliderToShare => colliderToShare;
     
     protected override void Awake()
     {
@@ -130,8 +144,11 @@ public class Player : Entity
             }
         }
 
-        // safety check
-        if (mainCamera == null) Debug.LogError("Player: No camera found in scene! Player won't work correctly.");
+        animator = GetComponent<Animator>();
+
+        currentPhase = Phase.Infant; // Start in the Infant phase
+        //change the next line once an actual fix is found for player threshold not assigning properly
+        nextPowerLevel = playerConfig.phaseThresholds.juvenile; // Set next phase threshold
 
         hungerHandler = new HungerHandler(_powerLevel, entityFatigue, 0);
 
@@ -160,6 +177,8 @@ public class Player : Entity
 
         if (activeBitingHooks != null && activeBitingHooks.Count > 0) CheckMaxHookDistanceState();
         if (activeBitingHooks != null && activeBitingHooks.Count <= 0) maxSpeed = originalMaxSpeed;
+
+        if (CanMature()) Mature();
     }
 
     protected override void UnderwaterBehavior()
@@ -198,6 +217,48 @@ public class Player : Entity
         }
 
         maxSpeed = isAtMaxHookDistance ? originalMaxSpeed * lineExtensionSpeedPenalty : originalMaxSpeed;
+    }
+
+
+    protected bool CanMature()
+    {
+        return (_powerLevel >= nextPowerLevel);
+    }
+
+    protected void Mature()
+    {
+        switch (currentPhase)
+        {
+            case Phase.Infant:
+                currentPhase = Phase.Juvenile;
+                animator?.SetBool("isInfant", false);
+                animator?.SetBool("isJuvie", true);
+                nextPowerLevel = playerConfig.phaseThresholds.adult;
+                Debug.Log("Player matured to Juvenile phase!");
+                break;
+            case Phase.Juvenile:
+                currentPhase = Phase.Adult;
+                nextPowerLevel = playerConfig.phaseThresholds.beast;
+                Debug.Log("Player matured to Adult phase!");
+                break;
+            case Phase.Adult:
+                currentPhase = Phase.Beast;
+                nextPowerLevel = playerConfig.phaseThresholds.monster;
+                Debug.Log("Player matured to Beast phase!");
+                break;
+            case Phase.Beast:
+                currentPhase = Phase.Monster;
+                nextPowerLevel = playerConfig.phaseThresholds.victory; //Change this to the desired value for winning the game
+                Debug.Log("Player matured to Monster phase!");
+                break;
+            case Phase.Monster:
+                Debug.Log("Victory!");
+                //transition to victory scene
+                SceneManager.LoadScene("Victory");
+                break;
+            default:
+                break;
+        }
     }
 
     #region Input Handling
@@ -320,8 +381,9 @@ public class Player : Entity
                     float hookMaxDistanceSqr = hook.maxDistance * hook.maxDistance;
 
                     // Player is pulling against this fishing line!
-                    Fisherman fisherman = hook.spawner?.GetComponent<Fisherman>();
-
+                    // Fisherman fisherman = hook.spawner?.GetComponent<Fisherman>();
+                    Enemy enemy = hook.spawner?.GetComponent<Enemy>();
+                    
                     // If player is at or near max distance, try extending the fishing line
                     if (currentDistanceSqr >= hookMaxDistanceSqr * (0.99f * 0.99f)) // At 99% or more of max distance
                     {
@@ -331,12 +393,17 @@ public class Player : Entity
                     // If player is at or near max distance, deal fatigue damage
                     if (currentDistanceSqr >= hookMaxDistanceSqr * (0.9f * 0.9f)) // 90% of max distance
                     {
-                        if (fisherman != null)
-                        {
-                            fisherman.TakeFatigue(PowerLevel);
-                            DebugLog($"Player pulls against {fisherman.name}'s fishing line - fisherman suffers fatigue!");
-                        }
+                        // if (fisherman != null)
+                        // {
+                        //     fisherman.TakeFatigue(PowerLevel);
+                        //     DebugLog($"Player pulls against {fisherman.name}'s fishing line - fisherman suffers fatigue!");
+                        // }
 
+                        if (enemy != null)
+                        {
+                            enemy.TakeFatigue(PowerLevel);
+                            DebugLog($"Player pulls against {enemy.name}'s fishing line - enemy suffers fatigue!");
+                        }
                     }
 
                 }
