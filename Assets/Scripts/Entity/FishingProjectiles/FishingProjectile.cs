@@ -22,12 +22,10 @@ public abstract class FishingProjectile : Entity
     [SerializeField] private float maxStretchDistance = 8f;    // How far beyond maxDistance player can stretch
     [SerializeField] private float stretchResistance = 10f;    // Resistance force when stretching
     [SerializeField] private float snapBackForce = 10f;        // Force applied when snapping back
-    //[SerializeField] private float maxStretchTime = 0.8f;      // Max time allowed in stretch zone
     [SerializeField] private AnimationCurve stretchCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
 
     // Stretch state tracking
     private bool isStretching = false;
-    //private float stretchTimer = 0f;
     private float currentStretchAmount = 0f;
 
     [Header("Visual Events")]
@@ -152,9 +150,10 @@ public abstract class FishingProjectile : Entity
         }
     }
 
-    public virtual void ThrowProjectile(Vector2 throwDirection, float throwForce)
+    public virtual void ThrowProjectile(Vector3 throwDirection, float throwForce)
     {
-        if (rb == null) Debug.LogError("Rigidbody2D is not assigned!");
+        if (rb == null) Debug.LogError("Rigidbody is not assigned!");
+        transform.position += new Vector3(0f, 0f, -1f);
         rb.AddForce(throwDirection.normalized * throwForce, ForceMode2D.Impulse);
         OnProjectileThrown();
     }
