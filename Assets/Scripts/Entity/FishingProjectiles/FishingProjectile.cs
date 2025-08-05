@@ -370,13 +370,15 @@ public abstract class FishingProjectile : Entity
     protected abstract void OnAirborneBehavior();
     protected abstract void OnUnderwaterBehavior();
 
-    private void OnDestroy()
+    protected void OnDestroy()
     {
         // Clean up player reference when hook is destroyed
         if (player != null && isBeingHeld)
         {
             player.RemoveBitingHook(this);
         }
+        player?.GetComponentInChildren<MouthMagnet>()?.RemoveEntity(this);
+
     }
 
 }
