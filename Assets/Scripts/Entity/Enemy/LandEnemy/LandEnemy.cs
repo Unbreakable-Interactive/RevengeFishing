@@ -389,6 +389,7 @@ public class LandEnemy : Enemy, IBoatComponent
     protected override void StartDefeatBehaviors()
     {
         base.StartDefeatBehaviors();
+        transform.position += new Vector3(0f, 0f, -1f);
         CleanupFishingTools();
         DropTool();
     }

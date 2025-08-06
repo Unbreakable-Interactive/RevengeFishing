@@ -164,6 +164,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9fe37b15344ca5f4ab93beabfaab7777, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  player: {fileID: 5706962072255297144}
   magneticForce: 100
   baseMagnetRange: 2
   magnetOffset: {x: 0, y: 0}
@@ -370,8 +371,9 @@ MonoBehaviour:
   maxLineExtension: 10
   lineExtensionSpeedPenalty: 0.6
   playerSpriteRenderer: {fileID: 0}
+  animator: {fileID: 0}
   enableDebugLogs: 0
-  colliderToShare: {fileID: 0}
+  colliderToShare: {fileID: 5938476875424283519}
 --- !u!114 &2299430188239530610
 MonoBehaviour:
   m_ObjectHideFlags: 0
