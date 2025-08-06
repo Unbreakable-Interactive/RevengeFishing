@@ -22,12 +22,10 @@ public abstract class FishingProjectile : Entity
     [SerializeField] private float maxStretchDistance = 8f;    // How far beyond maxDistance player can stretch
     [SerializeField] private float stretchResistance = 10f;    // Resistance force when stretching
     [SerializeField] private float snapBackForce = 10f;        // Force applied when snapping back
-    //[SerializeField] private float maxStretchTime = 0.8f;      // Max time allowed in stretch zone
     [SerializeField] private AnimationCurve stretchCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
 
     // Stretch state tracking
     private bool isStretching = false;
-    //private float stretchTimer = 0f;
     private float currentStretchAmount = 0f;
 
     [Header("Visual Events")]
@@ -50,7 +48,7 @@ public abstract class FishingProjectile : Entity
         }
 
         OnProjectileSpawned();
-        Debug.Log($"Hook initialized. SpawnPoint: {spawnPoint}, Current Position: {transform.position}");
+        GameLogger.LogVerbose($"Hook initialized. SpawnPoint: {spawnPoint}, Current Position: {transform.position}");
     }
 
     protected override void Update()
@@ -74,7 +72,7 @@ public abstract class FishingProjectile : Entity
     public virtual void SetSpawnPoint(Transform spawnPosition)
     {
         spawnPoint = spawnPosition;
-        Debug.Log($"Hook spawn point set to: {spawnPoint}");
+        GameLogger.LogVerbose($"Hook spawn point set to: {spawnPoint}");
     }
 
     private void OnTriggerEnter2D(Collider2D other)
@@ -99,7 +97,7 @@ public abstract class FishingProjectile : Entity
         // Notify fisherman
         OnPlayerInteraction?.Invoke(true);
 
-        Debug.Log("Player is holding the fishing hook!");
+        GameLogger.LogVerbose("Player is holding the fishing hook!");
     }
 
     // Add this method to handle when hook releases
@@ -118,7 +116,7 @@ public abstract class FishingProjectile : Entity
             // Notify fisherman
             OnPlayerInteraction?.Invoke(false);
 
-            Debug.Log("Hook released player!");
+            GameLogger.LogVerbose("Hook released player!");
         }
     }
 
@@ -148,13 +146,14 @@ public abstract class FishingProjectile : Entity
             // Apply only tangential velocity (creates swinging motion)
             rb.velocity = tangentDirection * tangentVelocity;
 
-            //Debug.Log($"Hook constrained to rope - swinging with tangent velocity: {tangentVelocity}");
+            //GameLogger.LogVerbose($"Hook constrained to rope - swinging with tangent velocity: {tangentVelocity}");
         }
     }
 
-    public virtual void ThrowProjectile(Vector2 throwDirection, float throwForce)
+    public virtual void ThrowProjectile(Vector3 throwDirection, float throwForce)
     {
-        if (rb == null) Debug.LogError("Rigidbody2D is not assigned!");
+        if (rb == null) GameLogger.LogError("Rigidbody2D is not assigned!");
+        transform.position += new Vector3(0f, 0f, -1f);
         rb.AddForce(throwDirection.normalized * throwForce, ForceMode2D.Impulse);
         OnProjectileThrown();
     }
@@ -195,7 +194,7 @@ public abstract class FishingProjectile : Entity
                 //stretchTimer = 0f;
                 currentStretchAmount = 0f;
                 OnStretchEnded?.Invoke();
-                Debug.Log("Fishing line relaxed");
+                GameLogger.LogVerbose("Fishing line relaxed");
             }
             return;
         }
@@ -216,7 +215,7 @@ public abstract class FishingProjectile : Entity
         if (isBeingHeld)
         {
             transform.position = player.transform.position;
-            //Debug.Log($"Hook following player to position: {player.transform.position}");
+            //GameLogger.LogVerbose($"Hook following player to position: {player.transform.position}");
         }
     }
 
@@ -230,7 +229,7 @@ public abstract class FishingProjectile : Entity
             isStretching = true;
             //stretchTimer = 0f;
             OnStretchStarted?.Invoke();
-            Debug.Log("Fishing line is stretching!");
+            GameLogger.LogVerbose("Fishing line is stretching!");
         }
 
         //stretchTimer += Time.deltaTime;
@@ -244,7 +243,7 @@ public abstract class FishingProjectile : Entity
         playerRb.AddForce(resistanceForce, ForceMode2D.Impulse);
 
         OnLineStretching(currentStretchAmount);
-        Debug.Log($"Line stretch: {currentStretchAmount:F2} | Resistance: {stretchResistance}");
+        GameLogger.LogVerbose($"Line stretch: {currentStretchAmount:F2} | Resistance: {stretchResistance}");
     }
 
     private void SnapPlayerBack(Rigidbody2D playerRb)
@@ -274,7 +273,7 @@ public abstract class FishingProjectile : Entity
 
         currentStretchAmount = 0f;
 
-        Debug.Log($"SNAP! Player pulled back with force: {snapForce}");
+        GameLogger.LogVerbose($"SNAP! Player pulled back with force: {snapForce}");
     }
 
     // Visual and audio feedback methods
@@ -288,7 +287,7 @@ public abstract class FishingProjectile : Entity
             // - Tension sound effects
             // - Line renderer color change
             // - Particle effects
-            Debug.Log($"High line tension: {stretchAmount:F2}");
+            GameLogger.LogVerbose($"High line tension: {stretchAmount:F2}");
         }
     }
 
@@ -300,7 +299,7 @@ public abstract class FishingProjectile : Entity
         // - Particle burst
         // - Visual impact
 
-        Debug.Log($"SNAP BACK! Was stretched: {wasStretchAmount:F2}");
+        GameLogger.LogVerbose($"SNAP BACK! Was stretched: {wasStretchAmount:F2}");
 
         // Example effects you could add:
         // CameraShake.Instance?.Shake(0.3f * wasStretchAmount, 0.5f);
@@ -333,7 +332,7 @@ public abstract class FishingProjectile : Entity
             //stretchTimer = 0f;
             currentStretchAmount = 0f;
             OnStretchEnded?.Invoke(); // Notify visual system
-            Debug.Log("Fishing line relaxed");
+            GameLogger.LogVerbose("Fishing line relaxed");
         }
     }
 
@@ -347,7 +346,6 @@ public abstract class FishingProjectile : Entity
         return Vector3.Distance(transform.position, spawnPoint.position);
     }
 
-    // Implement EntityMovement abstract methods
     protected override void AirborneBehavior()
     {
         rb.gravityScale = airGravityScale;
@@ -362,22 +360,21 @@ public abstract class FishingProjectile : Entity
         OnUnderwaterBehavior();
     }
 
-    // Abstract methods for specific projectile behavior
     protected abstract void OnProjectileSpawned();
     protected abstract void OnProjectileThrown();
     protected abstract void OnProjectileRetracted();
 
-    // New abstract methods for environment behavior
     protected abstract void OnAirborneBehavior();
     protected abstract void OnUnderwaterBehavior();
 
-    private void OnDestroy()
+    protected void OnDestroy()
     {
-        // Clean up player reference when hook is destroyed
         if (player != null && isBeingHeld)
         {
             player.RemoveBitingHook(this);
         }
+        player?.GetComponentInChildren<MouthMagnet>()?.RemoveEntity(this);
+
     }
 
 }

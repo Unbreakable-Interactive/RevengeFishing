@@ -275,6 +275,8 @@ public abstract class Enemy : Entity
         GameLogger.Log($"{gameObject.name} has been EATEN!");
         ChangeState_Eaten();
         InterruptAllActions();
+        player.GetComponentInChildren<MouthMagnet>().RemoveEntity(this);
+        player.TriggerBite();
         TriggerDead();
     }
 
@@ -283,7 +285,8 @@ public abstract class Enemy : Entity
         GameLogger.Log($"{gameObject.name} has DIED!");
         ChangeState_Dead();
         InterruptAllActions();
-        
+
+
         if (player != null)
         {
             player.GainPowerFromEating(_powerLevel);
@@ -438,6 +441,7 @@ public abstract class Enemy : Entity
             TriggerEaten();
         }
     }
+
     #endregion
 }
 

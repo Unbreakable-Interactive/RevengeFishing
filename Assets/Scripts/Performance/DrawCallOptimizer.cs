@@ -69,7 +69,7 @@ public class DrawCallOptimizer : PerformanceComponentBase
             ApplyOptimizations();
         }
         
-        Debug.Log($"{ComponentName}: Initialized - Found {allSpriteRenderers.Count} sprite renderers");
+        GameLogger.LogVerbose($"{ComponentName}: Initialized - Found {allSpriteRenderers.Count} sprite renderers");
     }
     
     void Update()
@@ -156,7 +156,7 @@ public class DrawCallOptimizer : PerformanceComponentBase
         // Update draw call count
         optimizedDrawCalls = allSpriteRenderers.Count(sr => sr.enabled && sr.gameObject.activeInHierarchy);
         
-        Debug.Log($"DrawCallOptimizer: Optimization complete. Draw calls: {originalDrawCalls} → {optimizedDrawCalls} (Saved: {originalDrawCalls - optimizedDrawCalls})");
+        GameLogger.LogVerbose($"DrawCallOptimizer: Optimization complete. Draw calls: {originalDrawCalls} → {optimizedDrawCalls} (Saved: {originalDrawCalls - optimizedDrawCalls})");
     }
     
     void OptimizeSpriteBatching()
@@ -227,7 +227,7 @@ public class DrawCallOptimizer : PerformanceComponentBase
                     if (changed)
                     {
                         UnityEditor.AssetDatabase.ImportAsset(texturePath);
-                        Debug.Log($"Optimized texture: {texture.name} (used by {spriteCount} sprites)");
+                        GameLogger.LogVerbose($"Optimized texture: {texture.name} (used by {spriteCount} sprites)");
                     }
                 }
             }
@@ -323,22 +323,22 @@ public class DrawCallOptimizer : PerformanceComponentBase
     
     void LogAnalysisResults()
     {
-        Debug.Log("=== DRAW CALL ANALYSIS RESULTS ===");
-        Debug.Log($"Total Sprite Renderers: {allSpriteRenderers.Count}");
-        Debug.Log($"Active Draw Calls: {originalDrawCalls}");
-        Debug.Log($"Unique Textures: {textureGroups.Count}");
-        Debug.Log($"Unique Materials: {materialGroups.Count}");
-        Debug.Log($"Culled Sprites: {culledSprites}");
+        GameLogger.LogVerbose("=== DRAW CALL ANALYSIS RESULTS ===");
+        GameLogger.LogVerbose($"Total Sprite Renderers: {allSpriteRenderers.Count}");
+        GameLogger.LogVerbose($"Active Draw Calls: {originalDrawCalls}");
+        GameLogger.LogVerbose($"Unique Textures: {textureGroups.Count}");
+        GameLogger.LogVerbose($"Unique Materials: {materialGroups.Count}");
+        GameLogger.LogVerbose($"Culled Sprites: {culledSprites}");
         
         // Log largest texture groups
         var topTextures = textureGroups.OrderByDescending(kvp => kvp.Value.Count).Take(5);
-        Debug.Log("Top texture usage:");
+        GameLogger.LogVerbose("Top texture usage:");
         foreach (var kvp in topTextures)
         {
-            Debug.Log($"  {kvp.Key.name}: {kvp.Value.Count} sprites");
+            GameLogger.LogVerbose($"  {kvp.Key.name}: {kvp.Value.Count} sprites");
         }
         
-        Debug.Log($"Recommendations: {lastResult.recommendations}");
+        GameLogger.LogVerbose($"Recommendations: {lastResult.recommendations}");
     }
     
     public override float RenderDebugGUI(float startY)

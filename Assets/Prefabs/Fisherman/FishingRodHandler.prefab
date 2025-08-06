@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 269467598253431466}
   - component: {fileID: 4943573407618265512}
   - component: {fileID: 8456304736541642189}
-  m_Layer: 0
+  m_Layer: 13
   m_Name: FishingRod
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -175,7 +175,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5658404452784161183}
   - component: {fileID: 5703166417249820696}
-  m_Layer: 0
+  m_Layer: 13
   m_Name: Sprite
   m_TagString: Untagged
   m_Icon: {fileID: 0}

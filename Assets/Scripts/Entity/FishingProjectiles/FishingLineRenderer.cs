@@ -63,11 +63,11 @@ public class FishingLineRenderer : MonoBehaviour
             fishingProjectile.OnStretchEnded += OnStretchEnded;
             fishingProjectile.OnSnapBack += OnSnapBack;
 
-            Debug.Log($"Line Renderer: Using spawn point {startPoint} as start point");
+            GameLogger.LogVerbose($"Line Renderer: Using spawn point {startPoint} as start point");
         }
         else
         {
-            Debug.LogWarning("FishingLineRenderer: No FishingProjectile found in parent!");
+            GameLogger.LogWarning("FishingLineRenderer: No FishingProjectile found in parent!");
         }
     }
 
@@ -97,7 +97,7 @@ public class FishingLineRenderer : MonoBehaviour
 
         if (endPoint == null)
         {
-            Debug.LogWarning("FishingLineRenderer: Missing end point!");
+            GameLogger.LogWarning("FishingLineRenderer: Missing end point!");
             return;
         }
 
@@ -142,7 +142,7 @@ public class FishingLineRenderer : MonoBehaviour
     private void OnStretchStarted()
     {
         isStretching = true;
-        Debug.Log("Line Renderer: Stretch started");
+        GameLogger.LogVerbose("Line Renderer: Stretch started");
 
         if (stretchParticles != null)
             stretchParticles.Play();
@@ -166,7 +166,7 @@ public class FishingLineRenderer : MonoBehaviour
         stretchTimer = 0f;
 
         SetupNormalAppearance();
-        Debug.Log("Line Renderer: Stretch ended");
+        GameLogger.LogVerbose("Line Renderer: Stretch ended");
 
         if (stretchParticles != null)
             stretchParticles.Stop();
@@ -174,7 +174,7 @@ public class FishingLineRenderer : MonoBehaviour
 
     private void OnSnapBack(float snapStrength)
     {
-        Debug.Log($"Line Renderer: Snap back with strength {snapStrength}");
+        GameLogger.LogVerbose($"Line Renderer: Snap back with strength {snapStrength}");
 
         if (snapParticles != null)
         {

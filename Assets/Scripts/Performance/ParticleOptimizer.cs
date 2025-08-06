@@ -106,7 +106,7 @@ public class ParticleOptimizer : PerformanceComponentBase
             }
         }
         
-        Debug.Log($"ParticleOptimizer initialized with {particleSystems.Length} particle systems");
+        GameLogger.LogVerbose($"ParticleOptimizer initialized with {particleSystems.Length} particle systems");
     }
 
     void Update()

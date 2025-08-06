@@ -29,7 +29,7 @@ public class BoatPlatform : Platform, IBoatComponent
         
         if (debugBoatTriggers)
         {
-            Debug.Log($"BoatPlatform: Initialized on {gameObject.name} with ID {boatID}");
+            GameLogger.LogVerbose($"BoatPlatform: Initialized on {gameObject.name} with ID {boatID}");
         }
     }
     
@@ -42,7 +42,7 @@ public class BoatPlatform : Platform, IBoatComponent
             {
                 if (debugBoatTriggers)
                 {
-                    Debug.Log($"BoatPlatform: REJECTED - {boatEnemy.name} (ID: {boatEnemy.GetBoatID()}) rejected by boat (ID: {GetBoatID()})");
+                    GameLogger.LogVerbose($"BoatPlatform: REJECTED - {boatEnemy.name} (ID: {boatEnemy.GetBoatID()}) rejected by boat (ID: {GetBoatID()})");
                 }
                 return;
             }
@@ -61,7 +61,7 @@ public class BoatPlatform : Platform, IBoatComponent
         if (!(enemy is BoatLandEnemy boatEnemy))
         {
             if (debugBoatTriggers)
-                Debug.Log($"BoatPlatform: REJECTED - {enemy.name} is not BoatLandEnemy");
+                GameLogger.LogVerbose($"BoatPlatform: REJECTED - {enemy.name} is not BoatLandEnemy");
             return;
         }
         
@@ -69,7 +69,7 @@ public class BoatPlatform : Platform, IBoatComponent
         {
             if (debugBoatTriggers)
             {
-                Debug.Log($"BoatPlatform: REGISTRATION DENIED - {boatEnemy.name} (ID: {boatEnemy.GetBoatID()}) cannot register on boat (ID: {boatID})");
+                GameLogger.LogVerbose($"BoatPlatform: REGISTRATION DENIED - {boatEnemy.name} (ID: {boatEnemy.GetBoatID()}) cannot register on boat (ID: {boatID})");
             }
             return;
         }
@@ -84,14 +84,14 @@ public class BoatPlatform : Platform, IBoatComponent
                 if (otherBoatPlatform.GetBoatID() != GetBoatID())
                 {
                     if (debugBoatTriggers)
-                        Debug.Log($"BoatPlatform: BOAT TRANSFER BLOCKED - {enemy.name} cannot switch boats");
+                        GameLogger.LogVerbose($"BoatPlatform: BOAT TRANSFER BLOCKED - {enemy.name} cannot switch boats");
                     return;
                 }
             }
             
             previousPlatform.UnregisterEnemy(enemy);
             if (showDebugInfo)
-                Debug.Log($"Enemy {enemy.name} MOVED from {previousPlatform.name} to {gameObject.name}");
+                GameLogger.LogVerbose($"Enemy {enemy.name} MOVED from {previousPlatform.name} to {gameObject.name}");
         }
         
         assignedEnemies.Add(enemy);
@@ -110,7 +110,7 @@ public class BoatPlatform : Platform, IBoatComponent
         boatEnemy.platformBoundsCalculated = true;
 
         if (debugBoatTriggers)
-            Debug.Log($"BOAT ASSIGNMENT SUCCESS: {enemy.name} assigned to boat platform {gameObject.name} (ID: {boatID}). Total: {assignedEnemies.Count}");
+            GameLogger.LogVerbose($"BOAT ASSIGNMENT SUCCESS: {enemy.name} assigned to boat platform {gameObject.name} (ID: {boatID}). Total: {assignedEnemies.Count}");
         
         TriggerBoatMovement(enemy);
     }
@@ -121,7 +121,7 @@ public class BoatPlatform : Platform, IBoatComponent
         
         if (debugBoatTriggers)
         {
-            Debug.Log($"BoatPlatform OWNERSHIP CHECK: BoatEnemy {boatEnemy.name} (ID: {boatEnemy.GetBoatID()}) vs Platform (ID: {boatID}) = {matches}");
+            GameLogger.LogVerbose($"BoatPlatform OWNERSHIP CHECK: BoatEnemy {boatEnemy.name} (ID: {boatEnemy.GetBoatID()}) vs Platform (ID: {boatID}) = {matches}");
         }
         
         return matches;
@@ -134,7 +134,7 @@ public class BoatPlatform : Platform, IBoatComponent
             if (!(enemy is BoatLandEnemy boatEnemy))
             {
                 if (debugBoatTriggers)
-                    Debug.Log($"BoatPlatform RUNTIME: REJECTED - {enemy.name} is not BoatLandEnemy");
+                    GameLogger.LogVerbose($"BoatPlatform RUNTIME: REJECTED - {enemy.name} is not BoatLandEnemy");
                 return;
             }
             
@@ -142,7 +142,7 @@ public class BoatPlatform : Platform, IBoatComponent
             {
                 if (debugBoatTriggers)
                 {
-                    Debug.Log($"BoatPlatform RUNTIME: DENIED {boatEnemy.name} (ID: {boatEnemy.GetBoatID()}) - wrong boat (ID: {boatID})");
+                    GameLogger.LogVerbose($"BoatPlatform RUNTIME: DENIED {boatEnemy.name} (ID: {boatEnemy.GetBoatID()}) - wrong boat (ID: {boatID})");
                 }
                 return;
             }
@@ -162,7 +162,7 @@ public class BoatPlatform : Platform, IBoatComponent
 
             if (debugBoatTriggers)
             {
-                Debug.Log($"BOAT RUNTIME SUCCESS: {enemy.name} assigned to boat platform {gameObject.name} (ID: {boatID})");
+                GameLogger.LogVerbose($"BOAT RUNTIME SUCCESS: {enemy.name} assigned to boat platform {gameObject.name} (ID: {boatID})");
             }
             
             TriggerBoatMovement(enemy);
@@ -180,12 +180,12 @@ public class BoatPlatform : Platform, IBoatComponent
             
             if (debugBoatTriggers)
             {
-                Debug.Log($"BoatPlatform: Triggered boat movement for {enemy.name} on boat {boatFloater.name}");
+                GameLogger.LogVerbose($"BoatPlatform: Triggered boat movement for {enemy.name} on boat {boatFloater.name}");
             }
         }
         else if (debugBoatTriggers)
         {
-            Debug.LogWarning($"BoatPlatform: Cannot trigger boat movement - BoatFloater not found!");
+            GameLogger.LogWarning($"BoatPlatform: Cannot trigger boat movement - BoatFloater not found!");
         }
     }
     
@@ -195,7 +195,7 @@ public class BoatPlatform : Platform, IBoatComponent
         
         if (debugBoatTriggers)
         {
-            Debug.Log($"BoatPlatform: BoatFloater manually assigned: {floater.name}");
+            GameLogger.LogVerbose($"BoatPlatform: BoatFloater manually assigned: {floater.name}");
         }
     }
     
@@ -212,7 +212,7 @@ public class BoatPlatform : Platform, IBoatComponent
             
             if (debugBoatTriggers)
             {
-                Debug.Log("BoatPlatform: Force started boat movement");
+                GameLogger.LogVerbose("BoatPlatform: Force started boat movement");
             }
         }
     }
@@ -225,7 +225,7 @@ public class BoatPlatform : Platform, IBoatComponent
             
             if (debugBoatTriggers)
             {
-                Debug.Log("BoatPlatform: Stopped boat movement");
+                GameLogger.LogVerbose("BoatPlatform: Stopped boat movement");
             }
         }
     }
