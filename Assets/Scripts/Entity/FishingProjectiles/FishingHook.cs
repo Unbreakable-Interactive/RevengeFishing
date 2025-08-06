@@ -4,17 +4,17 @@ public class FishingHook : FishingProjectile
 {
     protected override void OnProjectileSpawned()
     {
-        Debug.Log("Fishing hook spawned!");
+        GameLogger.LogVerbose("Fishing hook spawned!");
     }
 
     protected override void OnProjectileThrown()
     {
-        Debug.Log("Fishing hook thrown!");
+        GameLogger.LogVerbose("Fishing hook thrown!");
     }
 
     protected override void OnProjectileRetracted()
     {
-        Debug.Log("Fishing hook retracted!");
+        GameLogger.LogVerbose("Fishing hook retracted!");
         StartCoroutine(IProjectileRetracted());
     }
 

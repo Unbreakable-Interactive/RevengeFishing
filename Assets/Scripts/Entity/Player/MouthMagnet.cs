@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -47,7 +46,7 @@ public class MouthMagnet : MonoBehaviour
             playerScaler = GetComponentInParent<PlayerScaler>();
             if (playerScaler == null)
             {
-                Debug.LogWarning("MouthMagnet: scaleWithPlayer is enabled but no PlayerScaler found in parent objects!");
+                GameLogger.LogWarning("MouthMagnet: scaleWithPlayer is enabled but no PlayerScaler found in parent objects!");
             }
         }
     }
@@ -74,14 +73,14 @@ public class MouthMagnet : MonoBehaviour
 
         if (magnetCollider == null)
         {
-            Debug.LogError("MouthMagnet requires a CircleCollider2D component!");
+            GameLogger.LogError("MouthMagnet requires a CircleCollider2D component!");
             return;
         }
 
         if (!magnetCollider.isTrigger)
         {
             magnetCollider.isTrigger = true;
-            Debug.Log("MouthMagnet: Set collider to trigger mode");
+            GameLogger.LogVerbose("MouthMagnet: Set collider to trigger mode");
         }
 
         //float currentRange = CurrentMagnetRange;
@@ -90,7 +89,7 @@ public class MouthMagnet : MonoBehaviour
         //    magnetCollider.radius = currentRange / 2f;
         //}
 
-        //Debug.Log($"MouthMagnet initialized with range: {currentRange} (base: {baseMagnetRange})");
+        //GameLogger.LogVerbose($"MouthMagnet initialized with range: {currentRange} (base: {baseMagnetRange})");
     }
 
     private void OnTriggerEnter2D(Collider2D other)
@@ -100,8 +99,8 @@ public class MouthMagnet : MonoBehaviour
         if (entity != null && !attractedEntities.Contains(entity))
         {
             attractedEntities.Add(entity);
-            Debug.Log($"MouthMagnet: Started attracting entity {entity.name} of type {entity.GetType().Name}");
-            Debug.Log($"Current attracted entities count: {attractedEntities.Count}");
+            GameLogger.LogVerbose($"MouthMagnet: Started attracting entity {entity.name} of type {entity.GetType().Name}");
+            GameLogger.LogVerbose($"Current attracted entities count: {attractedEntities.Count}");
         }
     }
 
@@ -112,7 +111,7 @@ public class MouthMagnet : MonoBehaviour
         if (entity != null && attractedEntities.Contains(entity))
         {
             attractedEntities.Remove(entity);
-            Debug.Log($"MouthMagnet: Stopped attracting entity {entity.name}");
+            GameLogger.LogVerbose($"MouthMagnet: Stopped attracting entity {entity.name}");
         }
     }
 
@@ -131,7 +130,7 @@ public class MouthMagnet : MonoBehaviour
             if (!ShouldAttractEntity(entity))
             {
                 attractedEntities.RemoveAt(i);
-                Debug.Log($"MouthMagnet: Removed {entity.name} - entity no longer meets attraction criteria");
+                GameLogger.LogVerbose($"MouthMagnet: Removed {entity.name} - entity no longer meets attraction criteria");
                 continue;
             }
 

@@ -53,7 +53,6 @@ public class BoatController : MonoBehaviour
             rightBoundary = rightBoundaryTransform.GetComponent<BoatBoundaryTrigger>();
         }
         
-        // ¡¡¡AQUÍ ESTABA EL PROBLEMA!!! - FALTABA ESTA LÍNEA
         StartCrewInitialization();
     }
     

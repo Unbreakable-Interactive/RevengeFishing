@@ -45,13 +45,13 @@ public class BoatBuoyancySystem : MonoBehaviour
             effectiveBuoyancyForce = requiredBuoyancy;
             if (debugMassChanges)
             {
-                Debug.Log($"AUTO-ADJUSTED: Buoyancy increased to {effectiveBuoyancyForce:F1} to support mass {rb.mass}");
+                GameLogger.LogVerbose($"AUTO-ADJUSTED: Buoyancy increased to {effectiveBuoyancyForce:F1} to support mass {rb.mass}");
             }
         }
         
         if (debugMassChanges)
         {
-            Debug.Log($"BoatBuoyancy: Initial mass setup - Base: {baseMass}, Total: {lastKnownMass}, Buoyancy: {effectiveBuoyancyForce}");
+            GameLogger.LogVerbose($"BoatBuoyancy: Initial mass setup - Base: {baseMass}, Total: {lastKnownMass}, Buoyancy: {effectiveBuoyancyForce}");
         }
     }
     
@@ -145,7 +145,7 @@ public class BoatBuoyancySystem : MonoBehaviour
                 
                 if (debugMassChanges)
                 {
-                    Debug.Log($"MASS UPDATE: Total: {currentTotalMass:F2}, Buoyancy: {effectiveBuoyancyForce:F1}");
+                    GameLogger.LogVerbose($"MASS UPDATE: Total: {currentTotalMass:F2}, Buoyancy: {effectiveBuoyancyForce:F1}");
                 }
             }
         }
@@ -185,7 +185,7 @@ public class BoatBuoyancySystem : MonoBehaviour
         
         if (debugMassChanges)
         {
-            Debug.Log($"CACHE REFRESH: Found {cachedChildRigidbodies?.Count ?? 0} rigidbodies, {cachedEnemies?.Length ?? 0} enemies");
+            GameLogger.LogVerbose($"CACHE REFRESH: Found {cachedChildRigidbodies?.Count ?? 0} rigidbodies, {cachedEnemies?.Length ?? 0} enemies");
         }
     }
     
@@ -198,7 +198,7 @@ public class BoatBuoyancySystem : MonoBehaviour
         
         if (debugMassChanges)
         {
-            Debug.Log("BoatBuoyancy: Manual buoyancy recalculation triggered with cache refresh");
+            GameLogger.LogVerbose("BoatBuoyancy: Manual buoyancy recalculation triggered with cache refresh");
         }
     }
 }

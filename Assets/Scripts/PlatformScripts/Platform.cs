@@ -21,7 +21,7 @@ public class Platform : MonoBehaviour
         platformCollider = GetComponent<Collider2D>();
         if (platformCollider == null)
         {
-            Debug.LogError($"Platform {gameObject.name} missing Collider2D component!");
+            GameLogger.LogError($"Platform {gameObject.name} missing Collider2D component!");
             return;
         }
         gameObject.layer = LayerMask.NameToLayer(LayerNames.PLATFORM);
@@ -36,7 +36,7 @@ public class Platform : MonoBehaviour
 
         if (showDebugInfo)
         {
-            Debug.Log($"Platform {gameObject.name} set up selective collisions");
+            GameLogger.LogVerbose($"Platform {gameObject.name} set up selective collisions");
         }
     }
 
@@ -65,7 +65,7 @@ public class Platform : MonoBehaviour
         {
             previousPlatform.UnregisterEnemy(enemy);
             if (showDebugInfo)
-                Debug.Log($"Enemy {enemy.name} MOVED from {previousPlatform.name} to {gameObject.name}");
+                GameLogger.LogVerbose($"Enemy {enemy.name} MOVED from {previousPlatform.name} to {gameObject.name}");
         }
         
         assignedEnemies.Add(enemy);
@@ -84,7 +84,7 @@ public class Platform : MonoBehaviour
         landEnemy.platformBoundsCalculated = true;
 
         if (showDebugInfo)
-            Debug.Log($"Enemy {enemy.name} assigned to platform {gameObject.name}. Total enemies: {assignedEnemies.Count}");
+            GameLogger.LogVerbose($"Enemy {enemy.name} assigned to platform {gameObject.name}. Total enemies: {assignedEnemies.Count}");
     }
 
     public virtual void RegisterEnemyAtRuntime(Enemy enemy)
@@ -108,7 +108,7 @@ public class Platform : MonoBehaviour
 
             if (showDebugInfo)
             {
-                Debug.Log($"Auto-assigned {enemy.name} to platform {gameObject.name}");
+                GameLogger.LogVerbose($"Auto-assigned {enemy.name} to platform {gameObject.name}");
             }
         }
     }
