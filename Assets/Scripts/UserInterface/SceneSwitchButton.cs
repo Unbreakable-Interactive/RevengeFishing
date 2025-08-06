@@ -27,7 +27,7 @@ public class SceneSwitchButton : MonoBehaviour
         else
         {
             if (enableDebugLogs)
-                Debug.LogError($"SceneSwitchButton: No Button component found on {gameObject.name}");
+                GameLogger.LogError($"SceneSwitchButton: No Button component found on {gameObject.name}");
         }
     }
 
@@ -44,12 +44,12 @@ public class SceneSwitchButton : MonoBehaviour
         if (string.IsNullOrEmpty(targetSceneName))
         {
             if (enableDebugLogs)
-                Debug.LogWarning($"SceneSwitchButton: Target scene name is empty on {gameObject.name}");
+                GameLogger.LogWarning($"SceneSwitchButton: Target scene name is empty on {gameObject.name}");
             return;
         }
 
         if (enableDebugLogs)
-            Debug.Log($"SceneSwitchButton: Switching to scene '{targetSceneName}'");
+            GameLogger.LogVerbose($"SceneSwitchButton: Switching to scene '{targetSceneName}'");
 
         SceneManager.LoadScene(targetSceneName);
     }

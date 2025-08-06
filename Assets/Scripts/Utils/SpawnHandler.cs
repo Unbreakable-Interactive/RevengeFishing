@@ -43,22 +43,22 @@ public class SpawnHandler : MonoBehaviour
     {
         if (spawnConfig == null)
         {
-            Debug.LogError($"SpawnHandler on {gameObject.name} needs a config!");
+            GameLogger.LogError($"SpawnHandler on {gameObject.name} needs a config!");
             return;
         }
 
         if (spawnPoints == null || spawnPoints.Length == 0)
         {
-            Debug.LogError($"SpawnHandler on {gameObject.name} needs spawn points!");
+            GameLogger.LogError($"SpawnHandler on {gameObject.name} needs spawn points!");
             return;
         }
 
-        nextSpawnTime = Time.time + 2f; // Initial delay
-        oneTimeCompleted = false; // FIXED: Reset oneTime flag
+        nextSpawnTime = Time.time + 2f;
+        oneTimeCompleted = false;
 
         if (spawnConfig.showLogs)
         {
-            Debug.Log($"SpawnHandler ready: {spawnConfig.configName}");
+            GameLogger.LogVerbose($"SpawnHandler ready: {spawnConfig.configName}");
         }
     }
 
@@ -104,7 +104,7 @@ public class SpawnHandler : MonoBehaviour
                 spawnedThisCycle = 0;
 
                 if (spawnConfig.showLogs)
-                    Debug.Log($"{spawnConfig.configName}: Cooldown ended, starting new cycle");
+                    GameLogger.LogVerbose($"{spawnConfig.configName}: Cooldown ended, starting new cycle");
             }
             return;
         }
@@ -136,10 +136,9 @@ public class SpawnHandler : MonoBehaviour
                 oneTimeCompleted = true;
 
                 if (spawnConfig.showLogs)
-                    Debug.Log($"{spawnConfig.configName}: Initial OneTime spawn completed");
+                    GameLogger.LogVerbose($"{spawnConfig.configName}: Initial OneTime spawn completed");
             }
         }
-
         else if (oneTimeCompleted && currentActive < spawnConfig.keepActiveAtOnce)
         {
             if (Time.time >= nextSpawnTime)
@@ -149,7 +148,7 @@ public class SpawnHandler : MonoBehaviour
                     ScheduleNextSpawn();
 
                     if (spawnConfig.showLogs)
-                        Debug.Log($"{spawnConfig.configName}: OneTime respawn after enemy death");
+                        GameLogger.LogVerbose($"{spawnConfig.configName}: OneTime respawn after enemy death");
                 }
             }
         }
@@ -161,7 +160,7 @@ public class SpawnHandler : MonoBehaviour
         cooldownEndTime = Time.time + spawnConfig.waitBetweenCycles;
 
         if (spawnConfig.showLogs)
-            Debug.Log($"{spawnConfig.configName}: Starting cooldown for {spawnConfig.waitBetweenCycles} seconds");
+            GameLogger.LogVerbose($"{spawnConfig.configName}: Starting cooldown for {spawnConfig.waitBetweenCycles} seconds");
     }
 
     bool TrySpawnEnemy()
@@ -176,7 +175,7 @@ public class SpawnHandler : MonoBehaviour
             SetupEnemy(enemy, spawnPos);
 
             if (spawnConfig.showLogs)
-                Debug.Log($"Spawned {spawnConfig.enemyType} at {spawnPos}. Active: {currentActive}");
+                GameLogger.LogVerbose($"Spawned {spawnConfig.enemyType} at {spawnPos}. Active: {currentActive}");
 
             return true;
         }
@@ -211,7 +210,7 @@ public class SpawnHandler : MonoBehaviour
         {
             if (spawnPoints.Length != 2)
             {
-                Debug.LogError("Spawn handler type Zone only supports 2 SpawnPoints");
+                GameLogger.LogError("Spawn handler type Zone only supports 2 SpawnPoints");
                 return Vector3.zero;
             }
 
@@ -234,7 +233,7 @@ public class SpawnHandler : MonoBehaviour
         }
 
         if (spawnConfig.showLogs)
-            Debug.LogWarning($"{spawnConfig.configName}: Couldn't find valid spawn position");
+            GameLogger.LogWarning($"{spawnConfig.configName}: Couldn't find valid spawn position");
 
         return Vector3.zero;
     }
@@ -279,12 +278,12 @@ public class SpawnHandler : MonoBehaviour
         
             if (spawnConfig.showLogs)
             {
-                Debug.Log($"BoatController initialized for {boatObject.name} with boundaries L:{leftBoundary?.name} R:{rightBoundary?.name}");
+                GameLogger.LogVerbose($"BoatController initialized for {boatObject.name} with boundaries L:{leftBoundary?.name} R:{rightBoundary?.name}");
             }
         }
         else
         {
-            Debug.LogError($"Spawned boat {boatObject.name} doesn't have BoatController component!");
+            GameLogger.LogError($"Spawned boat {boatObject.name} doesn't have BoatController component!");
         }
     }
 
@@ -343,7 +342,7 @@ public class SpawnHandler : MonoBehaviour
 
             if (!wasUnlocked && isUnlocked && spawnConfig.showLogs)
             {
-                Debug.Log($"{spawnConfig.configName} UNLOCKED! Player level: {playerLevel}");
+                GameLogger.LogVerbose($"{spawnConfig.configName} UNLOCKED! Player level: {playerLevel}");
             }
         }
     }
@@ -356,7 +355,7 @@ public class SpawnHandler : MonoBehaviour
         if (spawnConfig != null && spawnConfig.showLogs)
         {
             string objName = enemyObj != null ? enemyObj.name : "Unknown";
-            Debug.Log($"Enemy {objName} destroyed for {spawnConfig.configName}. Active: {currentActive}");
+            GameLogger.LogVerbose($"Enemy {objName} destroyed for {spawnConfig.configName}. Active: {currentActive}");
         }
 
         if (spawnConfig.spawnType == SpawnHandlerConfig.SpawnType.OneTime && oneTimeCompleted)
@@ -379,15 +378,15 @@ public class SpawnHandler : MonoBehaviour
         nextSpawnTime = Time.time + 2f;
 
         if (spawnConfig.showLogs)
-            Debug.Log($"🔄 {spawnConfig.configName} spawner reset");
+            GameLogger.LogVerbose($"🔄 {spawnConfig.configName} spawner reset");
     }
 
 #if UNITY_EDITOR
     void LogStats()
     {
-        Debug.Log($"=== {spawnConfig.configName} ===");
-        Debug.Log($"Active: {currentActive}, Unlocked: {isUnlocked}, In Cooldown: {inCooldown}");
-        Debug.Log($"Spawned this cycle: {spawnedThisCycle}, OneTime completed: {oneTimeCompleted}");
+        GameLogger.LogVerbose($"=== {spawnConfig.configName} ===");
+        GameLogger.LogVerbose($"Active: {currentActive}, Unlocked: {isUnlocked}, In Cooldown: {inCooldown}");
+        GameLogger.LogVerbose($"Spawned this cycle: {spawnedThisCycle}, OneTime completed: {oneTimeCompleted}");
     }
 #endif
 }

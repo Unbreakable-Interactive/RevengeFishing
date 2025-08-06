@@ -18,7 +18,7 @@ public class BoatMovementController : MonoBehaviour
         }
         
         if (debugMovement)
-            Debug.Log($"BoatMovementController initialized on {gameObject.name}");
+            GameLogger.LogVerbose($"BoatMovementController initialized on {gameObject.name}");
     }
 
     public void ApplyMovement(Vector2 characterMovement, bool isMoving)
@@ -26,7 +26,6 @@ public class BoatMovementController : MonoBehaviour
         if (rb == null) return;
 
         Vector2 boatVelocity = GetBoatVelocity();
-        
         Vector2 finalMovement = characterMovement + boatVelocity;
         
         if (isMoving || boatVelocity != Vector2.zero)
@@ -36,7 +35,7 @@ public class BoatMovementController : MonoBehaviour
             
             if (debugMovement && isMoving)
             {
-                Debug.Log($"BoatMovement: Character={characterMovement}, Boat={boatVelocity}, Final={finalMovement}");
+                GameLogger.LogVerbose($"BoatMovement: Character={characterMovement}, Boat={boatVelocity}, Final={finalMovement}");
             }
         }
     }
@@ -58,6 +57,6 @@ public class BoatMovementController : MonoBehaviour
     public void StopMovement()
     {
         if (debugMovement)
-            Debug.Log($"BoatMovementController: Movement stopped for {gameObject.name}");
+            GameLogger.LogVerbose($"BoatMovementController: Movement stopped for {gameObject.name}");
     }
 }

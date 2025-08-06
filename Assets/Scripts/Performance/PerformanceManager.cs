@@ -101,7 +101,7 @@ public class PerformanceManager : MonoBehaviour
                 componentReferences.Add(mb);
             }
             
-            Debug.Log($"PerformanceManager: Registered component '{component.ComponentName}'");
+            GameLogger.LogVerbose($"PerformanceManager: Registered component '{component.ComponentName}'");
         }
     }
     
@@ -120,7 +120,7 @@ public class PerformanceManager : MonoBehaviour
             componentReferences.Remove(mb);
         }
         
-        Debug.Log($"PerformanceManager: Unregistered component '{component.ComponentName}'");
+        GameLogger.LogVerbose($"PerformanceManager: Unregistered component '{component.ComponentName}'");
     }
     
     /// <summary>
@@ -151,7 +151,7 @@ public class PerformanceManager : MonoBehaviour
             }
         }
         
-        Debug.Log($"PerformanceManager: Discovered {performanceComponents.Count} performance components");
+        GameLogger.LogVerbose($"PerformanceManager: Discovered {performanceComponents.Count} performance components");
     }
     
     #endregion
@@ -179,7 +179,7 @@ public class PerformanceManager : MonoBehaviour
         }
         
         isInitialized = true;
-        Debug.Log($"PerformanceManager: Initialized {performanceComponents.Count} components (Lightweight: {lightweightMode})");
+        GameLogger.LogVerbose($"PerformanceManager: Initialized {performanceComponents.Count} components (Lightweight: {lightweightMode})");
     }
     
     /// <summary>
@@ -209,7 +209,7 @@ public class PerformanceManager : MonoBehaviour
         {
             component.SetEnabled(true);
         }
-        Debug.Log("PerformanceManager: Enabled all components");
+        GameLogger.LogVerbose("PerformanceManager: Enabled all components");
     }
     
     /// <summary>
@@ -221,7 +221,7 @@ public class PerformanceManager : MonoBehaviour
         {
             component.SetEnabled(false);
         }
-        Debug.Log("PerformanceManager: Disabled all components");
+        GameLogger.LogVerbose("PerformanceManager: Disabled all components");
     }
     
     /// <summary>
@@ -233,7 +233,7 @@ public class PerformanceManager : MonoBehaviour
         {
             component.Reset();
         }
-        Debug.Log("PerformanceManager: Reset all components");
+        GameLogger.LogVerbose("PerformanceManager: Reset all components");
     }
     
     /// <summary>
@@ -254,7 +254,7 @@ public class PerformanceManager : MonoBehaviour
                     component.ShowDebugInfo = false;
                 }
             }
-            Debug.Log("PerformanceManager: Switched to LIGHTWEIGHT mode (FPS only)");
+            GameLogger.LogVerbose("PerformanceManager: Switched to LIGHTWEIGHT mode (FPS only)");
         }
         else
         {
@@ -263,7 +263,7 @@ public class PerformanceManager : MonoBehaviour
             {
                 component.SetEnabled(true);
             }
-            Debug.Log("PerformanceManager: Switched to FULL DEBUG mode");
+            GameLogger.LogVerbose("PerformanceManager: Switched to FULL DEBUG mode");
         }
     }
     
@@ -283,7 +283,7 @@ public class PerformanceManager : MonoBehaviour
             component.ShowDebugInfo = showAllDebugInfo;
         }
         
-        Debug.Log($"PerformanceManager: Debug info {(showAllDebugInfo ? "enabled" : "disabled")} (Lightweight: {lightweightMode})");
+        GameLogger.LogVerbose($"PerformanceManager: Debug info {(showAllDebugInfo ? "enabled" : "disabled")} (Lightweight: {lightweightMode})");
     }
     
     /// <summary>
@@ -328,7 +328,7 @@ public class PerformanceManager : MonoBehaviour
         }
         
         string status = showAllDebugInfo ? "ENABLED" : "DISABLED";
-        Debug.Log($"PerformanceManager: ALL performance systems {status} (Tab key pressed)");
+        GameLogger.LogVerbose($"PerformanceManager: ALL performance systems {status} (Tab key pressed)");
     }
     
     private void ToggleComponentDebug<T>() where T : class, IPerformanceComponent
@@ -337,7 +337,7 @@ public class PerformanceManager : MonoBehaviour
         if (component != null)
         {
             component.ShowDebugInfo = !component.ShowDebugInfo;
-            Debug.Log($"PerformanceManager: Toggled debug for {component.ComponentName}: {component.ShowDebugInfo}");
+            GameLogger.LogVerbose($"PerformanceManager: Toggled debug for {component.ComponentName}: {component.ShowDebugInfo}");
         }
     }
     
@@ -545,7 +545,7 @@ public class PerformanceManager : MonoBehaviour
     [ContextMenu("Log Performance Summary")]
     public void LogPerformanceSummary()
     {
-        Debug.Log($"PERFORMANCE SUMMARY: {GetPerformanceSummary()}");
+        GameLogger.LogVerbose($"PERFORMANCE SUMMARY: {GetPerformanceSummary()}");
     }
     
     #endregion
