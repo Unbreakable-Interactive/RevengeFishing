@@ -77,7 +77,7 @@ public class HookSpawner : MonoBehaviour
             return;
         }
         
-        throwDirection = new Vector2(Random.Range(0.2f, 1f) * transform.localScale.x, Random.Range(0.2f, 0.5f)) ;
+        throwDirection = new Vector3(Random.Range(0.2f, 1f) * transform.localScale.x, Random.Range(0.1f, 0.3f), .2f) ;
 
         // hookMaxDistance = originalMaxDistance;
         hookMaxDistance = originalMaxDistance + (Random.Range(-2f, 2f));

@@ -1,8 +1,12 @@
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class MouthMagnet : MonoBehaviour
 {
+    [Header("Player Reference")]
+    [SerializeField] private Player player; // Reference to the Player component
+
     [Header("Magnet Settings")]
     [SerializeField] private float magneticForce = 10f;
     [SerializeField] private float baseMagnetRange = 1.4f;
@@ -98,21 +102,31 @@ public class MouthMagnet : MonoBehaviour
 
         if (entity != null && !attractedEntities.Contains(entity))
         {
+            if (entity.GetComponent<Enemy>() != null && entity.GetComponent<Enemy>().State == Enemy.EnemyState.Alive) return;
             attractedEntities.Add(entity);
             GameLogger.LogVerbose($"MouthMagnet: Started attracting entity {entity.name} of type {entity.GetType().Name}");
             GameLogger.LogVerbose($"Current attracted entities count: {attractedEntities.Count}");
         }
+        player.animator.SetInteger("objectsInRange", attractedEntities.Count);
+
     }
 
     private void OnTriggerExit2D(Collider2D other)
     {
         Entity entity = other.GetComponentInParent<Entity>();
 
+        RemoveEntity(entity);
+    }
+
+    public void RemoveEntity(Entity entity)
+    {
         if (entity != null && attractedEntities.Contains(entity))
         {
             attractedEntities.Remove(entity);
             GameLogger.LogVerbose($"MouthMagnet: Stopped attracting entity {entity.name}");
         }
+        player.animator.SetInteger("objectsInRange", attractedEntities.Count);
+
     }
 
     private void ApplyMagneticForceToEntities()

@@ -100,7 +100,7 @@ public class Player : Entity
     [Header("Visual Settings")]
     [SerializeField] private SpriteRenderer playerSpriteRenderer;
 
-    Animator animator;
+    public Animator animator;
 
     [Header("Debug")]
     public bool enableDebugLogs = false;
@@ -328,6 +328,11 @@ public class Player : Entity
 
     public int GetFatigue() => entityFatigue.fatigue;
 
+    public void TriggerBite()
+    {
+        animator?.SetTrigger("isBiting");
+    }
+
     public void TakeFishingFatigue(float fatigueDamage)
     {
         // 10% enemy's fatigue
@@ -347,6 +352,8 @@ public class Player : Entity
         if (!activeBitingHooks.Contains(hook))
         {
             activeBitingHooks.Add(hook);
+            GetComponentInChildren<MouthMagnet>().RemoveEntity(hook); // Hook is no longer being drawn to center of magnet
+            TriggerBite(); // Trigger bite animation
             DebugLog($"Hook {hook.name} is now biting player. Total hooks: {activeBitingHooks.Count}");
         }
     }
@@ -561,6 +568,20 @@ public class Player : Entity
 
         // Transition to GameOver scene
         SceneManager.LoadScene("GameOver");
+    }
+
+    #endregion
+
+    #region Special Abilities
+
+    protected void SpecialAbilityOne() //this will be the Backflip ability
+    {
+
+    }
+
+    protected void SpecialAbilityTwo() //this will be the Big Bite ability
+    {
+
     }
 
     #endregion
