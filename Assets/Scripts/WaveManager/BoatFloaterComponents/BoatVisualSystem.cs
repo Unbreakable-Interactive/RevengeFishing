@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class BoatVisualSystem : MonoBehaviour
@@ -6,12 +7,15 @@ public class BoatVisualSystem : MonoBehaviour
     [SerializeField] private SpriteRenderer boatSpriteRenderer;
     [SerializeField] private bool useSpriteFlip = true;
     [SerializeField] private bool adaptToScaleDirection = true;
+
+    [SerializeField] private List<SpriteRenderer> boatPartsRenderer = new List<SpriteRenderer>();
     
     private float currentDirectionMultiplier = 1f;
     
     public void Initialize()
     {
         UpdateDirectionMultiplier();
+        DestroyEnemy(false);
     }
     
     public void UpdateVisualDirection(float movementDirection)
@@ -33,6 +37,16 @@ public class BoatVisualSystem : MonoBehaviour
         else
         {
             currentDirectionMultiplier = transform.localScale.x >= 0 ? 1f : -1f;
+        }
+    }
+
+    public void DestroyEnemy(bool isDestroyed)
+    {
+        boatSpriteRenderer.gameObject.SetActive(!isDestroyed);
+
+        foreach (SpriteRenderer renderer in boatPartsRenderer)
+        {
+            renderer.gameObject.SetActive(isDestroyed);
         }
     }
 

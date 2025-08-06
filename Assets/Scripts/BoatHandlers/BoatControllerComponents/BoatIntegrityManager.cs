@@ -11,7 +11,10 @@ public class BoatIntegrityManager : MonoBehaviour
     
     public Action<float, float> OnIntegrityChanged;
     
-    private BoatCrewManager crewManager;
+    [SerializeField] private BoatCrewManager crewManager;
+    
+    [SerializeField] private BoatMovementSystem boatMovement;
+    [SerializeField] private BoatVisualSystem boatVisualSystem;
     
     public float CurrentIntegrity => currentIntegrity;
     public float MaxIntegrity => maxIntegrity;
@@ -75,6 +78,9 @@ public class BoatIntegrityManager : MonoBehaviour
         if (isBoatDestroyed) return;
         
         isBoatDestroyed = true;
+        
+        boatMovement.DestroyState();
+        boatVisualSystem.DestroyEnemy(true);
         
         BoatLifecycleManager lifecycleManager = GetComponent<BoatLifecycleManager>();
         if (lifecycleManager != null)

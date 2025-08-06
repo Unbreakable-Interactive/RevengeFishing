@@ -5,12 +5,14 @@ public enum BoatMovementState
 {
     AutoMove,
     Driven,
+    Destroyed
 }
 
 public class BoatMovementSystem : MonoBehaviour
 {
     private const float DRIVEN_SPEED = 60;
     private const float AUTOMOVE_SPEED = 2;
+    private const float DESTROYED_SPEED = 0;
     
     [Header("Movement Settings")]
     [SerializeField] private float movementSpeed = 2f;
@@ -37,6 +39,7 @@ public class BoatMovementSystem : MonoBehaviour
     {
         rb = rigidbody;
         visualSystem = visual;
+        movementState = BoatMovementState.AutoMove;
 
         SetupSpeedByState();
     }
@@ -45,6 +48,13 @@ public class BoatMovementSystem : MonoBehaviour
     {
         movementSpeed = movementState == BoatMovementState.AutoMove ? AUTOMOVE_SPEED : DRIVEN_SPEED;
         maxMovementForce = movementState == BoatMovementState.AutoMove ? AUTOMOVE_SPEED : DRIVEN_SPEED;
+    }
+
+    public void DestroyState()
+    {
+        movementState = BoatMovementState.Destroyed;
+        movementSpeed = DESTROYED_SPEED;
+        maxMovementForce = DESTROYED_SPEED;
     }
     
     public void InitializeBoundaries(Transform left, Transform right)

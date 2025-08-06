@@ -22,8 +22,10 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
     [Space]
     [SerializeField] private List<BoatLandEnemy> allCrewMembers = new List<BoatLandEnemy>();
     
-    private BoatIntegrityManager integrityManager;
-    private BoatFloater boatFloater;
+    [SerializeField] private BoatIntegrityManager integrityManager;
+    [SerializeField] private BoatFloater boatFloater;
+    // [SerializeField] private BoatMovementSystem boatMovement;
+    // [SerializeField] private BoatVisualSystem boatVisualSystem;
     
     public string GetBoatID() => boatID.UniqueID;
     public void SetBoatID(BoatID newBoatID) => boatID = newBoatID;
