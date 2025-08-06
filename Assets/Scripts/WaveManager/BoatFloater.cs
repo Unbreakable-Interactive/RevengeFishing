@@ -37,7 +37,7 @@ public class BoatFloater : MonoBehaviour
     {
         if (floatPoints[0] == null || floatPoints[1] == null || floatPoints[2] == null)
         {
-            Debug.LogError("BoatFloater: Float Points not assigned in inspector.");
+            GameLogger.LogError("BoatFloater: Float Points not assigned in inspector.");
             return false;
         }
         return true;

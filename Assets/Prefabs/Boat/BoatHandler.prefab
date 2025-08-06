@@ -159,8 +159,8 @@ MonoBehaviour:
   lifecycleManager: {fileID: 4501382052666747941}
   boatFloater: {fileID: 3157742320908821756}
   boatPlatform: {fileID: 8531477562920402828}
-  leftBoundary: {fileID: 0}
-  rightBoundary: {fileID: 0}
+  leftBoundary: {fileID: 1736860403605829746}
+  rightBoundary: {fileID: 8710223552841239171}
 --- !u!114 &2578428894357833174
 MonoBehaviour:
   m_ObjectHideFlags: 0

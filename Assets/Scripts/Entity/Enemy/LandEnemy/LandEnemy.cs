@@ -125,7 +125,7 @@ public class LandEnemy : Enemy, IBoatComponent
         platformBoundsCalculated = false;
         platformLeftEdge = 0f;
         platformRightEdge = 0f;
-        Debug.Log($"{gameObject.name} platform assignment cleared");
+        GameLogger.LogVerbose($"{gameObject.name} platform assignment cleared");
     }
 
     public override void ScheduleNextAction()
@@ -135,7 +135,7 @@ public class LandEnemy : Enemy, IBoatComponent
             nextActionTime = Time.time + Random.Range(1f, 3f);
             
             if (assignedPlatform != null && assignedPlatform.showDebugInfo)
-                Debug.Log($"{gameObject.name}: Next action scheduled for {nextActionTime:F1}");
+                GameLogger.LogVerbose($"{gameObject.name}: Next action scheduled for {nextActionTime:F1}");
         }
         else
         {
@@ -172,11 +172,11 @@ public class LandEnemy : Enemy, IBoatComponent
                 landEnemyConfig.runProbability = 0.3f;
                 landEnemyConfig.identifier = TypeIdentifier.Land;
                 
-                Debug.LogWarning($"{gameObject.name}: No LandEnemyConfig assigned! Created default config.");
+                GameLogger.LogWarning($"{gameObject.name}: No LandEnemyConfig assigned! Created default config.");
             }
             else
             {
-                Debug.Log($"{gameObject.name}: Loaded default LandEnemyConfig from Resources");
+                GameLogger.LogVerbose($"{gameObject.name}: Loaded default LandEnemyConfig from Resources");
             }
         }
 
@@ -192,12 +192,12 @@ public class LandEnemy : Enemy, IBoatComponent
         idleDetector = GetComponentInChildren<IdleDetector>();
         if (idleDetector != null && _landMovementState == LandMovementState.Idle && idleDetector.ShouldAvoidIdle())
         {
-            Debug.Log($"{gameObject.name} moved on spawn due to overlap with idle enemies");
+            GameLogger.LogVerbose($"{gameObject.name} moved on spawn due to overlap with idle enemies");
             ChooseMovementAction();
         }
         animator = GetComponent<Animator>();
-        Debug.Log($"{gameObject.name} - Enemy initialized with power level {_powerLevel}");
-        Debug.Log($"{animator != null}");
+        GameLogger.Log($"{gameObject.name} - Enemy initialized with power level {_powerLevel}");
+        GameLogger.LogVerbose($"Animator found: {animator != null}");
     }
 
     protected override void Update()
@@ -212,21 +212,22 @@ public class LandEnemy : Enemy, IBoatComponent
     public override void SetMovementMode(bool aboveWater)
     {
         base.SetMovementMode(aboveWater);
-        Debug.Log($"{gameObject.name} SetMovementMode called: aboveWater={aboveWater}, state={_state}, hasStartedFloating={hasStartedFloating}");
+        GameLogger.LogVerbose($"{gameObject.name} SetMovementMode called: aboveWater={aboveWater}, state={_state}, hasStartedFloating={hasStartedFloating}");
+        
         if (aboveWater)
         {
             if (_state == EnemyState.Defeated && hasStartedFloating)
             {
-                Debug.Log($"{gameObject.name} - ESCAPE CONDITIONS MET! Triggering escape.");
+                GameLogger.Log($"{gameObject.name} - ESCAPE CONDITIONS MET! Triggering escape.");
                 TriggerEscape();
                 return;
             }
             else if (_state == EnemyState.Defeated)
             {
-                Debug.Log($"{gameObject.name} - Defeated but escape conditions not met: hasStartedFloating={hasStartedFloating}");
+                GameLogger.LogVerbose($"{gameObject.name} - Defeated but escape conditions not met: hasStartedFloating={hasStartedFloating}");
             }
             hasStartedFloating = false;
-            Debug.Log($"{gameObject.name} enemy switched to AIRBORNE mode");
+            GameLogger.LogVerbose($"{gameObject.name} enemy switched to AIRBORNE mode");
         }
         else
         {
@@ -235,7 +236,7 @@ public class LandEnemy : Enemy, IBoatComponent
                 TriggerDefeat();
             }
             hasStartedFloating = true;
-            Debug.Log($"{gameObject.name} enemy switched to UNDERWATER mode");
+            GameLogger.LogVerbose($"{gameObject.name} enemy switched to UNDERWATER mode");
         }
     }
 
@@ -283,7 +284,7 @@ public class LandEnemy : Enemy, IBoatComponent
         isPullingPlayer = true;
         if (player == null)
         {
-            Debug.LogError("Player not found for pull mechanic!");
+            GameLogger.LogError("Player not found for pull mechanic!");
             isPullingPlayer = false;
             yield break;
         }
@@ -311,7 +312,7 @@ public class LandEnemy : Enemy, IBoatComponent
         float pullStrength = lineShortened * pullForce;
         float pullDuration = 0.4f;
 
-        Debug.Log($"[REEL FORCE] Applying reel force: direction={pullDirection}, strength={pullStrength}, duration={pullDuration}");
+        GameLogger.LogVerbose($"[REEL FORCE] Applying reel force: direction={pullDirection}, strength={pullStrength}, duration={pullDuration}");
 
         float elapsedTime = 0f;
         Rigidbody2D playerRb = player.GetComponent<Rigidbody2D>();
@@ -335,7 +336,7 @@ public class LandEnemy : Enemy, IBoatComponent
         Rigidbody2D playerRb = player.GetComponent<Rigidbody2D>();
         float resistanceForce = pullForce * 0.5f;
 
-        Debug.Log($"[RESISTANCE PULL] Applying resistance force: {resistanceForce}");
+        GameLogger.LogVerbose($"[RESISTANCE PULL] Applying resistance force: {resistanceForce}");
         playerRb.AddForce(pullDirection * resistanceForce, ForceMode2D.Impulse);
         yield return null;
     }
@@ -344,7 +345,7 @@ public class LandEnemy : Enemy, IBoatComponent
     {
         if (player == null)
         {
-            Debug.LogWarning("Cannot apply pull fatigue damage - player not found!");
+            GameLogger.LogWarning("Cannot apply pull fatigue damage - player not found!");
             return;
         }
 
@@ -356,7 +357,7 @@ public class LandEnemy : Enemy, IBoatComponent
     {
         if (hookSpawner == null || !hookSpawner.HasActiveHook())
         {
-            Debug.LogWarning("Cannot shorten line - no active hook!");
+            GameLogger.LogWarning("Cannot shorten line - no active hook!");
             return 0f;
         }
 
@@ -398,7 +399,7 @@ public class LandEnemy : Enemy, IBoatComponent
         if (fishingToolEquipped)
         {
             fishingToolEquipped = false;
-            Debug.Log($"{gameObject.name} - Fishing tool cleaned up due to defeat");
+            GameLogger.LogVerbose($"{gameObject.name} - Fishing tool cleaned up due to defeat");
         }
     }
 
@@ -461,10 +462,6 @@ public class LandEnemy : Enemy, IBoatComponent
             platformLeftEdge = bounds.min.x + edgeBuffer;
             platformRightEdge = bounds.max.x - edgeBuffer;
             platformBoundsCalculated = true;
-            if (assignedPlatform.showDebugInfo)
-            {
-                //Debug.Log($"Platform bounds calculated for {gameObject.name}: Left={platformLeftEdge}, Right={platformRightEdge}");
-            }
         }
     }
 
@@ -492,7 +489,7 @@ public class LandEnemy : Enemy, IBoatComponent
             bodyCollider.enabled = true;
         }
     
-        Debug.Log($"{gameObject.name} LandEnemy state completely reset to Alive");
+        GameLogger.Log($"{gameObject.name} LandEnemy state completely reset to Alive");
     }
 
     protected override void TriggerDefeat()
@@ -526,13 +523,13 @@ public class LandEnemy : Enemy, IBoatComponent
         if (fishingToolEquipped) return;
 
         float randomValue = Random.value;
-        Debug.Log($"Choosing random land action for {gameObject.name}. Random value = {randomValue}");
+        GameLogger.LogVerbose($"Choosing random land action for {gameObject.name}. Random value = {randomValue}");
 
         if (randomValue < landEnemyConfig.idleProbability)
         {
             if (idleDetector != null && idleDetector.ShouldAvoidIdle())
             {
-                Debug.Log($"{gameObject.name} prevented from going idle due to overlap with {idleDetector.GetOverlappingIdleEnemyCount()} idle enemy(ies)");
+                GameLogger.LogVerbose($"{gameObject.name} prevented from going idle due to overlap with {idleDetector.GetOverlappingIdleEnemyCount()} idle enemy(ies)");
                 ChooseMovementAction();
                 return;
             }
@@ -659,7 +656,7 @@ public class LandEnemy : Enemy, IBoatComponent
 
         if (assignedPlatform != null && assignedPlatform.showDebugInfo)
         {
-            Debug.Log($"{gameObject.name} equipped fishing tool");
+            GameLogger.LogVerbose($"{gameObject.name} equipped fishing tool");
         }
 
         return true;
@@ -676,7 +673,7 @@ public class LandEnemy : Enemy, IBoatComponent
 
         if (assignedPlatform != null && assignedPlatform.showDebugInfo)
         {
-            Debug.Log($"{gameObject.name} put away fishing tool");
+            GameLogger.LogVerbose($"{gameObject.name} put away fishing tool");
         }
 
         return true;
@@ -701,7 +698,7 @@ public class LandEnemy : Enemy, IBoatComponent
             GameObject droppedToolHandler = Instantiate(toolDropPrefab, transform.position, transform.rotation);
             if (assignedPlatform != null && assignedPlatform.showDebugInfo)
             {
-                Debug.Log($"{gameObject.name} dropped their tool");
+                GameLogger.LogVerbose($"{gameObject.name} dropped their tool");
             }
         }
     }

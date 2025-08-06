@@ -28,9 +28,7 @@ public abstract class Entity : MonoBehaviour
 
     private bool isInitialized = false;
 
-    // Add this property after the existing fields
     public int PowerLevel => _powerLevel;
-
     public bool IsAboveWater => isAboveWater;
 
     public enum EntityType
@@ -60,7 +58,7 @@ public abstract class Entity : MonoBehaviour
 
         if (GetComponent<Player>() != null)
         {
-            _powerLevel = 100; //starting power level for player
+            _powerLevel = 100;
         }
 
         entityFatigue = new EntityFatigue(_powerLevel != 0 ? _powerLevel : 100, 0);
@@ -68,7 +66,7 @@ public abstract class Entity : MonoBehaviour
         SetMovementMode(isAboveWater);
         isInitialized = true;
 
-        Debug.Log($"{gameObject.name} - EntityMovement initialized successfully");
+        GameLogger.Log($"{gameObject.name} - EntityMovement initialized successfully");
     }
 
     protected virtual void Update()
@@ -117,7 +115,7 @@ public abstract class Entity : MonoBehaviour
         }
     }
 
-    // Abstract methods that derived classes must implement
     protected abstract void AirborneBehavior();
     protected abstract void UnderwaterBehavior();
 }
+

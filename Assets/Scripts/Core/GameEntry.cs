@@ -29,27 +29,27 @@ public class GameEntry : MonoBehaviour
     private void InitializeGlobalSystems()
     {
         if (enableDebugLogs)
-            Debug.Log("GameEntry: Global systems initialized");
+            GameLogger.Log("GameEntry: Global systems initialized");
     }
     
     public void LoadGameScene()
     {
         if (enableDebugLogs)
-            Debug.Log("GameEntry: Loading game scene");
+            GameLogger.Log("GameEntry: Loading game scene");
         SceneManager.LoadScene(gameSceneName);
     }
     
     public void LoadMenuScene()
     {
         if (enableDebugLogs)
-            Debug.Log("GameEntry: Loading menu scene");
+            GameLogger.Log("GameEntry: Loading menu scene");
         SceneManager.LoadScene(menuSceneName);
     }
     
     public void QuitGame()
     {
         if (enableDebugLogs)
-            Debug.Log("GameEntry: Quitting game");
+            GameLogger.Log("GameEntry: Quitting game");
         Application.Quit();
     }
 }

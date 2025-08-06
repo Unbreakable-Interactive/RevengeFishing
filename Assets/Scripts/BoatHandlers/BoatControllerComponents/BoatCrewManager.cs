@@ -1,4 +1,3 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -70,7 +69,7 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
                 }
             }
             
-            Debug.Log($"BoatCrewManager: ISOLATED boat physics between {gameObject.name} and {otherBoat.gameObject.name}");
+            GameLogger.LogVerbose($"BoatCrewManager: ISOLATED boat physics between {gameObject.name} and {otherBoat.gameObject.name}");
         }
     }
     
@@ -88,7 +87,7 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
         leftBoundary.SetBoatID(boatID);
         rightBoundary.SetBoatID(boatID);
         
-        Debug.Log($"BoatCrewManager: Configured boat ID {boatID} for all components");
+        GameLogger.LogVerbose($"BoatCrewManager: Configured boat ID {boatID} for all components");
     }
     
     public void StartCrewInitialization()
@@ -156,7 +155,7 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
     {
         if (boatFishermanPrefab == null)
         {
-            Debug.LogError($"No boatFishermanPrefab assigned to {gameObject.name}!");
+            GameLogger.LogError($"No boatFishermanPrefab assigned to {gameObject.name}!");
             return null;
         }
         
@@ -185,7 +184,7 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
         }
         else
         {
-            Debug.LogError($"Instantiated BoatFishermanHandler doesn't contain BoatLandEnemy component!");
+            GameLogger.LogError($"Instantiated BoatFishermanHandler doesn't contain BoatLandEnemy component!");
             Destroy(crewHandlerObj);
             return null;
         }

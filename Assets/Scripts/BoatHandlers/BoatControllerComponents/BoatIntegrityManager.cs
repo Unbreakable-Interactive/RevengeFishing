@@ -22,7 +22,7 @@ public class BoatIntegrityManager : MonoBehaviour
         crewManager = GetComponent<BoatCrewManager>();
         if (crewManager == null)
         {
-            Debug.LogError("BoatIntegrityManager: BoatCrewManager not found on same GameObject!");
+            GameLogger.LogError("BoatIntegrityManager: BoatCrewManager not found on same GameObject!");
         }
     }
     
@@ -61,8 +61,6 @@ public class BoatIntegrityManager : MonoBehaviour
     public void CheckBoatDestruction()
     {
         if (crewManager == null) return;
-        
-        // Filter by enemy Type 
         
         int aliveCrewCount = crewManager.GetActiveCrewCount();
         

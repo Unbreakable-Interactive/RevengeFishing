@@ -31,7 +31,7 @@ public class BoatMovementSystem : MonoBehaviour
     private float currentMovementDirection = 1f;
     private Platform assignedPlatform;
     
-    [SerializeField] BoatMovementState  movementState = BoatMovementState.AutoMove;
+    [SerializeField] BoatMovementState movementState = BoatMovementState.AutoMove;
     
     public void Initialize(Rigidbody2D rigidbody, BoatVisualSystem visual)
     {
@@ -124,7 +124,7 @@ public class BoatMovementSystem : MonoBehaviour
         
         if (debugMovement)
         {
-            Debug.Log($"BoatMovement: Registered to platform {platform.name}, starting movement!");
+            GameLogger.LogVerbose($"BoatMovement: Registered to platform {platform.name}, starting movement!");
         }
         
         StartMovement();
@@ -139,7 +139,7 @@ public class BoatMovementSystem : MonoBehaviour
         
         if (debugMovement)
         {
-            Debug.Log("BoatMovement: Movement started!");
+            GameLogger.LogVerbose("BoatMovement: Movement started!");
         }
     }
     
@@ -151,7 +151,7 @@ public class BoatMovementSystem : MonoBehaviour
         if (debugMovement)
         {
             string direction = currentMovementDirection > 0 ? "RIGHT" : "LEFT";
-            Debug.Log($"BoatMovement: New movement direction: {direction}");
+            GameLogger.LogVerbose($"BoatMovement: New movement direction: {direction}");
         }
     }
 
@@ -168,11 +168,6 @@ public class BoatMovementSystem : MonoBehaviour
         movementState = BoatMovementState.AutoMove;
         SetupSpeedByState();
     }
-    
-    // public void SetMovementEnabled(bool enabled)
-    // {
-    //     // This would be handled by the main BoatFloater enableFloaterMovement
-    // }
     
     public void SetAutomaticMovementEnabled(bool enabled)
     {
@@ -198,7 +193,7 @@ public class BoatMovementSystem : MonoBehaviour
         movementActive = false;
         if (debugMovement)
         {
-            Debug.Log("BoatMovement: Movement stopped manually");
+            GameLogger.LogVerbose("BoatMovement: Movement stopped manually");
         }
     }
     

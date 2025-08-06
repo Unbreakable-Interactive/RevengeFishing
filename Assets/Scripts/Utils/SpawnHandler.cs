@@ -37,19 +37,6 @@ public class SpawnHandler : MonoBehaviour
         if (!isUnlocked) return;
 
         HandleSpawning();
-
-        // // Debug keys para testing
-        // if (Input.GetKeyDown(KeyCode.F))
-        // {
-        //     Debug.Log($"🎮 Manual spawn triggered for {spawnConfig.configName}!");
-        //     SpawnOne();
-        // }
-        //
-        // if (Input.GetKeyDown(KeyCode.G)) LogStats();
-        //
-        // // NUEVAS TECLAS PARA TESTING
-        // if (Input.GetKeyDown(KeyCode.R)) ResetAllEnemiesOfThisType();
-        // if (Input.GetKeyDown(KeyCode.T)) TestEnemyDefeatOfThisType();
     }
 
     public void Initialize()
@@ -140,7 +127,6 @@ public class SpawnHandler : MonoBehaviour
         }
     }
 
-
     void HandleOneTimeSpawning()
     {
         if (Time.time >= nextSpawnTime && !oneTimeCompleted)
@@ -197,7 +183,7 @@ public class SpawnHandler : MonoBehaviour
 
         return false;
     }
-
+    
     Vector3 GetValidSpawnPosition()
     {
         if (spawnConfig.spawnHandlerType == SpawnHandlerType.PerPoint)
@@ -207,7 +193,17 @@ public class SpawnHandler : MonoBehaviour
                 Vector3 pos = spawnPoints[Random.Range(0, spawnPoints.Length)].position;
                 if (spawnConfig.IsValidDistance(pos))
                 {
-                    return pos;
+                    if (spawnConfig.enemyType == SpawnHandlerConfig.EnemyType.Boat)
+                    {
+                        if (BoatSpawnHelper.IsPositionFreeForBoat(pos, spawnConfig.showLogs))
+                        {
+                            return pos;
+                        }
+                    }
+                    else
+                    {
+                        return pos;
+                    }
                 }
             }
         }
@@ -216,13 +212,25 @@ public class SpawnHandler : MonoBehaviour
             if (spawnPoints.Length != 2)
             {
                 Debug.LogError("Spawn handler type Zone only supports 2 SpawnPoints");
+                return Vector3.zero;
             }
 
-            Vector3 tempPos = spawnPoints[0].position;
-            float xPosition = Random.Range(tempPos.x, spawnPoints[1].position.x);
-            Vector3 pos = new Vector3(xPosition,tempPos.y,0);
-
-            return pos;
+            if (spawnConfig.enemyType == SpawnHandlerConfig.EnemyType.Boat)
+            {
+                Vector3 validBoatPos = BoatSpawnHelper.FindValidBoatSpawnPosition(
+                    spawnPoints[0].position, 
+                    spawnPoints[1].position, 
+                    spawnConfig);
+                
+                return validBoatPos;
+            }
+            else
+            {
+                Vector3 tempPos = spawnPoints[0].position;
+                float xPosition = Random.Range(tempPos.x, spawnPoints[1].position.x);
+                Vector3 pos = new Vector3(xPosition, tempPos.y, 0);
+                return pos;
+            }
         }
 
         if (spawnConfig.showLogs)
@@ -250,12 +258,7 @@ public class SpawnHandler : MonoBehaviour
         {
             StartCoroutine(AssignToPlatform(enemy, spawnPos));
         }
-
-        if (spawnConfig.enemyType == SpawnHandlerConfig.EnemyType.BoatFisherman)
-        {
-            StartCoroutine(AssignToPlatform(enemy, spawnPos));
-        }
-    
+        
         if (spawnConfig.enemyType == SpawnHandlerConfig.EnemyType.Boat)
         {
             StartCoroutine(InitializeBoatController(enemy, spawnPoints));
@@ -284,8 +287,6 @@ public class SpawnHandler : MonoBehaviour
             Debug.LogError($"Spawned boat {boatObject.name} doesn't have BoatController component!");
         }
     }
-
-
 
     IEnumerator AssignToPlatform(GameObject enemy, Vector3 spawnPos)
     {
@@ -347,32 +348,21 @@ public class SpawnHandler : MonoBehaviour
         }
     }
 
-    public void OnEnemyDestroyed()
+    public void OnEnemyDestroyed(GameObject enemyObj = null)
     {
         currentActive--;
         if (currentActive < 0) currentActive = 0;
 
         if (spawnConfig != null && spawnConfig.showLogs)
-            Debug.Log($"Enemy destroyed for {spawnConfig.configName}. Active: {currentActive}");
-    }
-
-    public void OnEnemyDestroyed(GameObject enemyObj)
-    {
-        currentActive--;
-        if (currentActive < 0) currentActive = 0;
-
-        if (spawnConfig != null && spawnConfig.showLogs)
-            Debug.Log($"Enemy {enemyObj.name} returned to pool for {spawnConfig.configName}. Active: {currentActive}");
+        {
+            string objName = enemyObj != null ? enemyObj.name : "Unknown";
+            Debug.Log($"Enemy {objName} destroyed for {spawnConfig.configName}. Active: {currentActive}");
+        }
 
         if (spawnConfig.spawnType == SpawnHandlerConfig.SpawnType.OneTime && oneTimeCompleted)
         {
             ScheduleNextSpawn();
         }
-    }
-
-    public void SpawnSingleAtRandomPoint()
-    {
-        TrySpawnEnemy();
     }
 
     public void SpawnOne()
@@ -392,77 +382,12 @@ public class SpawnHandler : MonoBehaviour
             Debug.Log($"🔄 {spawnConfig.configName} spawner reset");
     }
 
+#if UNITY_EDITOR
     void LogStats()
     {
         Debug.Log($"=== {spawnConfig.configName} ===");
         Debug.Log($"Active: {currentActive}, Unlocked: {isUnlocked}, In Cooldown: {inCooldown}");
         Debug.Log($"Spawned this cycle: {spawnedThisCycle}, OneTime completed: {oneTimeCompleted}");
     }
-
-    private void ResetAllEnemiesOfThisType()
-    {
-        Enemy[] allEnemies = FindObjectsOfType<Enemy>();
-        int resetCount = 0;
-
-        foreach (Enemy enemy in allEnemies)
-        {
-            if (enemy.gameObject.activeInHierarchy && ShouldManageThisEnemy(enemy))
-            {
-                enemy.TriggerAlive();
-                resetCount++;
-                Debug.Log($"🔄 Reset enemy: {enemy.gameObject.name}");
-            }
-        }
-        Debug.Log($"🔄 Reset {resetCount} enemies of type {spawnConfig.enemyType}");
-    }
-
-    private void TestEnemyDefeatOfThisType()
-    {
-        Enemy[] allEnemies = FindObjectsOfType<Enemy>();
-
-        foreach (Enemy enemy in allEnemies)
-        {
-            if (enemy.gameObject.activeInHierarchy &&
-                enemy.GetState() == Enemy.EnemyState.Alive &&
-                ShouldManageThisEnemy(enemy))
-            {
-                Debug.Log($"💀 Forcing defeat on: {enemy.gameObject.name} (Type: {spawnConfig.enemyType})");
-                enemy.TakeFatigue(enemy.entityFatigue.maxFatigue);
-                break;
-            }
-        }
-    }
-
-    private bool ShouldManageThisEnemy(Enemy enemy)
-    {
-        if (spawnConfig.enemyType == SpawnHandlerConfig.EnemyType.LandFisherman)
-        {
-            return enemy is LandEnemy;
-        }
-        else if (spawnConfig.enemyType == SpawnHandlerConfig.EnemyType.BoatFisherman)
-        {
-            return enemy.gameObject.name.ToLower().Contains("boatfisherman");
-        }
-
-        return false;
-    }
-
-    void OnDrawGizmosSelected()
-    {
-        if (spawnConfig == null || spawnPoints == null) return;
-
-        foreach (Transform point in spawnPoints)
-        {
-            if (point != null)
-            {
-                // Min distance (red)
-                Gizmos.color = Color.red;
-                Gizmos.DrawWireSphere(point.position, spawnConfig.dontSpawnCloserThan);
-
-                // Max distance (blue)
-                Gizmos.color = Color.blue;
-                Gizmos.DrawWireSphere(point.position, spawnConfig.dontSpawnFartherThan);
-            }
-        }
-    }
+#endif
 }

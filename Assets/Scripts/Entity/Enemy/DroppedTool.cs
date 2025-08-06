@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class DroppedTool : Entity
@@ -7,7 +5,6 @@ public class DroppedTool : Entity
     private Vector2 dropForce;
     private bool hasAntiRotated = false;
 
-    // Start is called before the first frame update
     protected void Start()
     {
         dropForce = new Vector2(
@@ -18,7 +15,6 @@ public class DroppedTool : Entity
         Initialize();
     }
 
-    // Update is called once per frame
     protected override void Update()
     {
         base.Update();
@@ -30,7 +26,7 @@ public class DroppedTool : Entity
 
         rb.AddForce(dropForce * 20, ForceMode2D.Impulse);
         rb.AddTorque(-dropForce.x * 8, ForceMode2D.Impulse);
-        Debug.Log($"Tool dropped in direction {dropForce}");
+        GameLogger.LogVerbose($"Tool dropped in direction {dropForce}");
     }
 
     protected override void AirborneBehavior()
@@ -44,14 +40,13 @@ public class DroppedTool : Entity
         {
             rb.AddTorque(dropForce.x * 8, ForceMode2D.Impulse);
             rb.drag = 2f;
-            hasAntiRotated = true; // Prevents continuous anti-rotation
+            hasAntiRotated = true;
         }
 
         if (rb.velocity.magnitude < 0.1f)
         {
             GameObject parent = transform.parent?.gameObject;
-            Destroy(parent); // Destroy if nearly stationary
+            Destroy(parent);
         }
     }
-
 }

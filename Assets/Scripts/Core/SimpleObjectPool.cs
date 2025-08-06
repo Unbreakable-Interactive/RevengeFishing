@@ -9,7 +9,6 @@ public class SimpleObjectPool : MonoBehaviour
     [Header("Runtime Info (Read Only)")]
     [SerializeField] private bool showDebugInfo = true;
     
-    // Pool structure for COMPLETE HANDLERS
     private Dictionary<string, Queue<GameObject>> availableHandlers = new Dictionary<string, Queue<GameObject>>();
     private Dictionary<string, List<GameObject>> usedHandlers = new Dictionary<string, List<GameObject>>();
     private Dictionary<string, GameObject> poolContainers = new Dictionary<string, GameObject>();
@@ -39,7 +38,7 @@ public class SimpleObjectPool : MonoBehaviour
     {
         if (poolingConfig == null)
         {
-            Debug.LogError("No PoolingConfig assigned to SimpleObjectPool!");
+            GameLogger.LogError("No PoolingConfig assigned to SimpleObjectPool!");
             return;
         }
 
@@ -50,36 +49,30 @@ public class SimpleObjectPool : MonoBehaviour
 
         if (poolingConfig.enableDebugLogs)
         {
-            Debug.Log($"Created {poolingConfig.poolConfigs.Count} handler pools at game start");
+            GameLogger.Log($"Created {poolingConfig.poolConfigs.Count} handler pools at game start");
         }
     }
 
-    /// <summary>
-    /// Create a pool of COMPLETE HANDLERS
-    /// </summary>
     void CreatePool(string poolName, GameObject handlerPrefab, int initialSize, int maxSize)
     {
         if (handlerPrefab == null)
         {
-            Debug.LogError($"Cannot create pool '{poolName}' - no handler prefab assigned!");
+            GameLogger.LogError($"Cannot create pool '{poolName}' - no handler prefab assigned!");
             return;
         }
 
-        // Create container for organization
         GameObject container = new GameObject($"Pool_{poolName}");
         container.transform.SetParent(transform);
         poolContainers[poolName] = container;
 
-        // Create the queues
         Queue<GameObject> available = new Queue<GameObject>();
         List<GameObject> used = new List<GameObject>();
 
-        // Create initial COMPLETE HANDLERS and put them in available queue
         for (int i = 0; i < initialSize; i++)
         {
             GameObject handler = Instantiate(handlerPrefab, container.transform);
             handler.name = $"{poolName}Handler_{i:00}";
-            handler.SetActive(false); // Deactivate the ENTIRE HANDLER
+            handler.SetActive(false);
             available.Enqueue(handler);
         }
 
@@ -88,18 +81,15 @@ public class SimpleObjectPool : MonoBehaviour
 
         if (poolingConfig.enableDebugLogs)
         {
-            Debug.Log($"Created pool '{poolName}' with {initialSize} complete handlers ready to use (max: {maxSize})");
+            GameLogger.LogVerbose($"Created pool '{poolName}' with {initialSize} complete handlers ready to use (max: {maxSize})");
         }
     }
 
-    /// <summary>
-    /// Spawn a COMPLETE HANDLER (LandFishermanHandler or BoatFishermanHandler)
-    /// </summary>
     public GameObject Spawn(string poolName, Vector3 position)
     {
         if (!availableHandlers.ContainsKey(poolName))
         {
-            Debug.LogError($"Pool '{poolName}' doesn't exist! Check your PoolingConfig.");
+            GameLogger.LogError($"Pool '{poolName}' doesn't exist! Check your PoolingConfig.");
             return null;
         }
 
@@ -107,17 +97,15 @@ public class SimpleObjectPool : MonoBehaviour
         List<GameObject> used = usedHandlers[poolName];
         GameObject handlerToSpawn;
 
-        // Try to get a free handler first
         if (available.Count > 0)
         {
             handlerToSpawn = available.Dequeue();
             
             if (showDebugInfo)
-                Debug.Log($"Reused handler from pool '{poolName}'. Available left: {available.Count}");
+                GameLogger.LogVerbose($"Reused handler from pool '{poolName}'. Available left: {available.Count}");
         }
         else
         {
-            // No free handlers, need to create a new one
             var poolData = GetPoolData(poolName);
             if (poolData != null && used.Count < poolData.maxSize)
             {
@@ -125,39 +113,33 @@ public class SimpleObjectPool : MonoBehaviour
                 handlerToSpawn.name = $"{poolName}Handler_{used.Count:00}";
                 
                 if (showDebugInfo)
-                    Debug.Log($"Created new handler for pool '{poolName}' (pool was empty). Total: {used.Count + 1}");
+                    GameLogger.LogVerbose($"Created new handler for pool '{poolName}' (pool was empty). Total: {used.Count + 1}");
             }
             else
             {
-                Debug.LogWarning($"Pool '{poolName}' is full! Can't create more handlers.");
+                GameLogger.LogWarning($"Pool '{poolName}' is full! Can't create more handlers.");
                 return null;
             }
         }
 
-        // Set up the COMPLETE HANDLER for use
         handlerToSpawn.transform.position = position;
         handlerToSpawn.transform.rotation = Quaternion.identity;
         handlerToSpawn.transform.localScale = Vector3.one;
         
-        // Reset the COMPLETE HANDLER
         ResetHandler(handlerToSpawn, position);
         
-        // Move handler out of pool to world space
         handlerToSpawn.transform.SetParent(null);
-        handlerToSpawn.SetActive(true); // Activate the ENTIRE HANDLER
+        handlerToSpawn.SetActive(true);
         used.Add(handlerToSpawn);
 
         return handlerToSpawn;
     }
 
-    /// <summary>
-    /// Return a COMPLETE HANDLER to the pool
-    /// </summary>
     public void ReturnToPool(string poolName, GameObject handler)
     {
         if (!availableHandlers.ContainsKey(poolName))
         {
-            Debug.LogError($"Pool '{poolName}' doesn't exist!");
+            GameLogger.LogError($"Pool '{poolName}' doesn't exist!");
             Destroy(handler);
             return;
         }
@@ -165,38 +147,27 @@ public class SimpleObjectPool : MonoBehaviour
         Queue<GameObject> available = availableHandlers[poolName];
         List<GameObject> used = usedHandlers[poolName];
 
-        // Remove from used list
         if (used.Contains(handler))
         {
             used.Remove(handler);
         }
 
-        // Clean up the COMPLETE HANDLER
         CleanupHandler(handler);
 
-        // Put back in available queue
-        handler.SetActive(false); // Deactivate the ENTIRE HANDLER
+        handler.SetActive(false);
         handler.transform.SetParent(poolContainers[poolName].transform);
         available.Enqueue(handler);
 
         if (showDebugInfo)
         {
-            Debug.Log($"Returned handler to pool '{poolName}'. Available: {available.Count}, Used: {used.Count}");
+            GameLogger.LogVerbose($"Returned handler to pool '{poolName}'. Available: {available.Count}, Used: {used.Count}");
         }
     }
 
-    /// <summary>
-    /// FIXED: Reset COMPLETE HANDLER when spawning - comprehensive physics and state reset
-    /// </summary>
-    /// <summary>
-    /// FIXED: Reset COMPLETE HANDLER when spawning - includes child local positions
-    /// </summary>
     void ResetHandler(GameObject handler, Vector3 spawnPosition)
     {
-        // STEP 1: RESET CHILD POSITIONS TO PREFAB VALUES FIRST
         ResetChildPositions(handler);
 
-        // STEP 2: Reset all physics AFTER positions are corrected
         Rigidbody2D[] rigidbodies = handler.GetComponentsInChildren<Rigidbody2D>();
         foreach (var rb in rigidbodies)
         {
@@ -210,11 +181,9 @@ public class SimpleObjectPool : MonoBehaviour
             rb.isKinematic = false;
         }
 
-        // STEP 4: Find and reset the Enemy component
         Enemy enemy = handler.GetComponentInChildren<Enemy>();
         if (enemy != null)
         {
-            // Reset enemy state
             enemy.ChangeState_Alive();
             enemy.ResetFatigue();
             
@@ -222,10 +191,8 @@ public class SimpleObjectPool : MonoBehaviour
             collider.isTrigger = false;
             collider.enabled = true;
             
-            // Reset land enemy specific stuff
             if (enemy is LandEnemy landEnemy)
             {
-                // Clear old platform assignment
                 if (landEnemy.GetAssignedPlatform() != null)
                 {
                     landEnemy.GetAssignedPlatform().UnregisterEnemy(landEnemy);
@@ -238,30 +205,22 @@ public class SimpleObjectPool : MonoBehaviour
                 landEnemy.HasThrownHook = false;
                 landEnemy.MovementStateLand = LandEnemy.LandMovementState.Idle;
                 
-                // Set water mode based on spawn height  
                 landEnemy.SetMovementMode(spawnPosition.y > 0f);
                 
-                // Schedule next action
                 landEnemy.ScheduleNextAction();
             }
             
-            // FIXED: Force Initialize AFTER everything is reset
             enemy.Initialize();
         }
 
-        // STEP 5: Force Unity to refresh physics
         Physics2D.SyncTransforms();
 
         if (showDebugInfo)
-            Debug.Log($"Handler {handler.name} completely reset with child positions corrected at {spawnPosition}");
+            GameLogger.LogVerbose($"Handler {handler.name} completely reset with child positions corrected at {spawnPosition}");
     }
 
-    /// <summary>
-    /// NEW: Reset child GameObject positions to their prefab values
-    /// </summary>
     private void ResetChildPositions(GameObject handler)
     {
-        // FIXED: Reset specific known child positions for LandFishermanHandler
         if (handler.name.ToLower().Contains("landfishermanhandler"))
         {
             ResetLandFishermanHandlerPositions(handler);
@@ -272,14 +231,10 @@ public class SimpleObjectPool : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// FIXED: Reset LandFishermanHandler child positions to prefab values
-    /// </summary>
     private void ResetLandFishermanHandlerPositions(GameObject handler)
     {
         Transform handlerTransform = handler.transform;
         
-        // Find and reset Fisherman position (should be at Y = 0 according to prefab)
         Transform fishermanTransform = handlerTransform.Find("Fisherman");
         if (fishermanTransform != null)
         {
@@ -288,10 +243,9 @@ public class SimpleObjectPool : MonoBehaviour
             fishermanTransform.localScale = Vector3.one;
             
             if (showDebugInfo)
-                Debug.Log($"Reset Fisherman local position to (0, 0, 0) in {handler.name}");
+                GameLogger.LogVerbose($"Reset Fisherman local position to (0, 0, 0) in {handler.name}");
         }
         
-        // Find and reset WaterLine position (should be at Y = -0.3 according to prefab)
         Transform waterLineTransform = handlerTransform.Find("WaterLine");
         if (waterLineTransform != null)
         {
@@ -300,18 +254,14 @@ public class SimpleObjectPool : MonoBehaviour
             waterLineTransform.localScale = Vector3.one;
             
             if (showDebugInfo)
-                Debug.Log($"Reset WaterLine local position to (0, -0.3, 0) in {handler.name}");
+                GameLogger.LogVerbose($"Reset WaterLine local position to (0, -0.3, 0) in {handler.name}");
         }
     }
 
-    /// <summary>
-    /// FIXED: Reset BoatFishermanHandler child positions (for future use)
-    /// </summary>
     private void ResetBoatFishermanHandlerPositions(GameObject handler)
     {
         Transform handlerTransform = handler.transform;
         
-        // Find and reset Fisherman position in boat handler
         Transform fishermanTransform = handlerTransform.Find("Fisherman");
         if (fishermanTransform != null)
         {
@@ -320,21 +270,16 @@ public class SimpleObjectPool : MonoBehaviour
             fishermanTransform.localScale = Vector3.one;
             
             if (showDebugInfo)
-                Debug.Log($"Reset Fisherman local position in {handler.name}");
+                GameLogger.LogVerbose($"Reset Fisherman local position in {handler.name}");
         }
     }
 
-    /// <summary>
-    /// Clean up COMPLETE HANDLER when returning to pool
-    /// </summary>
     void CleanupHandler(GameObject handler)
     {
-        // Reset transform
         handler.transform.localPosition = Vector3.zero;
         handler.transform.localRotation = Quaternion.identity;
         handler.transform.localScale = Vector3.one;
 
-        // Stop any coroutines in the entire handler
         MonoBehaviour[] components = handler.GetComponentsInChildren<MonoBehaviour>();
         foreach (var component in components)
         {
@@ -342,7 +287,6 @@ public class SimpleObjectPool : MonoBehaviour
                 component.StopAllCoroutines();
         }
 
-        // Clean up enemy references
         Enemy enemy = handler.GetComponentInChildren<Enemy>();
         if (enemy != null && enemy is LandEnemy landEnemy)
         {
@@ -354,7 +298,7 @@ public class SimpleObjectPool : MonoBehaviour
         }
 
         if (showDebugInfo)
-            Debug.Log($"Handler {handler.name} cleaned up and returned to pool");
+            GameLogger.LogVerbose($"Handler {handler.name} cleaned up and returned to pool");
     }
 
     PoolingConfig.PoolData GetPoolData(string poolName)
@@ -369,7 +313,6 @@ public class SimpleObjectPool : MonoBehaviour
         return null;
     }
 
-    // Utility methods
     public int GetAvailableCount(string poolName)
     {
         return availableHandlers.ContainsKey(poolName) ? availableHandlers[poolName].Count : 0;
@@ -387,12 +330,12 @@ public class SimpleObjectPool : MonoBehaviour
 
     public void LogPoolStats()
     {
-        Debug.Log("=== HANDLER POOL STATS ===");
+        GameLogger.Log("=== HANDLER POOL STATS ===");
         foreach (string poolName in availableHandlers.Keys)
         {
             int available = GetAvailableCount(poolName);
             int used = GetUsedCount(poolName);
-            Debug.Log($"Pool '{poolName}': {available} available handlers, {used} used handlers, {available + used} total");
+            GameLogger.Log($"Pool '{poolName}': {available} available handlers, {used} used handlers, {available + used} total");
         }
     }
 
