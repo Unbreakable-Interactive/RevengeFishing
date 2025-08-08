@@ -106,8 +106,10 @@ GameObject:
   - component: {fileID: 6823642733017911228}
   - component: {fileID: 1551637374989697810}
   - component: {fileID: 6872625325474904207}
+  - component: {fileID: 7081784477181152349}
+  - component: {fileID: 6817366124321017162}
   m_Layer: 6
-  m_Name: Boat (2)
+  m_Name: BoatPart2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -207,6 +209,66 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 0
+--- !u!114 &7081784477181152349
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 919244316435478149}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b12801055d32a4620b361749a97ce05c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  forceMultiplier: 20
+  torqueMultiplier: 5
+  rb: {fileID: 6872625325474904207}
+--- !u!61 &6817366124321017162
+BoxCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 919244316435478149}
+  m_Enabled: 1
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 1
+  m_UsedByEffector: 0
+  m_UsedByComposite: 0
+  m_Offset: {x: 0, y: 0}
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0.5, y: 0.5}
+    oldSize: {x: 1.364, y: 0.888}
+    newSize: {x: 3.228, y: 1.128}
+    adaptiveTilingThreshold: 0.5
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  serializedVersion: 2
+  m_Size: {x: 1.364, y: 0.888}
+  m_EdgeRadius: 0
 --- !u!1 &1725949659940357100
 GameObject:
   m_ObjectHideFlags: 0
@@ -459,10 +521,10 @@ MonoBehaviour:
   boatSpriteRenderer: {fileID: 4981744675166538355}
   useSpriteFlip: 1
   adaptToScaleDirection: 1
-  boatPartsRenderer:
-  - {fileID: 2979381925943829690}
-  - {fileID: 1551637374989697810}
-  - {fileID: 8041602805694101544}
+  boatParts:
+  - {fileID: 6424523540721141613}
+  - {fileID: 919244316435478149}
+  - {fileID: 5587843507457551362}
 --- !u!1 &2049951311662369099
 GameObject:
   m_ObjectHideFlags: 0
@@ -609,9 +671,9 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 3081829646394375417}
-  - {fileID: 6823642733017911228}
   - {fileID: 783062613233276386}
+  - {fileID: 6823642733017911228}
+  - {fileID: 3081829646394375417}
   m_Father: {fileID: 5056142362256130071}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &3997283787686557288
@@ -687,8 +749,10 @@ GameObject:
   - component: {fileID: 783062613233276386}
   - component: {fileID: 8041602805694101544}
   - component: {fileID: 2342713545657276092}
+  - component: {fileID: 8364685129650910935}
+  - component: {fileID: 2232732426229390306}
   m_Layer: 6
-  m_Name: Boat (3)
+  m_Name: BoatPart3
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -788,6 +852,66 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 0
+--- !u!114 &8364685129650910935
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5587843507457551362}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b12801055d32a4620b361749a97ce05c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  forceMultiplier: 20
+  torqueMultiplier: 5
+  rb: {fileID: 2342713545657276092}
+--- !u!61 &2232732426229390306
+BoxCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5587843507457551362}
+  m_Enabled: 1
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 1
+  m_UsedByEffector: 0
+  m_UsedByComposite: 0
+  m_Offset: {x: 0, y: 0}
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0.5, y: 0.5}
+    oldSize: {x: 1.376, y: 1.12}
+    newSize: {x: 3.228, y: 1.128}
+    adaptiveTilingThreshold: 0.5
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  serializedVersion: 2
+  m_Size: {x: 1.376, y: 1.12}
+  m_EdgeRadius: 0
 --- !u!1 &5674966400638831099
 GameObject:
   m_ObjectHideFlags: 0
@@ -925,8 +1049,10 @@ GameObject:
   - component: {fileID: 3081829646394375417}
   - component: {fileID: 2979381925943829690}
   - component: {fileID: 8226294876671822817}
+  - component: {fileID: 4316885148912153313}
+  - component: {fileID: 3666627265282306395}
   m_Layer: 6
-  m_Name: Boat (1)
+  m_Name: BoatPart1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1026,6 +1152,66 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 0
+--- !u!114 &4316885148912153313
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6424523540721141613}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b12801055d32a4620b361749a97ce05c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  forceMultiplier: 20
+  torqueMultiplier: 5
+  rb: {fileID: 8226294876671822817}
+--- !u!61 &3666627265282306395
+BoxCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6424523540721141613}
+  m_Enabled: 1
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 1
+  m_UsedByEffector: 0
+  m_UsedByComposite: 0
+  m_Offset: {x: 0, y: 0}
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0.5, y: 0.5}
+    oldSize: {x: 1.268, y: 0.888}
+    newSize: {x: 3.228, y: 1.128}
+    adaptiveTilingThreshold: 0.5
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  serializedVersion: 2
+  m_Size: {x: 1.268, y: 0.888}
+  m_EdgeRadius: 0
 --- !u!1 &6629729176795069028
 GameObject:
   m_ObjectHideFlags: 0

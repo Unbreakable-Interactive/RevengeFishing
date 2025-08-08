@@ -31,7 +31,7 @@ public class LevelDisplay : BaseDisplay
         {
             // Show difference from initial (good for player progression)
             int progression = entity.PowerLevel - initPowerLevel;
-            levelText = progression >= 0 ? $"+{progression:N0}" : progression.ToString("N0");
+            levelText = progression >= 0 ? $"{progression:N0}" : progression.ToString("N0");
         }
         
         SetDisplayText(levelText);

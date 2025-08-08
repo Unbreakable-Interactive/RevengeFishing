@@ -8,7 +8,7 @@ public class BoatVisualSystem : MonoBehaviour
     [SerializeField] private bool useSpriteFlip = true;
     [SerializeField] private bool adaptToScaleDirection = true;
 
-    [SerializeField] private List<SpriteRenderer> boatPartsRenderer = new List<SpriteRenderer>();
+    [SerializeField] private List<GameObject> boatParts = new List<GameObject>();
     
     private float currentDirectionMultiplier = 1f;
     
@@ -42,12 +42,38 @@ public class BoatVisualSystem : MonoBehaviour
 
     public void DestroyEnemy(bool isDestroyed)
     {
-        boatSpriteRenderer.gameObject.SetActive(!isDestroyed);
-
-        foreach (SpriteRenderer renderer in boatPartsRenderer)
+        if (boatSpriteRenderer != null)
         {
-            renderer.gameObject.SetActive(isDestroyed);
+            boatSpriteRenderer.gameObject.SetActive(!isDestroyed);
         }
+
+        foreach (GameObject part in boatParts)
+        {
+            if (part != null)
+            {
+                part.SetActive(isDestroyed);
+                
+                if (isDestroyed)
+                {
+                    BoatPart boatPartScript = part.GetComponent<BoatPart>();
+                    if (boatPartScript != null)
+                    {
+                        boatPartScript.ApplyInitialForces();
+                    }
+                }
+                else
+                {
+                    // Si se está desactivando (reapareciendo barco), resetear posición
+                    BoatPart boatPartScript = part.GetComponent<BoatPart>();
+                    if (boatPartScript != null)
+                    {
+                        boatPartScript.ResetToOriginalPosition();
+                    }
+                }
+            }
+        }
+        
+        GameLogger.LogVerbose($"BoatVisualSystem: Boat destruction state set to {isDestroyed}");
     }
 
     #region Public Methods
