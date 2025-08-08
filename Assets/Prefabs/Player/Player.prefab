@@ -164,16 +164,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9fe37b15344ca5f4ab93beabfaab7777, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  player: {fileID: 5706962072255297144}
-  magneticForce: 100
-  baseMagnetRange: 2
-  magnetOffset: {x: 0, y: 0}
-  forceCurve:
+  attractionForce: 10
+  maxAttractionDistance: 3
+  attractionCurve:
     serializedVersion: 2
     m_Curve:
     - serializedVersion: 3
       time: 0
-      value: 0.17453003
+      value: 0
       inSlope: 0
       outSlope: 0
       tangentMode: 0
@@ -181,19 +179,10 @@ MonoBehaviour:
       inWeight: 0
       outWeight: 0
     - serializedVersion: 3
-      time: 0.8002839
-      value: 0.49993208
-      inSlope: 1.3143834
-      outSlope: 1.3143834
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 0.54039496
-    - serializedVersion: 3
-      time: 0.8999939
+      time: 1
       value: 1
-      inSlope: 2
-      outSlope: 2
+      inSlope: 0
+      outSlope: 0
       tangentMode: 0
       weightedMode: 0
       inWeight: 0
@@ -201,10 +190,10 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  scaleWithPlayer: 1
-  showDebugGizmos: 1
-  playerScaler: {fileID: 2299430188239530610}
-  attractedEntities: []
+  attractEnemies: 1
+  attractFishingProjectiles: 1
+  attractDroppedTools: 1
+  enableDebugLogs: 0
 --- !u!1 &6436991216858690687
 GameObject:
   m_ObjectHideFlags: 0
@@ -286,6 +275,11 @@ GameObject:
   - component: {fileID: 6169990416566653775}
   - component: {fileID: 5374213318811793880}
   - component: {fileID: -2646521994517316191}
+  - component: {fileID: 1853546293060932535}
+  - component: {fileID: 2105218869042468182}
+  - component: {fileID: 2172370509418973487}
+  - component: {fileID: 5911949729748028038}
+  - component: {fileID: 7167261056600227333}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -339,43 +333,20 @@ MonoBehaviour:
   underwaterMaxSpeed: 16
   entityType: 1
   playerConfig: {fileID: 11400000, guid: 519c911c847b744d88f2a8e10d6d8f27, type: 2}
+  playerInput: {fileID: 1853546293060932535}
+  playerMovement: {fileID: 2105218869042468182}
+  playerPhases: {fileID: 2172370509418973487}
+  playerHooks: {fileID: 5911949729748028038}
+  playerVisuals: {fileID: 7167261056600227333}
   mainCamera: {fileID: 0}
+  colliderToShare: {fileID: 5938476875424283519}
   hungerHandler:
     _hunger: 0
     _maxHunger: 0
     _maxHungerBonus: 0
   magnet: {fileID: 5682015124687868118}
   status: 0
-  currentPhase: 0
-  nextPowerLevel: 0
-  rotationSpeed: 10
-  rotationThreshold: 10
-  boostThreshold: 15
-  underwaterRotationSpeed: 10
-  autoRotateInAir: 1
-  airRotationSpeed: 15
-  minSpeedForRotation: 0.3
-  airGravityAscending: 1.5
-  airGravityDescending: 4
-  gravityTransitionSpeed: 2
-  velocityThreshold: 0.1
-  forceAmount: 2
-  maxSpeed: 15
-  naturalDrag: 0.8
-  rotationDrag: 0.5
-  constantAccel: 1
-  minForwardVelocity: 1.5
-  sidewaysDrag: 2
-  steeringForce: 10
-  steeringDamping: 0.98
-  activeBitingHooks: []
-  lineExtensionAmount: 1
-  maxLineExtension: 10
-  lineExtensionSpeedPenalty: 0.6
-  playerSpriteRenderer: {fileID: 2849642784151798417}
-  animator: {fileID: -2646521994517316191}
   enableDebugLogs: 0
-  colliderToShare: {fileID: 5938476875424283519}
 --- !u!114 &2299430188239530610
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -459,6 +430,99 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &1853546293060932535
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6728867108004361845}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4eeab389cd1ec411f9fd79545bce323a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  enableInput: 1
+  enableDebugLogs: 0
+--- !u!114 &2105218869042468182
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6728867108004361845}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9cd40db4fd02c4100a8c347b53a8b18c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  forceAmount: 1
+  maxSpeed: 5
+  naturalDrag: 0.5
+  rotationDrag: 1
+  constantAccel: 0.2
+  minForwardVelocity: 1
+  sidewaysDrag: 1
+  rotationSpeed: 10
+  rotationThreshold: 10
+  boostThreshold: 10
+  underwaterRotationSpeed: 10
+  steeringForce: 5
+  steeringDamping: 0.98
+  airGravityAscending: 1.5
+  airGravityDescending: 4
+  gravityTransitionSpeed: 2
+  velocityThreshold: 0.1
+  autoRotateInAir: 1
+  airRotationSpeed: 8
+  minSpeedForRotation: 0.3
+  enableDebugLogs: 0
+--- !u!114 &2172370509418973487
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6728867108004361845}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 417eb99b78e57442ea9145c26506aee5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  currentPhase: 0
+  nextPowerLevel: 0
+  enableDebugLogs: 0
+--- !u!114 &5911949729748028038
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6728867108004361845}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: edfc77547311746acb987c4704c14724, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  activeBitingHooks: []
+  lineExtensionAmount: 1
+  maxLineExtension: 12
+  lineExtensionSpeedPenalty: 0.6
+  enableDebugLogs: 0
+--- !u!114 &7167261056600227333
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6728867108004361845}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5487e7afcd3164649bce50af328a4da7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playerSpriteRenderer: {fileID: 2849642784151798417}
+  enableDebugLogs: 0
 --- !u!1 &7202299424025216376
 GameObject:
   m_ObjectHideFlags: 0

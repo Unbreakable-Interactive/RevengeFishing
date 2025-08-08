@@ -1,120 +1,63 @@
-using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
+using System.Collections.Generic;
 
 public class MouthMagnet : MonoBehaviour
 {
-    [Header("Player Reference")]
-    [SerializeField] private Player player; // Reference to the Player component
-
     [Header("Magnet Settings")]
-    [SerializeField] private float magneticForce = 10f;
-    [SerializeField] private float baseMagnetRange = 1.4f;
-    [SerializeField] private Vector2 magnetOffset = Vector2.zero;
-    [SerializeField] private AnimationCurve forceCurve = AnimationCurve.EaseInOut(0f, 0.1f, 1f, 1f);
-    
-    [Header("Scaling")]
-    [SerializeField] private bool scaleWithPlayer = true;
+    [SerializeField] private float attractionForce = 10f;
+    [SerializeField] private float maxAttractionDistance = 3f;
+    [SerializeField] private AnimationCurve attractionCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
+
+    [Header("Entity Filtering")]
+    [SerializeField] private bool attractEnemies = true;
+    [SerializeField] private bool attractFishingProjectiles = true;
+    [SerializeField] private bool attractDroppedTools = true;
+
+    private List<Entity> attractedEntities = new List<Entity>();
+    private Player player;
 
     [Header("Debug")]
-    [SerializeField] private bool showDebugGizmos = true;
+    [SerializeField] private bool enableDebugLogs = false;
 
-    private CircleCollider2D magnetCollider;
-    [SerializeField] private PlayerScaler playerScaler;
-    [SerializeField] private List<Entity> attractedEntities = new List<Entity>();
-    
-    public float CurrentMagnetRange => scaleWithPlayer && playerScaler != null 
-        ? baseMagnetRange * playerScaler.GetCurrentScaleMultiplier() 
-        : baseMagnetRange;
-
-    public Vector2 MagnetCenter
+    private void Awake()
     {
-        get
+        player = GetComponentInParent<Player>();
+        if (player == null)
         {
-            // Transform the local offset by the object's rotation
-            Vector2 rotatedOffset = transform.TransformDirection(magnetOffset);
-            return (Vector2)transform.position + rotatedOffset;
+            GameLogger.LogError("MouthMagnet: Could not find Player component in parent!");
         }
     }
 
-    void Start()
+    private void FixedUpdate()
     {
-        InitializeReferences();
-        InitializeMagnet();
-    }
-    
-    private void InitializeReferences()
-    {
-        if (scaleWithPlayer)
+        if (attractedEntities.Count > 0)
         {
-            if (playerScaler == null)
-            {
-                // playerScaler = GetComponentInParent<PlayerScaler>();
-                GameLogger.LogWarning("MouthMagnet: scaleWithPlayer is enabled but no PlayerScaler found in parent objects!");
-            }
+            ApplyMagneticForceToEntities();
         }
-    }
-
-    void FixedUpdate()
-    {
-        UpdateMagnetRange();
-        ApplyMagneticForceToEntities();
-        CleanupNullReferences();
-    }
-    
-    private void UpdateMagnetRange()
-    {
-        if (magnetCollider != null && scaleWithPlayer && playerScaler != null)
-        {
-            float currentRange = CurrentMagnetRange;
-            //magnetCollider.radius = currentRange / 2f;
-        }
-    }
-
-    private void InitializeMagnet()
-    {
-        magnetCollider = GetComponent<CircleCollider2D>();
-
-        if (magnetCollider == null)
-        {
-            GameLogger.LogError("MouthMagnet requires a CircleCollider2D component!");
-            return;
-        }
-
-        if (!magnetCollider.isTrigger)
-        {
-            magnetCollider.isTrigger = true;
-            GameLogger.LogVerbose("MouthMagnet: Set collider to trigger mode");
-        }
-
-        //float currentRange = CurrentMagnetRange;
-        //if (currentRange > 0)
-        //{
-        //    magnetCollider.radius = currentRange / 2f;
-        //}
-
-        //GameLogger.LogVerbose($"MouthMagnet initialized with range: {currentRange} (base: {baseMagnetRange})");
     }
 
     private void OnTriggerEnter2D(Collider2D other)
     {
         Entity entity = other.GetComponentInParent<Entity>();
 
-        if (entity != null && !attractedEntities.Contains(entity))
+        if (entity == null) return;
+
+        if (!ShouldAttractEntity(entity)) return;
+
+        if (!attractedEntities.Contains(entity))
         {
             if (entity.GetComponent<Enemy>() != null && entity.GetComponent<Enemy>().State == Enemy.EnemyState.Alive) return;
             attractedEntities.Add(entity);
             GameLogger.LogVerbose($"MouthMagnet: Started attracting entity {entity.name} of type {entity.GetType().Name}");
             GameLogger.LogVerbose($"Current attracted entities count: {attractedEntities.Count}");
         }
-        player.animator.SetInteger("objectsInRange", attractedEntities.Count);
-
+        
+        UpdateAnimatorObjectsInRange();
     }
 
     private void OnTriggerExit2D(Collider2D other)
     {
         Entity entity = other.GetComponentInParent<Entity>();
-
         RemoveEntity(entity);
     }
 
@@ -126,6 +69,11 @@ public class MouthMagnet : MonoBehaviour
             GameLogger.LogVerbose($"MouthMagnet: Stopped attracting entity {entity.name}");
         }
     
+        UpdateAnimatorObjectsInRange();
+    }
+
+    private void UpdateAnimatorObjectsInRange()
+    {
         if (player != null && player.animator != null)
         {
             player.animator.SetInteger("objectsInRange", attractedEntities.Count);
@@ -134,114 +82,86 @@ public class MouthMagnet : MonoBehaviour
 
     private void ApplyMagneticForceToEntities()
     {
+        Vector3 magnetCenter = transform.position;
+
         for (int i = attractedEntities.Count - 1; i >= 0; i--)
         {
             Entity entity = attractedEntities[i];
 
-            if (entity == null)
+            if (entity == null || entity.gameObject == null)
             {
                 attractedEntities.RemoveAt(i);
                 continue;
             }
 
-            if (!ShouldAttractEntity(entity))
+            Vector3 direction = magnetCenter - entity.transform.position;
+            float distance = direction.magnitude;
+
+            if (distance > maxAttractionDistance)
             {
                 attractedEntities.RemoveAt(i);
-                GameLogger.LogVerbose($"MouthMagnet: Removed {entity.name} - entity no longer meets attraction criteria");
                 continue;
             }
-
-            Rigidbody2D entityRb = entity.GetComponent<Rigidbody2D>();
-            if (entityRb == null) continue;
-
-            Vector2 directionToMagnet = (MagnetCenter - (Vector2)entity.transform.position);
-            float distance = directionToMagnet.magnitude;
 
             if (distance < 0.1f) continue;
 
-            directionToMagnet.Normalize();
+            float normalizedDistance = distance / maxAttractionDistance;
+            float curveValue = attractionCurve.Evaluate(1f - normalizedDistance);
+            float force = attractionForce * curveValue;
 
-            float normalizedDistance = distance / CurrentMagnetRange;
-            float forceMultiplier = forceCurve.Evaluate(1f - normalizedDistance);
+            direction.Normalize();
 
-            Vector2 magneticPull = directionToMagnet * (magneticForce * forceMultiplier);
-            entityRb.AddForce(magneticPull, ForceMode2D.Force);
-
-            if (showDebugGizmos)
+            Rigidbody2D entityRb = entity.GetComponent<Rigidbody2D>();
+            if (entityRb != null)
             {
-                Color lineColor = GetDebugColorForEntity(entity);
-                Debug.DrawLine(entity.transform.position, MagnetCenter, lineColor, 0.1f);
+                entityRb.AddForce(direction * force, ForceMode2D.Force);
+
+                if (enableDebugLogs)
+                {
+                    GameLogger.LogVerbose($"Applying magnetic force {force:F2} to {entity.name}");
+                }
             }
         }
+
+        UpdateAnimatorObjectsInRange();
     }
 
     private bool ShouldAttractEntity(Entity entity)
     {
-        if (entity is FishingProjectile projectile)
-        {
-            return !projectile.isBeingHeld;
-        }
-        
-        if (entity is Enemy enemy)
-        {
-            return enemy.GetState() != Enemy.EnemyState.Alive;
-        }
+        if (entity.CurrentEntityType == Entity.EntityType.Enemy && !attractEnemies)
+            return false;
 
-        return false;
+        if (entity.CurrentEntityType == Entity.EntityType.FishingProjectile && !attractFishingProjectiles)
+            return false;
+
+        if (entity.GetComponent<DroppedTool>() != null && !attractDroppedTools)
+            return false;
+
+        return true;
     }
 
-    private Color GetDebugColorForEntity(Entity entity)
+    public void SetAttractionForce(float newForce)
     {
-        if (entity is FishingProjectile)
-        {
-            return Color.magenta;
-        }
-        
-        if (entity is Enemy)
-        {
-            return Color.red;
-        }
-
-        return Color.white;
+        attractionForce = newForce;
     }
 
-    private void CleanupNullReferences()
+    public void SetMaxAttractionDistance(float newDistance)
     {
-        attractedEntities.RemoveAll(entity => entity == null);
+        maxAttractionDistance = newDistance;
     }
 
-    private void OnDrawGizmosSelected()
+    public int GetAttractedEntitiesCount()
     {
-        if (showDebugGizmos)
-        {
-            Vector2 magnetCenter = MagnetCenter;
-            float displayRange = CurrentMagnetRange;
-
-            Gizmos.color = Color.magenta;
-            Gizmos.DrawWireSphere(magnetCenter, displayRange);
-
-            Gizmos.color = new Color(1f, 0f, 1f, 0.1f);
-            Gizmos.DrawSphere(magnetCenter, displayRange);
-
-            // Draw a small cross to show the exact center
-            Gizmos.color = Color.yellow;
-            float crossSize = 0.2f;
-            Gizmos.DrawLine(magnetCenter + Vector2.left * crossSize, magnetCenter + Vector2.right * crossSize);
-            Gizmos.DrawLine(magnetCenter + Vector2.up * crossSize, magnetCenter + Vector2.down * crossSize);
-
-            // Draw the offset vector in local space
-            Gizmos.color = Color.cyan;
-            Vector2 localOffsetStart = transform.position;
-            Gizmos.DrawLine(localOffsetStart, magnetCenter);
-        }
+        return attractedEntities.Count;
     }
 
-    // Helper method to update collider offset when magnetOffset changes in inspector
-    private void OnValidate()
+    public List<Entity> GetAttractedEntities()
     {
-        if (magnetCollider != null)
-        {
-            magnetCollider.offset = magnetOffset;
-        }
+        return new List<Entity>(attractedEntities);
+    }
+
+    private void DebugLog(string message)
+    {
+        if (enableDebugLogs) GameLogger.LogVerbose($"[MouthMagnet] {message}");
     }
 }

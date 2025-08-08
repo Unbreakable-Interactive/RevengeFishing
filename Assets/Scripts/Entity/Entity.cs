@@ -3,6 +3,16 @@ using UnityEngine;
 [RequireComponent(typeof(Rigidbody2D))]
 public abstract class Entity : MonoBehaviour
 {
+    public enum EntityType
+    {
+        Generic,
+        Player,
+        Enemy,
+        FishingProjectile
+    }
+
+  
+
     [SerializeField] protected Rigidbody2D rb;
     public Rigidbody2D Rigidbody2D => rb;
     
@@ -26,18 +36,26 @@ public abstract class Entity : MonoBehaviour
     [Header("Entity Type")]
     [SerializeField] protected EntityType entityType = EntityType.Generic;
 
+    public EntityType CurrentEntityType => entityType;
+    
     private bool isInitialized = false;
 
     public int PowerLevel => _powerLevel;
     public bool IsAboveWater => isAboveWater;
 
-    public enum EntityType
-    {
-        Generic,
-        Player,
-        Enemy,
-        FishingProjectile
-    }
+    
+    public float AirGravityScale => airGravityScale;
+
+    public float AirDrag => airDrag;
+
+    public float AirMaxSpeed => airMaxSpeed;
+
+    public float UnderwaterGravityScale => underwaterGravityScale;
+
+    public float UnderwaterDrag => underwaterDrag;
+
+    public float UnderwaterMaxSpeed => underwaterMaxSpeed;
+
 
     protected virtual void Awake()
     {
