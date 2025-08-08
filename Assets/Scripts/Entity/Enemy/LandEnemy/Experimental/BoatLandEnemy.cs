@@ -721,7 +721,10 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
         
         if (aboveWater && wasKinematicBeforeFall && rb.bodyType == RigidbodyType2D.Dynamic && _state == EnemyState.Alive)
         {
-            StartCoroutine(DelayedKinematicReturn());
+            if (gameObject.activeInHierarchy)
+            {
+                StartCoroutine(DelayedKinematicReturn());
+            }
         }
     }
 
