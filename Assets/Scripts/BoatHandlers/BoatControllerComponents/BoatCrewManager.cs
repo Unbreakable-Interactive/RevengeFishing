@@ -165,8 +165,6 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
         BoatLandEnemy boatFisherman = crewHandlerObj.GetComponentInChildren<BoatLandEnemy>();
         if (boatFisherman != null)
         {
-            boatFisherman.SetBoatID(boatID);
-            
             if (PowerLevelScaler.Instance != null)
             {
                 int powerLevel = PowerLevelScaler.Instance.CalculateEnemyPowerLevel();
@@ -281,6 +279,65 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
         StartCoroutine(DelayedIntegrityRecalculation());
     }
     
+    public void HandleCrewMemberDeath(BoatLandEnemy deadCrewMember)
+    {
+        if (!BoatEnemyBelongToBoat(deadCrewMember))
+        {
+            GameLogger.LogWarning($"BoatCrewManager: {deadCrewMember.name} doesn't belong to this boat");
+            return;
+        }
+        
+        ResetCrewMemberToInactive(deadCrewMember);
+        
+        StartCoroutine(DelayedIntegrityRecalculation());
+    }
+
+    private void ResetCrewMemberToInactive(BoatLandEnemy crewMember)
+    {
+        crewMember.StopAllCoroutines();
+        
+        crewMember.ChangeState_Alive();
+        crewMember.ResetFatigue();
+        
+        Collider2D collider = crewMember.BodyCollider;
+        if (collider != null)
+        {
+            collider.isTrigger = false;
+            collider.enabled = true;
+        }
+        
+        Rigidbody2D rb = crewMember.GetComponent<Rigidbody2D>();
+        if (rb != null)
+        {
+            rb.velocity = Vector2.zero;
+            rb.angularVelocity = 0f;
+            rb.gravityScale = 1f;
+            rb.simulated = true;
+            rb.freezeRotation = true;
+        }
+        
+        if (crewMember.ParentContainer != null)
+        {
+            Vector3 resetPosition = boatPlatform.transform.position;
+            resetPosition.y += 0.5f;
+            
+            int memberIndex = allCrewMembers.IndexOf(crewMember);
+            if (memberIndex >= 0)
+            {
+                resetPosition += new Vector3(memberIndex * 0.8f - 0.4f, 0, 0);
+            }
+            
+            crewMember.ParentContainer.transform.position = resetPosition;
+            crewMember.ParentContainer.SetActive(false);
+        }
+        
+        ConfigureFishermanForBoatLife(crewMember);
+        
+        crewMember.isReturningToPool = false;
+        
+        GameLogger.LogVerbose($"BoatCrewManager: Reset {crewMember.name} to inactive state in boat");
+    }
+    
     private IEnumerator DelayedIntegrityRecalculation()
     {
         yield return null;
@@ -333,25 +390,15 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
             BoatLandEnemy boatFisherman = allCrewMembers[i];
             if (boatFisherman != null)
             {
-                boatFisherman.SetBoatID(boatID);
-                
                 Vector3 resetPosition = platformPosition + new Vector3(i * 0.8f - 0.4f, 0, 0);
-                boatFisherman.transform.position = resetPosition;
-                
-                Rigidbody2D fishermanRb = boatFisherman.GetComponent<Rigidbody2D>();
-                if (fishermanRb != null)
-                {
-                    fishermanRb.velocity = Vector2.zero;
-                    fishermanRb.angularVelocity = 0f;
-                }
                 
                 if (boatFisherman.ParentContainer != null)
                 {
+                    boatFisherman.ParentContainer.transform.position = resetPosition;
                     boatFisherman.ParentContainer.SetActive(true);
                 }
                 
-                boatFisherman.TriggerAlive();
-                boatFisherman.ScheduleNextAction();
+                ResetCrewMemberToActive(boatFisherman);
                 
                 ConfigureFishermanForBoatLife(boatFisherman);
                 SubscribeToCrewMember(boatFisherman);
@@ -369,6 +416,21 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
         
         RandomlyDeactivateCrewMembers();
         integrityManager.CalculateBoatIntegrity();
+    }
+
+    private void ResetCrewMemberToActive(BoatLandEnemy crewMember)
+    {
+        crewMember.TriggerAlive();
+        crewMember.ScheduleNextAction();
+        
+        Rigidbody2D fishermanRb = crewMember.GetComponent<Rigidbody2D>();
+        if (fishermanRb != null)
+        {
+            fishermanRb.velocity = Vector2.zero;
+            fishermanRb.angularVelocity = 0f;
+        }
+        
+        crewMember.isReturningToPool = false;
     }
     
     public int GetActiveCrewCount()

@@ -52,6 +52,8 @@ public abstract class Enemy : Entity
     
     public Action<Enemy> OnEnemyDied;
     
+    [HideInInspector] public bool isReturningToPool = false;
+    
     public float NextActionTime
     {
         get { return nextActionTime; }
@@ -110,6 +112,8 @@ public abstract class Enemy : Entity
     public override void Initialize()
     {
         base.Initialize();
+
+        isReturningToPool = false;
 
         if (player == null)
         {
@@ -275,7 +279,13 @@ public abstract class Enemy : Entity
         GameLogger.Log($"{gameObject.name} has been EATEN!");
         ChangeState_Eaten();
         InterruptAllActions();
-        player.GetComponentInChildren<MouthMagnet>().RemoveEntity(this);
+        
+        MouthMagnet magnet = player.GetComponentInChildren<MouthMagnet>();
+        if (magnet != null)
+        {
+            magnet.RemoveEntity(this);
+        }
+        
         player.TriggerBite();
         TriggerDead();
     }
@@ -285,7 +295,6 @@ public abstract class Enemy : Entity
         GameLogger.Log($"{gameObject.name} has DIED!");
         ChangeState_Dead();
         InterruptAllActions();
-
 
         if (player != null)
         {
@@ -311,31 +320,39 @@ public abstract class Enemy : Entity
         ReturnToPool();
     }
 
-    private void ReturnToPool()
+    public virtual void ReturnToPool()
     {
+        if (isReturningToPool)
+        {
+            GameLogger.LogVerbose($"{gameObject.name} already returning to pool, skipping duplicate call");
+            return;
+        }
+        
+        isReturningToPool = true;
+        
         GameObject handler = parentContainer != null ? parentContainer : FindMyHandler();
-    
+
         if (handler == null)
         {
             GameLogger.LogError($"Could not find handler for enemy {gameObject.name}! Destroying instead.");
             Destroy(gameObject);
             return;
         }
-    
+
         if (this is LandEnemy)
         {
             NotifySpawnHandlerOfDeath();
         }
-    
+
         CleanupBeforePoolReturn();
-    
-        if (this is LandEnemy && SimpleObjectPool.Instance != null)
+
+        if (this is LandEnemy && !(this is BoatLandEnemy) && SimpleObjectPool.Instance != null)
         {
             SimpleObjectPool.Instance.ReturnToPool("LandFisherman", handler);
         }
         else
         {
-            GameLogger.LogVerbose($"{gameObject.name} lifecycle managed by BoatCrewManager");
+            GameLogger.LogVerbose($"{gameObject.name} lifecycle managed by BoatCrewManager or other system");
             gameObject.SetActive(false);
         }
     }
@@ -441,7 +458,5 @@ public abstract class Enemy : Entity
             TriggerEaten();
         }
     }
-
     #endregion
 }
-
