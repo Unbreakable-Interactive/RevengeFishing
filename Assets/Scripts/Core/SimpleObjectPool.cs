@@ -10,7 +10,7 @@ public class SimpleObjectPool : MonoBehaviour
     [SerializeField] private bool showDebugInfo = true;
     
     private Dictionary<string, Queue<GameObject>> availableHandlers = new Dictionary<string, Queue<GameObject>>();
-    private Dictionary<string, List<GameObject>> usedHandlers = new Dictionary<string, List<GameObject>>();
+    private Dictionary<string, HashSet<GameObject>> usedHandlers = new Dictionary<string, HashSet<GameObject>>();
     private Dictionary<string, GameObject> poolContainers = new Dictionary<string, GameObject>();
     
     public static SimpleObjectPool Instance { get; private set; }
@@ -66,7 +66,7 @@ public class SimpleObjectPool : MonoBehaviour
         poolContainers[poolName] = container;
 
         Queue<GameObject> available = new Queue<GameObject>();
-        List<GameObject> used = new List<GameObject>();
+        HashSet<GameObject> used = new HashSet<GameObject>();
 
         for (int i = 0; i < initialSize; i++)
         {
@@ -94,7 +94,7 @@ public class SimpleObjectPool : MonoBehaviour
         }
 
         Queue<GameObject> available = availableHandlers[poolName];
-        List<GameObject> used = usedHandlers[poolName];
+        HashSet<GameObject> used = usedHandlers[poolName];
         GameObject handlerToSpawn;
 
         if (available.Count > 0)
@@ -137,26 +137,46 @@ public class SimpleObjectPool : MonoBehaviour
 
     public void ReturnToPool(string poolName, GameObject handler)
     {
-        if (!availableHandlers.ContainsKey(poolName))
+        if (handler == null || !handler.activeInHierarchy)
         {
-            GameLogger.LogError($"Pool '{poolName}' doesn't exist!");
-            Destroy(handler);
+            if (showDebugInfo)
+                GameLogger.LogVerbose($"Cannot return to pool '{poolName}' - handler is null or already inactive");
+            return;
+        }
+        
+        if (!poolContainers.ContainsKey(poolName))
+        {
+            GameLogger.LogError($"Pool '{poolName}' not found!");
             return;
         }
 
         Queue<GameObject> available = availableHandlers[poolName];
-        List<GameObject> used = usedHandlers[poolName];
+        HashSet<GameObject> used = usedHandlers[poolName];
 
-        if (used.Contains(handler))
+        if (!used.Contains(handler))
         {
-            used.Remove(handler);
+            if (showDebugInfo)
+                GameLogger.LogVerbose($"Handler not found in used pool '{poolName}', skipping return");
+            return;
         }
 
+        used.Remove(handler);
         CleanupHandler(handler);
 
-        handler.SetActive(false);
-        handler.transform.SetParent(poolContainers[poolName].transform);
-        available.Enqueue(handler);
+        if (handler != null && handler.transform != null)
+        {
+            try
+            {
+                handler.SetActive(false);
+                handler.transform.SetParent(poolContainers[poolName].transform);
+                available.Enqueue(handler);
+            }
+            catch (System.Exception e)
+            {
+                GameLogger.LogError($"Error returning handler to pool '{poolName}': {e.Message}");
+                return;
+            }
+        }
 
         if (showDebugInfo)
         {

@@ -20,7 +20,7 @@ public class MouthMagnet : MonoBehaviour
     [SerializeField] private bool showDebugGizmos = true;
 
     private CircleCollider2D magnetCollider;
-    private PlayerScaler playerScaler;
+    [SerializeField] private PlayerScaler playerScaler;
     [SerializeField] private List<Entity> attractedEntities = new List<Entity>();
     
     public float CurrentMagnetRange => scaleWithPlayer && playerScaler != null 
@@ -47,9 +47,9 @@ public class MouthMagnet : MonoBehaviour
     {
         if (scaleWithPlayer)
         {
-            playerScaler = GetComponentInParent<PlayerScaler>();
             if (playerScaler == null)
             {
+                // playerScaler = GetComponentInParent<PlayerScaler>();
                 GameLogger.LogWarning("MouthMagnet: scaleWithPlayer is enabled but no PlayerScaler found in parent objects!");
             }
         }
@@ -125,8 +125,11 @@ public class MouthMagnet : MonoBehaviour
             attractedEntities.Remove(entity);
             GameLogger.LogVerbose($"MouthMagnet: Stopped attracting entity {entity.name}");
         }
-        player.animator.SetInteger("objectsInRange", attractedEntities.Count);
-
+    
+        if (player != null && player.animator != null)
+        {
+            player.animator.SetInteger("objectsInRange", attractedEntities.Count);
+        }
     }
 
     private void ApplyMagneticForceToEntities()
@@ -161,7 +164,7 @@ public class MouthMagnet : MonoBehaviour
             float normalizedDistance = distance / CurrentMagnetRange;
             float forceMultiplier = forceCurve.Evaluate(1f - normalizedDistance);
 
-            Vector2 magneticPull = directionToMagnet * magneticForce * forceMultiplier;
+            Vector2 magneticPull = directionToMagnet * (magneticForce * forceMultiplier);
             entityRb.AddForce(magneticPull, ForceMode2D.Force);
 
             if (showDebugGizmos)

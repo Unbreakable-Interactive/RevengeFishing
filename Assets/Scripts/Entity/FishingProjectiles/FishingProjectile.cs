@@ -367,14 +367,16 @@ public abstract class FishingProjectile : Entity
     protected abstract void OnAirborneBehavior();
     protected abstract void OnUnderwaterBehavior();
 
-    protected void OnDestroy()
+    private void OnDestroy()
     {
         if (player != null && isBeingHeld)
         {
             player.RemoveBitingHook(this);
         }
-        player?.GetComponentInChildren<MouthMagnet>()?.RemoveEntity(this);
-
+    
+        if (player != null && player.Magnet != null)
+        {
+            player.Magnet.RemoveEntity(this);
+        }
     }
-
 }

@@ -45,6 +45,38 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
     [Header("Boat Physics Integration")]
     [SerializeField] private float boatCrewMass = 0.3f;
 
+    public string GetBoatID() 
+    {
+        if (assignedPlatform is BoatPlatform boatPlatform)
+        {
+            return boatPlatform.GetBoatID();
+        }
+        
+        BoatCrewManager crewManager = GetComponentInParent<BoatCrewManager>();
+        if (crewManager != null)
+        {
+            return crewManager.GetBoatID();
+        }
+        
+        return "NO_BOAT_ID";
+    }
+    
+    public void SetBoatID(BoatID newBoatID) 
+    {
+        if (assignedPlatform is BoatPlatform boatPlatform)
+        {
+            boatPlatform.SetBoatID(newBoatID);
+        }
+        else
+        {
+            BoatCrewManager crewManager = GetComponentInParent<BoatCrewManager>();
+            if (crewManager != null)
+            {
+                crewManager.SetBoatID(newBoatID);
+            }
+        }
+    }
+
     protected override void Start()
     {
         base.Start();
@@ -721,7 +753,10 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
         
         if (aboveWater && wasKinematicBeforeFall && rb.bodyType == RigidbodyType2D.Dynamic && _state == EnemyState.Alive)
         {
-            StartCoroutine(DelayedKinematicReturn());
+            if (gameObject.activeInHierarchy)
+            {
+                StartCoroutine(DelayedKinematicReturn());
+            }
         }
     }
 
@@ -817,6 +852,28 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
         
         if (enableDebugMessages)
             GameLogger.LogVerbose($"BoatLandEnemy {gameObject.name}: Initialize() - Reset to Kinematic physics and cleared tracking state");
+    }
+
+    public override void ReturnToPool()
+    {
+        if (isReturningToPool)
+        {
+            GameLogger.LogVerbose($"{gameObject.name} already returning to pool, skipping duplicate call");
+            return;
+        }
+        
+        isReturningToPool = true;
+        
+        BoatCrewManager crewManager = GetComponentInParent<BoatCrewManager>();
+        if (crewManager != null && crewManager.BoatEnemyBelongToBoat(this))
+        {
+            crewManager.HandleCrewMemberDeath(this);
+        }
+        else
+        {
+            GameLogger.LogError($"BoatLandEnemy {gameObject.name} couldn't find its BoatCrewManager!");
+            gameObject.SetActive(false);
+        }
     }
 
     protected override void TriggerDefeat()
