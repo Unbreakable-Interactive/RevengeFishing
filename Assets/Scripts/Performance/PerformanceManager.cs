@@ -10,11 +10,15 @@ public class PerformanceManager : MonoBehaviour
     [Header("Performance Manager Settings")]
     [SerializeField] private bool enableInBuildMode = false;
     [SerializeField] private bool enableInDebugMode = true;
-    [SerializeField] private bool lightweightMode = true; // NEW: Only FPS monitoring when true
+    [SerializeField] private bool lightweightMode = true;
     [SerializeField] private bool showAllDebugInfo = false;
     
     [Header("Key Bindings")]
     public KeyCode toggleAllPerformanceSystemsKey = KeyCode.Tab;
+    
+    [Header("Auto-Discovery")]
+    [SerializeField] private bool autoDiscoverComponents = true;
+    [SerializeField] private Transform[] specificParents; // Optional: limit discovery scope
     
     [Header("Component References")]
     [SerializeField] private List<MonoBehaviour> componentReferences = new List<MonoBehaviour>();
@@ -32,10 +36,33 @@ public class PerformanceManager : MonoBehaviour
     private float updateInterval = 0.5f;
     private float nextUpdateTime = 0f;
     
+    // Cached references to avoid FindObjectOfType calls
+    private static PerformanceManager _instance;
+    public static PerformanceManager Instance 
+    { 
+        get 
+        {
+            if (_instance == null)
+                _instance = FindObjectOfType<PerformanceManager>();
+            return _instance;
+        }
+    }
+    
     #region Unity Lifecycle
     
     private void Awake()
     {
+        // Singleton pattern
+        if (_instance == null)
+        {
+            _instance = this;
+        }
+        else if (_instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        
         // Determine if we should be active
         debugMode = Debug.isDebugBuild ? enableInDebugMode : enableInBuildMode;
         
@@ -44,15 +71,18 @@ public class PerformanceManager : MonoBehaviour
             gameObject.SetActive(false);
             return;
         }
-        
-        // Auto-discover performance components
-        DiscoverComponents();
     }
     
     private void Start()
     {
         if (debugMode)
         {
+            // FIXED: Single discovery call, no circular references
+            if (autoDiscoverComponents)
+            {
+                DiscoverComponents();
+            }
+            
             InitializeAllComponents();
         }
     }
@@ -79,30 +109,36 @@ public class PerformanceManager : MonoBehaviour
         RenderCompositeDebugGUI();
     }
     
+    private void OnDestroy()
+    {
+        if (_instance == this)
+            _instance = null;
+    }
+    
     #endregion
     
     #region Component Management
     
     /// <summary>
-    /// Register a performance component with the manager
+    /// Register a performance component with the manager (Thread-safe)
     /// </summary>
     public void RegisterComponent(IPerformanceComponent component)
     {
         if (component == null) return;
         
-        if (!performanceComponents.Contains(component))
+        // Prevent duplicate registration
+        if (performanceComponents.Contains(component)) return;
+        
+        performanceComponents.Add(component);
+        componentMap[component.GetType()] = component;
+        
+        // Add to reference list for inspector visibility
+        if (component is MonoBehaviour mb && !componentReferences.Contains(mb))
         {
-            performanceComponents.Add(component);
-            componentMap[component.GetType()] = component;
-            
-            // Add to reference list for inspector visibility
-            if (component is MonoBehaviour mb && !componentReferences.Contains(mb))
-            {
-                componentReferences.Add(mb);
-            }
-            
-            GameLogger.LogVerbose($"PerformanceManager: Registered component '{component.ComponentName}'");
+            componentReferences.Add(mb);
         }
+        
+        GameLogger.LogVerbose($"PerformanceManager: Registered component '{component.ComponentName}'");
     }
     
     /// <summary>
@@ -136,16 +172,39 @@ public class PerformanceManager : MonoBehaviour
     }
     
     /// <summary>
-    /// Auto-discover performance components in the scene
+    /// FIXED: Single discovery method with scope control
     /// </summary>
     private void DiscoverComponents()
     {
-        // Find all MonoBehaviours that implement IPerformanceComponent
-        MonoBehaviour[] allComponents = FindObjectsOfType<MonoBehaviour>();
+        performanceComponents.Clear();
+        componentMap.Clear();
+        componentReferences.Clear();
         
-        foreach (MonoBehaviour mb in allComponents)
+        MonoBehaviour[] componentsToCheck;
+        
+        // Limit discovery scope if specific parents are provided
+        if (specificParents != null && specificParents.Length > 0)
         {
-            if (mb is IPerformanceComponent perfComponent)
+            List<MonoBehaviour> scopedComponents = new List<MonoBehaviour>();
+            foreach (Transform parent in specificParents)
+            {
+                if (parent != null)
+                {
+                    scopedComponents.AddRange(parent.GetComponentsInChildren<MonoBehaviour>());
+                }
+            }
+            componentsToCheck = scopedComponents.ToArray();
+        }
+        else
+        {
+            // Full scene discovery (expensive)
+            componentsToCheck = FindObjectsOfType<MonoBehaviour>();
+        }
+        
+        // Register performance components
+        foreach (MonoBehaviour mb in componentsToCheck)
+        {
+            if (mb != null && mb is IPerformanceComponent perfComponent)
             {
                 RegisterComponent(perfComponent);
             }
@@ -197,6 +256,20 @@ public class PerformanceManager : MonoBehaviour
                     
                 component.UpdateComponent();
             }
+        }
+    }
+    
+    /// <summary>
+    /// Force refresh of component discovery
+    /// </summary>
+    [ContextMenu("Refresh Component Discovery")]
+    public void RefreshDiscovery()
+    {
+        if (autoDiscoverComponents)
+        {
+            DiscoverComponents();
+            InitializeAllComponents();
+            GameLogger.LogVerbose("PerformanceManager: Component discovery refreshed");
         }
     }
     
@@ -331,16 +404,6 @@ public class PerformanceManager : MonoBehaviour
         GameLogger.LogVerbose($"PerformanceManager: ALL performance systems {status} (Tab key pressed)");
     }
     
-    private void ToggleComponentDebug<T>() where T : class, IPerformanceComponent
-    {
-        var component = GetComponent<T>();
-        if (component != null)
-        {
-            component.ShowDebugInfo = !component.ShowDebugInfo;
-            GameLogger.LogVerbose($"PerformanceManager: Toggled debug for {component.ComponentName}: {component.ShowDebugInfo}");
-        }
-    }
-    
     #endregion
     
     #region Debug GUI
@@ -395,7 +458,6 @@ public class PerformanceManager : MonoBehaviour
         // Render each component in organized sections
         var perfMonitor = GetComponent<AdvancedPerformanceMonitor>();
         var culling = GetComponent<GameObjectCulling>();
-        var particles = GetComponent<ParticleOptimizer>();
         var drawCallOpt = GetComponent<DrawCallOptimizer>();
         var memoryOpt = GetComponent<MemoryOptimizer>();
         
@@ -414,15 +476,6 @@ public class PerformanceManager : MonoBehaviour
             GUI.Label(new Rect(x, y, width, lineHeight), "🎯 OBJECT CULLING", sectionStyle);
             y += lineHeight;
             y = culling.RenderDebugGUI(y);
-            y += sectionSpacing;
-        }
-        
-        // 3. PARTICLE OPTIMIZATION SECTION
-        if (particles != null && particles.IsEnabled && particles.ShowDebugInfo)
-        {
-            GUI.Label(new Rect(x, y, width, lineHeight), "🎨 PARTICLE OPTIMIZER", sectionStyle);
-            y += lineHeight;
-            y = particles.RenderDebugGUI(y);
             y += sectionSpacing;
         }
         

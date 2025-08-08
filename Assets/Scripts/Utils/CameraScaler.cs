@@ -25,10 +25,12 @@ public class CameraScaler : MonoBehaviour
     private void Awake()
     {
         if (playerScaler == null)
-            playerScaler = FindObjectOfType<PlayerScaler>();
+            GameLogger.LogError("No PlayerScaler component found!");
+            // playerScaler = FindObjectOfType<PlayerScaler>();
 
         if (virtualCamera == null)
-            virtualCamera = FindObjectOfType<CinemachineVirtualCamera>();
+            GameLogger.LogError("No CinemachineVirtualCamera component found!");
+            // virtualCamera = FindObjectOfType<CinemachineVirtualCamera>();
 
         if (virtualCamera != null)
         {
