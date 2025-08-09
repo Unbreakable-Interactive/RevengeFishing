@@ -12,7 +12,7 @@ public class HungerDisplay : BaseDisplay
         float currentHunger = player.HungerHandler.GetHunger();
         float maxHunger = player.HungerHandler.GetMaxHunger();
         
-        string hungerText = $"{currentHunger:F1} / {maxHunger:F1}";
+        string hungerText = $"{currentHunger} / {maxHunger}";
         SetDisplayText(hungerText);
     }
 

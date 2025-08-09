@@ -27,6 +27,12 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
     [Header("Platform Movement Control")]
     [SerializeField] private bool allowMovementOnPlatform = true;
     [SerializeField] private float platformMovementChance = 0.6f;
+    [SerializeField] private bool enableIndependentMovement = true;
+    
+    [Header("Performance Optimization")]
+    [SerializeField] private float physicsUpdateInterval = 0.1f;
+    [SerializeField] private float groundCheckInterval = 0.15f;
+    [SerializeField] private float platformCheckInterval = 0.08f;
     
     private Vector2 simulatedVelocity;
     private bool isGrounded;
@@ -44,6 +50,17 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
     
     [Header("Boat Physics Integration")]
     [SerializeField] private float boatCrewMass = 0.3f;
+
+    private float lastPhysicsUpdateTime = 0f;
+    private float lastGroundCheckTime = 0f;
+    private float lastPlatformCheckTime = 0f;
+    
+    private Collider2D cachedMyCollider;
+    private Collider2D cachedPlatformCollider;
+    private Vector2 cachedRayStartPosition;
+    
+    private float platformStickDistanceSqr;
+    private float maxMoveDistanceSqr;
 
     public string GetBoatID() 
     {
@@ -81,9 +98,13 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
     {
         base.Start();
         SetupBoatPhysics();
+        CacheComponents();
         
         currentGravityScale = isAboveWater ? kinematicAirGravity : kinematicUnderwaterGravity;
         targetGravityScale = currentGravityScale;
+        
+        platformStickDistanceSqr = platformStickDistance * platformStickDistance;
+        maxMoveDistanceSqr = maxMoveDistance * maxMoveDistance;
         
         if (fishermanConfig == null)
         {
@@ -93,6 +114,17 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
                 GameLogger.LogWarning($"BoatLandEnemy {gameObject.name}: No FishermanConfig found! Fishing behavior will not work.");
             }
         }
+    }
+
+    private void CacheComponents()
+    {
+        cachedMyCollider = GetComponent<Collider2D>();
+        RefreshPlatformColliderCache();
+    }
+
+    private void RefreshPlatformColliderCache()
+    {
+        cachedPlatformCollider = assignedPlatform?.PlatformCollider;
     }
 
     private void SetupBoatPhysics()
@@ -119,24 +151,18 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
     
     private void ForceCollisionSettings()
     {
-        if (assignedPlatform != null)
+        if (assignedPlatform != null && cachedMyCollider != null && cachedPlatformCollider != null)
         {
-            Collider2D myCollider = GetComponent<Collider2D>();
-            Collider2D platformCollider = assignedPlatform.PlatformCollider;
+            Physics2D.IgnoreCollision(cachedMyCollider, cachedPlatformCollider, false);
             
-            if (myCollider != null && platformCollider != null)
-            {
-                Physics2D.IgnoreCollision(myCollider, platformCollider, false);
-                
-                if (enableDebugMessages)
-                    GameLogger.LogVerbose($"BoatLandEnemy {gameObject.name}: Forced collision settings with {assignedPlatform.name}");
-            }
+            if (enableDebugMessages)
+                GameLogger.LogVerbose($"BoatLandEnemy {gameObject.name}: Forced collision settings with {assignedPlatform.name}");
         }
     }
     
     private void ForceInitialGroundCheck()
     {
-        CheckGroundStatus();
+        CheckGroundStatusOptimized();
         if (!isGrounded && enableDebugMessages)
         {
             GameLogger.LogVerbose($"BoatLandEnemy {gameObject.name}: Not grounded at spawn, starting to fall");
@@ -183,21 +209,24 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
 
     private void FixedUpdate()
     {
-        if (rb == null) return;
-
-        if (rb.bodyType == RigidbodyType2D.Kinematic && useKinematicBoatPhysics)
-        {
-            KinematicPhysicsSimulation();
-        }
-    }
-
-    private void KinematicPhysicsSimulation()
-    {
+        if (rb == null || rb.bodyType != RigidbodyType2D.Kinematic || !useKinematicBoatPhysics) return;
         if (_state != EnemyState.Alive && _state != EnemyState.Defeated) return;
 
+        float currentTime = Time.fixedTime;
+        
         UpdateGravityTransition();
-        CheckPlatformSticking();
-        CheckGroundStatus();
+        
+        if (currentTime - lastPlatformCheckTime >= platformCheckInterval)
+        {
+            CheckPlatformStickingOptimized();
+            lastPlatformCheckTime = currentTime;
+        }
+        
+        if (currentTime - lastGroundCheckTime >= groundCheckInterval)
+        {
+            CheckGroundStatusOptimized();
+            lastGroundCheckTime = currentTime;
+        }
         
         if (!platformBoundsCalculated && assignedPlatform != null)
         {
@@ -211,63 +240,65 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
 
         if (trackingPlatformMovement)
         {
-            UpdatePlatformBasedMovement();
+            UpdatePlatformMovementOptimized();
         }
         else
         {
-            if (!isGrounded && !isStuckToPlatform)
+            KinematicPhysicsSimulationOptimized();
+        }
+    }
+
+    private void KinematicPhysicsSimulationOptimized()
+    {
+        if (!isGrounded && !isStuckToPlatform)
+        {
+            ApplySimulatedGravity();
+            ApplyHorizontalMovement();
+            CheckPlatformBounds();
+            ApplySafeKinematicMovement();
+        }
+        else
+        {
+            if (simulatedVelocity.y < 0)
             {
-                ApplySimulatedGravity();
-                ApplyHorizontalMovement();
-                CheckPlatformBounds();
-                ApplySafeKinematicMovement();
+                simulatedVelocity.y = Mathf.Lerp(simulatedVelocity.y, 0, Time.fixedDeltaTime * 8f);
             }
-            else
-            {
-                if (simulatedVelocity.y < 0)
-                {
-                    simulatedVelocity.y = Mathf.Lerp(simulatedVelocity.y, 0, Time.fixedDeltaTime * 8f);
-                }
-                ApplyHorizontalMovement();
-                CheckPlatformBounds();
-                ApplySafeKinematicMovement();
-            }
+            ApplyHorizontalMovement();
+            CheckPlatformBounds();
+            ApplySafeKinematicMovement();
         }
     }
 
     private bool ShouldMakeAIDecisions()
     {
-        if (trackingPlatformMovement && !allowMovementOnPlatform)
-        {
-            return false;
-        }
-        return true;
+        return !(trackingPlatformMovement && !allowMovementOnPlatform);
     }
 
-    private void UpdatePlatformBasedMovement()
+    private void UpdatePlatformMovementOptimized()
     {
-        if (assignedPlatform == null) return;
+        if (assignedPlatform == null || cachedPlatformCollider == null) return;
 
-        Collider2D platformCollider = assignedPlatform.PlatformCollider;
-        if (platformCollider == null) return;
-
-        Vector3 currentPlatformPosition = platformCollider.bounds.max;
+        Vector3 currentPlatformPosition = cachedPlatformCollider.bounds.max;
         
         if (lastPlatformPosition != Vector3.zero)
         {
-            Vector3 platformMovement = currentPlatformPosition - lastPlatformPosition;
-            
-            if (platformMovement.magnitude > 0.1f && enableDebugMessages)
-            {
-                GameLogger.LogWarning($"BoatLandEnemy {gameObject.name}: LARGE platform movement: {platformMovement.magnitude}");
-            }
-            
             Vector3 localMovement = GetLocalMovementOnPlatform();
             localXPositionOnPlatform += localMovement.x;
             
-            Vector3 newPosition = transform.position + platformMovement;
-            newPosition.x += localMovement.x;
-            newPosition.y = currentPlatformPosition.y + relativeYOffsetToPlatform;
+            Vector3 newPosition = transform.position;
+            
+            if (enableIndependentMovement)
+            {
+                newPosition.x += localMovement.x;
+                newPosition.y = currentPlatformPosition.y + relativeYOffsetToPlatform;
+            }
+            else
+            {
+                Vector3 platformMovement = currentPlatformPosition - lastPlatformPosition;
+                newPosition += platformMovement;
+                newPosition.x += localMovement.x;
+                newPosition.y = currentPlatformPosition.y + relativeYOffsetToPlatform;
+            }
             
             transform.position = newPosition;
             lastValidPlatformPosition = newPosition;
@@ -428,15 +459,15 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
     {
         if (assignedPlatform == null) return;
 
-        Collider2D platformCollider = assignedPlatform.PlatformCollider;
-        if (platformCollider == null) return;
+        RefreshPlatformColliderCache();
+        if (cachedPlatformCollider == null) return;
 
         isStuckToPlatform = true;
         isGrounded = true;
         simulatedVelocity.y = 0;
         trackingPlatformMovement = true;
 
-        Vector3 platformSurface = platformCollider.bounds.max;
+        Vector3 platformSurface = cachedPlatformCollider.bounds.max;
         
         if (BodyCollider != null)
         {
@@ -468,7 +499,7 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
 
         if (enableDebugMessages)
         {
-            GameLogger.LogVerbose($"BoatLandEnemy {gameObject.name}: Started tracking platform movement. Y offset: {relativeYOffsetToPlatform}");
+            GameLogger.LogVerbose($"BoatLandEnemy {gameObject.name}: Started tracking platform movement. Independent: {enableIndependentMovement}");
         }
     }
 
@@ -492,7 +523,7 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
         currentGravityScale = Mathf.Lerp(currentGravityScale, targetGravityScale, Time.fixedDeltaTime * gravityTransitionSpeed);
     }
 
-    private void CheckPlatformSticking()
+    private void CheckPlatformStickingOptimized()
     {
         if (assignedPlatform == null) 
         {
@@ -503,10 +534,13 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
             return;
         }
 
-        Collider2D platformCollider = assignedPlatform.PlatformCollider;
-        if (platformCollider == null) return;
+        if (cachedPlatformCollider == null)
+        {
+            RefreshPlatformColliderCache();
+            if (cachedPlatformCollider == null) return;
+        }
 
-        float distance = transform.position.y - platformCollider.bounds.max.y;
+        float distance = transform.position.y - cachedPlatformCollider.bounds.max.y;
 
         if (trackingPlatformMovement)
         {
@@ -525,7 +559,7 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
         }
     }
 
-    private void CheckGroundStatus()
+    private void CheckGroundStatusOptimized()
     {
         if (isStuckToPlatform) 
         {
@@ -533,8 +567,8 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
             return;
         }
 
-        Vector2 rayStart = (Vector2)transform.position;
-        RaycastHit2D hit = Physics2D.Raycast(rayStart, Vector2.down, groundCheckDistance, groundCheckLayers);
+        cachedRayStartPosition = transform.position;
+        RaycastHit2D hit = Physics2D.Raycast(cachedRayStartPosition, Vector2.down, groundCheckDistance, groundCheckLayers);
         
         bool wasGrounded = isGrounded;
         isGrounded = hit.collider != null;
@@ -601,12 +635,9 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
 
     private void CheckBoatPlatformBounds()
     {
-        if (assignedPlatform == null) return;
+        if (assignedPlatform == null || cachedPlatformCollider == null) return;
 
-        Collider2D platformCollider = assignedPlatform.PlatformCollider;
-        if (platformCollider == null) return;
-
-        Bounds platformBounds = platformCollider.bounds;
+        Bounds platformBounds = cachedPlatformCollider.bounds;
         Vector3 currentPos = transform.position;
 
         float leftEdge = platformBounds.min.x + edgeBuffer;
@@ -629,11 +660,14 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
     {
         if (assignedPlatform == null) return;
 
-        Collider2D platformCollider = assignedPlatform.PlatformCollider;
-    
-        if (platformCollider != null)
+        if (cachedPlatformCollider == null)
         {
-            Bounds bounds = platformCollider.bounds;
+            RefreshPlatformColliderCache();
+        }
+    
+        if (cachedPlatformCollider != null)
+        {
+            Bounds bounds = cachedPlatformCollider.bounds;
             platformLeftEdge = bounds.min.x + edgeBuffer;
             platformRightEdge = bounds.max.x - edgeBuffer;
             platformBoundsCalculated = true;
@@ -647,12 +681,12 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
 
     private void ApplySafeKinematicMovement()
     {
-        if (simulatedVelocity.magnitude < 0.001f) return;
+        if (simulatedVelocity.sqrMagnitude < 0.000001f) return;
 
         Vector2 currentPosition = rb.position;
         Vector2 targetMovement = simulatedVelocity * Time.fixedDeltaTime;
         
-        if (targetMovement.magnitude > maxMoveDistance)
+        if (targetMovement.sqrMagnitude > maxMoveDistanceSqr)
         {
             targetMovement = targetMovement.normalized * maxMoveDistance;
         }
@@ -663,7 +697,7 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
         {
             Vector2 safePosition = GetPlatformSafePosition(currentPosition, targetPosition);
             
-            if (Vector2.Distance(currentPosition, safePosition) > 0.001f)
+            if ((currentPosition - safePosition).sqrMagnitude > 0.000001f)
             {
                 rb.MovePosition(safePosition);
             }
@@ -676,10 +710,7 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
 
     private Vector2 GetPlatformSafePosition(Vector2 currentPos, Vector2 targetPos)
     {
-        Collider2D myCollider = GetComponent<Collider2D>();
-        Collider2D platformCollider = assignedPlatform.PlatformCollider;
-        
-        if (myCollider == null || platformCollider == null) return targetPos;
+        if (cachedMyCollider == null || cachedPlatformCollider == null) return targetPos;
 
         Vector2 direction = (targetPos - currentPos);
         float distance = direction.magnitude;
@@ -690,7 +721,7 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
 
         RaycastHit2D hit = Physics2D.CapsuleCast(
             currentPos,
-            myCollider.bounds.size,
+            cachedMyCollider.bounds.size,
             CapsuleDirection2D.Vertical,
             0f,
             direction,
@@ -698,7 +729,7 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
             platformLayers
         );
 
-        if (hit.collider != null && hit.collider == platformCollider)
+        if (hit.collider != null && hit.collider == cachedPlatformCollider)
         {
             if (Vector2.Dot(direction, Vector2.down) > 0.3f)
             {
@@ -725,6 +756,8 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
     public override void SetAssignedPlatform(Platform platform)
     {        
         base.SetAssignedPlatform(platform);
+        
+        RefreshPlatformColliderCache();
         
         if (platform != null)
         {
@@ -842,6 +875,7 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
         base.Initialize();
         
         SetupBoatPhysics();
+        CacheComponents();
         
         simulatedVelocity = Vector2.zero;
         wasKinematicBeforeFall = true;
@@ -894,5 +928,35 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
         
         if (enableDebugMessages)
             GameLogger.LogVerbose($"BoatLandEnemy {gameObject.name}: Defeat behaviors started - ready to fall");
+    }
+
+    public void SetIndependentMovement(bool independent)
+    {
+        enableIndependentMovement = independent;
+        
+        if (enableDebugMessages)
+        {
+            GameLogger.LogVerbose($"BoatLandEnemy {gameObject.name}: Independent movement set to {independent}");
+        }
+    }
+
+    [ContextMenu("Toggle Independent Movement")]
+    public void ToggleIndependentMovement()
+    {
+        SetIndependentMovement(!enableIndependentMovement);
+        GameLogger.LogVerbose($"BoatLandEnemy {gameObject.name}: Independent movement toggled to {enableIndependentMovement}");
+    }
+
+    [ContextMenu("Test Platform Movement")]
+    public void TestPlatformMovement()
+    {
+        if (trackingPlatformMovement)
+        {
+            GameLogger.LogVerbose($"BoatLandEnemy {gameObject.name}: Currently tracking platform movement. Independent: {enableIndependentMovement}");
+        }
+        else
+        {
+            GameLogger.LogVerbose($"BoatLandEnemy {gameObject.name}: NOT tracking platform movement");
+        }
     }
 }
