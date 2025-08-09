@@ -1,0 +1,192 @@
+{
+    "m_SGVersion": 3,
+    "m_Type": "UnityEditor.ShaderGraph.GraphData",
+    "m_ObjectId": "ab30c25a5d3d4722a0b25fdc1338449b",
+    "m_Properties": [
+        {
+            "m_Id": "8d8bf3fe137c40fca9c860ac9e5bf7de"
+        },
+        {
+            "m_Id": "500b7bb9f28144b3b11eb25c144d9987"
+        },
+        {
+            "m_Id": "78eddf7e3dbb4c4c95ed9aa9c5c05500"
+        },
+        {
+            "m_Id": "b6a5e91d75cd48588fce7525f975a9b1"
+        }
+    ],
+    "m_Keywords": [],
+    "m_Dropdowns": [],
+    "m_CategoryData": [
+        {
+            "m_Id": "65de81a408b84a35a469f6339fdbe109"
+        }
+    ],
+    "m_Nodes": [],
+    "m_GroupDatas": [],
+    "m_StickyNoteDatas": [],
+    "m_Edges": [],
+    "m_VertexContext": {
+        "m_Position": {
+            "x": 0.0,
+            "y": 1.0
+        },
+        "m_Blocks": []
+    },
+    "m_FragmentContext": {
+        "m_Position": {
+            "x": 0.0,
+            "y": 200.0
+        },
+        "m_Blocks": []
+    },
+    "m_PreviewData": {
+        "serializedMesh": {
+            "m_SerializedMesh": "{\"mesh\":{\"instanceID\":0}}",
+            "m_Guid": ""
+        },
+        "preventRotation": false
+    },
+    "m_Path": "Shader Graphs",
+    "m_GraphPrecision": 1,
+    "m_PreviewMode": 2,
+    "m_OutputNode": {
+        "m_Id": ""
+    },
+    "m_ActiveTargets": []
+}
+
+{
+    "m_SGVersion": 1,
+    "m_Type": "UnityEditor.ShaderGraph.Internal.Vector3ShaderProperty",
+    "m_ObjectId": "500b7bb9f28144b3b11eb25c144d9987",
+    "m_Guid": {
+        "m_GuidSerialized": "d9d11803-9590-4b5e-b9d0-8b23a2b4e471"
+    },
+    "m_Name": "EndPosition",
+    "m_DefaultRefNameVersion": 1,
+    "m_RefNameGeneratedByDisplayName": "EndPosition",
+    "m_DefaultReferenceName": "_EndPosition",
+    "m_OverrideReferenceName": "",
+    "m_GeneratePropertyBlock": true,
+    "m_UseCustomSlotLabel": false,
+    "m_CustomSlotLabel": "",
+    "m_DismissedVersion": 0,
+    "m_Precision": 0,
+    "overrideHLSLDeclaration": false,
+    "hlslDeclarationOverride": 0,
+    "m_Hidden": false,
+    "m_Value": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "w": 0.0
+    }
+}
+
+{
+    "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.CategoryData",
+    "m_ObjectId": "65de81a408b84a35a469f6339fdbe109",
+    "m_Name": "",
+    "m_ChildObjectList": [
+        {
+            "m_Id": "8d8bf3fe137c40fca9c860ac9e5bf7de"
+        },
+        {
+            "m_Id": "500b7bb9f28144b3b11eb25c144d9987"
+        },
+        {
+            "m_Id": "78eddf7e3dbb4c4c95ed9aa9c5c05500"
+        },
+        {
+            "m_Id": "b6a5e91d75cd48588fce7525f975a9b1"
+        }
+    ]
+}
+
+{
+    "m_SGVersion": 1,
+    "m_Type": "UnityEditor.ShaderGraph.Internal.Vector3ShaderProperty",
+    "m_ObjectId": "78eddf7e3dbb4c4c95ed9aa9c5c05500",
+    "m_Guid": {
+        "m_GuidSerialized": "7b5a10db-d246-4466-a793-5defdcda9986"
+    },
+    "m_Name": "WaterSurface",
+    "m_DefaultRefNameVersion": 1,
+    "m_RefNameGeneratedByDisplayName": "WaterSurface",
+    "m_DefaultReferenceName": "_WaterSurface",
+    "m_OverrideReferenceName": "",
+    "m_GeneratePropertyBlock": true,
+    "m_UseCustomSlotLabel": false,
+    "m_CustomSlotLabel": "",
+    "m_DismissedVersion": 0,
+    "m_Precision": 0,
+    "overrideHLSLDeclaration": false,
+    "hlslDeclarationOverride": 0,
+    "m_Hidden": false,
+    "m_Value": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "w": 0.0
+    }
+}
+
+{
+    "m_SGVersion": 1,
+    "m_Type": "UnityEditor.ShaderGraph.Internal.Vector3ShaderProperty",
+    "m_ObjectId": "8d8bf3fe137c40fca9c860ac9e5bf7de",
+    "m_Guid": {
+        "m_GuidSerialized": "0145562b-704c-4339-8877-f0899a8dd37f"
+    },
+    "m_Name": "StartPosition",
+    "m_DefaultRefNameVersion": 1,
+    "m_RefNameGeneratedByDisplayName": "StartPosition",
+    "m_DefaultReferenceName": "_StartPosition",
+    "m_OverrideReferenceName": "",
+    "m_GeneratePropertyBlock": true,
+    "m_UseCustomSlotLabel": false,
+    "m_CustomSlotLabel": "",
+    "m_DismissedVersion": 0,
+    "m_Precision": 0,
+    "overrideHLSLDeclaration": false,
+    "hlslDeclarationOverride": 0,
+    "m_Hidden": false,
+    "m_Value": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "w": 0.0
+    }
+}
+
+{
+    "m_SGVersion": 1,
+    "m_Type": "UnityEditor.ShaderGraph.Internal.Vector3ShaderProperty",
+    "m_ObjectId": "b6a5e91d75cd48588fce7525f975a9b1",
+    "m_Guid": {
+        "m_GuidSerialized": "24ef70bd-28c7-472c-915e-659fb817fe3a"
+    },
+    "m_Name": "CameraPosition",
+    "m_DefaultRefNameVersion": 1,
+    "m_RefNameGeneratedByDisplayName": "CameraPosition",
+    "m_DefaultReferenceName": "_CameraPosition",
+    "m_OverrideReferenceName": "",
+    "m_GeneratePropertyBlock": true,
+    "m_UseCustomSlotLabel": false,
+    "m_CustomSlotLabel": "",
+    "m_DismissedVersion": 0,
+    "m_Precision": 0,
+    "overrideHLSLDeclaration": false,
+    "hlslDeclarationOverride": 0,
+    "m_Hidden": false,
+    "m_Value": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "w": 0.0
+    }
+}
+
