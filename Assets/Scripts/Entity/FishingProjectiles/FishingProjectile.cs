@@ -166,6 +166,7 @@ public abstract class FishingProjectile : Entity
     protected IEnumerator IProjectileRetracted()
     {
         yield return new WaitUntil(() => maxDistance <= 0.1f);
+        player?.GetComponentInChildren<MouthMagnet>()?.RemoveEntity(this);
         // Notify the spawner before destroying
         if (spawner != null)
         {
@@ -373,7 +374,7 @@ public abstract class FishingProjectile : Entity
         {
             player.RemoveBitingHook(this);
         }
-    
+
         if (player != null && player.Magnet != null)
         {
             player.Magnet.RemoveEntity(this);

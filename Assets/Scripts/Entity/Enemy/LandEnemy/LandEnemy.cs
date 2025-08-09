@@ -683,20 +683,19 @@ public class LandEnemy : Enemy, IBoatComponent
     protected virtual void OnFishingToolEquipped()
     {
         animator?.SetBool("rodEquipped", true);
-        GetComponentInChildren<SpriteRenderer>().gameObject.transform.position += new Vector3(0.242f * transform.localScale.x, 0.702f, 0f);
     }
 
     protected virtual void OnFishingToolUnequipped()
     {
         animator?.SetBool("rodEquipped", false);
-        GetComponentInChildren<SpriteRenderer>().gameObject.transform.position -= new Vector3(0.242f * transform.localScale.x, 0.702f, 0f);
     }
 
     public virtual void DropTool()
     {
         if (toolDropPrefab != null)
         {
-            GameObject droppedToolHandler = Instantiate(toolDropPrefab, transform.position, transform.rotation);
+            //GameObject droppedToolHandler = 
+            Instantiate(toolDropPrefab, transform.position, transform.rotation);
             if (assignedPlatform != null && assignedPlatform.showDebugInfo)
             {
                 GameLogger.LogVerbose($"{gameObject.name} dropped their tool");
