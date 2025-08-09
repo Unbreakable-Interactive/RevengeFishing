@@ -94,4 +94,3 @@ public class BoatController : MonoBehaviour
     internal BoatFloater BoatFloater => boatFloater;
     internal BoatPlatform BoatPlatform => boatPlatform;
 }
-

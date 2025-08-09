@@ -54,6 +54,12 @@ public abstract class Enemy : Entity
     
     [HideInInspector] public bool isReturningToPool = false;
     
+    private static Player cachedPlayer;
+    private static bool playerCached = false;
+    private static SpawnHandler[] cachedSpawnHandlers;
+    private static float lastSpawnHandlerCacheTime = 0f;
+    private const float SPAWN_HANDLER_CACHE_DURATION = 5f;
+    
     public float NextActionTime
     {
         get { return nextActionTime; }
@@ -81,15 +87,21 @@ public abstract class Enemy : Entity
     protected virtual void Start()
     {
         entityType = EntityType.Enemy;
-    
-        if (player == null)
-        {
-            player = Player.Instance;
-        }
-
-        AutoAssignReferences();
         
+        CachePlayerReference();
+        AutoAssignReferences();
         Initialize();
+    }
+
+    private void CachePlayerReference()
+    {
+        if (!playerCached || cachedPlayer == null)
+        {
+            cachedPlayer = Player.Instance;
+            playerCached = cachedPlayer != null;
+        }
+        
+        player = cachedPlayer;
     }
 
     private void AutoAssignReferences()
@@ -114,10 +126,10 @@ public abstract class Enemy : Entity
         base.Initialize();
 
         isReturningToPool = false;
-
+        
         if (player == null)
         {
-            player = Player.Instance;
+            CachePlayerReference();
         }
 
         EnemySetup();
@@ -339,9 +351,9 @@ public abstract class Enemy : Entity
             return;
         }
 
-        if (this is LandEnemy)
+        if (this is LandEnemy && !(this is BoatLandEnemy))
         {
-            NotifySpawnHandlerOfDeath();
+            NotifySpawnHandlerOfDeathOptimized();
         }
 
         CleanupBeforePoolReturn();
@@ -382,13 +394,21 @@ public abstract class Enemy : Entity
         return null;
     }
 
-    private void NotifySpawnHandlerOfDeath()
+    private void NotifySpawnHandlerOfDeathOptimized()
     {
-        SpawnHandler[] allSpawnHandlers = FindObjectsOfType<SpawnHandler>();
+        float currentTime = Time.time;
         
-        foreach (SpawnHandler handler in allSpawnHandlers)
+        if (cachedSpawnHandlers == null || 
+            currentTime - lastSpawnHandlerCacheTime > SPAWN_HANDLER_CACHE_DURATION)
         {
-            if (handler.config != null && 
+            cachedSpawnHandlers = FindObjectsOfType<SpawnHandler>();
+            lastSpawnHandlerCacheTime = currentTime;
+        }
+        
+        for (int i = 0; i < cachedSpawnHandlers.Length; i++)
+        {
+            SpawnHandler handler = cachedSpawnHandlers[i];
+            if (handler != null && handler.config != null && 
                 this is LandEnemy && 
                 handler.config.enemyType == SpawnHandlerConfig.EnemyType.LandFisherman)
             {

@@ -34,6 +34,9 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
     [SerializeField] private float groundCheckInterval = 0.15f;
     [SerializeField] private float platformCheckInterval = 0.08f;
     
+    [Header("Boat Physics Integration")]
+    [SerializeField] private float boatCrewMass = 0.3f;
+    
     private Vector2 simulatedVelocity;
     private bool isGrounded;
     private bool wasKinematicBeforeFall = true;
@@ -47,9 +50,6 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
     private float localXPositionOnPlatform;
     private float relativeYOffsetToPlatform = 0f;
     private bool trackingPlatformMovement = false;
-    
-    [Header("Boat Physics Integration")]
-    [SerializeField] private float boatCrewMass = 0.3f;
 
     private float lastPhysicsUpdateTime = 0f;
     private float lastGroundCheckTime = 0f;
@@ -61,18 +61,34 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
     
     private float platformStickDistanceSqr;
     private float maxMoveDistanceSqr;
+    
+    private string cachedBoatID;
+    private BoatCrewManager cachedCrewManager;
+    private bool crewManagerCached = false;
 
     public string GetBoatID() 
     {
-        if (assignedPlatform is BoatPlatform boatPlatform)
+        if (!string.IsNullOrEmpty(cachedBoatID))
         {
-            return boatPlatform.GetBoatID();
+            return cachedBoatID;
         }
         
-        BoatCrewManager crewManager = GetComponentInParent<BoatCrewManager>();
-        if (crewManager != null)
+        if (assignedPlatform is BoatPlatform boatPlatform)
         {
-            return crewManager.GetBoatID();
+            cachedBoatID = boatPlatform.GetBoatID();
+            return cachedBoatID;
+        }
+        
+        if (!crewManagerCached)
+        {
+            cachedCrewManager = GetComponentInParent<BoatCrewManager>();
+            crewManagerCached = true;
+        }
+        
+        if (cachedCrewManager != null)
+        {
+            cachedBoatID = cachedCrewManager.GetBoatID();
+            return cachedBoatID;
         }
         
         return "NO_BOAT_ID";
@@ -80,25 +96,23 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
     
     public void SetBoatID(BoatID newBoatID) 
     {
+        cachedBoatID = newBoatID?.UniqueID ?? "NO_BOAT_ID";
+        
         if (assignedPlatform is BoatPlatform boatPlatform)
         {
             boatPlatform.SetBoatID(newBoatID);
         }
-        else
+        else if (cachedCrewManager != null)
         {
-            BoatCrewManager crewManager = GetComponentInParent<BoatCrewManager>();
-            if (crewManager != null)
-            {
-                crewManager.SetBoatID(newBoatID);
-            }
+            cachedCrewManager.SetBoatID(newBoatID);
         }
     }
 
     protected override void Start()
     {
         base.Start();
+        CacheReferencesOptimized();
         SetupBoatPhysics();
-        CacheComponents();
         
         currentGravityScale = isAboveWater ? kinematicAirGravity : kinematicUnderwaterGravity;
         targetGravityScale = currentGravityScale;
@@ -106,20 +120,36 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
         platformStickDistanceSqr = platformStickDistance * platformStickDistance;
         maxMoveDistanceSqr = maxMoveDistance * maxMoveDistance;
         
-        if (fishermanConfig == null)
-        {
-            fishermanConfig = Resources.Load<FishermanConfig>("FishermanConfig");
-            if (fishermanConfig == null)
-            {
-                GameLogger.LogWarning($"BoatLandEnemy {gameObject.name}: No FishermanConfig found! Fishing behavior will not work.");
-            }
-        }
+        LoadFishermanConfigOptimized();
     }
 
-    private void CacheComponents()
+    private void CacheReferencesOptimized()
     {
         cachedMyCollider = GetComponent<Collider2D>();
         RefreshPlatformColliderCache();
+        
+        if (!crewManagerCached)
+        {
+            cachedCrewManager = GetComponentInParent<BoatCrewManager>();
+            crewManagerCached = true;
+        }
+    }
+    
+    private void LoadFishermanConfigOptimized()
+    {
+        if (fishermanConfig != null) return;
+        
+        if (cachedCrewManager?.fishermanConfig != null)
+        {
+            fishermanConfig = cachedCrewManager.fishermanConfig;
+            return;
+        }
+        
+        fishermanConfig = Resources.Load<FishermanConfig>("FishermanConfig");
+        if (fishermanConfig == null)
+        {
+            GameLogger.LogWarning($"BoatLandEnemy {gameObject.name}: No FishermanConfig found! Fishing behavior will not work.");
+        }
     }
 
     private void RefreshPlatformColliderCache()
@@ -874,8 +904,8 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
     {
         base.Initialize();
         
+        CacheReferencesOptimized();
         SetupBoatPhysics();
-        CacheComponents();
         
         simulatedVelocity = Vector2.zero;
         wasKinematicBeforeFall = true;
@@ -883,6 +913,9 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
         trackingPlatformMovement = false;
         lastValidPlatformPosition = Vector3.zero;
         localXPositionOnPlatform = 0f;
+        
+        cachedBoatID = null;
+        crewManagerCached = false;
         
         if (enableDebugMessages)
             GameLogger.LogVerbose($"BoatLandEnemy {gameObject.name}: Initialize() - Reset to Kinematic physics and cleared tracking state");
@@ -898,10 +931,9 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
         
         isReturningToPool = true;
         
-        BoatCrewManager crewManager = GetComponentInParent<BoatCrewManager>();
-        if (crewManager != null && crewManager.BoatEnemyBelongToBoat(this))
+        if (cachedCrewManager != null && cachedCrewManager.BoatEnemyBelongToBoat(this))
         {
-            crewManager.HandleCrewMemberDeath(this);
+            cachedCrewManager.HandleCrewMemberDeath(this);
         }
         else
         {

@@ -19,6 +19,9 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
     [SerializeField] private int maxCrewMembers = 2;
     [SerializeField] private int maxInactiveCrewMembers = 1;
     
+    [Header("Shared Configuration")]
+    [SerializeField] public FishermanConfig fishermanConfig;
+    
     [Space]
     [SerializeField] private List<BoatLandEnemy> allCrewMembers = new List<BoatLandEnemy>();
     

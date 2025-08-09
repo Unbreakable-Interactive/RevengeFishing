@@ -59,7 +59,10 @@ public class LandEnemy : Enemy, IBoatComponent
     [SerializeField] protected float maxLineReduction = 1.5f;
     [SerializeField] protected float lineReductionVariation = 0.4f;
 
-    Animator animator;
+    protected Animator animator;
+    
+    private Collider2D cachedPlatformCollider;
+    private bool platformColliderCached = false;
 
     public Vector3 InitialSpawnPosition { get; set; }
 
@@ -89,6 +92,8 @@ public class LandEnemy : Enemy, IBoatComponent
     public virtual void SetAssignedPlatform(Platform platform)
     {
         assignedPlatform = platform;
+        platformColliderCached = false;
+        cachedPlatformCollider = null;
     }
 
     public Platform GetAssignedPlatform()
@@ -122,9 +127,13 @@ public class LandEnemy : Enemy, IBoatComponent
             assignedPlatform.UnregisterEnemy(this);
             assignedPlatform = null;
         }
+        
         platformBoundsCalculated = false;
+        platformColliderCached = false;
+        cachedPlatformCollider = null;
         platformLeftEdge = 0f;
         platformRightEdge = 0f;
+        
         GameLogger.LogVerbose($"{gameObject.name} platform assignment cleared");
     }
 
@@ -160,41 +169,55 @@ public class LandEnemy : Enemy, IBoatComponent
     {
         base.EnemySetup();
         platformBoundsCalculated = false;
+        platformColliderCached = false;
+        
+        LoadConfigurationOptimized();
+        SetupComponentsOptimized();
+    }
+    
+    private void LoadConfigurationOptimized()
+    {
+        if (landEnemyConfig != null) return;
+        
+        landEnemyConfig = Resources.Load<LandEnemyConfig>("LandEnemyConfig");
+        
         if (landEnemyConfig == null)
         {
-            landEnemyConfig = Resources.Load<LandEnemyConfig>("LandEnemyConfig");
+            landEnemyConfig = ScriptableObject.CreateInstance<LandEnemyConfig>();
+            landEnemyConfig.idleProbability = 0.4f;
+            landEnemyConfig.walkProbability = 0.3f;
+            landEnemyConfig.runProbability = 0.3f;
+            landEnemyConfig.identifier = TypeIdentifier.Land;
             
-            if (landEnemyConfig == null)
-            {
-                landEnemyConfig = ScriptableObject.CreateInstance<LandEnemyConfig>();
-                landEnemyConfig.idleProbability = 0.4f;
-                landEnemyConfig.walkProbability = 0.3f;
-                landEnemyConfig.runProbability = 0.3f;
-                landEnemyConfig.identifier = TypeIdentifier.Land;
-                
-                GameLogger.LogWarning($"{gameObject.name}: No LandEnemyConfig assigned! Created default config.");
-            }
-            else
-            {
-                GameLogger.LogVerbose($"{gameObject.name}: Loaded default LandEnemyConfig from Resources");
-            }
+            GameLogger.LogWarning($"{gameObject.name}: No LandEnemyConfig assigned! Created default config.");
         }
-
+        else
+        {
+            GameLogger.LogVerbose($"{gameObject.name}: Loaded default LandEnemyConfig from Resources");
+        }
+    }
+    
+    private void SetupComponentsOptimized()
+    {
         nextActionTime = Time.time + Random.Range(0.5f, 2f);
         _landMovementState = LandMovementState.Idle;
+        
         hookSpawner = GetComponent<HookSpawner>();
         if (hookSpawner == null)
         {
             hookSpawner = gameObject.AddComponent<HookSpawner>();
         }
         hookSpawner.Initialize();
+        
         SetMovementMode(isAboveWater);
+        
         idleDetector = GetComponentInChildren<IdleDetector>();
         if (idleDetector != null && _landMovementState == LandMovementState.Idle && idleDetector.ShouldAvoidIdle())
         {
             GameLogger.LogVerbose($"{gameObject.name} moved on spawn due to overlap with idle enemies");
             ChooseMovementAction();
         }
+        
         animator = GetComponent<Animator>();
         GameLogger.Log($"{gameObject.name} - Enemy initialized with power level {_powerLevel}");
         GameLogger.LogVerbose($"Animator found: {animator != null}");
@@ -455,11 +478,15 @@ public class LandEnemy : Enemy, IBoatComponent
     {
         if (assignedPlatform == null) return;
 
-        Collider2D platformCol = assignedPlatform.GetComponent<Collider2D>();
-    
-        if (platformCol != null)
+        if (!platformColliderCached || cachedPlatformCollider == null)
         {
-            Bounds bounds = platformCol.bounds;
+            cachedPlatformCollider = assignedPlatform.GetComponent<Collider2D>();
+            platformColliderCached = true;
+        }
+    
+        if (cachedPlatformCollider != null)
+        {
+            Bounds bounds = cachedPlatformCollider.bounds;
             platformLeftEdge = bounds.min.x + edgeBuffer;
             platformRightEdge = bounds.max.x - edgeBuffer;
             platformBoundsCalculated = true;
