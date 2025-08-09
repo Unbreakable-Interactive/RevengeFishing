@@ -11,9 +11,10 @@ public class BoatIntegrityManager : MonoBehaviour
     
     public Action<float, float> OnIntegrityChanged;
     
-    [SerializeField] private BoatCrewManager crewManager;
-    [SerializeField] private BoatMovementSystem boatMovement;
-    [SerializeField] private BoatVisualSystem boatVisualSystem;
+    private BoatCrewManager crewManager;
+    private BoatMovementSystem boatMovement;
+    private BoatVisualSystem boatVisualSystem;
+    private BoatLifecycleManager lifecycleManager;
     
     private List<BoatLandEnemy> cachedCrewMembers;
     private int cachedActiveCrewCount = 0;
@@ -23,16 +24,13 @@ public class BoatIntegrityManager : MonoBehaviour
     public float MaxIntegrity => maxIntegrity;
     public bool IsDestroyed => isBoatDestroyed;
     
-    public void Initialize()
+    public void Initialize(BoatCrewManager crewMgr)
     {
-        crewManager = GetComponent<BoatCrewManager>();
-        if (crewManager == null)
-        {
-            GameLogger.LogError("BoatIntegrityManager: BoatCrewManager not found on same GameObject!");
-        }
+        crewManager = crewMgr;
         
         boatMovement = GetComponent<BoatMovementSystem>();
         boatVisualSystem = GetComponent<BoatVisualSystem>();
+        lifecycleManager = GetComponent<BoatLifecycleManager>();
         
         RefreshCrewCache();
     }
@@ -127,7 +125,6 @@ public class BoatIntegrityManager : MonoBehaviour
             boatVisualSystem.DestroyEnemy(true);
         }
         
-        BoatLifecycleManager lifecycleManager = GetComponent<BoatLifecycleManager>();
         if (lifecycleManager != null)
         {
             lifecycleManager.DestroyBoat();

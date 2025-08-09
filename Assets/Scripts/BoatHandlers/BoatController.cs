@@ -13,12 +13,14 @@ public class BoatController : MonoBehaviour
     [SerializeField] private BoatBoundaryTrigger leftBoundary;
     [SerializeField] private BoatBoundaryTrigger rightBoundary;
     
+    private static readonly System.Collections.Generic.List<Enemy> tempEnemyList = new System.Collections.Generic.List<Enemy>();
+    
     private void Awake()
     {
-        ValidateComponents();
+        CacheComponents();
     }
     
-    private void ValidateComponents()
+    private void CacheComponents()
     {
         if (integrityManager == null)
             integrityManager = GetComponent<BoatIntegrityManager>();
@@ -38,13 +40,11 @@ public class BoatController : MonoBehaviour
     
     public void Initialize(Transform leftBoundaryTransform, Transform rightBoundaryTransform)
     {
-        // Initialize all boat systems
         boatFloater.Initialize();
-        crewManager.Initialize(boatPlatform, integrityManager);
-        integrityManager.Initialize();
+        crewManager.Initialize(boatPlatform, integrityManager, boatFloater);
+        integrityManager.Initialize(crewManager);
         lifecycleManager.Initialize(this);
         
-        // Set up boundaries
         if (leftBoundaryTransform != null && rightBoundaryTransform != null)
         {
             boatFloater.InitializeBoundaries(leftBoundaryTransform, rightBoundaryTransform);
@@ -79,12 +79,14 @@ public class BoatController : MonoBehaviour
     public System.Collections.Generic.List<Enemy> GetAllCrewMembers()
     {
         var boatCrew = crewManager.GetAllCrewMembers();
-        var enemyCrew = new System.Collections.Generic.List<Enemy>();
-        foreach (var crew in boatCrew)
+        tempEnemyList.Clear();
+        
+        for (int i = 0; i < boatCrew.Count; i++)
         {
-            enemyCrew.Add((Enemy)crew);
+            tempEnemyList.Add(boatCrew[i]);
         }
-        return enemyCrew;
+        
+        return tempEnemyList;
     }
     
     public bool IsDestroyed() => integrityManager.IsDestroyed;
@@ -92,3 +94,4 @@ public class BoatController : MonoBehaviour
     internal BoatFloater BoatFloater => boatFloater;
     internal BoatPlatform BoatPlatform => boatPlatform;
 }
+
