@@ -221,8 +221,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b12801055d32a4620b361749a97ce05c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  forceMultiplier: 20
+  forceMultiplier: 8
   torqueMultiplier: 5
+  airGravityScale: 2
+  airDrag: 1.5
+  underwaterGravityScale: -0.5
+  underwaterDrag: 3
+  buoyancyStartDelay: 1.5
+  waterDetectionOffset: 0.1
+  enableBuoyancy: 1
+  debugFloatation: 0
   rb: {fileID: 6872625325474904207}
 --- !u!61 &6817366124321017162
 BoxCollider2D:
@@ -864,8 +872,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b12801055d32a4620b361749a97ce05c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  forceMultiplier: 20
+  forceMultiplier: 8
   torqueMultiplier: 5
+  airGravityScale: 2
+  airDrag: 1.5
+  underwaterGravityScale: -0.5
+  underwaterDrag: 3
+  buoyancyStartDelay: 1.5
+  waterDetectionOffset: 0.1
+  enableBuoyancy: 1
+  debugFloatation: 0
   rb: {fileID: 2342713545657276092}
 --- !u!61 &2232732426229390306
 BoxCollider2D:
@@ -1164,8 +1180,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b12801055d32a4620b361749a97ce05c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  forceMultiplier: 20
+  forceMultiplier: 8
   torqueMultiplier: 5
+  airGravityScale: 2
+  airDrag: 1.5
+  underwaterGravityScale: -0.5
+  underwaterDrag: 3
+  buoyancyStartDelay: 1.5
+  waterDetectionOffset: 0.1
+  enableBuoyancy: 1
+  debugFloatation: 0
   rb: {fileID: 8226294876671822817}
 --- !u!61 &3666627265282306395
 BoxCollider2D:

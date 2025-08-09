@@ -55,7 +55,21 @@ public class BoatMovementSystem : MonoBehaviour
         movementState = BoatMovementState.Destroyed;
         movementSpeed = DESTROYED_SPEED;
         maxMovementForce = DESTROYED_SPEED;
+    
+        movementActive = false;
+    
+        if (rb != null)
+        {
+            Vector2 sinkingForce = Vector2.down * 2f;
+            rb.AddForce(sinkingForce, ForceMode2D.Impulse);
+        
+            rb.drag = 0.1f;
+            rb.angularDrag = 0.1f;
+        }
+    
+        GameLogger.LogVerbose("BoatMovement: Boat destroyed - movement stopped, sinking force applied");
     }
+
     
     public void InitializeBoundaries(Transform left, Transform right)
     {

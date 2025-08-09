@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -52,18 +53,18 @@ public class BoatVisualSystem : MonoBehaviour
             if (part != null)
             {
                 part.SetActive(isDestroyed);
-                
+            
                 if (isDestroyed)
                 {
                     BoatPart boatPartScript = part.GetComponent<BoatPart>();
                     if (boatPartScript != null)
                     {
-                        boatPartScript.ApplyInitialForces();
+                        float randomDelay = Random.Range(0f, 0.3f);
+                        StartCoroutine(ApplyForcesWithDelay(boatPartScript, randomDelay));
                     }
                 }
                 else
                 {
-                    // Si se está desactivando (reapareciendo barco), resetear posición
                     BoatPart boatPartScript = part.GetComponent<BoatPart>();
                     if (boatPartScript != null)
                     {
@@ -72,9 +73,16 @@ public class BoatVisualSystem : MonoBehaviour
                 }
             }
         }
-        
+    
         GameLogger.LogVerbose($"BoatVisualSystem: Boat destruction state set to {isDestroyed}");
     }
+
+    private IEnumerator ApplyForcesWithDelay(BoatPart boatPart, float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        boatPart.ApplyInitialForces();
+    }
+
 
     #region Public Methods
 
