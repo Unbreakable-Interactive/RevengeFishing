@@ -26,8 +26,8 @@ public class BoatFloater : MonoBehaviour
         
         if (ValidateFloatPoints())
         {
-            physicsSystem.Initialize(rb, waterPhysics);
             buoyancySystem.Initialize(rb, waterPhysics, floatPoints);
+            physicsSystem.Initialize(rb, waterPhysics);
             movementSystem.Initialize(rb, visualSystem);
             visualSystem.Initialize();
         }

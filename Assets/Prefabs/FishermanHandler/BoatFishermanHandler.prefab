@@ -384,6 +384,10 @@ MonoBehaviour:
   fishermanConfig: {fileID: 11400000, guid: 876c88f03b9414e67960bdc874e7d116, type: 2}
   allowMovementOnPlatform: 1
   platformMovementChance: 0.6
+  enableIndependentMovement: 1
+  physicsUpdateInterval: 0.1
+  groundCheckInterval: 0.15
+  platformCheckInterval: 0.08
   boatCrewMass: 0.5
 --- !u!114 &4143942327312340731
 MonoBehaviour:
@@ -573,7 +577,7 @@ SpriteRenderer:
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
-  m_Size: {x: 1, y: 1}
+  m_Size: {x: 52.0127, y: 40}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
