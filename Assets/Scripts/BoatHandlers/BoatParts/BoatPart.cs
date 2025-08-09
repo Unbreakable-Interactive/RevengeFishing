@@ -7,15 +7,15 @@ public class BoatPart : MonoBehaviour
     [SerializeField] private float forceMultiplier = 8f;
     [SerializeField] private float torqueMultiplier = 5f;
     
-    [Header("Physics Settings - Match DroppedTool")]
+    [Header("Physics Settings")]
     [SerializeField] private float airGravityScale = 2f;
     [SerializeField] private float airDrag = 1.5f;
     [SerializeField] private float underwaterGravityScale = 0f;
     [SerializeField] private float underwaterDrag = 0.5f;
     [SerializeField] private float buoyancyStartDelay = 1.5f;
     
-    [Header("Water Detection")]
-    [SerializeField] private float waterDetectionOffset = 0.1f;
+    [Header("Performance Optimization")]
+    [SerializeField] private float waterCheckInterval = 0.2f;
     [SerializeField] private bool enableBuoyancy = true;
     [SerializeField] private bool debugFloatation = false;
     
@@ -26,6 +26,10 @@ public class BoatPart : MonoBehaviour
     
     [SerializeField] private Rigidbody2D rb;
     private WaterPhysics waterPhysics;
+    
+    private float lastWaterCheckTime = 0f;
+    private Vector2 cachedCheckPosition;
+    private bool waterCheckEnabled = false;
     
     private void Awake()
     {
@@ -56,7 +60,7 @@ public class BoatPart : MonoBehaviour
         
         if (enableBuoyancy)
         {
-            StartCoroutine(StartWaterDetectionAfterDelay());
+            StartCoroutine(StartOptimizedWaterDetection());
         }
         
         if (debugFloatation)
@@ -89,37 +93,42 @@ public class BoatPart : MonoBehaviour
         }
     }
     
-    private IEnumerator StartWaterDetectionAfterDelay()
+    private IEnumerator StartOptimizedWaterDetection()
     {
         yield return new WaitForSeconds(buoyancyStartDelay);
         
+        waterCheckEnabled = true;
+        lastWaterCheckTime = Time.time;
+        
         if (debugFloatation)
         {
-            GameLogger.LogVerbose($"BoatPart {gameObject.name} - Water detection activated");
+            GameLogger.LogVerbose($"BoatPart {gameObject.name} - Optimized water detection activated");
         }
     }
     
     private void FixedUpdate()
     {
-        if (hasAppliedForce && enableBuoyancy && waterPhysics != null)
+        if (!waterCheckEnabled || !hasAppliedForce || !enableBuoyancy || waterPhysics == null) return;
+        
+        float currentTime = Time.time;
+        if (currentTime - lastWaterCheckTime >= waterCheckInterval)
         {
-            CheckWaterStatus();
+            CheckWaterStatusOptimized();
+            lastWaterCheckTime = currentTime;
         }
     }
     
-    private void CheckWaterStatus()
+    private void CheckWaterStatusOptimized()
     {
-        Vector2 checkPosition = (Vector2)transform.position + Vector2.down * waterDetectionOffset;
-        float waterHeight = waterPhysics.GetWaterHeightAt(checkPosition);
-        bool shouldBeInWater = waterHeight > checkPosition.y;
+        cachedCheckPosition = transform.position;
+        cachedCheckPosition.y -= 0.1f;
         
-        if (shouldBeInWater && !isInWaterMode)
+        float waterHeight = waterPhysics.GetWaterHeightAt(cachedCheckPosition);
+        bool shouldBeInWater = waterHeight > cachedCheckPosition.y;
+        
+        if (shouldBeInWater != isInWaterMode)
         {
-            SetPhysicsMode(false);
-        }
-        else if (!shouldBeInWater && isInWaterMode)
-        {
-            SetPhysicsMode(true);
+            SetPhysicsMode(!shouldBeInWater);
         }
     }
     
@@ -138,6 +147,7 @@ public class BoatPart : MonoBehaviour
         
         hasAppliedForce = false;
         isInWaterMode = false;
+        waterCheckEnabled = false;
         
         StopAllCoroutines();
         
@@ -152,6 +162,7 @@ public class BoatPart : MonoBehaviour
         enableBuoyancy = enabled;
         if (!enabled)
         {
+            waterCheckEnabled = false;
             SetPhysicsMode(true);
         }
     }
@@ -168,24 +179,4 @@ public class BoatPart : MonoBehaviour
     {
         ResetToOriginalPosition();
     }
-    
-    [ContextMenu("Test Toggle Buoyancy")]
-    public void TestToggleBuoyancy()
-    {
-        SetBuoyancyEnabled(!enableBuoyancy);
-        GameLogger.LogVerbose($"BoatPart {gameObject.name} - Buoyancy: {enableBuoyancy}");
-    }
-    
-    [ContextMenu("Force Water Mode")]
-    public void ForceWaterMode()
-    {
-        SetPhysicsMode(false);
-    }
-    
-    [ContextMenu("Force Air Mode")]
-    public void ForceAirMode()
-    {
-        SetPhysicsMode(true);
-    }
 }
-

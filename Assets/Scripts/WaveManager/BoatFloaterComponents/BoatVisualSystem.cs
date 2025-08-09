@@ -11,12 +11,36 @@ public class BoatVisualSystem : MonoBehaviour
 
     [SerializeField] private List<GameObject> boatParts = new List<GameObject>();
     
+    [Header("Performance Optimization")]
+    [SerializeField] private float explosionDelayRange = 0.3f;
+    [SerializeField] private int maxSimultaneousExplosions = 3;
+    
     private float currentDirectionMultiplier = 1f;
+    private BoatPart[] cachedBoatPartScripts;
+    private bool boatPartsInitialized = false;
     
     public void Initialize()
     {
+        CacheBoatPartScripts();
         UpdateDirectionMultiplier();
         DestroyEnemy(false);
+    }
+    
+    private void CacheBoatPartScripts()
+    {
+        if (boatPartsInitialized) return;
+        
+        cachedBoatPartScripts = new BoatPart[boatParts.Count];
+        
+        for (int i = 0; i < boatParts.Count; i++)
+        {
+            if (boatParts[i] != null)
+            {
+                cachedBoatPartScripts[i] = boatParts[i].GetComponent<BoatPart>();
+            }
+        }
+        
+        boatPartsInitialized = true;
     }
     
     public void UpdateVisualDirection(float movementDirection)
@@ -48,43 +72,75 @@ public class BoatVisualSystem : MonoBehaviour
             boatSpriteRenderer.gameObject.SetActive(!isDestroyed);
         }
 
-        foreach (GameObject part in boatParts)
+        if (!boatPartsInitialized)
         {
-            if (part != null)
-            {
-                part.SetActive(isDestroyed);
-            
-                if (isDestroyed)
-                {
-                    BoatPart boatPartScript = part.GetComponent<BoatPart>();
-                    if (boatPartScript != null)
-                    {
-                        float randomDelay = Random.Range(0f, 0.3f);
-                        StartCoroutine(ApplyForcesWithDelay(boatPartScript, randomDelay));
-                    }
-                }
-                else
-                {
-                    BoatPart boatPartScript = part.GetComponent<BoatPart>();
-                    if (boatPartScript != null)
-                    {
-                        boatPartScript.ResetToOriginalPosition();
-                    }
-                }
-            }
+            CacheBoatPartScripts();
+        }
+
+        if (isDestroyed)
+        {
+            StartCoroutine(BatchExplosionSequence());
+        }
+        else
+        {
+            BatchResetBoatParts();
         }
     
         GameLogger.LogVerbose($"BoatVisualSystem: Boat destruction state set to {isDestroyed}");
     }
-
-    private IEnumerator ApplyForcesWithDelay(BoatPart boatPart, float delay)
+    
+    private IEnumerator BatchExplosionSequence()
     {
-        yield return new WaitForSeconds(delay);
-        boatPart.ApplyInitialForces();
+        List<int> remainingParts = new List<int>();
+        
+        for (int i = 0; i < boatParts.Count; i++)
+        {
+            if (boatParts[i] != null)
+            {
+                boatParts[i].SetActive(true);
+                remainingParts.Add(i);
+            }
+        }
+        
+        while (remainingParts.Count > 0)
+        {
+            int batchSize = Mathf.Min(maxSimultaneousExplosions, remainingParts.Count);
+            
+            for (int i = 0; i < batchSize; i++)
+            {
+                int randomIndex = Random.Range(0, remainingParts.Count);
+                int partIndex = remainingParts[randomIndex];
+                
+                if (cachedBoatPartScripts[partIndex] != null)
+                {
+                    cachedBoatPartScripts[partIndex].ApplyInitialForces();
+                }
+                
+                remainingParts.RemoveAt(randomIndex);
+            }
+            
+            if (remainingParts.Count > 0)
+            {
+                yield return new WaitForSeconds(Random.Range(0.1f, explosionDelayRange));
+            }
+        }
     }
-
-
-    #region Public Methods
+    
+    private void BatchResetBoatParts()
+    {
+        for (int i = 0; i < boatParts.Count; i++)
+        {
+            if (boatParts[i] != null)
+            {
+                boatParts[i].SetActive(false);
+                
+                if (cachedBoatPartScripts[i] != null)
+                {
+                    cachedBoatPartScripts[i].ResetToOriginalPosition();
+                }
+            }
+        }
+    }
 
     public float GetCurrentDirectionMultiplier()
     {
@@ -99,6 +155,4 @@ public class BoatVisualSystem : MonoBehaviour
     {
         boatSpriteRenderer = renderer;
     }
-
-    #endregion
 }

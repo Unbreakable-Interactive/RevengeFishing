@@ -228,7 +228,7 @@ MonoBehaviour:
   underwaterGravityScale: -0.5
   underwaterDrag: 3
   buoyancyStartDelay: 1.5
-  waterDetectionOffset: 0.1
+  waterCheckInterval: 0.25
   enableBuoyancy: 1
   debugFloatation: 0
   rb: {fileID: 6872625325474904207}
@@ -481,6 +481,8 @@ MonoBehaviour:
   maxMovementForce: 60
   enableAutomaticMovement: 1
   debugMovement: 0
+  waterCheckInterval: 0.25
+  boundaryCheckInterval: 0.1
   leftBoundary: {fileID: 0}
   rightBoundary: {fileID: 0}
   boundaryBuffer: 1
@@ -879,7 +881,7 @@ MonoBehaviour:
   underwaterGravityScale: -0.5
   underwaterDrag: 3
   buoyancyStartDelay: 1.5
-  waterDetectionOffset: 0.1
+  waterCheckInterval: 0.25
   enableBuoyancy: 1
   debugFloatation: 0
   rb: {fileID: 2342713545657276092}
@@ -1187,7 +1189,7 @@ MonoBehaviour:
   underwaterGravityScale: -0.5
   underwaterDrag: 3
   buoyancyStartDelay: 1.5
-  waterDetectionOffset: 0.1
+  waterCheckInterval: 0.25
   enableBuoyancy: 1
   debugFloatation: 0
   rb: {fileID: 8226294876671822817}
