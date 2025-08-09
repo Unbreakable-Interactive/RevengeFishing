@@ -5,18 +5,24 @@ public enum BoatMovementState
 {
     AutoMove,
     Driven,
+    Destroyed
 }
 
 public class BoatMovementSystem : MonoBehaviour
 {
     private const float DRIVEN_SPEED = 60;
     private const float AUTOMOVE_SPEED = 2;
+    private const float DESTROYED_SPEED = 0;
     
     [Header("Movement Settings")]
     [SerializeField] private float movementSpeed = 2f;
     [SerializeField] private float maxMovementForce = 6f;
     [SerializeField] private bool enableAutomaticMovement = true;
     [SerializeField] private bool debugMovement = false;
+    
+    [Header("Performance Optimization")]
+    [SerializeField] private float waterCheckInterval = 0.25f;
+    [SerializeField] private float boundaryCheckInterval = 0.1f;
     
     [Header("Boundaries")]
     [SerializeField] private Transform leftBoundary;
@@ -31,20 +37,64 @@ public class BoatMovementSystem : MonoBehaviour
     private float currentMovementDirection = 1f;
     private Platform assignedPlatform;
     
-    [SerializeField] BoatMovementState  movementState = BoatMovementState.AutoMove;
+    [SerializeField] BoatMovementState movementState = BoatMovementState.AutoMove;
     
+    private BoatFloater cachedFloater;
+    private WaterPhysics cachedWaterPhysics;
+    private Transform[] cachedFloatPoints;
+    
+    private float lastWaterCheckTime = 0f;
+    private float lastBoundaryCheckTime = 0f;
+    private bool isInWaterCached = false;
+    
+    private Vector2 cachedPosition;
+    private Vector2 cachedMoveForce;
+
     public void Initialize(Rigidbody2D rigidbody, BoatVisualSystem visual)
     {
         rb = rigidbody;
         visualSystem = visual;
+        movementState = BoatMovementState.AutoMove;
 
+        CacheComponents();
         SetupSpeedByState();
+    }
+    
+    private void CacheComponents()
+    {
+        cachedFloater = GetComponent<BoatFloater>();
+        cachedWaterPhysics = WaterPhysics.Instance;
+        
+        if (cachedFloater?.floatPoints != null)
+        {
+            cachedFloatPoints = cachedFloater.floatPoints;
+        }
     }
 
     private void SetupSpeedByState()
     {
         movementSpeed = movementState == BoatMovementState.AutoMove ? AUTOMOVE_SPEED : DRIVEN_SPEED;
         maxMovementForce = movementState == BoatMovementState.AutoMove ? AUTOMOVE_SPEED : DRIVEN_SPEED;
+    }
+
+    public void DestroyState()
+    {
+        movementState = BoatMovementState.Destroyed;
+        movementSpeed = DESTROYED_SPEED;
+        maxMovementForce = DESTROYED_SPEED;
+    
+        movementActive = false;
+    
+        if (rb != null)
+        {
+            Vector2 sinkingForce = Vector2.down * 2f;
+            rb.AddForce(sinkingForce, ForceMode2D.Impulse);
+        
+            rb.drag = 0.1f;
+            rb.angularDrag = 0.1f;
+        }
+    
+        GameLogger.LogVerbose("BoatMovement: Boat destroyed - movement stopped, sinking force applied");
     }
     
     public void InitializeBoundaries(Transform left, Transform right)
@@ -55,26 +105,35 @@ public class BoatMovementSystem : MonoBehaviour
     
     public void UpdateMovement()
     {
-        if (enableAutomaticMovement && movementActive)
-        {
-            HandleBoatMovement();
-        }
-    }
-    
-    private void HandleBoatMovement()
-    {
-        if (!IsInWater()) return;
+        if (!enableAutomaticMovement || !movementActive || movementState == BoatMovementState.Destroyed) return;
         
-        CheckBoundaries();
-        ApplyMovementForce();
+        float currentTime = Time.time;
+        
+        if (currentTime - lastWaterCheckTime >= waterCheckInterval)
+        {
+            isInWaterCached = IsInWaterOptimized();
+            lastWaterCheckTime = currentTime;
+        }
+        
+        if (!isInWaterCached) return;
+        
+        if (currentTime - lastBoundaryCheckTime >= boundaryCheckInterval)
+        {
+            CheckBoundariesOptimized();
+            lastBoundaryCheckTime = currentTime;
+        }
+        
+        ApplyMovementForceOptimized();
     }
     
-    private void CheckBoundaries()
+    private void CheckBoundariesOptimized()
     {
+        cachedPosition = transform.position;
+        
         bool nearLeftBoundary = leftBoundary != null && 
-                               transform.position.x <= leftBoundary.position.x + boundaryBuffer;
+                               cachedPosition.x <= leftBoundary.position.x + boundaryBuffer;
         bool nearRightBoundary = rightBoundary != null && 
-                                transform.position.x >= rightBoundary.position.x - boundaryBuffer;
+                                cachedPosition.x >= rightBoundary.position.x - boundaryBuffer;
         
         if (nearLeftBoundary && currentMovementDirection < 0)
         {
@@ -88,27 +147,29 @@ public class BoatMovementSystem : MonoBehaviour
         }
     }
     
-    private void ApplyMovementForce()
+    private void ApplyMovementForceOptimized()
     {
-        Vector2 moveForce = Vector2.right * (currentMovementDirection * movementSpeed);
-        moveForce = Vector2.ClampMagnitude(moveForce, maxMovementForce);
-        rb.AddForce(moveForce);
+        cachedMoveForce.x = currentMovementDirection * movementSpeed;
+        cachedMoveForce.y = 0f;
+        
+        if (cachedMoveForce.sqrMagnitude > maxMovementForce * maxMovementForce)
+        {
+            cachedMoveForce = cachedMoveForce.normalized * maxMovementForce;
+        }
+        
+        rb.AddForce(cachedMoveForce);
     }
     
-    private bool IsInWater()
+    private bool IsInWaterOptimized()
     {
-        BoatFloater floater = GetComponent<BoatFloater>();
-        if (floater == null || floater.floatPoints == null) return false;
+        if (cachedFloater == null || cachedFloatPoints == null || cachedWaterPhysics == null) return false;
         
-        WaterPhysics waterPhysics = WaterPhysics.Instance;
-        if (waterPhysics == null) return false;
-        
-        foreach (Transform point in floater.floatPoints)
+        for (int i = 0; i < cachedFloatPoints.Length; i++)
         {
-            if (point != null)
+            if (cachedFloatPoints[i] != null)
             {
-                Vector2 worldPos = point.position;
-                float waterHeight = waterPhysics.GetWaterHeightAt(worldPos);
+                Vector2 worldPos = cachedFloatPoints[i].position;
+                float waterHeight = cachedWaterPhysics.GetWaterHeightAt(worldPos);
                 if (waterHeight > worldPos.y) return true;
             }
         }
@@ -124,7 +185,7 @@ public class BoatMovementSystem : MonoBehaviour
         
         if (debugMovement)
         {
-            Debug.Log($"BoatMovement: Registered to platform {platform.name}, starting movement!");
+            GameLogger.LogVerbose($"BoatMovement: Registered to platform {platform.name}, starting movement!");
         }
         
         StartMovement();
@@ -137,9 +198,12 @@ public class BoatMovementSystem : MonoBehaviour
         movementActive = true;
         ChooseNewMovementDirection();
         
+        lastWaterCheckTime = 0f;
+        lastBoundaryCheckTime = 0f;
+        
         if (debugMovement)
         {
-            Debug.Log("BoatMovement: Movement started!");
+            GameLogger.LogVerbose("BoatMovement: Movement started!");
         }
     }
     
@@ -151,11 +215,9 @@ public class BoatMovementSystem : MonoBehaviour
         if (debugMovement)
         {
             string direction = currentMovementDirection > 0 ? "RIGHT" : "LEFT";
-            Debug.Log($"BoatMovement: New movement direction: {direction}");
+            GameLogger.LogVerbose($"BoatMovement: New movement direction: {direction}");
         }
     }
-
-    #region Public Methods
 
     public void SetMovementState_Driven()
     {
@@ -168,11 +230,6 @@ public class BoatMovementSystem : MonoBehaviour
         movementState = BoatMovementState.AutoMove;
         SetupSpeedByState();
     }
-    
-    // public void SetMovementEnabled(bool enabled)
-    // {
-    //     // This would be handled by the main BoatFloater enableFloaterMovement
-    // }
     
     public void SetAutomaticMovementEnabled(bool enabled)
     {
@@ -198,7 +255,7 @@ public class BoatMovementSystem : MonoBehaviour
         movementActive = false;
         if (debugMovement)
         {
-            Debug.Log("BoatMovement: Movement stopped manually");
+            GameLogger.LogVerbose("BoatMovement: Movement stopped manually");
         }
     }
     
@@ -206,6 +263,4 @@ public class BoatMovementSystem : MonoBehaviour
     public bool IsRegisteredToPlatform() => isRegisteredToPlatform;
     public float GetCurrentMovementDirection() => currentMovementDirection;
     public Platform GetAssignedPlatform() => assignedPlatform;
-
-    #endregion    
 }

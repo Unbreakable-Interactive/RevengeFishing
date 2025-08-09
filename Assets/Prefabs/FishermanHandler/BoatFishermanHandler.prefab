@@ -340,6 +340,7 @@ MonoBehaviour:
   enableDebugMessages: 1
   bodyCollider: {fileID: 3479015762017106946}
   parentContainer: {fileID: 1963649820016990938}
+  isReturningToPool: 0
   swimForce: 0
   minSwimSpeed: 0
   landEnemyConfig: {fileID: 11400000, guid: 93c90735659e547458403c343be80b20, type: 2}
@@ -381,6 +382,8 @@ MonoBehaviour:
   collisionSafetyMargin: 0.05
   platformStickDistance: 0.15
   fishermanConfig: {fileID: 11400000, guid: 876c88f03b9414e67960bdc874e7d116, type: 2}
+  allowMovementOnPlatform: 1
+  platformMovementChance: 0.6
   boatCrewMass: 0.5
 --- !u!114 &4143942327312340731
 MonoBehaviour:
@@ -657,9 +660,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d2328aedfae58994584044d24494e314, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  faceCamera: 1
+  displayText: {fileID: 2426049732161016549}
+  mainCamera: {fileID: 0}
   entity: {fileID: 2752949202772209852}
   showAbsolutePowerLevel: 1
-  faceCamera: 1
 --- !u!222 &7546795088030066811
 CanvasRenderer:
   m_ObjectHideFlags: 0

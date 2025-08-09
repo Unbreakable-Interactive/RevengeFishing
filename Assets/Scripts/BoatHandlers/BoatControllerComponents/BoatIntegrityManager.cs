@@ -12,42 +12,69 @@ public class BoatIntegrityManager : MonoBehaviour
     public Action<float, float> OnIntegrityChanged;
     
     private BoatCrewManager crewManager;
+    private BoatMovementSystem boatMovement;
+    private BoatVisualSystem boatVisualSystem;
+    private BoatLifecycleManager lifecycleManager;
+    
+    private List<BoatLandEnemy> cachedCrewMembers;
+    private int cachedActiveCrewCount = 0;
+    private float cachedTotalPower = 0f;
     
     public float CurrentIntegrity => currentIntegrity;
     public float MaxIntegrity => maxIntegrity;
     public bool IsDestroyed => isBoatDestroyed;
     
-    public void Initialize()
+    public void Initialize(BoatCrewManager crewMgr)
     {
-        crewManager = GetComponent<BoatCrewManager>();
-        if (crewManager == null)
-        {
-            Debug.LogError("BoatIntegrityManager: BoatCrewManager not found on same GameObject!");
-        }
+        crewManager = crewMgr;
+        
+        boatMovement = GetComponent<BoatMovementSystem>();
+        boatVisualSystem = GetComponent<BoatVisualSystem>();
+        lifecycleManager = GetComponent<BoatLifecycleManager>();
+        
+        RefreshCrewCache();
+    }
+    
+    private void RefreshCrewCache()
+    {
+        if (crewManager == null) return;
+        
+        cachedCrewMembers = crewManager.GetAllCrewMembers();
     }
     
     public void CalculateBoatIntegrity()
     {
         if (crewManager == null) return;
         
-        float totalCrewPower = 0f;
-        int activeCrewCount = 0;
+        RefreshCrewCache();
         
-        List<BoatLandEnemy> allCrewMembers = crewManager.GetAllCrewMembers();
-        
-        foreach (BoatLandEnemy crew in allCrewMembers)
+        if (cachedCrewMembers == null || cachedCrewMembers.Count == 0)
         {
-            if (IsCrewMemberActive(crew))
+            cachedTotalPower = 0f;
+            cachedActiveCrewCount = 0;
+            maxIntegrity = 0f;
+            currentIntegrity = 0f;
+            return;
+        }
+        
+        cachedTotalPower = 0f;
+        cachedActiveCrewCount = 0;
+        
+        for (int i = 0; i < cachedCrewMembers.Count; i++)
+        {
+            if (IsCrewMemberActive(cachedCrewMembers[i]))
             {
-                totalCrewPower += crew.PowerLevel;
-                activeCrewCount++;
+                cachedTotalPower += cachedCrewMembers[i].PowerLevel;
+                cachedActiveCrewCount++;
             }
         }
         
-        maxIntegrity = totalCrewPower;
+        maxIntegrity = cachedTotalPower;
         currentIntegrity = maxIntegrity;
         
         OnIntegrityChanged?.Invoke(currentIntegrity, maxIntegrity);
+        
+        GameLogger.LogVerbose($"BoatIntegrityManager: Calculated integrity - Active crew: {cachedActiveCrewCount}, Total power: {cachedTotalPower}");
     }
     
     private bool IsCrewMemberActive(BoatLandEnemy crew)
@@ -62,12 +89,22 @@ public class BoatIntegrityManager : MonoBehaviour
     {
         if (crewManager == null) return;
         
-        // Filter by enemy Type 
+        int totalCrewMembers = cachedCrewMembers?.Count ?? 0;
         
-        int aliveCrewCount = crewManager.GetActiveCrewCount();
-        
-        if (aliveCrewCount == 0 || currentIntegrity <= 0f)
+        if (totalCrewMembers == 0)
         {
+            GameLogger.LogVerbose($"BoatIntegrityManager: No crew members found, skipping destruction check");
+            return;
+        }
+        
+        if (cachedActiveCrewCount == 0 && totalCrewMembers > 0)
+        {
+            GameLogger.LogVerbose($"BoatIntegrityManager: All crew inactive ({totalCrewMembers} total), triggering destruction");
+            TriggerDestruction();
+        }
+        else if (currentIntegrity <= 0f && maxIntegrity > 0f)
+        {
+            GameLogger.LogVerbose($"BoatIntegrityManager: Zero integrity with max {maxIntegrity}, triggering destruction");
             TriggerDestruction();
         }
     }
@@ -78,11 +115,22 @@ public class BoatIntegrityManager : MonoBehaviour
         
         isBoatDestroyed = true;
         
-        BoatLifecycleManager lifecycleManager = GetComponent<BoatLifecycleManager>();
+        if (boatMovement != null)
+        {
+            boatMovement.DestroyState();
+        }
+        
+        if (boatVisualSystem != null)
+        {
+            boatVisualSystem.DestroyEnemy(true);
+        }
+        
         if (lifecycleManager != null)
         {
             lifecycleManager.DestroyBoat();
         }
+        
+        GameLogger.LogVerbose("BoatIntegrityManager: Boat destroyed due to integrity loss");
     }
     
     public void Reset()
@@ -90,5 +138,10 @@ public class BoatIntegrityManager : MonoBehaviour
         currentIntegrity = 0f;
         maxIntegrity = 0f;
         isBoatDestroyed = false;
+        
+        cachedActiveCrewCount = 0;
+        cachedTotalPower = 0f;
+        
+        GameLogger.LogVerbose("BoatIntegrityManager: Reset completed");
     }
 }

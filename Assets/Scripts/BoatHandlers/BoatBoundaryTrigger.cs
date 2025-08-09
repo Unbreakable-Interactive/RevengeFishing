@@ -29,7 +29,7 @@ public class BoatBoundaryTrigger : MonoBehaviour, IBoatComponent
     private void Start()
     {
         string boundType = isLeftBoundary ? "LEFT" : "RIGHT";
-        Debug.Log($"BoatBoundaryTrigger: {boundType} boundary initialized on {gameObject.name} with ID {boatID} and crewManager: {crewManager.name}");
+        GameLogger.LogVerbose($"BoatBoundaryTrigger: {boundType} boundary initialized on {gameObject.name} with ID {boatID} and crewManager: {crewManager.name}");
     }
     
     private void OnTriggerEnter2D(Collider2D other)
@@ -37,24 +37,24 @@ public class BoatBoundaryTrigger : MonoBehaviour, IBoatComponent
         if (other.gameObject.layer != 6) return;
         
         if (debugTriggers)
-            Debug.Log($"BoatBoundaryTrigger: Enemy layer object detected - {other.gameObject.name}");
+            GameLogger.LogVerbose($"BoatBoundaryTrigger: Enemy layer object detected - {other.gameObject.name}");
         
         LandEnemy enemy = FindLandEnemyInHierarchy(other.gameObject);
         
         if (enemy == null)
         {
             if (debugTriggers)
-                Debug.Log($"BoatBoundaryTrigger: NO LandEnemy found in hierarchy of {other.gameObject.name}");
+                GameLogger.LogVerbose($"BoatBoundaryTrigger: NO LandEnemy found in hierarchy of {other.gameObject.name}");
             return;
         }
         
         if (debugTriggers)
-            Debug.Log($"BoatBoundaryTrigger: Found LandEnemy {enemy.name}");
+            GameLogger.LogVerbose($"BoatBoundaryTrigger: Found LandEnemy {enemy.name}");
         
         if (ShouldProcess(enemy))
         {
             if (debugTriggers)
-                Debug.Log($"BoatBoundaryTrigger: PROCESSING {enemy.name} (belongs to this boat)");
+                GameLogger.LogVerbose($"BoatBoundaryTrigger: PROCESSING {enemy.name} (belongs to this boat)");
             StopEnemyMovement(enemy);
         }
         else
@@ -62,7 +62,7 @@ public class BoatBoundaryTrigger : MonoBehaviour, IBoatComponent
             if (debugTriggers)
             {
                 string enemyID = enemy is IBoatComponent comp ? comp.GetBoatID() : "NO_ID";
-                Debug.Log($"BoatBoundaryTrigger: IGNORING {enemy.name} (ID: {enemyID}) - doesn't belong to this boat (ID: {boatID})");
+                GameLogger.LogVerbose($"BoatBoundaryTrigger: IGNORING {enemy.name} (ID: {enemyID}) - doesn't belong to this boat (ID: {boatID})");
             }
         }
     }
@@ -90,7 +90,7 @@ public class BoatBoundaryTrigger : MonoBehaviour, IBoatComponent
             if (enemy != null)
             {
                 if (debugTriggers)
-                    Debug.Log($"BoatBoundaryTrigger: Found LandEnemy {enemy.name} in parent {current.name}");
+                    GameLogger.LogVerbose($"BoatBoundaryTrigger: Found LandEnemy {enemy.name} in parent {current.name}");
                 return enemy;
             }
             current = current.parent;
@@ -104,7 +104,7 @@ public class BoatBoundaryTrigger : MonoBehaviour, IBoatComponent
         if (enemy == null)
         {
             if (debugTriggers)
-                Debug.Log("BoatBoundaryTrigger: Enemy is NULL in ShouldProcess");
+                GameLogger.LogVerbose("BoatBoundaryTrigger: Enemy is NULL in ShouldProcess");
             return false;
         }
         
@@ -114,7 +114,7 @@ public class BoatBoundaryTrigger : MonoBehaviour, IBoatComponent
             
             if (debugTriggers)
             {
-                Debug.Log($"BoatBoundaryTrigger: {enemy.name} (ID: {boatComponent.GetBoatID()}) belongs to this boat (ID: {boatID})? {belongsToThisBoat}");
+                GameLogger.LogVerbose($"BoatBoundaryTrigger: {enemy.name} (ID: {boatComponent.GetBoatID()}) belongs to this boat (ID: {boatID})? {belongsToThisBoat}");
             }
             
             return belongsToThisBoat;
@@ -122,7 +122,7 @@ public class BoatBoundaryTrigger : MonoBehaviour, IBoatComponent
         
         if (debugTriggers)
         {
-            Debug.Log($"BoatBoundaryTrigger: {enemy.name} doesn't implement IBoatComponent - rejecting");
+            GameLogger.LogVerbose($"BoatBoundaryTrigger: {enemy.name} doesn't implement IBoatComponent - rejecting");
         }
         
         return false;
@@ -133,7 +133,7 @@ public class BoatBoundaryTrigger : MonoBehaviour, IBoatComponent
         var currentState = enemy.MovementStateLand;
         
         if (debugTriggers)
-            Debug.Log($"BoatBoundaryTrigger: StopEnemyMovement called for {enemy.name}, current state: {currentState}");
+            GameLogger.LogVerbose($"BoatBoundaryTrigger: StopEnemyMovement called for {enemy.name}, current state: {currentState}");
         
         bool shouldStop = false;
         
@@ -141,37 +141,37 @@ public class BoatBoundaryTrigger : MonoBehaviour, IBoatComponent
         {
             shouldStop = true;
             if (debugTriggers)
-                Debug.Log($"BoatBoundaryTrigger: {enemy.name} is moving LEFT toward LEFT boundary - SHOULD STOP");
+                GameLogger.LogVerbose($"BoatBoundaryTrigger: {enemy.name} is moving LEFT toward LEFT boundary - SHOULD STOP");
         }
         else if (!isLeftBoundary && (currentState == LandEnemy.LandMovementState.WalkRight || currentState == LandEnemy.LandMovementState.RunRight))
         {
             shouldStop = true;
             if (debugTriggers)
-                Debug.Log($"BoatBoundaryTrigger: {enemy.name} is moving RIGHT toward RIGHT boundary - SHOULD STOP");
+                GameLogger.LogVerbose($"BoatBoundaryTrigger: {enemy.name} is moving RIGHT toward RIGHT boundary - SHOULD STOP");
         }
         else
         {
             if (debugTriggers)
-                Debug.Log($"BoatBoundaryTrigger: {enemy.name} current state {currentState} doesn't need stopping at {(isLeftBoundary ? "LEFT" : "RIGHT")} boundary");
+                GameLogger.LogVerbose($"BoatBoundaryTrigger: {enemy.name} current state {currentState} doesn't need stopping at {(isLeftBoundary ? "LEFT" : "RIGHT")} boundary");
         }
         
         if (shouldStop)
         {
             if (debugTriggers)
-                Debug.Log($"BoatBoundaryTrigger: STOPPING {enemy.name} at {(isLeftBoundary ? "LEFT" : "RIGHT")} boundary");
+                GameLogger.LogVerbose($"BoatBoundaryTrigger: STOPPING {enemy.name} at {(isLeftBoundary ? "LEFT" : "RIGHT")} boundary");
             
             if (debugTriggers)
-                Debug.Log($"BoatBoundaryTrigger: {enemy.name} state BEFORE: {enemy.MovementStateLand}");
+                GameLogger.LogVerbose($"BoatBoundaryTrigger: {enemy.name} state BEFORE: {enemy.MovementStateLand}");
             enemy.MovementStateLand = LandEnemy.LandMovementState.Idle;
             if (debugTriggers)
-                Debug.Log($"BoatBoundaryTrigger: {enemy.name} state AFTER: {enemy.MovementStateLand}");
+                GameLogger.LogVerbose($"BoatBoundaryTrigger: {enemy.name} state AFTER: {enemy.MovementStateLand}");
             
             Rigidbody2D fishermanRb = enemy.GetComponent<Rigidbody2D>();
             if (fishermanRb != null)
             {
                 Vector2 velocityBefore = fishermanRb.velocity;
                 if (debugTriggers)
-                    Debug.Log($"BoatBoundaryTrigger: {enemy.name} velocity BEFORE: {velocityBefore}");
+                    GameLogger.LogVerbose($"BoatBoundaryTrigger: {enemy.name} velocity BEFORE: {velocityBefore}");
                 
                 Vector2 velocity = fishermanRb.velocity;
                 velocity.x = 0f;
@@ -179,11 +179,11 @@ public class BoatBoundaryTrigger : MonoBehaviour, IBoatComponent
                 
                 Vector2 velocityAfter = fishermanRb.velocity;
                 if (debugTriggers)
-                    Debug.Log($"BoatBoundaryTrigger: {enemy.name} velocity AFTER: {velocityAfter}");
+                    GameLogger.LogVerbose($"BoatBoundaryTrigger: {enemy.name} velocity AFTER: {velocityAfter}");
             }
             else
             {
-                Debug.LogError($"BoatBoundaryTrigger: {enemy.name} has NO Rigidbody2D!");
+                GameLogger.LogError($"BoatBoundaryTrigger: {enemy.name} has NO Rigidbody2D!");
             }
             
             LandEnemy.LandMovementState[] excludedStates;
@@ -194,7 +194,7 @@ public class BoatBoundaryTrigger : MonoBehaviour, IBoatComponent
                     LandEnemy.LandMovementState.RunLeft 
                 };
                 if (debugTriggers)
-                    Debug.Log($"BoatBoundaryTrigger: Excluding LEFT movements for {enemy.name}");
+                    GameLogger.LogVerbose($"BoatBoundaryTrigger: Excluding LEFT movements for {enemy.name}");
             }
             else
             {
@@ -203,7 +203,7 @@ public class BoatBoundaryTrigger : MonoBehaviour, IBoatComponent
                     LandEnemy.LandMovementState.RunRight 
                 };
                 if (debugTriggers)
-                    Debug.Log($"BoatBoundaryTrigger: Excluding RIGHT movements for {enemy.name}");
+                    GameLogger.LogVerbose($"BoatBoundaryTrigger: Excluding RIGHT movements for {enemy.name}");
             }
             
             try
@@ -211,11 +211,11 @@ public class BoatBoundaryTrigger : MonoBehaviour, IBoatComponent
                 enemy.ChooseRandomActionExcluding(excludedStates);
                 enemy.ScheduleNextAction();
                 if (debugTriggers)
-                    Debug.Log($"BoatBoundaryTrigger: Successfully scheduled new action for {enemy.name}");
+                    GameLogger.LogVerbose($"BoatBoundaryTrigger: Successfully scheduled new action for {enemy.name}");
             }
             catch (System.Exception e)
             {
-                Debug.LogError($"BoatBoundaryTrigger: Exception in ChooseRandomActionExcluding for {enemy.name}: {e.Message}");
+                GameLogger.LogError($"BoatBoundaryTrigger: Exception in ChooseRandomActionExcluding for {enemy.name}: {e.Message}");
             }
         }
     }

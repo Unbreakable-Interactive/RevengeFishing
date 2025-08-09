@@ -33,13 +33,10 @@ public abstract class PerformanceComponentBase : MonoBehaviour, IPerformanceComp
         set => showDebugInfoField = value; 
     }
     
+    // REMOVED: Auto-registration in Awake (causes circular references)
     protected virtual void Awake()
     {
-        PerformanceManager manager = FindObjectOfType<PerformanceManager>();
-        if (manager != null)
-        {
-            manager.RegisterComponent(this);
-        }
+        // Empty - Let PerformanceManager handle discovery
     }
     
     protected virtual void Start()

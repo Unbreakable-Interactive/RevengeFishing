@@ -10,7 +10,6 @@ public class BoatPlatformOccupant : MonoBehaviour
     
     private void Start()
     {
-        // Automáticamente detectar si está en un bote
         BoatPlatform platform = GetComponentInParent<BoatPlatform>();
         if (platform != null)
         {
@@ -24,7 +23,7 @@ public class BoatPlatformOccupant : MonoBehaviour
         currentBoatPlatform = boatPlatform;
         
         if (debugMode)
-            Debug.Log($"{gameObject.name} entered boat platform: {boatPlatform.name}");
+            GameLogger.LogVerbose($"{gameObject.name} entered boat platform: {boatPlatform.name}");
     }
     
     private void ExitBoatPlatform()
@@ -33,7 +32,7 @@ public class BoatPlatformOccupant : MonoBehaviour
         currentBoatPlatform = null;
         
         if (debugMode)
-            Debug.Log($"{gameObject.name} exited boat platform");
+            GameLogger.LogVerbose($"{gameObject.name} exited boat platform");
     }
     
     public bool IsOnBoatPlatform()
