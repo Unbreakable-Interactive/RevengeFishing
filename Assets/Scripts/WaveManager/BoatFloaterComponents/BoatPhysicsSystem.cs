@@ -1,260 +1,99 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class BoatPhysicsSystem : MonoBehaviour
 {
-    [Header("Force Settings")]
-    [SerializeField] private float horizontalForce = 0f;
-    [SerializeField] private float maxHorizontalForce = 5f;
+    [Header("Kinematic Settings")]
+    [SerializeField] private Vector3 kinematicVelocity;
+    [SerializeField] private float maxKinematicSpeed = 25f;
     
-    [Header("Water Resistance")]
-    [SerializeField] private float waterDrag = 0.85f;
-    [SerializeField] private float angularDrag = 0.7f;
+    [Header("Resistance")]
+    [SerializeField] private float kinematicDrag = 0.98f;
     
-    [Header("Force Protection")]
-    [SerializeField] private float maxTotalForce = 50f;
-    [SerializeField] private float maxAngularVelocity = 180f;
-    [SerializeField] private float forceSmoothing = 0.85f;
-    [SerializeField] private bool enableForceProtection = true;
-    
-    [Header("Vertical Control")]
-    [SerializeField] private float maxVerticalSpeed = 3f;
-    [SerializeField] private float verticalDamping = 0.8f;
-    [SerializeField] private bool enableSpeedLimit = true;
-    
-    [Header("Wave Rolling")]
-    [SerializeField] private float waveRollStrength = 2.5f;
-    [SerializeField] private float rollResponseSpeed = 1.5f;
-    [SerializeField] private float maxRollAngle = 12f;
-    [SerializeField] private float maxTorqueLimit = 8f;
-    [SerializeField] private bool enableWaveRolling = true;
-    
-    [Header("Stability")]
-    [SerializeField] private float stabilityForce = 0.3f;
+    [Header("Debug")]
+    [SerializeField] private bool debugPhysics = true;
     
     private Rigidbody2D rb;
-    private WaterPhysics waterPhysics;
-    private Transform[] floatPoints;
+    private Vector3 smoothedKinematicVelocity;
     
-    // Wave rolling state
-    private float currentRollAngle = 0f;
-    private float rollVelocity = 0f;
-    private Vector2 smoothedForce = Vector2.zero;
-    private float smoothedTorque = 0f;
-    private Vector2 previousVelocity;
-    
-    // Visual system reference for direction
-    private BoatVisualSystem visualSystem;
-    
-    public void Initialize(Rigidbody2D rigidbody, WaterPhysics physics)
+    public void Initialize(Rigidbody2D rigidbody, WaterPhysics physics, Transform[] points)
     {
         rb = rigidbody;
-        waterPhysics = physics;
-        visualSystem = GetComponent<BoatVisualSystem>();
-        
-        BoatFloater floater = GetComponent<BoatFloater>();
-        if (floater != null)
+        SetupKinematicMode();
+        GameLogger.LogError($"[KINEMATIC PHYSICS] {gameObject.name} - Physics system initialized");
+    }
+    
+    private void SetupKinematicMode()
+    {
+        if (rb != null)
         {
-            floatPoints = floater.floatPoints;
+            rb.bodyType = RigidbodyType2D.Kinematic;
+            rb.mass = 12f;
+            rb.simulated = true;
+            GameLogger.LogError($"[KINEMATIC PHYSICS] {gameObject.name} - Set to KINEMATIC mode");
         }
     }
     
     public void UpdatePhysics()
     {
-        previousVelocity = rb.velocity;
-        
-        ApplyHorizontalForce();
-        ApplyWaterResistance();
-        
-        if (enableWaveRolling)
-        {
-            ApplyWaveRolling();
-        }
-        
-        ApplyStability();
-        
-        if (enableSpeedLimit)
-        {
-            LimitVerticalMovement();
-        }
-        
-        if (enableForceProtection)
-        {
-            ApplyForceProtection();
-        }
+        ApplyMovement();
     }
     
-    private void ApplyHorizontalForce()
+    private void ApplyMovement()
     {
-        if (Mathf.Abs(horizontalForce) > 0.01f && IsInWater())
+        if (rb == null) return;
+        
+        kinematicVelocity.y *= kinematicDrag;
+        
+        smoothedKinematicVelocity = Vector3.Lerp(smoothedKinematicVelocity, kinematicVelocity, 8f * Time.fixedDeltaTime);
+        Vector3 deltaPosition = smoothedKinematicVelocity * Time.fixedDeltaTime;
+        
+        if (deltaPosition.magnitude > 0.001f)
         {
-            float effectiveForce = Mathf.Clamp(horizontalForce, -maxHorizontalForce, maxHorizontalForce);
+            rb.MovePosition(rb.position + (Vector2)deltaPosition);
             
-            if (visualSystem != null)
+            if (debugPhysics)
             {
-                effectiveForce *= visualSystem.GetCurrentDirectionMultiplier();
-            }
-            
-            Vector2 horizontalForceVector = Vector2.right * effectiveForce;
-            smoothedForce = Vector2.Lerp(smoothedForce, horizontalForceVector, (1f - forceSmoothing) * Time.fixedDeltaTime * 10f);
-            rb.AddForce(smoothedForce);
-        }
-    }
-    
-    private void ApplyWaterResistance()
-    {
-        if (IsInWater())
-        {
-            float effectiveDrag = waterDrag;
-            float effectiveAngularDrag = angularDrag;
-            
-            if (visualSystem != null && visualSystem.GetCurrentDirectionMultiplier() < 0)
-            {
-                effectiveDrag *= 1.1f;
-                effectiveAngularDrag *= 1.2f;
-            }
-            
-            rb.velocity *= effectiveDrag;
-            rb.angularVelocity *= effectiveAngularDrag;
-        }
-    }
-    
-    private void ApplyWaveRolling()
-    {
-        if (floatPoints == null || floatPoints.Length < 3) return;
-        
-        float bowHeight = waterPhysics.GetWaterHeightAt(floatPoints[0].position);
-        float sternHeight = waterPhysics.GetWaterHeightAt(floatPoints[2].position);
-        
-        float heightDifference = bowHeight - sternHeight;
-        
-        if (visualSystem != null && visualSystem.GetCurrentDirectionMultiplier() < 0)
-        {
-            heightDifference *= 0.8f;
-        }
-        
-        float targetRollAngle = heightDifference * waveRollStrength;
-        targetRollAngle = Mathf.Clamp(targetRollAngle, -maxRollAngle, maxRollAngle);
-        
-        currentRollAngle = Mathf.SmoothDamp(
-            currentRollAngle,
-            targetRollAngle,
-            ref rollVelocity,
-            1f / rollResponseSpeed,
-            Mathf.Infinity,
-            Time.fixedDeltaTime
-        );
-        
-        float currentBoatAngle = transform.eulerAngles.z;
-        if (currentBoatAngle > 180f) currentBoatAngle -= 360f;
-        
-        float angleDifference = Mathf.DeltaAngle(currentBoatAngle, currentRollAngle);
-        float rollTorque = angleDifference * rollResponseSpeed;
-        
-        if (enableForceProtection)
-        {
-            rollTorque = Mathf.Clamp(rollTorque, -maxTorqueLimit, maxTorqueLimit);
-            smoothedTorque = Mathf.Lerp(smoothedTorque, rollTorque, (1f - forceSmoothing) * Time.fixedDeltaTime * 8f);
-            rb.AddTorque(smoothedTorque, ForceMode2D.Force);
-        }
-        else
-        {
-            rb.AddTorque(rollTorque, ForceMode2D.Force);
-        }
-    }
-    
-    private void ApplyStability()
-    {
-        float currentAngle = transform.eulerAngles.z;
-        if (currentAngle > 180f) currentAngle -= 360f;
-        
-        float stabilityTorque = -currentAngle * stabilityForce * Time.fixedDeltaTime;
-        
-        if (visualSystem != null && visualSystem.GetCurrentDirectionMultiplier() < 0)
-        {
-            stabilityTorque *= 1.3f;
-        }
-        
-        if (enableForceProtection)
-        {
-            stabilityTorque = Mathf.Clamp(stabilityTorque, -maxTorqueLimit * 0.5f, maxTorqueLimit * 0.5f);
-        }
-        
-        rb.AddTorque(stabilityTorque);
-    }
-    
-    private void LimitVerticalMovement()
-    {
-        Vector2 velocity = rb.velocity;
-        
-        if (Mathf.Abs(velocity.y) > maxVerticalSpeed)
-        {
-            velocity.y = Mathf.Sign(velocity.y) * maxVerticalSpeed;
-        }
-        
-        if (Mathf.Abs(velocity.y) > maxVerticalSpeed * 0.7f)
-        {
-            velocity.y *= verticalDamping;
-        }
-        
-        float velocityChange = Mathf.Abs(velocity.y - previousVelocity.y);
-        if (velocityChange > maxVerticalSpeed * 0.5f)
-        {
-            velocity.y = Mathf.Lerp(previousVelocity.y, velocity.y, 0.7f);
-        }
-        
-        rb.velocity = velocity;
-    }
-    
-    private void ApplyForceProtection()
-    {
-        if (Mathf.Abs(rb.angularVelocity) > maxAngularVelocity)
-        {
-            rb.angularVelocity = Mathf.Sign(rb.angularVelocity) * maxAngularVelocity;
-        }
-        
-        if (rb.velocity.magnitude > maxTotalForce)
-        {
-            rb.velocity = rb.velocity.normalized * maxTotalForce;
-        }
-        
-        float currentAngle = transform.eulerAngles.z;
-        if (currentAngle > 180f) currentAngle -= 360f;
-        
-        if (Mathf.Abs(currentAngle) > 45f)
-        {
-            float correctionTorque = -currentAngle * 0.1f;
-            rb.AddTorque(correctionTorque);
-        }
-    }
-    
-    private bool IsInWater()
-    {
-        if (floatPoints == null) return false;
-        
-        foreach (Transform point in floatPoints)
-        {
-            if (point != null)
-            {
-                Vector2 worldPos = point.position;
-                float waterHeight = waterPhysics.GetWaterHeightAt(worldPos);
-                if (waterHeight > worldPos.y) return true;
+                GameLogger.LogError($"[PHYSICS MOVE] {gameObject.name} - MOVED by: {deltaPosition}");
             }
         }
-        return false;
+        else if (debugPhysics && Mathf.Abs(kinematicVelocity.x) > 0.01f)
+        {
+            GameLogger.LogError($"[PHYSICS MOVE] {gameObject.name} - NO MOVEMENT: Delta too small {deltaPosition.magnitude}");
+        }
     }
 
-    #region Public Methods
-
+    public void SetTargetVelocity(Vector2 targetVelocity)
+    {
+        kinematicVelocity.x = Mathf.Clamp(targetVelocity.x, -maxKinematicSpeed, maxKinematicSpeed);
+        kinematicVelocity.y = targetVelocity.y; // Mantener Y para buoyancy
+        
+        if (debugPhysics)
+        {
+            GameLogger.LogError($"[PHYSICS VELOCITY] {gameObject.name} - Target velocity set to: {kinematicVelocity}");
+        }
+    }
+    
     public void SetHorizontalForce(float force)
     {
-        horizontalForce = Mathf.Clamp(force, -maxHorizontalForce, maxHorizontalForce);
+        kinematicVelocity.x = force;
+        
+        if (debugPhysics)
+        {
+            GameLogger.LogError($"[PHYSICS LEGACY] {gameObject.name} - Force as velocity: {force}");
+        }
     }
     
-    public void AddHorizontalForce(float additionalForce)
+    public void StopKinematicMovement()
     {
-        float newForce = horizontalForce + additionalForce;
-        SetHorizontalForce(newForce);
+        kinematicVelocity = Vector3.zero;
+        smoothedKinematicVelocity = Vector3.zero;
     }
-
-    #endregion
+    
+    public Vector3 GetKinematicVelocity() => kinematicVelocity;
+    public void SetKinematicVelocity(Vector3 velocity) => kinematicVelocity = velocity;
+    public void AddHorizontalForce(float additionalForce) => kinematicVelocity.x += additionalForce;
+    public void RegisterCrewMembers(List<Enemy> crewMembers) { }
+    public void InitializeBoundaries(Transform left, Transform right) { }
+    public void ConfigureCrewPhysicsIsolation(List<BoatLandEnemy> crewMembers) { }
 }

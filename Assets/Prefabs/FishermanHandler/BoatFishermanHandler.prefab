@@ -209,6 +209,10 @@ GameObject:
   - component: {fileID: 2752949202772209852}
   - component: {fileID: 4143942327312340731}
   - component: {fileID: 4966504455565441911}
+  - component: {fileID: 1430337817794020162}
+  - component: {fileID: 8404533200329947663}
+  - component: {fileID: 3049492626662468830}
+  - component: {fileID: 5822758134612673355}
   m_Layer: 7
   m_Name: Fisherman
   m_TagString: Enemy
@@ -345,7 +349,7 @@ MonoBehaviour:
   minSwimSpeed: 0
   landEnemyConfig: {fileID: 11400000, guid: 93c90735659e547458403c343be80b20, type: 2}
   boatID:
-    _uniqueID: Boat_1af25ebb
+    _uniqueID: Boat_1bb50b88
   _landMovementState: 0
   walkingSpeed: 1.5
   runningSpeed: 3
@@ -359,36 +363,21 @@ MonoBehaviour:
   maxUpwardVelocity: 0
   weight: 0
   hasStartedFloating: 0
+  hookSpawner: {fileID: 4993868596264358822}
   hookTimer: 1
   hookDuration: 8
+  subscribedHook: {fileID: 0}
   isPullingPlayer: 0
   minLineLength: 6
   maxLineReduction: 1.5
   lineReductionVariation: 0.4
+  animator: {fileID: 2694603455566713901}
   assignedPlatform: {fileID: 0}
-  useKinematicBoatPhysics: 1
-  kinematicGravityForce: 9.8
-  groundCheckLayers:
-    serializedVersion: 2
-    m_Bits: 64
-  groundCheckDistance: 0.2
-  kinematicAirGravity: 2
-  kinematicUnderwaterGravity: -0.2
-  gravityTransitionSpeed: 2
-  maxMoveDistance: 0.1
-  platformLayers:
-    serializedVersion: 2
-    m_Bits: 64
-  collisionSafetyMargin: 0.05
-  platformStickDistance: 0.15
+  crewPhysics: {fileID: 3049492626662468830}
+  platformTracker: {fileID: 5822758134612673355}
+  crewAI: {fileID: 1430337817794020162}
+  crewFisherman: {fileID: 8404533200329947663}
   fishermanConfig: {fileID: 11400000, guid: 876c88f03b9414e67960bdc874e7d116, type: 2}
-  allowMovementOnPlatform: 1
-  platformMovementChance: 0.6
-  enableIndependentMovement: 1
-  physicsUpdateInterval: 0.1
-  groundCheckInterval: 0.15
-  platformCheckInterval: 0.08
-  boatCrewMass: 0.5
 --- !u!114 &4143942327312340731
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -415,6 +404,80 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   debugMode: 1
+--- !u!114 &1430337817794020162
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2561211109777225482}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9c9d55af16afb43a18b3cb33371d3f3a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  allowMovementOnPlatform: 1
+  platformMovementChance: 0.6
+  enableIndependentMovement: 1
+--- !u!114 &8404533200329947663
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2561211109777225482}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2d4f51223b979497da46ee6ffc05b7e5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  fishermanConfig: {fileID: 11400000, guid: 876c88f03b9414e67960bdc874e7d116, type: 2}
+--- !u!114 &3049492626662468830
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2561211109777225482}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2c4aee941e7cb46c58329d4bf102f59b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  useKinematicBoatPhysics: 1
+  kinematicGravityForce: 9.8
+  boatCrewMass: 0.5
+  kinematicAirGravity: 2
+  kinematicUnderwaterGravity: -0.2
+  gravityTransitionSpeed: 2
+  groundCheckLayers:
+    serializedVersion: 2
+    m_Bits: 64
+  groundCheckDistance: 0.2
+  groundCheckInterval: 0.15
+  maxMoveDistance: 0.1
+  platformLayers:
+    serializedVersion: 2
+    m_Bits: 64
+  collisionSafetyMargin: 0.05
+  platformStickDistance: 0.15
+--- !u!114 &5822758134612673355
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2561211109777225482}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f2c452673f314432b87a26cdaf35c60b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  platformStickDistance: 0.15
+  platformCheckInterval: 0.08
+  enableIndependentMovement: 1
+  boundsBuffer: 0.3
+  boundsStopThreshold: 0.1
 --- !u!1 &2788446199190403421
 GameObject:
   m_ObjectHideFlags: 0

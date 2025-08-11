@@ -3,12 +3,18 @@ using UnityEngine;
 
 public class BoatBuoyancySystem : MonoBehaviour
 {
-    [Header("Buoyancy Settings")]
-    [SerializeField] private float buoyancyForce = 25f;
-    [SerializeField] private float smoothBuoyancy = 0.5f;
+    [Header("Kinematic Buoyancy Settings")]
+    [SerializeField] private float kinematicBuoyancyForce = 15f;
+    [SerializeField] private float kinematicBuoyancySmooth = 2f;
+    [SerializeField] private bool useKinematicBuoyancy = true;
     
-    [Header("Dynamic Mass")]
-    [SerializeField] private bool enableDynamicBuoyancy = true;
+    [Header("Kinematic Float Control")]
+    [SerializeField] private float kinematicFloatHeight = 0.5f;
+    [SerializeField] private float kinematicSinkSpeed = 1f;
+    [SerializeField] private float kinematicRiseSpeed = 2f;
+    
+    [Header("Mass Calculation")]
+    [SerializeField] private bool enableDynamicMass = true;
     [SerializeField] private float baseMass = 1f;
     [SerializeField] private bool debugMassChanges = true;
     
@@ -16,6 +22,11 @@ public class BoatBuoyancySystem : MonoBehaviour
     private WaterPhysics waterPhysics;
     private Transform[] floatPoints;
     private BoatVisualSystem visualSystem;
+    private BoatPhysicsSystem physicsSystem;
+    
+    private Vector3 kinematicBuoyancyOffset;
+    private float averageWaterHeight;
+    private float boatCenterY;
     
     private float lastKnownMass = 0f;
     private float effectiveBuoyancyForce = 6f;
@@ -32,26 +43,19 @@ public class BoatBuoyancySystem : MonoBehaviour
         waterPhysics = physics;
         floatPoints = points;
         visualSystem = GetComponent<BoatVisualSystem>();
+        physicsSystem = GetComponent<BoatPhysicsSystem>();
         
-        baseMass = rb.mass;
-        effectiveBuoyancyForce = buoyancyForce;
-        
-        RefreshComponentCache();
-        lastKnownMass = CalculateTotalMassOptimized();
-        
-        float requiredBuoyancy = rb.mass * Physics2D.gravity.magnitude * 1.5f;
-        if (effectiveBuoyancyForce < requiredBuoyancy)
+        if (rb != null && rb.bodyType == RigidbodyType2D.Kinematic)
         {
-            effectiveBuoyancyForce = requiredBuoyancy;
-            if (debugMassChanges)
-            {
-                GameLogger.LogVerbose($"AUTO-ADJUSTED: Buoyancy increased to {effectiveBuoyancyForce:F1} to support mass {rb.mass}");
-            }
+            useKinematicBuoyancy = true;
+            GameLogger.LogError($"[KINEMATIC BUOYANCY] {gameObject.name} - Initialized kinematic buoyancy system");
         }
-        
-        if (debugMassChanges)
+        else
         {
-            GameLogger.LogVerbose($"BoatBuoyancy: Initial mass setup - Base: {baseMass}, Total: {lastKnownMass}, Buoyancy: {effectiveBuoyancyForce}");
+            baseMass = rb.mass;
+            effectiveBuoyancyForce = kinematicBuoyancyForce;
+            RefreshComponentCache();
+            lastKnownMass = CalculateTotalMassOptimized();
         }
     }
     
@@ -69,19 +73,103 @@ public class BoatBuoyancySystem : MonoBehaviour
         }
         
         componentsCached = true;
+        
+        if (useKinematicBuoyancy)
+        {
+            GameLogger.LogError($"[BUOYANCY CREW] {gameObject.name} - Registered {cachedEnemies.Length} crew members for mass calculation");
+        }
     }
     
     public void UpdateBuoyancy()
     {
-        if (enableDynamicBuoyancy)
+        if (useKinematicBuoyancy)
+        {
+            UpdateKinematicBuoyancy();
+        }
+        else
+        {
+            UpdateDynamicBuoyancy();
+        }
+    }
+    
+    private void UpdateKinematicBuoyancy()
+    {
+        if (floatPoints == null || waterPhysics == null || physicsSystem == null) return;
+        
+        CalculateKinematicBuoyancyValues();
+        ApplyKinematicBuoyancyToPhysics();
+    }
+    
+    private void CalculateKinematicBuoyancyValues()
+    {
+        float totalWaterHeight = 0f;
+        int validPoints = 0;
+        boatCenterY = transform.position.y;
+        
+        foreach (Transform point in floatPoints)
+        {
+            if (point == null) continue;
+            
+            Vector2 worldPos = point.position;
+            float waterHeight = waterPhysics.GetWaterHeightAt(worldPos, transform);
+            
+            if (waterHeight > worldPos.y - 2f)
+            {
+                totalWaterHeight += waterHeight;
+                validPoints++;
+            }
+        }
+        
+        if (validPoints > 0)
+        {
+            averageWaterHeight = totalWaterHeight / validPoints;
+            
+            float targetY = averageWaterHeight + kinematicFloatHeight;
+            float currentY = boatCenterY;
+            
+            float buoyancyDirection = targetY - currentY;
+            
+            if (buoyancyDirection > 0)
+            {
+                kinematicBuoyancyOffset.y = buoyancyDirection * kinematicRiseSpeed;
+            }
+            else
+            {
+                kinematicBuoyancyOffset.y = buoyancyDirection * kinematicSinkSpeed;
+            }
+            
+            kinematicBuoyancyOffset.y = Mathf.Clamp(kinematicBuoyancyOffset.y, -3f, 3f);
+        }
+        else
+        {
+            kinematicBuoyancyOffset.y = -kinematicSinkSpeed;
+        }
+    }
+    
+    private void ApplyKinematicBuoyancyToPhysics()
+    {
+        Vector3 currentKinematicVelocity = physicsSystem.GetKinematicVelocity();
+        
+        currentKinematicVelocity.y = Mathf.Lerp(
+            currentKinematicVelocity.y,
+            kinematicBuoyancyOffset.y,
+            kinematicBuoyancySmooth * Time.fixedDeltaTime
+        );
+        
+        physicsSystem.SetKinematicVelocity(currentKinematicVelocity);
+    }
+    
+    private void UpdateDynamicBuoyancy()
+    {
+        if (enableDynamicMass)
         {
             UpdateDynamicBuoyancyOptimized();
         }
         
-        ApplyBuoyancy();
+        ApplyDynamicBuoyancy();
     }
     
-    private void ApplyBuoyancy()
+    private void ApplyDynamicBuoyancy()
     {
         int submergedPoints = 0;
         Vector2 totalForce = Vector2.zero;
@@ -91,8 +179,7 @@ public class BoatBuoyancySystem : MonoBehaviour
             if (point == null) continue;
         
             Vector2 worldPos = point.position;
-        
-            float waterHeight = waterPhysics.GetWaterHeightAt(worldPos, this.transform);
+            float waterHeight = waterPhysics.GetWaterHeightAt(worldPos, transform);
             float submersion = waterHeight - worldPos.y;
         
             if (submersion > 0)
@@ -102,11 +189,7 @@ public class BoatBuoyancySystem : MonoBehaviour
                 float speedFactor = 1f;
                 if (rb.velocity.y > 0)
                 {
-                    BoatPhysicsSystem physicsSystem = GetComponent<BoatPhysicsSystem>();
-                    if (physicsSystem != null)
-                    {
-                        speedFactor = Mathf.Lerp(1f, smoothBuoyancy, rb.velocity.y / 3f);
-                    }
+                    speedFactor = Mathf.Lerp(1f, 0.5f, rb.velocity.y / 3f);
                 }
             
                 float force = submersion * effectiveBuoyancyForce * speedFactor;
@@ -141,7 +224,7 @@ public class BoatBuoyancySystem : MonoBehaviour
                 lastKnownMass = currentTotalMass;
                 
                 float requiredBuoyancy = currentTotalMass * Physics2D.gravity.magnitude * 2.0f;
-                effectiveBuoyancyForce = Mathf.Max(buoyancyForce, requiredBuoyancy);
+                effectiveBuoyancyForce = Mathf.Max(kinematicBuoyancyForce, requiredBuoyancy);
                 
                 if (debugMassChanges)
                 {
@@ -191,14 +274,41 @@ public class BoatBuoyancySystem : MonoBehaviour
     
     public void RecalculateBuoyancy()
     {
-        componentsCached = false;
-        RefreshComponentCache();
-        lastKnownMass = 0f;
-        UpdateDynamicBuoyancyOptimized();
-        
-        if (debugMassChanges)
+        if (useKinematicBuoyancy)
         {
-            GameLogger.LogVerbose("BoatBuoyancy: Manual buoyancy recalculation triggered with cache refresh");
+            kinematicBuoyancyOffset = Vector3.zero;
+            GameLogger.LogError($"[BUOYANCY RECALC] {gameObject.name} - Kinematic buoyancy recalculated");
+        }
+        else
+        {
+            componentsCached = false;
+            RefreshComponentCache();
+            lastKnownMass = 0f;
+            UpdateDynamicBuoyancyOptimized();
         }
     }
+    
+    #region Public Methods
+    
+    public void SetKinematicBuoyancyForce(float force)
+    {
+        kinematicBuoyancyForce = force;
+    }
+    
+    public void SetKinematicFloatHeight(float height)
+    {
+        kinematicFloatHeight = height;
+    }
+    
+    public float GetAverageWaterHeight()
+    {
+        return averageWaterHeight;
+    }
+    
+    public Vector3 GetKinematicBuoyancyOffset()
+    {
+        return kinematicBuoyancyOffset;
+    }
+    
+    #endregion
 }

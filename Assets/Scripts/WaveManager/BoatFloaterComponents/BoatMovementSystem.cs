@@ -1,4 +1,3 @@
-using System.Collections;
 using UnityEngine;
 
 public enum BoatMovementState
@@ -10,19 +9,16 @@ public enum BoatMovementState
 
 public class BoatMovementSystem : MonoBehaviour
 {
-    private const float DRIVEN_SPEED = 60;
-    private const float AUTOMOVE_SPEED = 2;
+    private const float DRIVEN_SPEED = 2.5f;
+    private const float AUTOMOVE_SPEED = 1;
     private const float DESTROYED_SPEED = 0;
+    private const float MIN_ACTIVE_SPEED = 2f;
     
     [Header("Movement Settings")]
-    [SerializeField] private float movementSpeed = 2f;
-    [SerializeField] private float maxMovementForce = 6f;
+    [SerializeField] private float movementSpeed = 1f;
+    [SerializeField] private float maxMovementForce = 2.5f;
     [SerializeField] private bool enableAutomaticMovement = true;
-    [SerializeField] private bool debugMovement = false;
-    
-    [Header("Performance Optimization")]
-    [SerializeField] private float waterCheckInterval = 0.25f;
-    [SerializeField] private float boundaryCheckInterval = 0.1f;
+    [SerializeField] private bool debugMovement = true;
     
     [Header("Boundaries")]
     [SerializeField] private Transform leftBoundary;
@@ -31,6 +27,7 @@ public class BoatMovementSystem : MonoBehaviour
     
     private Rigidbody2D rb;
     private BoatVisualSystem visualSystem;
+    private BoatPhysicsSystem physicsSystem;
     
     private bool isRegisteredToPlatform = false;
     private bool movementActive = false;
@@ -39,42 +36,28 @@ public class BoatMovementSystem : MonoBehaviour
     
     [SerializeField] BoatMovementState movementState = BoatMovementState.AutoMove;
     
-    private BoatFloater cachedFloater;
-    private WaterPhysics cachedWaterPhysics;
-    private Transform[] cachedFloatPoints;
-    
-    private float lastWaterCheckTime = 0f;
     private float lastBoundaryCheckTime = 0f;
-    private bool isInWaterCached = false;
-    
     private Vector2 cachedPosition;
-    private Vector2 cachedMoveForce;
 
     public void Initialize(Rigidbody2D rigidbody, BoatVisualSystem visual)
     {
         rb = rigidbody;
         visualSystem = visual;
+        physicsSystem = GetComponent<BoatPhysicsSystem>();
         movementState = BoatMovementState.AutoMove;
-
-        CacheComponents();
         SetupSpeedByState();
-    }
-    
-    private void CacheComponents()
-    {
-        cachedFloater = GetComponent<BoatFloater>();
-        cachedWaterPhysics = WaterPhysics.Instance;
+
+        GameLogger.LogError($"[MOVEMENT INIT] {gameObject.name} - Movement system initialized - INDEPENDENT FROM CREW");
         
-        if (cachedFloater?.floatPoints != null)
-        {
-            cachedFloatPoints = cachedFloater.floatPoints;
-        }
+        StartMovement();
     }
 
     private void SetupSpeedByState()
     {
         movementSpeed = movementState == BoatMovementState.AutoMove ? AUTOMOVE_SPEED : DRIVEN_SPEED;
         maxMovementForce = movementState == BoatMovementState.AutoMove ? AUTOMOVE_SPEED : DRIVEN_SPEED;
+        
+        GameLogger.LogError($"[MOVEMENT SETUP] {gameObject.name} - Speed set to: {movementSpeed} for state: {movementState}");
     }
 
     public void DestroyState()
@@ -82,180 +65,180 @@ public class BoatMovementSystem : MonoBehaviour
         movementState = BoatMovementState.Destroyed;
         movementSpeed = DESTROYED_SPEED;
         maxMovementForce = DESTROYED_SPEED;
-    
         movementActive = false;
-    
-        if (rb != null)
+
+        if (physicsSystem != null)
         {
-            Vector2 sinkingForce = Vector2.down * 2f;
-            rb.AddForce(sinkingForce, ForceMode2D.Impulse);
-        
-            rb.drag = 0.1f;
-            rb.angularDrag = 0.1f;
+            physicsSystem.StopKinematicMovement();
         }
-    
-        GameLogger.LogVerbose("BoatMovement: Boat destroyed - movement stopped, sinking force applied");
     }
     
     public void InitializeBoundaries(Transform left, Transform right)
     {
         leftBoundary = left;
         rightBoundary = right;
+        GameLogger.LogError($"[MOVEMENT BOUNDARIES] {gameObject.name} - Boundaries set: Left={left?.name}, Right={right?.name}");
     }
     
     public void UpdateMovement()
     {
-        if (!enableAutomaticMovement || !movementActive || movementState == BoatMovementState.Destroyed) return;
-        
-        float currentTime = Time.time;
-        
-        if (currentTime - lastWaterCheckTime >= waterCheckInterval)
+        if (debugMovement)
         {
-            isInWaterCached = IsInWaterOptimized();
-            lastWaterCheckTime = currentTime;
+            GameLogger.LogError($"[MOVEMENT UPDATE START] {gameObject.name} - AutoMovement: {enableAutomaticMovement}, State: {movementState}, Active: {movementActive}");
         }
         
-        if (!isInWaterCached) return;
-        
-        if (currentTime - lastBoundaryCheckTime >= boundaryCheckInterval)
+        // EL BOTE SE MUEVE SOLO BASADO EN SU PROPIO ESTADO, NO EN LOS TRIPULANTES
+        if (!enableAutomaticMovement || movementState == BoatMovementState.Destroyed) 
         {
-            CheckBoundariesOptimized();
-            lastBoundaryCheckTime = currentTime;
+            if (debugMovement)
+            {
+                GameLogger.LogError($"[MOVEMENT BLOCKED] {gameObject.name} - AutoMovement: {enableAutomaticMovement}, State: {movementState}");
+            }
+            return;
         }
         
-        ApplyMovementForceOptimized();
+        if (!movementActive)
+        {
+            if (debugMovement)
+            {
+                GameLogger.LogError($"[MOVEMENT INACTIVE] {gameObject.name} - Movement not active, forcing start");
+            }
+            StartMovement();
+            return;
+        }
+        
+        CheckBoundaries();
+        ApplyMovementForce();
+        
+        if (debugMovement)
+        {
+            GameLogger.LogError($"[MOVEMENT UPDATE END] {gameObject.name} - Direction: {currentMovementDirection}, Speed: {movementSpeed}, INDEPENDENT MOVEMENT");
+        }
     }
     
-    private void CheckBoundariesOptimized()
+    private void CheckBoundaries()
     {
+        if (Time.time - lastBoundaryCheckTime < 0.1f) return;
+        lastBoundaryCheckTime = Time.time;
+        
         cachedPosition = transform.position;
         
-        bool nearLeftBoundary = leftBoundary != null && 
-                               cachedPosition.x <= leftBoundary.position.x + boundaryBuffer;
-        bool nearRightBoundary = rightBoundary != null && 
-                                cachedPosition.x >= rightBoundary.position.x - boundaryBuffer;
+        bool nearLeft = leftBoundary != null && cachedPosition.x <= leftBoundary.position.x + boundaryBuffer;
+        bool nearRight = rightBoundary != null && cachedPosition.x >= rightBoundary.position.x - boundaryBuffer;
         
-        if (nearLeftBoundary && currentMovementDirection < 0)
+        if (nearLeft && currentMovementDirection < 0)
         {
             currentMovementDirection = 1f;
             visualSystem?.UpdateVisualDirection(currentMovementDirection);
+            if (debugMovement)
+            {
+                GameLogger.LogError($"[MOVEMENT BOUNDARY] {gameObject.name} - Hit LEFT boundary, turning RIGHT");
+            }
         }
-        else if (nearRightBoundary && currentMovementDirection > 0)
+        else if (nearRight && currentMovementDirection > 0)
         {
             currentMovementDirection = -1f;
             visualSystem?.UpdateVisualDirection(currentMovementDirection);
-        }
-    }
-    
-    private void ApplyMovementForceOptimized()
-    {
-        cachedMoveForce.x = currentMovementDirection * movementSpeed;
-        cachedMoveForce.y = 0f;
-        
-        if (cachedMoveForce.sqrMagnitude > maxMovementForce * maxMovementForce)
-        {
-            cachedMoveForce = cachedMoveForce.normalized * maxMovementForce;
-        }
-        
-        rb.AddForce(cachedMoveForce);
-    }
-    
-    private bool IsInWaterOptimized()
-    {
-        if (cachedFloater == null || cachedFloatPoints == null || cachedWaterPhysics == null) return false;
-        
-        for (int i = 0; i < cachedFloatPoints.Length; i++)
-        {
-            if (cachedFloatPoints[i] != null)
+            if (debugMovement)
             {
-                Vector2 worldPos = cachedFloatPoints[i].position;
-                float waterHeight = cachedWaterPhysics.GetWaterHeightAt(worldPos);
-                if (waterHeight > worldPos.y) return true;
+                GameLogger.LogError($"[MOVEMENT BOUNDARY] {gameObject.name} - Hit RIGHT boundary, turning LEFT");
             }
         }
-        return false;
+    }
+    
+    private void ApplyMovementForce()
+    {
+        if (physicsSystem == null) 
+        {
+            GameLogger.LogError($"[MOVEMENT ERROR] {gameObject.name} - Physics system is NULL!");
+            return;
+        }
+        
+        // GARANTIZAR QUE EL BOTE SIEMPRE SE MUEVA CUANDO ESTÉ ACTIVO
+        float activeMovementSpeed = movementSpeed <= 0 ? MIN_ACTIVE_SPEED : movementSpeed;
+        float targetForce = currentMovementDirection * activeMovementSpeed;
+        
+        GameLogger.LogError($"[MOVEMENT CALC] {gameObject.name} - Direction: {currentMovementDirection}, Speed: {movementSpeed}, Active Speed: {activeMovementSpeed}, Target Force: {targetForce}");
+        
+        physicsSystem.SetHorizontalForce(targetForce);
+        
+        if (debugMovement)
+        {
+            GameLogger.LogError($"[MOVEMENT FORCE] {gameObject.name} - Applied force: {targetForce} (Speed: {activeMovementSpeed}) BOAT FORCE");
+        }
     }
     
     public void OnRegisteredToPlatform(Platform platform)
     {
-        if (isRegisteredToPlatform) return;
-        
         isRegisteredToPlatform = true;
         assignedPlatform = platform;
         
-        if (debugMovement)
-        {
-            GameLogger.LogVerbose($"BoatMovement: Registered to platform {platform.name}, starting movement!");
-        }
+        GameLogger.LogError($"[MOVEMENT REGISTER] {gameObject.name} - Registered to platform {platform?.name}, starting INDEPENDENT movement!");
         
         StartMovement();
     }
     
     public void StartMovement()
     {
-        if (movementActive) return;
-        
         movementActive = true;
-        ChooseNewMovementDirection();
-        
-        lastWaterCheckTime = 0f;
-        lastBoundaryCheckTime = 0f;
-        
-        if (debugMovement)
-        {
-            GameLogger.LogVerbose("BoatMovement: Movement started!");
-        }
-    }
-    
-    private void ChooseNewMovementDirection()
-    {
         currentMovementDirection = Random.Range(0, 2) == 0 ? -1f : 1f;
-        visualSystem?.UpdateVisualDirection(currentMovementDirection);
         
-        if (debugMovement)
-        {
-            string direction = currentMovementDirection > 0 ? "RIGHT" : "LEFT";
-            GameLogger.LogVerbose($"BoatMovement: New movement direction: {direction}");
-        }
+        GameLogger.LogError($"[MOVEMENT START] {gameObject.name} - Movement ACTIVATED, direction: {currentMovementDirection} - BOAT MOVEMENT ONLY");
     }
 
     public void SetMovementState_Driven()
     {
         movementState = BoatMovementState.Driven;
         SetupSpeedByState();
+        GameLogger.LogError($"[MOVEMENT STATE] {gameObject.name} - Set to DRIVEN, speed: {movementSpeed} - BOAT INDEPENDENT");
+        
+        if (!movementActive)
+        {
+            StartMovement();
+        }
     }
 
     public void SetMovementState_AutoMove()
     {
         movementState = BoatMovementState.AutoMove;
         SetupSpeedByState();
+        GameLogger.LogError($"[MOVEMENT STATE] {gameObject.name} - Set to AUTOMOVE, speed: {movementSpeed} - BOAT INDEPENDENT");
+        
+        if (!movementActive)
+        {
+            StartMovement();
+        }
     }
     
     public void SetAutomaticMovementEnabled(bool enabled)
     {
         enableAutomaticMovement = enabled;
+        GameLogger.LogError($"[MOVEMENT ENABLE] {gameObject.name} - Automatic movement: {enabled} - BOAT CONTROL ONLY");
         
-        if (enabled && !movementActive && isRegisteredToPlatform)
+        if (enabled && !movementActive)
         {
             StartMovement();
         }
         else if (!enabled)
         {
             movementActive = false;
+            if (physicsSystem != null)
+            {
+                physicsSystem.SetHorizontalForce(0f);
+            }
         }
     }
     
-    public void ForceStartMovement()
-    {
-        StartMovement();
-    }
+    public void ForceStartMovement() => StartMovement();
     
     public void StopMovement()
     {
         movementActive = false;
-        if (debugMovement)
+        GameLogger.LogError($"[MOVEMENT STOP] {gameObject.name} - Movement STOPPED by direct boat control");
+        
+        if (physicsSystem != null)
         {
-            GameLogger.LogVerbose("BoatMovement: Movement stopped manually");
+            physicsSystem.SetHorizontalForce(0f);
         }
     }
     

@@ -15,6 +15,9 @@ public class BoatPlatform : Platform, IBoatComponent
     [SerializeField] private bool debugBoatTriggers = true;
     [SerializeField] private BoatFloater boatFloater;
     
+    private const int PLATFORM_LAYER = 5;
+    private const int ENEMY_LAYER = 6;
+    
     public string GetBoatID() => boatID.UniqueID;
     public void SetBoatID(BoatID newBoatID) => boatID = newBoatID;
     
@@ -29,28 +32,37 @@ public class BoatPlatform : Platform, IBoatComponent
         
         if (debugBoatTriggers)
         {
-            GameLogger.LogVerbose($"BoatPlatform: Initialized on {gameObject.name} with ID {boatID}");
+            GameLogger.LogError($"[BOAT PLATFORM] Initialized {gameObject.name} - ID: {boatID}");
         }
     }
     
     void OnCollisionEnter2D(Collision2D collision)
     {
-        Enemy enemy = collision.gameObject.GetComponent<Enemy>();
+        ProcessEnemyRegistration(collision.gameObject, "COLLISION");
+    }
+    
+    void OnTriggerEnter2D(Collider2D other)
+    {
+        ProcessEnemyRegistration(other.gameObject, "TRIGGER");
+    }
+    
+    private void ProcessEnemyRegistration(GameObject targetGameObject, string eventType)
+    {
+        if (targetGameObject.layer != ENEMY_LAYER) return;
+        
+        Enemy enemy = targetGameObject.GetComponent<Enemy>();
         if (enemy != null && enemy is BoatLandEnemy boatEnemy)
         {
             if (!DoesBoatEnemyBelongToThisBoat(boatEnemy))
             {
                 if (debugBoatTriggers)
                 {
-                    GameLogger.LogVerbose($"BoatPlatform: REJECTED - {boatEnemy.name} (ID: {boatEnemy.GetBoatID()}) rejected by boat (ID: {GetBoatID()})");
+                    GameLogger.LogError($"[BOAT PLATFORM] REJECTED {eventType} - {boatEnemy.name} wrong boat");
                 }
                 return;
             }
             
-            if (boatEnemy.landEnemyConfig != null && identifier == boatEnemy.landEnemyConfig.identifier)
-            {
-                RegisterEnemyOnCollision(enemy);
-            }
+            RegisterEnemyOnCollision(enemy);
         }
     }
     
@@ -61,7 +73,7 @@ public class BoatPlatform : Platform, IBoatComponent
         if (!(enemy is BoatLandEnemy boatEnemy))
         {
             if (debugBoatTriggers)
-                GameLogger.LogVerbose($"BoatPlatform: REJECTED - {enemy.name} is not BoatLandEnemy");
+                GameLogger.LogError($"[BOAT PLATFORM] REJECTED - {enemy.name} not BoatLandEnemy");
             return;
         }
         
@@ -69,7 +81,7 @@ public class BoatPlatform : Platform, IBoatComponent
         {
             if (debugBoatTriggers)
             {
-                GameLogger.LogVerbose($"BoatPlatform: REGISTRATION DENIED - {boatEnemy.name} (ID: {boatEnemy.GetBoatID()}) cannot register on boat (ID: {boatID})");
+                GameLogger.LogError($"[BOAT PLATFORM] DENIED - {boatEnemy.name} wrong boat ID");
             }
             return;
         }
@@ -79,24 +91,11 @@ public class BoatPlatform : Platform, IBoatComponent
         Platform previousPlatform = boatEnemy.GetAssignedPlatform();
         if (previousPlatform != null && previousPlatform != this)
         {
-            if (previousPlatform is BoatPlatform otherBoatPlatform)
-            {
-                if (otherBoatPlatform.GetBoatID() != GetBoatID())
-                {
-                    if (debugBoatTriggers)
-                        GameLogger.LogVerbose($"BoatPlatform: BOAT TRANSFER BLOCKED - {enemy.name} cannot switch boats");
-                    return;
-                }
-            }
-            
             previousPlatform.UnregisterEnemy(enemy);
-            if (showDebugInfo)
-                GameLogger.LogVerbose($"Enemy {enemy.name} MOVED from {previousPlatform.name} to {gameObject.name}");
         }
         
         assignedEnemies.Add(enemy);
         boatEnemy.SetAssignedPlatform(this);
-        
         boatEnemy.OnPlatformAssigned(this);
         
         Collider2D enemyCollider = enemy.GetComponent<Collider2D>();
@@ -110,21 +109,14 @@ public class BoatPlatform : Platform, IBoatComponent
         boatEnemy.platformBoundsCalculated = true;
 
         if (debugBoatTriggers)
-            GameLogger.LogVerbose($"BOAT ASSIGNMENT SUCCESS: {enemy.name} assigned to boat platform {gameObject.name} (ID: {boatID}). Total: {assignedEnemies.Count}");
+            GameLogger.LogError($"[BOAT ASSIGNMENT] {enemy.name} -> {gameObject.name} SUCCESS! Total: {assignedEnemies.Count}");
         
         TriggerBoatMovement(enemy);
     }
     
     private bool DoesBoatEnemyBelongToThisBoat(BoatLandEnemy boatEnemy)
     {
-        bool matches = boatID.Matches(boatEnemy.GetBoatID());
-        
-        if (debugBoatTriggers)
-        {
-            GameLogger.LogVerbose($"BoatPlatform OWNERSHIP CHECK: BoatEnemy {boatEnemy.name} (ID: {boatEnemy.GetBoatID()}) vs Platform (ID: {boatID}) = {matches}");
-        }
-        
-        return matches;
+        return boatID.Matches(boatEnemy.GetBoatID());
     }
     
     public override void RegisterEnemyAtRuntime(Enemy enemy)
@@ -134,7 +126,7 @@ public class BoatPlatform : Platform, IBoatComponent
             if (!(enemy is BoatLandEnemy boatEnemy))
             {
                 if (debugBoatTriggers)
-                    GameLogger.LogVerbose($"BoatPlatform RUNTIME: REJECTED - {enemy.name} is not BoatLandEnemy");
+                    GameLogger.LogError($"[BOAT PLATFORM] RUNTIME REJECTED - {enemy.name} not BoatLandEnemy");
                 return;
             }
             
@@ -142,7 +134,7 @@ public class BoatPlatform : Platform, IBoatComponent
             {
                 if (debugBoatTriggers)
                 {
-                    GameLogger.LogVerbose($"BoatPlatform RUNTIME: DENIED {boatEnemy.name} (ID: {boatEnemy.GetBoatID()}) - wrong boat (ID: {boatID})");
+                    GameLogger.LogError($"[BOAT PLATFORM] RUNTIME DENIED - {boatEnemy.name} wrong boat");
                 }
                 return;
             }
@@ -162,7 +154,7 @@ public class BoatPlatform : Platform, IBoatComponent
 
             if (debugBoatTriggers)
             {
-                GameLogger.LogVerbose($"BOAT RUNTIME SUCCESS: {enemy.name} assigned to boat platform {gameObject.name} (ID: {boatID})");
+                GameLogger.LogError($"[BOAT RUNTIME] {enemy.name} -> {gameObject.name} SUCCESS!");
             }
             
             TriggerBoatMovement(enemy);
@@ -180,23 +172,14 @@ public class BoatPlatform : Platform, IBoatComponent
             
             if (debugBoatTriggers)
             {
-                GameLogger.LogVerbose($"BoatPlatform: Triggered boat movement for {enemy.name} on boat {boatFloater.name}");
+                GameLogger.LogError($"[BOAT MOVEMENT] Triggered for {enemy.name}");
             }
-        }
-        else if (debugBoatTriggers)
-        {
-            GameLogger.LogWarning($"BoatPlatform: Cannot trigger boat movement - BoatFloater not found!");
         }
     }
     
     public void SetBoatFloater(BoatFloater floater)
     {
         boatFloater = floater;
-        
-        if (debugBoatTriggers)
-        {
-            GameLogger.LogVerbose($"BoatPlatform: BoatFloater manually assigned: {floater.name}");
-        }
     }
     
     public BoatFloater GetBoatFloater()
@@ -209,24 +192,6 @@ public class BoatPlatform : Platform, IBoatComponent
         if (boatFloater != null)
         {
             boatFloater.ForceStartMovement();
-            
-            if (debugBoatTriggers)
-            {
-                GameLogger.LogVerbose("BoatPlatform: Force started boat movement");
-            }
-        }
-    }
-    
-    public void StopBoatMovement()
-    {
-        if (boatFloater != null)
-        {
-            boatFloater.StopMovement();
-            
-            if (debugBoatTriggers)
-            {
-                GameLogger.LogVerbose("BoatPlatform: Stopped boat movement");
-            }
         }
     }
     

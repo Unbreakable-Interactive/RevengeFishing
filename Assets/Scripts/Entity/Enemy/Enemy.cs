@@ -39,7 +39,7 @@ public abstract class Enemy : Entity
     [SerializeField] protected float minActionTime = 1f;
     [SerializeField] protected float maxActionTime = 4f;
     [SerializeField] protected float nextActionTime;
-
+    
     [Header("Debug")]
     [SerializeField] protected bool enableDebugMessages = false;
 

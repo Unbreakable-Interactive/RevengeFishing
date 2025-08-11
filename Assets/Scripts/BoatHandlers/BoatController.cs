@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class BoatController : MonoBehaviour
 {
-    [Header("Required Managers")]
+    [Header("Required Managers - AUTO ASSIGNED")]
     [SerializeField] private BoatIntegrityManager integrityManager;
     [SerializeField] private BoatCrewManager crewManager;
     [SerializeField] private BoatLifecycleManager lifecycleManager;
@@ -22,6 +22,7 @@ public class BoatController : MonoBehaviour
     
     private void CacheComponents()
     {
+        // AUTO-ASSIGN COMPONENTS IF NOT SET
         if (integrityManager == null)
             integrityManager = GetComponent<BoatIntegrityManager>();
             
@@ -41,7 +42,7 @@ public class BoatController : MonoBehaviour
     public void Initialize(Transform leftBoundaryTransform, Transform rightBoundaryTransform)
     {
         boatFloater.Initialize();
-        crewManager.Initialize(boatPlatform, integrityManager, boatFloater);
+        crewManager.Initialize(boatPlatform, this);
         integrityManager.Initialize(crewManager);
         lifecycleManager.Initialize(this);
         
@@ -49,11 +50,12 @@ public class BoatController : MonoBehaviour
         {
             boatFloater.InitializeBoundaries(leftBoundaryTransform, rightBoundaryTransform);
             
-            leftBoundary = leftBoundaryTransform.GetComponent<BoatBoundaryTrigger>();
-            rightBoundary = rightBoundaryTransform.GetComponent<BoatBoundaryTrigger>();
+            crewManager.SetupBoundaries(leftBoundary, rightBoundary);
         }
         
         StartCrewInitialization();
+        
+        GameLogger.LogError($"[BOAT CONTROLLER] {gameObject.name} - All managers initialized");
     }
     
     public void StartCrewInitialization()
@@ -63,9 +65,12 @@ public class BoatController : MonoBehaviour
     
     public void ResetBoat()
     {
+        // ORCHESTRATE RESET - EACH MANAGER HANDLES ITS OWN RESET
         integrityManager.Reset();
         crewManager.Reset();
         lifecycleManager.Reset();
+        
+        GameLogger.LogError($"[BOAT CONTROLLER] {gameObject.name} - Boat reset completed");
     }
     
     public void DestroyBoat()
@@ -73,8 +78,11 @@ public class BoatController : MonoBehaviour
         lifecycleManager.DestroyBoat();
     }
     
+    #region Public Getters - PURE DELEGATION
+    
     public float GetCurrentIntegrity() => integrityManager.CurrentIntegrity;
     public float GetMaxIntegrity() => integrityManager.MaxIntegrity;
+    public bool IsDestroyed() => integrityManager.IsDestroyed;
     
     public System.Collections.Generic.List<Enemy> GetAllCrewMembers()
     {
@@ -89,9 +97,9 @@ public class BoatController : MonoBehaviour
         return tempEnemyList;
     }
     
-    public bool IsDestroyed() => integrityManager.IsDestroyed;
-    
     internal BoatFloater BoatFloater => boatFloater;
     internal BoatPlatform BoatPlatform => boatPlatform;
+    internal BoatPhysicsSystem BoatPhysicsSystem => boatFloater.GetComponent<BoatPhysicsSystem>();
+    
+    #endregion
 }
-

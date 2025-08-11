@@ -9,10 +9,10 @@ public class LandEnemy : Enemy, IBoatComponent
     public LandEnemyConfig landEnemyConfig;
 
     [Header("Boat Identity")]
-    [SerializeField] private BoatID boatID = new BoatID();
+    [SerializeField] protected BoatID boatID = new BoatID();
     
-    public string GetBoatID() => boatID?.UniqueID ?? "NO_ID";
-    public void SetBoatID(BoatID newBoatID) => boatID = newBoatID;
+    public virtual string GetBoatID() => boatID?.UniqueID ?? "NO_ID";
+    public virtual void SetBoatID(BoatID newBoatID) => boatID = newBoatID;
 
     #region Land Enemy Variables
     public enum LandMovementState
@@ -33,7 +33,9 @@ public class LandEnemy : Enemy, IBoatComponent
 
     [Header("Land Enemy Variables")]
     [SerializeField] protected float walkingSpeed;
+    public float WalkingSpeed=> walkingSpeed;
     [SerializeField] protected float runningSpeed;
+    public float RunningSpeed => runningSpeed;
     [SerializeField] protected float edgeBuffer;
     public bool fishingToolEquipped = false;
     public bool isOnBoat = false;
@@ -47,11 +49,14 @@ public class LandEnemy : Enemy, IBoatComponent
 
     [Header("Escape System")]
     [SerializeField] protected bool hasStartedFloating = false;
-    protected HookSpawner hookSpawner;
+    [SerializeField] protected HookSpawner hookSpawner;
+    public HookSpawner HookSpawner => hookSpawner;
     protected bool hasThrownHook;
+    
     [SerializeField] protected float hookTimer;
     [SerializeField] protected float hookDuration;
-    protected FishingProjectile subscribedHook;
+    public float HookDuration => hookDuration;
+    [SerializeField] protected FishingProjectile subscribedHook;
 
     [Header("Pull Mechanic")]
     [SerializeField] protected bool isPullingPlayer = false;
@@ -59,7 +64,8 @@ public class LandEnemy : Enemy, IBoatComponent
     [SerializeField] protected float maxLineReduction = 1.5f;
     [SerializeField] protected float lineReductionVariation = 0.4f;
 
-    Animator animator;
+    [SerializeField] private Animator animator;
+    public Animator EnemyAnimator => animator;
 
     public Vector3 InitialSpawnPosition { get; set; }
 
@@ -82,6 +88,11 @@ public class LandEnemy : Enemy, IBoatComponent
     }
     #endregion
 
+    public void SetSubscribedHook(FishingProjectile fishingHook)
+    {
+        subscribedHook = fishingHook;
+    }
+
     #region Platform Assignment
     [Header("Platform Assignment")]
     public Platform assignedPlatform;
@@ -91,7 +102,7 @@ public class LandEnemy : Enemy, IBoatComponent
         assignedPlatform = platform;
     }
 
-    public Platform GetAssignedPlatform()
+    public virtual Platform GetAssignedPlatform()
     {
         return assignedPlatform;
     }
@@ -182,11 +193,12 @@ public class LandEnemy : Enemy, IBoatComponent
 
         nextActionTime = Time.time + Random.Range(0.5f, 2f);
         _landMovementState = LandMovementState.Idle;
-        hookSpawner = GetComponent<HookSpawner>();
+        
         if (hookSpawner == null)
         {
-            hookSpawner = gameObject.AddComponent<HookSpawner>();
+            hookSpawner = GetComponent<HookSpawner>();
         }
+        
         hookSpawner.Initialize();
         SetMovementMode(isAboveWater);
         idleDetector = GetComponentInChildren<IdleDetector>();
@@ -421,7 +433,7 @@ public class LandEnemy : Enemy, IBoatComponent
         }
     }
 
-    protected virtual void OnHookPlayerInteraction(bool isBeingHeld)
+    public virtual void OnHookPlayerInteraction(bool isBeingHeld)
     {
         if (hookSpawner.CurrentHook != null)
         {
