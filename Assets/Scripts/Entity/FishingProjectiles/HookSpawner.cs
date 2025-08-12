@@ -23,7 +23,7 @@ public class HookSpawner : MonoBehaviour
 
     private Vector2 throwDirection;
 
-    [SerializeField] private Rope rodAttachRope; // Reference to the rod attachment point
+    private Rope rodAttachRope; // Reference to the rod attachment point's rope component
 
     public Rope RodAttachRope
     {
@@ -41,6 +41,7 @@ public class HookSpawner : MonoBehaviour
         Debug.Log($"HookSpawner.Initialize() called on {gameObject.name}");
 
         rodAttachRope = GetComponentInChildren<Rope>();
+        rodAttachRope.gameObject.GetComponent<LineRenderer>().enabled = false;
 
         // AUTO-SETUP MISSING REFERENCES
         if (hookHandlerPrefab == null)
@@ -103,6 +104,8 @@ public class HookSpawner : MonoBehaviour
         currentHook = curHookHandler.FishingProjectile;
 
         rodAttachRope.SetEndPoint(currentHook.transform);
+        rodAttachRope.ropeLength = hookMaxDistance;
+        rodAttachRope.gameObject.GetComponent<LineRenderer>().enabled = true;
 
         if (currentHook != null)
         {
@@ -180,6 +183,7 @@ public class HookSpawner : MonoBehaviour
             {
                 // When line is very short, start destruction
                 currentHook.RetractProjectile();
+                rodAttachRope.gameObject.GetComponent<LineRenderer>().enabled = false;
                 Debug.Log($"Hook retraction complete - destroying hook");
             }
         }
@@ -218,6 +222,7 @@ public class HookSpawner : MonoBehaviour
     {
         if (currentHookHandler != null)
         {
+            rodAttachRope.gameObject.GetComponent<LineRenderer>().enabled = false;
             Destroy(currentHookHandler);
             currentHookHandler = null;
             curHookHandler = null;

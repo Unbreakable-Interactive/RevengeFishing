@@ -548,7 +548,6 @@ MonoBehaviour:
   spawnPoint: {fileID: 3470367175335556429}
   throwForce: 10
   hookMaxDistance: 8
-  rodAttachRope: {fileID: 0}
 --- !u!95 &7820947729106568814
 Animator:
   serializedVersion: 5
@@ -645,7 +644,18 @@ LineRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Positions: []
+  m_Positions:
+  - {x: 1.0337, y: 2.2017, z: 0}
+  - {x: 1.0337, y: 2.1837, z: 0}
+  - {x: 1.0337001, y: 2.1697001, z: 0}
+  - {x: 1.0337, y: 2.1597, z: 0}
+  - {x: 1.0337, y: 2.1537, z: 0}
+  - {x: 1.0337, y: 2.1517, z: 0}
+  - {x: 1.0337, y: 2.1536999, z: 0}
+  - {x: 1.0337, y: 2.1597, z: 0}
+  - {x: 1.0337, y: 2.1697001, z: 0}
+  - {x: 1.0337, y: 2.1836998, z: 0}
+  - {x: 1.0337, y: 2.2017, z: 0}
   m_Parameters:
     serializedVersion: 3
     widthMultiplier: 1
@@ -728,7 +738,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   startPoint: {fileID: 3470367175335556429}
   midPoint: {fileID: 0}
-  endPoint: {fileID: 0}
+  endPoint: {fileID: 3470367175335556429}
   linePoints: 10
   stiffness: 350
   damping: 15
