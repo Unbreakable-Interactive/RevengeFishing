@@ -792,7 +792,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   faceCamera: 1
-  displayText: {fileID: 0}
+  displayText: {fileID: 2426049732161016549}
   mainCamera: {fileID: 0}
   entity: {fileID: 2752949202772209852}
   showAbsolutePowerLevel: 1
