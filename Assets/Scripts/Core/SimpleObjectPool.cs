@@ -25,7 +25,6 @@ public class SimpleObjectPool : MonoBehaviour
         else
         {
             Destroy(gameObject);
-            return;
         }
     }
 
@@ -195,7 +194,7 @@ public class SimpleObjectPool : MonoBehaviour
             rb.angularVelocity = 0f;
             rb.gravityScale = 1f;
             rb.simulated = true;
-            rb.freezeRotation = true;
+            // rb.freezeRotation = true;
             rb.drag = 0f;
             rb.angularDrag = 0.05f;
             rb.isKinematic = false;
@@ -233,7 +232,7 @@ public class SimpleObjectPool : MonoBehaviour
             enemy.Initialize();
         }
 
-        Physics2D.SyncTransforms();
+        // Physics2D.SyncTransforms();
 
         if (showDebugInfo)
             GameLogger.LogVerbose($"Handler {handler.name} completely reset with child positions corrected at {spawnPosition}");

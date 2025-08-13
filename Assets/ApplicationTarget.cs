@@ -2,22 +2,19 @@ using UnityEngine;
 
 public class ApplicationTarget : MonoBehaviour
 {
-    [Header("Physics Settings")]
-    [Tooltip("Tiempo fijo entre pasos de física (0.02 = 50 Hz)")]
-    public float fixedTimestep = 0.02f;
-
-    [Header("Frame Rate Settings")]
-    [Tooltip("FPS objetivo para sincronizar mejor con FixedUpdate (múltiplo de 50 recomendado)")]
-    public int targetFrameRate = 100;
-
+    [Header("Performance Settings")]
+    [SerializeField] private int targetFrameRate = 100;
+    [SerializeField] private float fixedTimestep = 0.02f;
+    
     void Awake()
     {
         Time.fixedDeltaTime = fixedTimestep;
-
-        QualitySettings.vSyncCount = 0;
-
         Application.targetFrameRate = targetFrameRate;
-
-        Debug.Log($"FrameRateLock: Fixed Timestep = {fixedTimestep} ({1f/fixedTimestep} Hz), Target FPS = {targetFrameRate}");
+        
+        Physics2D.autoSyncTransforms = false;
+        Physics2D.queriesStartInColliders = false;
+        
+        GameLogger.Log($"[BOOTSTRAP] FixedDelta: {Time.fixedDeltaTime}, TargetFPS: {Application.targetFrameRate}");
+        GameLogger.Log($"[BOOTSTRAP] AutoSync: {Physics2D.autoSyncTransforms}, QueriesInColliders: {Physics2D.queriesStartInColliders}");
     }
 }

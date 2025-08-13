@@ -15,3 +15,4 @@ public class FishermanConfig : ScriptableObject
     public float minActionTime = 1f;
     public float maxActionTime = 4f;
 }
+

@@ -10,7 +10,6 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
     
     [Header("Crew Properties")]
     [SerializeField] private GameObject boatFishermanPrefab;
-    [SerializeField] private Transform[] crewSpawnPoints;
     [SerializeField] private int maxCrewMembers = 2;
     [SerializeField] private int maxInactiveCrewMembers = 1;
     
@@ -19,9 +18,7 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
     
     private BoatPlatform boatPlatform;
     private BoatController boatController;
-    private BoatIntegrityManager integrityManager;
     private BoatFloater boatFloater;
-    private BoatPhysicsSystem physicsSystem;
     
     private BoatBoundaryTrigger leftBoundary;
     private BoatBoundaryTrigger rightBoundary;
@@ -31,44 +28,19 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
     public string GetBoatID() => boatID.UniqueID;
     public void SetBoatID(BoatID newBoatID) => boatID = newBoatID;
     
-    public void Initialize(BoatPlatform platform, BoatController controller)
+    public void Initialize(BoatController controller, BoatPlatform platform, BoatFloater floater)
     {
-        boatPlatform = platform;
         boatController = controller;
-        integrityManager = controller.GetComponent<BoatIntegrityManager>();
-        boatFloater = controller.BoatFloater;
-        physicsSystem = controller.BoatPhysicsSystem;
+        boatPlatform = platform;
+        boatFloater = floater;
         
-        ValidateRequiredReferences();
-        ConfigureBoatComponentIDs();
-        
-        GameLogger.LogError($"[CREW MANAGER] {gameObject.name} - Crew management initialized");
+        GameLogger.LogError($"[CREW MANAGER] {gameObject.name} - Initialized with platform: {boatPlatform.name}");
     }
     
     public void SetupBoundaries(BoatBoundaryTrigger left, BoatBoundaryTrigger right)
     {
         leftBoundary = left;
         rightBoundary = right;
-        ConfigureBoatComponentIDs();
-    }
-    
-    private void ValidateRequiredReferences()
-    {
-        if (boatPlatform == null)
-            throw new System.Exception($"BoatCrewManager on {gameObject.name}: boatPlatform must be assigned!");
-    }
-    
-    private void ConfigureBoatComponentIDs()
-    {
-        boatPlatform.SetBoatID(boatID);
-        
-        if (leftBoundary != null)
-            leftBoundary.SetBoatID(boatID);
-            
-        if (rightBoundary != null)
-            rightBoundary.SetBoatID(boatID);
-        
-        GameLogger.LogVerbose($"BoatCrewManager: Configured boat ID {boatID} for all components");
     }
     
     public void StartCrewInitialization()
@@ -88,7 +60,7 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
         allCrewMembers.Clear();
         
         Vector3 platformPosition = boatPlatform.transform.position;
-        platformPosition.y += 0.1f;
+        platformPosition.y -= 0.3f;
         
         List<BoatLandEnemy> newCrewMembers = new List<BoatLandEnemy>();
         
@@ -97,29 +69,25 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
             Vector3 spawnPosition = platformPosition + new Vector3(i * 0.8f - 0.4f, 0, 0);
             BoatLandEnemy boatFisherman = InstantiateCrewMember(spawnPosition, i);
             
+            boatFisherman.SetAssignedPlatform(boatPlatform);
+            boatFisherman.SetBoatID(boatID);
+            
             if (boatFisherman != null)
             {
                 newCrewMembers.Add(boatFisherman);
             }
         }
         
-        yield return new WaitForEndOfFrame();
+        // yield return new WaitForEndOfFrame();
         
         for (int i = 0; i < newCrewMembers.Count; i++)
         {
             BoatLandEnemy boatFisherman = newCrewMembers[i];
-            ConfigureCrewMemberForBoatLife(boatFisherman);
-            RegisterCrewMemberToPlatform(boatFisherman);
-            SubscribeToCrewMember(boatFisherman);
+            ConfigureCrewMember(boatFisherman);
             allCrewMembers.Add(boatFisherman);
         }
         
-        yield return new WaitForEndOfFrame();
-        
-        if (physicsSystem != null)
-        {
-            physicsSystem.ConfigureCrewPhysicsIsolation(newCrewMembers);
-        }
+        // yield return new WaitForEndOfFrame();
         
         if (boatFloater != null)
         {
@@ -133,10 +101,12 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
         
         RandomlyDeactivateCrewMembers();
         
-        if (integrityManager != null)
+        if (boatController != null)
         {
-            integrityManager.CalculateBoatIntegrity();
+            boatController.RecalculateBoatIntegrity();
         }
+
+        yield return null;
         
         GameLogger.LogError($"[CREW INIT] {gameObject.name} - Initialized {allCrewMembers.Count} crew members");
     }
@@ -149,8 +119,12 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
             return null;
         }
         
-        GameObject crewHandlerObj = Instantiate(boatFishermanPrefab, spawnPosition, Quaternion.identity);
-        crewHandlerObj.transform.SetParent(transform);
+        Vector3 correctedPosition = boatPlatform.transform.position;
+        correctedPosition.x += (index * 0.8f) - 0.4f;
+        correctedPosition.y -= 0.3f;
+        
+        GameObject crewHandlerObj = Instantiate(boatFishermanPrefab, correctedPosition, Quaternion.identity);
+        crewHandlerObj.transform.SetParent(boatPlatform.transform);
         
         BoatLandEnemy boatFisherman = crewHandlerObj.GetComponentInChildren<BoatLandEnemy>();
         if (boatFisherman != null)
@@ -168,20 +142,26 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
                 fishermanRb.angularVelocity = 0f;
             }
             
+            GameLogger.LogError($"[CREW SPAWN] {boatFisherman.name} spawned at: {correctedPosition}");
+            
             return boatFisherman;
         }
         else
         {
-            GameLogger.LogError($"Instantiated BoatFishermanHandler doesn't contain BoatLandEnemy component!");
+            GameLogger.LogError($"BoatFishermanHandler doesn't contain BoatLandEnemy component!");
             Destroy(crewHandlerObj);
             return null;
         }
     }
     
-    private void ConfigureCrewMemberForBoatLife(BoatLandEnemy boatFisherman)
+    private void ConfigureCrewMember(BoatLandEnemy boatFisherman)
     {
+        boatFisherman.SetAssignedPlatform(boatPlatform);
+        boatFisherman.OnPlatformAssigned(boatPlatform);
+        
+        boatPlatform.RegisterEnemyAtRuntime(boatFisherman);
+        
         boatFisherman.isOnBoat = true;
-        boatFisherman.SetBoatID(boatID);
         
         Rigidbody2D fishermanRb = boatFisherman.GetComponent<Rigidbody2D>();
         if (fishermanRb != null)
@@ -196,26 +176,12 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
             fishermanRb.angularVelocity = 0f;
         }
         
-        GameLogger.LogError($"[CREW CONFIG] {boatFisherman.name} configured for boat life - isOnBoat: {boatFisherman.isOnBoat}");
-    }
-    
-    private void RegisterCrewMemberToPlatform(BoatLandEnemy boatFisherman)
-    {
-        boatPlatform.RegisterEnemyAtRuntime(boatFisherman);
+        boatFisherman.OnEnemyDied -= OnCrewMemberDied;
+        boatFisherman.OnEnemyDied += OnCrewMemberDied;
         
-        boatFisherman.SetAssignedPlatform(boatPlatform);
-        boatFisherman.OnPlatformAssigned(boatPlatform);
+        Platform assignedCheck = boatFisherman.GetAssignedPlatform();
         
-        GameLogger.LogError($"[PLATFORM ASSIGN] {boatFisherman.name} assigned to platform {boatPlatform.name}");
-    }
-    
-    private void SubscribeToCrewMember(BoatLandEnemy boatFisherman)
-    {
-        if (boatFisherman != null)
-        {
-            boatFisherman.OnEnemyDied -= OnCrewMemberDied;
-            boatFisherman.OnEnemyDied += OnCrewMemberDied;
-        }
+        GameLogger.LogError($"[CREW CONFIG] {boatFisherman.name} configured - Platform: {boatPlatform.name}, BoatID: {boatID.UniqueID}, assignedPlatform: {(assignedCheck != null ? assignedCheck.name : "NULL")}, isOnBoat: {boatFisherman.isOnBoat}");
     }
     
     public void OnCrewMemberDied(Enemy deadCrew)
@@ -234,11 +200,10 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
         ResetCrewMemberToInactive(deadCrewMember);
         StartCoroutine(DelayedIntegrityRecalculation());
     }
-
+    
     private void ResetCrewMemberToInactive(BoatLandEnemy crewMember)
     {
         crewMember.StopAllCoroutines();
-        
         crewMember.ChangeState_Alive();
         crewMember.ResetFatigue();
         
@@ -262,7 +227,7 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
         if (crewMember.ParentContainer != null)
         {
             Vector3 resetPosition = boatPlatform.transform.position;
-            resetPosition.y += 0.1f;
+            resetPosition.y -= 0.3f;
             
             int memberIndex = allCrewMembers.IndexOf(crewMember);
             if (memberIndex >= 0)
@@ -274,21 +239,19 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
             crewMember.ParentContainer.SetActive(false);
         }
         
-        ConfigureCrewMemberForBoatLife(crewMember);
-        
+        ConfigureCrewMember(crewMember);
         crewMember.isReturningToPool = false;
         
-        GameLogger.LogVerbose($"BoatCrewManager: Reset {crewMember.name} to inactive state in boat");
+        GameLogger.LogVerbose($"BoatCrewManager: Reset {crewMember.name} to inactive state");
     }
     
     private IEnumerator DelayedIntegrityRecalculation()
     {
         yield return null;
         
-        if (integrityManager != null)
+        if (boatController != null)
         {
-            integrityManager.CalculateBoatIntegrity();
-            integrityManager.CheckBoatDestruction();
+            boatController.RecalculateBoatIntegrity();
         }
     }
     
@@ -332,7 +295,7 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
     private IEnumerator ResetExistingCrew()
     {
         Vector3 platformPosition = boatPlatform.transform.position;
-        platformPosition.y += 0.1f;
+        platformPosition.y -= 0.3f;
         
         for (int i = 0; i < allCrewMembers.Count; i++)
         {
@@ -348,31 +311,22 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
                 }
                 
                 ResetCrewMemberToActive(boatFisherman);
-                ConfigureCrewMemberForBoatLife(boatFisherman);
-                SubscribeToCrewMember(boatFisherman);
-                RegisterCrewMemberToPlatform(boatFisherman);
+                ConfigureCrewMember(boatFisherman);
             }
         }
         
         yield return new WaitForEndOfFrame();
         
-        if (physicsSystem != null)
-        {
-            physicsSystem.ConfigureCrewPhysicsIsolation(allCrewMembers);
-        }
-        
-        yield return null;
-        
         RandomlyDeactivateCrewMembers();
         
-        if (integrityManager != null)
+        if (boatController != null)
         {
-            integrityManager.CalculateBoatIntegrity();
+            boatController.RecalculateBoatIntegrity();
         }
         
         GameLogger.LogError($"[CREW RESET] {gameObject.name} - Reset {allCrewMembers.Count} existing crew members");
     }
-
+    
     private void ResetCrewMemberToActive(BoatLandEnemy crewMember)
     {
         crewMember.TriggerAlive();
@@ -386,6 +340,34 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
         }
         
         crewMember.isReturningToPool = false;
+    }
+    
+    public void AssignNavigator()
+    {
+        foreach (var crew in allCrewMembers)
+        {
+            if (crew != null && 
+                crew.ParentContainer != null && 
+                crew.ParentContainer.activeInHierarchy && 
+                crew.State == Enemy.EnemyState.Alive &&
+                !crew.IsNavigating())
+            {
+                crew.AssignToWheel();
+                break;
+            }
+        }
+    }
+    
+    public void ReleaseNavigator()
+    {
+        foreach (var crew in allCrewMembers)
+        {
+            if (crew != null && crew.IsNavigating())
+            {
+                crew.ReleaseFromWheel();
+                break;
+            }
+        }
     }
     
     public int GetActiveCrewCount()

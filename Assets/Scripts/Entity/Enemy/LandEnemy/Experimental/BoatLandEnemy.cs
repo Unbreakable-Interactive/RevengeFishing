@@ -1,401 +1,567 @@
+using System.Collections;
 using UnityEngine;
 
 public class BoatLandEnemy : LandEnemy, IBoatComponent
 {
-    [Header("Boat Crew Components - AUTO ASSIGNED")]
+    [Header("Boat Identity")]
+    [SerializeField] private bool debugBoatCrew = false;
+    
+    [Header("Boat Crew Systems")]
     [SerializeField] private BoatCrewPhysics crewPhysics;
-    [SerializeField] private BoatCrewPlatformTracker platformTracker;
-    [SerializeField] private BoatCrewAI crewAI;
-    [SerializeField] private BoatCrewFisherman crewFisherman;
-
-    public FishermanConfig fishermanConfig; 
-    public bool trackingPlatformMovement => platformTracker?.IsTrackingMovement ?? false;
+    [SerializeField] public FishermanConfig fishermanConfig;
     
-    private bool boatSystemsInitialized = false; // NUEVA: Prevenir doble inicialización
+    [Header("Boat Specific Settings")]
+    [SerializeField] private float boundaryBuffer = 0.3f;
+    [SerializeField] private bool enableHookThrowing = true;
     
-    public override string GetBoatID() => GetBoatIDFromParent();
-    public override void SetBoatID(BoatID newBoatID) 
-    { 
-        if (boatID != null)
-            boatID = newBoatID;
+    [Header("Crew Behavior")]
+    [SerializeField] private CrewRole crewRole = CrewRole.Sailor;
+    [SerializeField] private bool isNavigating = false;
+    
+    private bool boatSystemsInitialized = false;
+    private BoatPlatform boatPlatform;
+    private Vector3 lastBoatPosition;
+    private float lastHookAttemptTime = 0f;
+    private bool hasFallenFromBoat = false;
+    
+    public enum CrewRole
+    {
+        Sailor,
+        Navigator,
+        Lookout
     }
     
-    private string GetBoatIDFromParent()
-    {
-        if (assignedPlatform is BoatPlatform boatPlatform)
-            return boatPlatform.GetBoatID();
-            
-        BoatCrewManager crewManager = GetComponentInParent<BoatCrewManager>();
-        if (crewManager != null)
-            return crewManager.GetBoatID();
-            
-        return "NO_BOAT_ID";
-    }
-
-    // ELIMINADO: No sobrescribir Start() para evitar doble inicialización
-    // protected override void Start() 
+    public override string GetBoatID() => boatID?.UniqueID ?? "NO_ID";
+    public override void SetBoatID(BoatID newBoatID) => boatID = newBoatID;
     
-    private void SetBoatKinematicMode()
+    public CrewRole GetCrewRole() => crewRole;
+    public void SetCrewRole(CrewRole role) => crewRole = role;
+    
+    public bool IsNavigating() => isNavigating;
+    
+    public void AssignToWheel()
     {
-        if (rb != null && _state == EnemyState.Alive)
+        isNavigating = true;
+        crewRole = CrewRole.Navigator;
+        _landMovementState = LandMovementState.Idle;
+        fishingToolEquipped = false;
+    }
+    
+    public void ReleaseFromWheel()
+    {
+        isNavigating = false;
+        if (crewRole == CrewRole.Navigator)
         {
-            rb.isKinematic = true;
-            rb.angularVelocity = 0f;
-            GameLogger.LogError($"[BOAT CREW] {gameObject.name} - Set to KINEMATIC mode while alive");
+            crewRole = CrewRole.Sailor;
+        }
+    }
+
+    public void SynchronizeWithBoatMovement(Vector3 deltaMovement, BoatPlatform platform)
+    {
+        if (rb == null || !isOnBoat || _state != EnemyState.Alive) return;
+        
+        if (deltaMovement.magnitude > 0.001f && rb.bodyType == RigidbodyType2D.Kinematic)
+        {
+            Vector3 newPosition = transform.position + deltaMovement;
+            rb.MovePosition(newPosition);
+            
+            if (debugBoatCrew)
+                GameLogger.LogVerbose($"[BOAT SYNC] {gameObject.name} - Synced with delta: {deltaMovement}");
         }
     }
     
     private void InitializeBoatCrewSystems()
     {
-        // NUEVO: Prevenir múltiples inicializaciones
-        if (boatSystemsInitialized)
-        {
-            GameLogger.LogError($"[BOAT CREW] {gameObject.name} - Systems already initialized, skipping");
-            return;
-        }
+        if (boatSystemsInitialized) return;
         
         if (crewPhysics == null) crewPhysics = GetComponent<BoatCrewPhysics>();
-        if (platformTracker == null) platformTracker = GetComponent<BoatCrewPlatformTracker>();
-        if (crewAI == null) crewAI = GetComponent<BoatCrewAI>();
-        if (crewFisherman == null) crewFisherman = GetComponent<BoatCrewFisherman>();
         
         if (crewPhysics != null)
-            crewPhysics.Initialize(rb, this, platformTracker);
+            crewPhysics.Initialize(rb, this);
             
-        if (platformTracker != null)
-            platformTracker.Initialize(this, crewPhysics);
-            
-        if (crewAI != null)
-            crewAI.Initialize(this, platformTracker, crewPhysics);
-            
-        if (crewFisherman != null)
-            crewFisherman.Initialize(this, hookSpawner, fishermanConfig);
-        
-        boatSystemsInitialized = true; // MARCAR COMO INICIALIZADO
-        GameLogger.LogError($"[BOAT CREW] {gameObject.name} - All crew systems initialized ONCE");
+        boatSystemsInitialized = true;
     }
 
     protected override void Update()
     {
         base.Update();
         
-        if (_state == EnemyState.Defeated)
-        {
-            if (crewFisherman != null)
-            {
-                crewFisherman.CleanupFishingTools();
-            }
-            return;
-        }
-        
-        if (crewFisherman != null)
-        {
-            crewFisherman.HandleActiveHook();
-        }
-    }
-
-    private void FixedUpdate()
-    {
-        if (rb == null) return;
-        
         if (_state == EnemyState.Alive)
         {
-            if (crewPhysics != null)
+            if (enableHookThrowing)
             {
-                crewPhysics.UpdateGravityTransition();
-                crewPhysics.CheckGroundStatusOptimized();
-                crewPhysics.ApplyPhysicsMovement();
+                AttemptHookThrowing();
             }
-            
-            if (platformTracker != null)
-            {
-                platformTracker.UpdatePlatformTracking();
-            }
-
-            if (!platformBoundsCalculated && assignedPlatform != null)
-            {
-                CalculatePlatformBounds();
-            }
-
-            if (crewAI != null && crewAI.ShouldMakeAIDecisions() && crewAI.IsTimeForNextAction())
-            {
-                crewAI.MakeAIDecision();
-            }
+        }
+        else if (_state == EnemyState.Defeated && isOnBoat && !hasFallenFromBoat)
+        {
+            HandleFallFromBoat();
+            hasFallenFromBoat = true;
         }
     }
 
-    protected override void MakeAIDecision()
+    private void HandleFallFromBoat()
     {
-        if (_state != EnemyState.Alive) return;
+        GameLogger.LogError($"[BOAT CREW DEFEAT] {gameObject.name} - Falling from boat");
         
-        if (crewAI != null)
+        if (rb != null)
         {
-            crewAI.MakeAIDecision();
+            rb.bodyType = RigidbodyType2D.Dynamic;
+            rb.gravityScale = 1f;
+            rb.drag = 0.5f;
+            rb.freezeRotation = false;
         }
-        else
-        {
-            base.MakeAIDecision();
-        }
-    }
-    
-    public override void OnHookPlayerInteraction(bool isBeingHeld)
-    {
-        if (_state != EnemyState.Alive) return;
         
-        base.OnHookPlayerInteraction(isBeingHeld);
-        GameLogger.LogVerbose($"BoatLandEnemy {gameObject.name}: Hook interacted with player!");
-    }
-    
-    public void SynchronizeWithBoatMovement(Vector3 boatDelta, BoatPlatform platform)
-    {
-        if (_state != EnemyState.Alive) return;
+        isOnBoat = false;
         
-        if (platformTracker != null)
+        if (assignedPlatform != null)
         {
-            platformTracker.SynchronizeWithBoatMovement(boatDelta, platform);
+            assignedPlatform.UnregisterEnemy(this);
+            assignedPlatform = null;
         }
-    }
-    
-    public void OnPlatformAssigned(Platform platform)
-    {
-        if (platformTracker != null)
+        
+        if (isNavigating)
         {
-            platformTracker.OnPlatformAssigned(platform);
+            ReleaseFromWheel();
         }
         
         if (crewPhysics != null)
         {
-            crewPhysics.RefreshPlatformColliderCache();
+            crewPhysics.ResetPhysics();
         }
+        
+        if (boatPlatform != null)
+        {
+            BoatController boatController = boatPlatform.GetComponentInParent<BoatController>();
+            if (boatController != null)
+            {
+                boatController.RecalculateBoatIntegrity();
+            }
+        }
+        
+        OnEnemyDied?.Invoke(this);
     }
-
-    public Vector2 GetTargetHorizontalVelocity()
+    
+    private void FixedUpdate()
     {
-        if (_state != EnemyState.Alive) return Vector2.zero;
-        
-        if (crewAI != null)
-            return crewAI.GetTargetHorizontalVelocity();
-            
-        switch (_landMovementState)
-        {
-            case LandMovementState.WalkLeft: return Vector2.left * walkingSpeed;
-            case LandMovementState.WalkRight: return Vector2.right * walkingSpeed;
-            case LandMovementState.RunLeft: return Vector2.left * runningSpeed;
-            case LandMovementState.RunRight: return Vector2.right * runningSpeed;
-            default: return Vector2.zero;
-        }
-    }
-    
-    public bool IsGrounded => crewPhysics?.IsGrounded ?? false;
-    public bool IsFallingToWater => crewPhysics?.IsFallingToWater ?? false;
-    public Vector2 SimulatedVelocity => crewPhysics?.SimulatedVelocity ?? Vector2.zero;
-    
-    public Platform GetAssignedPlatform() => assignedPlatform;
+        if (_state != EnemyState.Alive) return;
 
-    public override void SetAssignedPlatform(Platform platform)
-    {        
-        base.SetAssignedPlatform(platform);
+        if (isOnBoat && assignedPlatform != null)
+            SyncWithBoatPlatform();
         
-        if (platformTracker != null)
+        if(crewPhysics != null)
+            crewPhysics.UpdatePhysics();
+    }
+    
+    private void SyncWithBoatPlatform()
+    {
+        Vector3 currentBoatPosition = assignedPlatform.transform.position;
+        Vector3 deltaMovement = currentBoatPosition - lastBoatPosition;
+        
+        if (deltaMovement.magnitude > 0.001f && rb.bodyType == RigidbodyType2D.Kinematic)
         {
-            platformTracker.SetAssignedPlatform(platform);
+            Vector3 newPosition = transform.position + deltaMovement;
+            rb.MovePosition(newPosition);
         }
         
-        if (crewPhysics != null)
+        lastBoatPosition = currentBoatPosition;
+    }
+    
+    private void AttemptHookThrowing()
+    {
+        if (!enableHookThrowing || hookSpawner == null || _state != EnemyState.Alive || isNavigating) return;
+        
+        if (Time.time - lastHookAttemptTime < 2f) return;
+        
+        if (!fishingToolEquipped && Time.time > nextActionTime)
         {
-            crewPhysics.RefreshPlatformColliderCache();
+            if (Random.value < 0.7f)
+            {
+                if (TryEquipFishingTool())
+                {
+                    StartCoroutine(ThrowHookAfterDelay());
+                    lastHookAttemptTime = Time.time;
+                }
+            }
+        }
+        else if (fishingToolEquipped && hookSpawner.CanThrowHook())
+        {
+            if (Random.value < 0.5f)
+            {
+                hookSpawner.ThrowHook();
+                lastHookAttemptTime = Time.time;
+                ScheduleNextAction();
+            }
         }
     }
     
-    protected override void CheckPlatformBounds()
+    private IEnumerator ThrowHookAfterDelay()
     {
-        if (platformTracker != null && platformTracker.IsTrackingMovement && assignedPlatform is BoatPlatform)
-        {
-            platformTracker.CheckBoatPlatformBounds();
-            return;
-        }
+        yield return new WaitForSeconds(Random.Range(0.5f, 1.5f));
         
-        base.CheckPlatformBounds();
+        if (fishingToolEquipped && _state == EnemyState.Alive && hookSpawner != null && hookSpawner.CanThrowHook())
+        {
+            hookSpawner.ThrowHook();
+            ScheduleNextAction();
+        }
     }
 
     public override void SetMovementMode(bool aboveWater)
     {
-        if (_state == EnemyState.Defeated)
+        if (_state == EnemyState.Alive && isOnBoat)
         {
-            GameLogger.LogError($"[BOAT CREW] {gameObject.name} DEFEATED - PROCESSING water mode change to {aboveWater}");
-            base.SetMovementMode(aboveWater);
-            return;
-        }
-        
-        if (_state == EnemyState.Alive && isOnBoat && assignedPlatform is BoatPlatform)
-        {
-            GameLogger.LogError($"[BOAT CREW] {gameObject.name} ON BOAT - IGNORING water mode change to {aboveWater}");
-            
             isAboveWater = aboveWater;
             
-            if (crewPhysics != null)
+            if (rb != null)
             {
-                crewPhysics.HandleMovementModeChange(aboveWater);
+                if (aboveWater)
+                {
+                    rb.bodyType = RigidbodyType2D.Kinematic;
+                    rb.gravityScale = 0f;
+                    rb.drag = 0f;
+                    rb.freezeRotation = true;
+                }
+                else
+                {
+                    rb.bodyType = RigidbodyType2D.Dynamic;
+                    rb.gravityScale = 0.5f;
+                    rb.drag = 3f;
+                }
             }
             
+            if (debugBoatCrew)
+                GameLogger.LogVerbose($"[BOAT CREW] {gameObject.name} - Boat movement mode: {(aboveWater ? "Above Water" : "In Water")}");
+        }
+        else
+        {
+            base.SetMovementMode(aboveWater);
+        }
+    }
+    
+    public override void LandMovement()
+    {
+        if (isOnBoat)
+        {
+            if (isNavigating)
+            {
+                _landMovementState = LandMovementState.Idle;
+                return;
+            }
+            
+            BoatLandMovement();
+        }
+        else
+        {
+            base.LandMovement();
+        }
+    }
+    
+    private void BoatLandMovement()
+    {
+        if (Time.time >= nextActionTime)
+        {
+            MakeBoatAIDecision();
+        }
+        
+        CalculateBoatPlatformBounds();
+        ExecuteBoatLandMovementBehaviour();
+        
+        if (platformBoundsCalculated)
+        {
+            CheckBoatPlatformBounds();
+        }
+    }
+    
+    protected virtual void CalculateBoatPlatformBounds()
+    {
+        if (assignedPlatform == null) 
+        {
+            if (debugBoatCrew)
+                GameLogger.LogWarning($"[BOAT BOUNDS] {gameObject.name} - No assigned platform!");
             return;
         }
-        
-        GameLogger.LogError($"[BOAT CREW] {gameObject.name} PROCESSING water mode change to {aboveWater}, state: {_state}");
-        base.SetMovementMode(aboveWater);
-        
-        if (crewPhysics != null)
-        {
-            crewPhysics.HandleMovementModeChange(aboveWater);
-        }
-    }
 
-    public override void ChangeState_Alive()
-    {
-        base.ChangeState_Alive();
-        
-        SetBoatKinematicMode();
-        
-        if (crewPhysics != null)
+        Collider2D platformCol = assignedPlatform.GetComponent<Collider2D>();
+
+        if (platformCol != null)
         {
-            crewPhysics.HandleAlive();
-        }
-        
-        if (platformTracker != null)
-        {
-            platformTracker.Reset();
-        }
-    }
-    
-    protected override void TriggerDefeat()
-    {
-        GameLogger.LogError($"[BOAT CREW] {gameObject.name} DEFEATED - Switching to DYNAMIC physics");
-        
-        if (rb != null)
-        {
-            rb.isKinematic = false;
-            rb.simulated = true;
-            rb.gravityScale = 1f;
-            rb.freezeRotation = true;
+            Bounds bounds = platformCol.bounds;
+            platformLeftEdge = bounds.min.x + boundaryBuffer;
+            platformRightEdge = bounds.max.x - boundaryBuffer;
+            platformBoundsCalculated = true;
             
-            if (crewPhysics != null)
+            if (debugBoatCrew && Time.frameCount % 300 == 0)
             {
-                rb.velocity = crewPhysics.SimulatedVelocity;
+                GameLogger.LogVerbose($"[BOAT BOUNDS] {gameObject.name} - Left:{platformLeftEdge:F2}, Right:{platformRightEdge:F2}, Center:{bounds.center.x:F2}");
             }
-            
-            GameLogger.LogError($"[BOAT CREW] {gameObject.name} - Now DYNAMIC for floating behavior");
         }
-        
-        if (crewFisherman != null)
+        else
         {
-            crewFisherman.CleanupFishingTools();
+            GameLogger.LogError($"[BOAT BOUNDS ERROR] {gameObject.name} - Platform has no collider!");
         }
-        
-        if (crewPhysics != null)
-        {
-            crewPhysics.HandleDefeat();
-        }
-        
-        if (platformTracker != null)
-        {
-            platformTracker.ForceStopSynchronization();
-        }
-        
-        base.TriggerDefeat();
     }
     
-    protected override void StartDefeatBehaviors()
+    protected virtual void CheckBoatPlatformBounds()
     {
-        if (crewFisherman != null)
+        if (!platformBoundsCalculated) return;
+        
+        float currentX = transform.position.x;
+        
+        if (currentX <= platformLeftEdge && (_landMovementState == LandMovementState.WalkLeft || _landMovementState == LandMovementState.RunLeft))
         {
-            crewFisherman.CleanupFishingTools();
+            rb.velocity = new Vector2(0, rb.velocity.y);
+            _landMovementState = LandMovementState.Idle;
+            ChooseRandomActionExcluding(LandMovementState.WalkLeft, LandMovementState.RunLeft);
+            ScheduleNextAction();
+            
+            if (debugBoatCrew)
+                GameLogger.LogError($"[BOAT BOUNDS] {gameObject.name} - Hit LEFT boundary at {currentX:F2} (limit: {platformLeftEdge:F2})");
         }
-        
-        base.StartDefeatBehaviors();
-        
-        if (platformTracker != null)
+        else if (currentX >= platformRightEdge && (_landMovementState == LandMovementState.WalkRight || _landMovementState == LandMovementState.RunRight))
         {
-            platformTracker.ForceStopSynchronization();
+            rb.velocity = new Vector2(0, rb.velocity.y);
+            _landMovementState = LandMovementState.Idle;
+            ChooseRandomActionExcluding(LandMovementState.WalkRight, LandMovementState.RunRight);
+            ScheduleNextAction();
+            
+            if (debugBoatCrew)
+                GameLogger.LogError($"[BOAT BOUNDS] {gameObject.name} - Hit RIGHT boundary at {currentX:F2} (limit: {platformRightEdge:F2})");
         }
     }
-
-    protected override void CleanupFishingTools()
+    
+    protected virtual void MakeBoatAIDecision()
     {
-        if (crewFisherman != null)
+        ChooseRandomLandAction();
+        ScheduleNextAction();
+    }
+    
+    protected virtual void ExecuteBoatLandMovementBehaviour()
+    {
+        if (fishingToolEquipped || isNavigating) return;
+        
+        Vector2 movement = Vector2.zero;
+        float currentSpeed = isOnBoat ? walkingSpeed * 0.3f : walkingSpeed;
+        
+        switch (_landMovementState)
         {
-            crewFisherman.CleanupFishingTools();
+            case LandMovementState.Idle:
+                EnemyAnimator?.SetBool("isWalking", false);
+                EnemyAnimator?.SetBool("isRunning", false);
+                EnemyAnimator?.SetBool("isIdle", true);
+                break;
+            case LandMovementState.WalkLeft:
+                EnemyAnimator?.SetBool("isWalking", true);
+                EnemyAnimator?.SetBool("isRunning", false);
+                EnemyAnimator?.SetBool("isIdle", false);
+                transform.localScale = new Vector3(-1f, 1f, 1f);
+                movement = Vector2.left * currentSpeed;
+                break;
+            case LandMovementState.WalkRight:
+                EnemyAnimator?.SetBool("isWalking", true);
+                EnemyAnimator?.SetBool("isRunning", false);
+                EnemyAnimator?.SetBool("isIdle", false);
+                transform.localScale = new Vector3(1f, 1f, 1f);
+                movement = Vector2.right * currentSpeed;
+                break;
+            case LandMovementState.RunLeft:
+                EnemyAnimator?.SetBool("isWalking", false);
+                EnemyAnimator?.SetBool("isRunning", true);
+                EnemyAnimator?.SetBool("isIdle", false);
+                transform.localScale = new Vector3(-1f, 1f, 1f);
+                movement = Vector2.left * (currentSpeed * 1.2f);
+                break;
+            case LandMovementState.RunRight:
+                EnemyAnimator?.SetBool("isWalking", false);
+                EnemyAnimator?.SetBool("isRunning", true);
+                EnemyAnimator?.SetBool("isIdle", false);
+                transform.localScale = new Vector3(1f, 1f, 1f);
+                movement = Vector2.right * (currentSpeed * 1.2f);
+                break;
         }
         
-        base.CleanupFishingTools();
+        if (isOnBoat && rb.bodyType == RigidbodyType2D.Kinematic)
+        {
+            if (movement != Vector2.zero)
+            {
+                Vector3 newPosition = transform.position + new Vector3(movement.x * Time.fixedDeltaTime, 0, 0);
+                rb.MovePosition(newPosition);
+            }
+        }
+        else
+        {
+            rb.velocity = new Vector2(movement.x, rb.velocity.y);
+        }
+    }
+    
+    public override void OnPlatformAssigned(Platform platform)
+    {
+        base.OnPlatformAssigned(platform);
+        
+        boatPlatform = platform as BoatPlatform;
+        
+        if (boatPlatform != null)
+        {
+            lastBoatPosition = boatPlatform.transform.position;
+            platformBoundsCalculated = false;
+            
+            GameLogger.LogError($"[BOAT CREW] {gameObject.name} - Assigned to boat platform: {boatPlatform.name}");
+        }
+        else
+        {
+            GameLogger.LogError($"[BOAT CREW ERROR] {gameObject.name} - Platform is not BoatPlatform! Type: {platform?.GetType().Name}");
+        }
+        
+        // if (crewPhysics != null)
+        // {
+        //     crewPhysics.RefreshPlatformColliderCache();
+        // }
     }
 
     public override void Initialize()
     {
         base.Initialize();
-        
-        // SOLO INICIALIZAR UNA VEZ
-        if (!boatSystemsInitialized)
-        {
-            InitializeBoatCrewSystems();
-            SetBoatKinematicMode();
-            
-            if (crewPhysics != null)
-            {
-                crewPhysics.ResetToOriginalState();
-            }
-            
-            if (platformTracker != null)
-            {
-                platformTracker.Reset();
-            }
-        }
-        
-        GameLogger.LogError($"[BOAT CREW INIT] {gameObject.name} - Systems initialized safely");
+        InitializeBoatCrewSystems();
     }
 
     public override void ReturnToPool()
     {
         if (isReturningToPool) return;
+        
         isReturningToPool = true;
         
-        // RESET flag para permitir reinicialización en próximo uso
-        boatSystemsInitialized = false;
+        ReleaseFromWheel();
         
-        BoatCrewManager crewManager = GetComponentInParent<BoatCrewManager>();
-        if (crewManager != null && crewManager.BoatEnemyBelongToBoat(this))
+        if (assignedPlatform != null)
         {
-            crewManager.HandleCrewMemberDeath(this);
+            assignedPlatform.UnregisterEnemy(this);
+            assignedPlatform = null;
+        }
+        
+        CleanupBoatSystems();
+        
+        if (parentContainer != null && parentContainer.activeInHierarchy)
+        {
+            gameObject.SetActive(false);
         }
         else
         {
-            GameLogger.LogError($"BoatLandEnemy {gameObject.name} couldn't find its BoatCrewManager!");
+            Destroy(gameObject);
+        }
+    }
+
+    private void CleanupBoatSystems()
+    {
+        StopAllCoroutines();
+        
+        if (crewPhysics != null)
+            crewPhysics.ResetPhysics();
+    }
+
+    protected override void OnTriggerEnter2D(Collider2D other)
+    {
+        base.OnTriggerEnter2D(other);
+        
+        if (other.gameObject.layer == LayerMask.NameToLayer("WaterLine"))
+        {
+            GameLogger.LogError($"[BOAT CREW WATER] {gameObject.name} - Hit water line");
             
-            if (ParentContainer != null)
+            SetMovementMode(false);
+            _landMovementState = LandMovementState.Idle;
+            ChangeState_Alive();
+        }
+    }
+
+    protected void OnTriggerExit2D(Collider2D other)
+    {
+        if (other.gameObject.layer == LayerMask.NameToLayer("WaterLine"))
+        {
+            GameLogger.LogError($"[BOAT CREW WATER] {gameObject.name} - Left water line");
+            
+            SetMovementMode(true);
+            
+            if (isOnBoat && rb != null)
             {
-                ParentContainer.SetActive(false);
+                rb.bodyType = RigidbodyType2D.Kinematic;
+                rb.gravityScale = 0f;
+                rb.drag = 0f;
+                rb.freezeRotation = true;
+            }
+        }
+    }
+
+    public override bool TryEquipFishingTool()
+    {
+        if (isNavigating) return false;
+        return base.TryEquipFishingTool();
+    }
+
+    public override bool TryUnequipFishingTool()
+    {
+        bool result = base.TryUnequipFishingTool();
+        if (result && isOnBoat)
+        {
+            _landMovementState = LandMovementState.Idle;
+        }
+        return result;
+    }
+
+    protected override void ChooseRandomLandAction()
+    {
+        if (fishingToolEquipped || isNavigating) return;
+        
+        if (isOnBoat)
+        {
+            float randomValue = Random.value;
+            
+            if (randomValue < 0.6f)
+            {
+                _landMovementState = LandMovementState.Idle;
+            }
+            else if (randomValue < 0.9f)
+            {
+                _landMovementState = (Random.value < 0.5f) ? LandMovementState.WalkLeft : LandMovementState.WalkRight;
             }
             else
             {
-                gameObject.SetActive(false);
+                if (!fishingToolEquipped && hookSpawner != null)
+                {
+                    TryEquipFishingTool();
+                }
             }
         }
-    }
-
-    public void SetIndependentMovement(bool independent)
-    {
-        if (crewAI != null)
+        else
         {
-            crewAI.SetIndependentMovement(independent);
+            base.ChooseRandomLandAction();
+        }
+    }
+    
+    public override void TriggerAlive()
+    {
+        base.TriggerAlive();
+        
+        hasFallenFromBoat = false;
+        
+        if (isOnBoat && rb != null)
+        {
+            rb.bodyType = RigidbodyType2D.Kinematic;
+            rb.gravityScale = 0f;
+            rb.drag = 0f;
+            rb.freezeRotation = true;
         }
     }
 
-    public override void WaterMovement()
+    protected override void TriggerDefeat()
     {
-        if (_state == EnemyState.Alive)
+        if (rb != null)
         {
-            return;
+            rb.bodyType = RigidbodyType2D.Dynamic;
+            rb.gravityScale = 1f;
+            rb.drag = 0.5f;
+            rb.freezeRotation = false;
         }
         
-        base.WaterMovement();
+        base.TriggerDefeat();
+        
+        GameLogger.LogError($"[BOAT CREW DEFEAT] {gameObject.name} - Base defeat behavior applied");
     }
 }

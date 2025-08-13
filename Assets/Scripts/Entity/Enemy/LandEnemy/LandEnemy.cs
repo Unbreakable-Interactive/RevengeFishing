@@ -88,7 +88,7 @@ public class LandEnemy : Enemy, IBoatComponent
     }
     #endregion
 
-    public void SetSubscribedHook(FishingProjectile fishingHook)
+    public virtual void SetSubscribedHook(FishingProjectile fishingHook)
     {
         subscribedHook = fishingHook;
     }

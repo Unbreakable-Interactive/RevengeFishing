@@ -19,32 +19,48 @@ public class BoatPart : MonoBehaviour
     [SerializeField] private bool enableBuoyancy = true;
     [SerializeField] private bool debugFloatation = false;
     
+    [Header("Dynamic Physics")]
+    [SerializeField] private float physicsLifetime = 15f;
+    [SerializeField] private float velocityThreshold = 0.1f;
+    [SerializeField] private bool autoCleanup = true;
+    
     private Vector3 originalLocalPosition;
     private Quaternion originalLocalRotation;
     private bool hasAppliedForce = false;
     private bool isInWaterMode = false;
+    private bool isDynamicPhysicsActive = false;
     
     [SerializeField] private Rigidbody2D rb;
-    private WaterPhysics waterPhysics;
+    private Collider2D partCollider;
     
     private float lastWaterCheckTime = 0f;
     private Vector2 cachedCheckPosition;
     private bool waterCheckEnabled = false;
+    private Coroutine physicsLifetimeCoroutine;
     
     private void Awake()
     {
         originalLocalPosition = transform.localPosition;
         originalLocalRotation = transform.localRotation;
         
-        if(rb == null)
-            rb = GetComponent<Rigidbody2D>();
-            
-        waterPhysics = WaterPhysics.Instance;
+        rb = GetComponent<Rigidbody2D>();
+        partCollider = GetComponent<Collider2D>();
     }
     
     public void ApplyInitialForces()
     {
-        if (rb == null || hasAppliedForce) return;
+        if (hasAppliedForce) return;
+        
+        EnableDynamicPhysics();
+        
+        if (rb == null)
+        {
+            if (debugFloatation)
+            {
+                GameLogger.LogWarning($"BoatPart {gameObject.name} - No Rigidbody2D found after enabling dynamic physics");
+            }
+            return;
+        }
         
         SetPhysicsMode(true);
         
@@ -63,9 +79,43 @@ public class BoatPart : MonoBehaviour
             StartCoroutine(StartOptimizedWaterDetection());
         }
         
+        if (autoCleanup)
+        {
+            physicsLifetimeCoroutine = StartCoroutine(PhysicsLifetimeManager());
+        }
+        
         if (debugFloatation)
         {
             GameLogger.LogVerbose($"BoatPart {gameObject.name} - Applied destruction forces: {explosionForce * forceMultiplier}");
+        }
+    }
+    
+    private void EnableDynamicPhysics()
+    {
+        if (isDynamicPhysicsActive) return;
+        
+        if (rb == null)
+        {
+            rb = gameObject.AddComponent<Rigidbody2D>();
+        }
+        
+        rb.bodyType = RigidbodyType2D.Dynamic;
+        rb.freezeRotation = false;
+        rb.mass = Random.Range(0.3f, 0.8f);
+        rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
+        rb.angularVelocity = 0f;
+        rb.velocity = Vector2.zero;
+        
+        if (partCollider != null)
+        {
+            partCollider.isTrigger = false;
+        }
+        
+        isDynamicPhysicsActive = true;
+        
+        if (debugFloatation)
+        {
+            GameLogger.LogVerbose($"BoatPart {gameObject.name} - Dynamic physics enabled with mass {rb.mass}");
         }
     }
     
@@ -106,9 +156,36 @@ public class BoatPart : MonoBehaviour
         }
     }
     
+    private IEnumerator PhysicsLifetimeManager()
+    {
+        float startTime = Time.time;
+        
+        while (Time.time - startTime < physicsLifetime)
+        {
+            yield return new WaitForSeconds(1f);
+            
+            if (rb != null && rb.velocity.magnitude < velocityThreshold && isInWaterMode)
+            {
+                yield return new WaitForSeconds(2f);
+                
+                if (rb != null && rb.velocity.magnitude < velocityThreshold)
+                {
+                    if (debugFloatation)
+                    {
+                        GameLogger.LogVerbose($"BoatPart {gameObject.name} - Early cleanup due to low velocity");
+                    }
+                    break;
+                }
+            }
+        }
+        
+        DisableDynamicPhysics();
+    }
+    
     private void FixedUpdate()
     {
-        if (!waterCheckEnabled || !hasAppliedForce || !enableBuoyancy || waterPhysics == null) return;
+        if (!waterCheckEnabled || !hasAppliedForce || !enableBuoyancy || WaterPhysics.Instance == null || rb == null) 
+            return;
         
         float currentTime = Time.time;
         if (currentTime - lastWaterCheckTime >= waterCheckInterval)
@@ -123,12 +200,79 @@ public class BoatPart : MonoBehaviour
         cachedCheckPosition = transform.position;
         cachedCheckPosition.y -= 0.1f;
         
-        float waterHeight = waterPhysics.GetWaterHeightAt(cachedCheckPosition);
+        float waterHeight = WaterPhysics.Instance.GetWaterHeightAt(cachedCheckPosition);
         bool shouldBeInWater = waterHeight > cachedCheckPosition.y;
         
         if (shouldBeInWater != isInWaterMode)
         {
             SetPhysicsMode(!shouldBeInWater);
+            
+            if (shouldBeInWater && !isInWaterMode)
+            {
+                StartCoroutine(SinkingBehavior());
+            }
+        }
+    }
+    
+    private IEnumerator SinkingBehavior()
+    {
+        yield return new WaitForSeconds(3f);
+        
+        if (rb != null && isInWaterMode)
+        {
+            SpriteRenderer spriteRenderer = GetComponent<SpriteRenderer>();
+            if (spriteRenderer != null)
+            {
+                float fadeTime = 2f;
+                float elapsed = 0f;
+                Color originalColor = spriteRenderer.color;
+                
+                while (elapsed < fadeTime)
+                {
+                    elapsed += Time.deltaTime;
+                    float alpha = Mathf.Lerp(1f, 0f, elapsed / fadeTime);
+                    spriteRenderer.color = new Color(originalColor.r, originalColor.g, originalColor.b, alpha);
+                    
+                    transform.position += Vector3.down * (Time.deltaTime * 0.5f);
+                    
+                    yield return null;
+                }
+            }
+            
+            DisableDynamicPhysics();
+        }
+    }
+    
+    private void DisableDynamicPhysics()
+    {
+        if (!isDynamicPhysicsActive) return;
+        
+        if (physicsLifetimeCoroutine != null)
+        {
+            StopCoroutine(physicsLifetimeCoroutine);
+        }
+        
+        StopAllCoroutines();
+        
+        if (rb != null)
+        {
+            DestroyImmediate(rb);
+            rb = null;
+        }
+        
+        if (partCollider != null)
+        {
+            partCollider.isTrigger = true;
+        }
+        
+        isDynamicPhysicsActive = false;
+        waterCheckEnabled = false;
+        
+        gameObject.SetActive(false);
+        
+        if (debugFloatation)
+        {
+            GameLogger.LogVerbose($"BoatPart {gameObject.name} - Dynamic physics disabled and part deactivated");
         }
     }
     
@@ -139,17 +283,40 @@ public class BoatPart : MonoBehaviour
         
         if (rb != null)
         {
-            rb.velocity = Vector2.zero;
-            rb.angularVelocity = 0f;
-            rb.gravityScale = 1f;
-            rb.drag = 0f;
+            if (isDynamicPhysicsActive)
+            {
+                DestroyImmediate(rb);
+                rb = null;
+            }
+        }
+        
+        if (partCollider != null)
+        {
+            partCollider.isTrigger = false;
+        }
+        
+        SpriteRenderer spriteRenderer = GetComponent<SpriteRenderer>();
+        if (spriteRenderer != null)
+        {
+            Color color = spriteRenderer.color;
+            color.a = 1f;
+            spriteRenderer.color = color;
         }
         
         hasAppliedForce = false;
         isInWaterMode = false;
+        isDynamicPhysicsActive = false;
         waterCheckEnabled = false;
         
+        if (physicsLifetimeCoroutine != null)
+        {
+            StopCoroutine(physicsLifetimeCoroutine);
+            physicsLifetimeCoroutine = null;
+        }
+        
         StopAllCoroutines();
+        
+        gameObject.SetActive(true);
         
         if (debugFloatation)
         {
@@ -167,16 +334,21 @@ public class BoatPart : MonoBehaviour
         }
     }
     
-    [ContextMenu("Test Apply Forces")]
-    public void TestApplyForces()
+    public void ForceDisablePhysics()
     {
-        hasAppliedForce = false;
-        ApplyInitialForces();
+        DisableDynamicPhysics();
     }
     
-    [ContextMenu("Test Reset Position")]
-    public void TestResetPosition()
+    public bool IsPhysicsActive()
     {
-        ResetToOriginalPosition();
+        return isDynamicPhysicsActive && rb != null;
+    }
+    
+    private void OnDestroy()
+    {
+        if (physicsLifetimeCoroutine != null)
+        {
+            StopCoroutine(physicsLifetimeCoroutine);
+        }
     }
 }

@@ -10,7 +10,7 @@ public class Platform : MonoBehaviour
     [Header("Debug")]
     public bool showDebugInfo = true;
 
-    private Collider2D platformCollider;
+    protected Collider2D platformCollider;
 
     [SerializeField] protected TypeIdentifier identifier;
 

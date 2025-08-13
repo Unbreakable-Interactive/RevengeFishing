@@ -10,9 +10,17 @@ public class BoatBoundaryTrigger : MonoBehaviour, IBoatComponent
     
     [Header("Boundary Settings")]
     [SerializeField] private bool isLeftBoundary = true;
+
+    public bool IsLeftBoundary => isLeftBoundary;
+    
     [SerializeField] private bool debugTriggers = true;
     
+    [Header("Anti-Tunneling")]
+    [SerializeField] private float preventionCheckRadius = 1.2f;
+    
     private const int ENEMY_LAYER = 6;
+    private float lastPreventionCheck = 0f;
+    private const float PREVENTION_INTERVAL = 0.02f;
     
     public string GetBoatID() => boatID.UniqueID;
     public void SetBoatID(BoatID newBoatID) => boatID = newBoatID;
@@ -32,6 +40,37 @@ public class BoatBoundaryTrigger : MonoBehaviour, IBoatComponent
     {
         string boundType = isLeftBoundary ? "LEFT" : "RIGHT";
         GameLogger.LogError($"[BOUNDARY TRIGGER] {boundType} boundary initialized - ID: {boatID}");
+    }
+    
+    private void FixedUpdate()
+    {
+        if (Time.fixedTime - lastPreventionCheck >= PREVENTION_INTERVAL)
+        {
+            PreventTriggerTunneling();
+            lastPreventionCheck = Time.fixedTime;
+        }
+    }
+    
+    private void PreventTriggerTunneling()
+    {
+        Collider2D triggerCollider = GetComponent<Collider2D>();
+        if (triggerCollider == null) return;
+        
+        var enemiesInRange = Physics2D.OverlapBoxAll(
+            transform.position, 
+            triggerCollider.bounds.size * preventionCheckRadius, 
+            0f, 
+            1 << ENEMY_LAYER
+        );
+        
+        foreach (var enemyCollider in enemiesInRange)
+        {
+            LandEnemy enemy = FindLandEnemyInHierarchy(enemyCollider.gameObject);
+            if (enemy != null && ShouldProcess(enemy))
+            {
+                StopEnemyMovement(enemy);
+            }
+        }
     }
     
     private void OnTriggerEnter2D(Collider2D other)
@@ -115,9 +154,17 @@ public class BoatBoundaryTrigger : MonoBehaviour, IBoatComponent
             Rigidbody2D enemyRb = enemy.GetComponent<Rigidbody2D>();
             if (enemyRb != null)
             {
-                Vector2 velocity = enemyRb.velocity;
-                velocity.x = 0f;
-                enemyRb.velocity = velocity;
+                if (enemyRb.bodyType == RigidbodyType2D.Kinematic)
+                {
+                    Vector3 currentPos = enemy.transform.position;
+                    enemyRb.MovePosition(currentPos);
+                }
+                else
+                {
+                    Vector2 velocity = enemyRb.velocity;
+                    velocity.x = 0f;
+                    enemyRb.velocity = velocity;
+                }
             }
             
             LandEnemy.LandMovementState[] excludedStates;

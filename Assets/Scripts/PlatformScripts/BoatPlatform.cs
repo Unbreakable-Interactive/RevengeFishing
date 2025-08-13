@@ -1,213 +1,172 @@
-using System.Collections.Generic;
 using UnityEngine;
-using Utils;
 
 public class BoatPlatform : Platform, IBoatComponent
 {
-    [Header("Boat Identity - ASSIGN IN EDITOR")]
-    [SerializeField] private BoatID boatID = new BoatID();
+    [Header("Motion Tracking")]
+    [SerializeField] private Vector3 lastPosition;
+    [SerializeField] private Vector3 currentVelocity;
+    [SerializeField] private bool trackMovement = true;
+    [SerializeField] private float syncForceMultiplier = 2f;
     
-    [Header("Required References - ASSIGN IN EDITOR")]
-    [SerializeField] private BoatCrewManager crewManager;
+    [Header("Boat Integration")]
+    [SerializeField] private BoatID boatID;
+    [SerializeField] private bool autoDetectBoatID = true;
     
-    [Header("BOAT SPECIFIC SETTINGS")]
-    [SerializeField] private bool autoStartMovementOnRegistration = true;
-    [SerializeField] private bool debugBoatTriggers = true;
-    [SerializeField] private BoatFloater boatFloater;
+    [Header("Synchronization")]
+    [SerializeField] private bool forceSyncCrew = true;
+    [SerializeField] private float syncThreshold = 0.05f;
+    [SerializeField] private bool debugSync = false;
     
-    private const int PLATFORM_LAYER = 5;
-    private const int ENEMY_LAYER = 6;
+    private Vector3 deltaPosition;
+    private Vector3 lastSyncPosition;
     
-    public string GetBoatID() => boatID.UniqueID;
     public void SetBoatID(BoatID newBoatID) => boatID = newBoatID;
     
     protected override void Start()
     {
         base.Start();
         
-        if (boatFloater == null)
+        platformCollider.isTrigger = true;
+        
+        lastPosition = transform.position;
+        lastSyncPosition = transform.position;
+        
+        if (autoDetectBoatID && boatID == null)
         {
-            boatFloater = GetComponentInParent<BoatFloater>();
+            boatID = GetComponentInParent<BoatID>();
         }
         
-        if (debugBoatTriggers)
-        {
-            GameLogger.LogError($"[BOAT PLATFORM] Initialized {gameObject.name} - ID: {boatID}");
-        }
-    }
-    
-    void OnCollisionEnter2D(Collision2D collision)
-    {
-        ProcessEnemyRegistration(collision.gameObject, "COLLISION");
-    }
-    
-    void OnTriggerEnter2D(Collider2D other)
-    {
-        ProcessEnemyRegistration(other.gameObject, "TRIGGER");
-    }
-    
-    private void ProcessEnemyRegistration(GameObject targetGameObject, string eventType)
-    {
-        if (targetGameObject.layer != ENEMY_LAYER) return;
-        
-        Enemy enemy = targetGameObject.GetComponent<Enemy>();
-        if (enemy != null && enemy is BoatLandEnemy boatEnemy)
-        {
-            if (!DoesBoatEnemyBelongToThisBoat(boatEnemy))
-            {
-                if (debugBoatTriggers)
-                {
-                    GameLogger.LogError($"[BOAT PLATFORM] REJECTED {eventType} - {boatEnemy.name} wrong boat");
-                }
-                return;
-            }
-            
-            RegisterEnemyOnCollision(enemy);
-        }
-    }
-    
-    protected override void RegisterEnemyOnCollision(Enemy enemy)
-    {
-        if (enemy == null || enemy.gameObject == null) return;
-        
-        if (!(enemy is BoatLandEnemy boatEnemy))
-        {
-            if (debugBoatTriggers)
-                GameLogger.LogError($"[BOAT PLATFORM] REJECTED - {enemy.name} not BoatLandEnemy");
-            return;
-        }
-        
-        if (!DoesBoatEnemyBelongToThisBoat(boatEnemy))
-        {
-            if (debugBoatTriggers)
-            {
-                GameLogger.LogError($"[BOAT PLATFORM] DENIED - {boatEnemy.name} wrong boat ID");
-            }
-            return;
-        }
-        
-        if (assignedEnemies.Contains(enemy)) return;
-        
-        Platform previousPlatform = boatEnemy.GetAssignedPlatform();
-        if (previousPlatform != null && previousPlatform != this)
-        {
-            previousPlatform.UnregisterEnemy(enemy);
-        }
-        
-        assignedEnemies.Add(enemy);
-        boatEnemy.SetAssignedPlatform(this);
-        boatEnemy.OnPlatformAssigned(this);
-        
-        Collider2D enemyCollider = enemy.GetComponent<Collider2D>();
-        if (enemyCollider != null)
-        {
-            Collider2D platformCollider = GetComponent<Collider2D>();
-            if (platformCollider != null)
-                Physics2D.IgnoreCollision(platformCollider, enemyCollider, false);
-        }
-
-        boatEnemy.platformBoundsCalculated = true;
-
-        if (debugBoatTriggers)
-            GameLogger.LogError($"[BOAT ASSIGNMENT] {enemy.name} -> {gameObject.name} SUCCESS! Total: {assignedEnemies.Count}");
-        
-        TriggerBoatMovement(enemy);
-    }
-    
-    private bool DoesBoatEnemyBelongToThisBoat(BoatLandEnemy boatEnemy)
-    {
-        return boatID.Matches(boatEnemy.GetBoatID());
+        GameLogger.LogError($"[BOAT PLATFORM] {GetBoatID()} - Platform with motion tracking initialized");
     }
     
     public override void RegisterEnemyAtRuntime(Enemy enemy)
     {
-        if (enemy != null && !assignedEnemies.Contains(enemy))
-        {
-            if (!(enemy is BoatLandEnemy boatEnemy))
-            {
-                if (debugBoatTriggers)
-                    GameLogger.LogError($"[BOAT PLATFORM] RUNTIME REJECTED - {enemy.name} not BoatLandEnemy");
-                return;
-            }
-            
-            if (!DoesBoatEnemyBelongToThisBoat(boatEnemy))
-            {
-                if (debugBoatTriggers)
-                {
-                    GameLogger.LogError($"[BOAT PLATFORM] RUNTIME DENIED - {boatEnemy.name} wrong boat");
-                }
-                return;
-            }
-            
-            assignedEnemies.Add(enemy);
-            boatEnemy.SetAssignedPlatform(this);
-
-            Collider2D enemyCollider = enemy.GetComponent<Collider2D>();
-            if (enemyCollider != null)
-            {
-                Collider2D platformCollider = GetComponent<Collider2D>();
-                if (platformCollider != null)
-                {
-                    Physics2D.IgnoreCollision(enemyCollider, platformCollider, false);
-                }
-            }
-
-            if (debugBoatTriggers)
-            {
-                GameLogger.LogError($"[BOAT RUNTIME] {enemy.name} -> {gameObject.name} SUCCESS!");
-            }
-            
-            TriggerBoatMovement(enemy);
-        }
-    }
-    
-    private void TriggerBoatMovement(Enemy enemy)
-    {
-        if (!autoStartMovementOnRegistration) return;
+        base.RegisterEnemyAtRuntime(enemy);
         
-        if (boatFloater != null)
+        if (enemy is BoatLandEnemy boatEnemy)
         {
-            boatFloater.RecalculateBuoyancy();
-            boatFloater.OnRegisteredToPlatform(this);
+            boatEnemy.SynchronizeWithBoatMovement(Vector3.zero, this);
             
-            if (debugBoatTriggers)
+            GameLogger.LogError($"[BOAT PLATFORM] {GetBoatID()} - Registered boat crew member: {enemy.name}, Total enemies: {assignedEnemies.Count}");
+            
+            if (debugSync)
             {
-                GameLogger.LogError($"[BOAT MOVEMENT] Triggered for {enemy.name}");
+                GameLogger.LogVerbose($"[BOAT PLATFORM] {GetBoatID()} - Registered and synced boat crew member: {enemy.name}");
             }
         }
     }
     
-    public void SetBoatFloater(BoatFloater floater)
+    public override void UnregisterEnemy(Enemy enemy)
     {
-        boatFloater = floater;
-    }
-    
-    public BoatFloater GetBoatFloater()
-    {
-        return boatFloater;
-    }
-    
-    public void ForceStartBoatMovement()
-    {
-        if (boatFloater != null)
+        base.UnregisterEnemy(enemy);
+        
+        if (enemy is BoatLandEnemy boatEnemy)
         {
-            boatFloater.ForceStartMovement();
+            if (debugSync)
+            {
+                GameLogger.LogVerbose($"[BOAT PLATFORM] {GetBoatID()} - Unregistered boat crew member: {enemy.name}");
+            }
         }
     }
     
-    public bool IsBoatMoving()
+    public Vector3 GetPlatformVelocity()
     {
-        return boatFloater != null && boatFloater.IsMovementActive();
+        return currentVelocity;
     }
     
-    public List<BoatLandEnemy> GetAssignedBoatEnemies()
+    public Vector3 GetPlatformDelta()
     {
-        List<BoatLandEnemy> boatEnemies = new List<BoatLandEnemy>();
-        foreach (Enemy enemy in assignedEnemies)
+        return deltaPosition;
+    }
+    
+    public bool IsMoving()
+    {
+        return currentVelocity.magnitude > syncThreshold;
+    }
+    
+    public string GetBoatID()
+    {
+        if (boatID != null)
+        {
+            return boatID.UniqueID;
+        }
+        
+        return gameObject.name;
+    }
+    
+    public void NotifyBoatMovement(Vector3 deltaPosMovement)
+    {
+        if (deltaPosMovement.magnitude < 0.001f) return;
+        
+        foreach (var enemy in assignedEnemies)
         {
             if (enemy is BoatLandEnemy boatEnemy)
-                boatEnemies.Add(boatEnemy);
+            {
+                boatEnemy.SynchronizeWithBoatMovement(deltaPosMovement, this);
+            }
         }
-        return boatEnemies;
+        
+        if (debugSync && deltaPosMovement.magnitude > syncThreshold)
+        {
+            GameLogger.LogVerbose($"[BOAT SYNC] {GetBoatID()} - Notified {assignedEnemies.Count} crew members of movement: {deltaPosMovement}");
+        }
+    }
+    
+    void FixedUpdate()
+    {
+        if (trackMovement)
+        {
+            UpdateMotionTracking();
+            
+            if (forceSyncCrew && deltaPosition.magnitude > syncThreshold)
+            {
+                ForceSynchronizeAllCrew();
+            }
+            
+            if (deltaPosition.magnitude > 0.001f)
+            {
+                NotifyBoatMovement(deltaPosition);
+            }
+        }
+    }
+    
+    private void UpdateMotionTracking()
+    {
+        Vector3 currentPosition = transform.position;
+        deltaPosition = currentPosition - lastPosition;
+        currentVelocity = deltaPosition / Time.fixedDeltaTime;
+        lastPosition = currentPosition;
+    }
+    
+    private void ForceSynchronizeAllCrew()
+    {
+        Vector3 syncDelta = transform.position - lastSyncPosition;
+        
+        foreach (var enemy in assignedEnemies)
+        {
+            if (enemy is BoatLandEnemy boatEnemy)
+            {
+                Vector3 targetPosition = boatEnemy.transform.position + syncDelta * syncForceMultiplier;
+                
+                Rigidbody2D crewRb = boatEnemy.GetComponent<Rigidbody2D>();
+                if (crewRb != null)
+                {
+                    Vector2 syncForce = (targetPosition - boatEnemy.transform.position) * 50f;
+                    crewRb.AddForce(syncForce);
+                    
+                    if (debugSync)
+                    {
+                        GameLogger.LogVerbose($"[FORCE SYNC] {boatEnemy.name} - Applied sync force: {syncForce}");
+                    }
+                }
+            }
+        }
+        
+        lastSyncPosition = transform.position;
+    }
+    
+    public void SetSyncForceMultiplier(float multiplier)
+    {
+        syncForceMultiplier = multiplier;
     }
 }
