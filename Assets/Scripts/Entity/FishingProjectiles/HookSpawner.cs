@@ -1,3 +1,4 @@
+using GogoGaga.OptimizedRopesAndCables;
 using UnityEngine;
 using Utils;
 
@@ -20,8 +21,16 @@ public class HookSpawner : MonoBehaviour
 
     public FishingProjectile CurrentHook => currentHook;
 
-    [SerializeField] private Vector2 throwDirection = new Vector2(1f, 0.2f);
-    
+    private Vector2 throwDirection;
+
+    private Rope rodAttachRope; // Reference to the rod attachment point's rope component
+
+    public Rope RodAttachRope
+    {
+        get => rodAttachRope;
+        set => rodAttachRope = value;
+    }
+
     private void Awake()
     {
         originalMaxDistance = hookMaxDistance;
@@ -30,6 +39,9 @@ public class HookSpawner : MonoBehaviour
     public void Initialize()
     {
         Debug.Log($"HookSpawner.Initialize() called on {gameObject.name}");
+
+        rodAttachRope = GetComponentInChildren<Rope>();
+        rodAttachRope.gameObject.GetComponent<LineRenderer>().enabled = false;
 
         // AUTO-SETUP MISSING REFERENCES
         if (hookHandlerPrefab == null)
@@ -47,6 +59,7 @@ public class HookSpawner : MonoBehaviour
             }
         }
 
+        if (spawnPoint == null) spawnPoint = rodAttachRope.gameObject.transform;
         if (spawnPoint == null)
         {
             // Auto-create spawn point
@@ -77,10 +90,10 @@ public class HookSpawner : MonoBehaviour
             return;
         }
         
-        throwDirection = new Vector3(Random.Range(0.2f, 1f) * transform.localScale.x, Random.Range(0.1f, 0.3f), .2f) ;
+        throwDirection = new Vector3(Random.Range(0.2f, 1f) * transform.localScale.x, Random.Range(-0.1f, 0.3f), .2f) ;
 
         // hookMaxDistance = originalMaxDistance;
-        hookMaxDistance = originalMaxDistance + (Random.Range(-2f, 2f));
+        hookMaxDistance = originalMaxDistance + (Random.Range(-2f, 1f));
 
         // Instantiate the hook handler
         currentHookHandler = Instantiate(hookHandlerPrefab, spawnPoint.position, spawnPoint.rotation);
@@ -90,7 +103,11 @@ public class HookSpawner : MonoBehaviour
         // Find the actual fishing hook within the handler
         // currentHook = currentHookHandler.GetComponentInChildren<FishingProjectile>();
         currentHook = curHookHandler.FishingProjectile;
-        
+
+        rodAttachRope.SetEndPoint(currentHook.transform);
+        rodAttachRope.ropeLength = hookMaxDistance;
+        rodAttachRope.gameObject.GetComponent<LineRenderer>().enabled = true;
+
         if (currentHook != null)
         {
             // CRITICAL FIX: Set the spawn point BEFORE calling other methods
@@ -167,6 +184,7 @@ public class HookSpawner : MonoBehaviour
             {
                 // When line is very short, start destruction
                 currentHook.RetractProjectile();
+                rodAttachRope.gameObject.GetComponent<LineRenderer>().enabled = false;
                 Debug.Log($"Hook retraction complete - destroying hook");
             }
         }
@@ -180,6 +198,7 @@ public class HookSpawner : MonoBehaviour
         if (currentHook != null)
         {
             currentHook.maxDistance = newLength;
+            rodAttachRope.ropeLength = newLength;
         }
     }
 
@@ -204,6 +223,7 @@ public class HookSpawner : MonoBehaviour
     {
         if (currentHookHandler != null)
         {
+            rodAttachRope.gameObject.GetComponent<LineRenderer>().enabled = false;
             Destroy(currentHookHandler);
             currentHookHandler = null;
             curHookHandler = null;
