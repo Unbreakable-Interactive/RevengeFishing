@@ -43,7 +43,7 @@ public class AdvancedPerformanceMonitor : PerformanceComponentBase
         frameHistory.Clear();
         nextUpdateTime = Time.time;
         showPerformanceStats = ShowDebugInfo;
-        Debug.Log($"{ComponentName}: Initialized");
+        GameLogger.LogVerbose($"{ComponentName}: Initialized");
     }
 
     void Update()
@@ -150,8 +150,6 @@ public class AdvancedPerformanceMonitor : PerformanceComponentBase
             }
         }
     }
-    
-    // OnGUI removed - handled by PerformanceManager composite GUI
     
     public override float RenderDebugGUI(float startY)
     {
@@ -271,18 +269,18 @@ public class AdvancedPerformanceMonitor : PerformanceComponentBase
     {
         System.GC.Collect();
         Resources.UnloadUnusedAssets();
-        Debug.Log("Forced garbage collection");
+        GameLogger.LogVerbose("Forced garbage collection");
     }
     
     [ContextMenu("Log Performance Report")]
     public void LogPerformanceReport()
     {
-        Debug.Log($"=== PERFORMANCE REPORT ===");
-        Debug.Log($"FPS: {fps:F1} (avg: {GetAverageFPS():F1})");
-        Debug.Log($"Memory: {usedMemory}MB / {totalMemory}MB");
-        Debug.Log($"Draw Calls: {drawCalls}");
-        Debug.Log($"CPU Time: {cpuTime:F1}ms | GPU Time: {gpuTime:F1}ms");
-        Debug.Log($"Bottleneck: {(isBottlenecked ? bottleneckType : "None")}");
-        Debug.Log($"Recommendation: {GetPerformanceRecommendation()}");
+        GameLogger.LogVerbose($"=== PERFORMANCE REPORT ===");
+        GameLogger.LogVerbose($"FPS: {fps:F1} (avg: {GetAverageFPS():F1})");
+        GameLogger.LogVerbose($"Memory: {usedMemory}MB / {totalMemory}MB");
+        GameLogger.LogVerbose($"Draw Calls: {drawCalls}");
+        GameLogger.LogVerbose($"CPU Time: {cpuTime:F1}ms | GPU Time: {gpuTime:F1}ms");
+        GameLogger.LogVerbose($"Bottleneck: {(isBottlenecked ? bottleneckType : "None")}");
+        GameLogger.LogVerbose($"Recommendation: {GetPerformanceRecommendation()}");
     }
 }

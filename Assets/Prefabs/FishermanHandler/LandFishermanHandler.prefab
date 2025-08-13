@@ -167,6 +167,10 @@ PrefabInstance:
       propertyPath: m_IsTrigger
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 6462691624678311332, guid: 29c863f917d5e8846acde5d4d6a4ca7e, type: 3}
+      propertyPath: displayText
+      value: 
+      objectReference: {fileID: 2426049732161016549}
     - target: {fileID: 7667254095196824905, guid: 29c863f917d5e8846acde5d4d6a4ca7e, type: 3}
       propertyPath: m_Name
       value: Fisherman
@@ -181,6 +185,17 @@ BoxCollider2D:
   m_CorrespondingSourceObject: {fileID: 6133233627236018558, guid: 29c863f917d5e8846acde5d4d6a4ca7e, type: 3}
   m_PrefabInstance: {fileID: 5326827163894387267}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &2426049732161016549 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7514183915682136230, guid: 29c863f917d5e8846acde5d4d6a4ca7e, type: 3}
+  m_PrefabInstance: {fileID: 5326827163894387267}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &2561211109777225482 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 7667254095196824905, guid: 29c863f917d5e8846acde5d4d6a4ca7e, type: 3}

@@ -26,8 +26,8 @@ public class BoatFloater : MonoBehaviour
         
         if (ValidateFloatPoints())
         {
-            physicsSystem.Initialize(rb, waterPhysics);
             buoyancySystem.Initialize(rb, waterPhysics, floatPoints);
+            physicsSystem.Initialize(rb, waterPhysics);
             movementSystem.Initialize(rb, visualSystem);
             visualSystem.Initialize();
         }
@@ -37,7 +37,7 @@ public class BoatFloater : MonoBehaviour
     {
         if (floatPoints[0] == null || floatPoints[1] == null || floatPoints[2] == null)
         {
-            Debug.LogError("BoatFloater: Float Points not assigned in inspector.");
+            GameLogger.LogError("BoatFloater: Float Points not assigned in inspector.");
             return false;
         }
         return true;

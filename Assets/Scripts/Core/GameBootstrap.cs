@@ -3,7 +3,6 @@ using UnityEngine;
 public class GameBootstrap : MonoBehaviour
 {
     [Header("Core Game Systems")]
-    // [SerializeField] private Player playerMovement;
     [SerializeField] private PlayerBounds playerBounds;
     [SerializeField] private Camera gameCamera;
 
@@ -23,18 +22,18 @@ public class GameBootstrap : MonoBehaviour
         try
         {
             if (enableBootstrapLogs)
-                Debug.Log("GameBootstrap: Starting initialization...");
+                GameLogger.Log("GameBootstrap: Starting initialization...");
             
             InitializeCoreSystemsPhase();
             InitializePlayerSystemsPhase();
             InitializeSpawnSystemsPhase();
             
             if (enableBootstrapLogs)
-                Debug.Log("GameBootstrap: All systems ready!");
+                GameLogger.Log("GameBootstrap: All systems ready!");
         }
         catch (System.Exception e)
         {
-            Debug.LogError($"GameBootstrap failed: {e.Message}");
+            GameLogger.LogError($"GameBootstrap failed: {e.Message}");
         }
     }
     
@@ -46,8 +45,6 @@ public class GameBootstrap : MonoBehaviour
     
     private void InitializePlayerSystemsPhase()
     {
-        // if (playerMovement != null) playerMovement.Initialize();
-        
         if (playerBounds != null) playerBounds.Initialize(Player.Instance);
     }
 
@@ -55,13 +52,4 @@ public class GameBootstrap : MonoBehaviour
     {
         if (spawnHandler != null) spawnHandler.Initialize();
     }
-    
-    // void Update()
-    // {
-    //     if (Input.GetKeyDown(KeyCode.R) && enableBootstrapLogs)
-    //     {
-    //         Debug.Log("GameBootstrap: Manual restart");
-    //         InitializeGameSystems();
-    //     }
-    // }
 }
