@@ -325,6 +325,7 @@ public abstract class Enemy : Entity
     protected virtual void TriggerEscape()
     {
         Debug.Log($"{gameObject.name} has ESCAPED! The player can no longer catch this enemy.");
+        player.GetComponentInChildren<MouthMagnet>().RemoveEntity(this);
         ReturnToPool();
     }
 
