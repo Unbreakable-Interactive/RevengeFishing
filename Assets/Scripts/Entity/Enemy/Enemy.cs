@@ -174,7 +174,7 @@ public abstract class Enemy : Entity
         base.SetMovementMode(aboveWater);
     }
 
-    public void TakeFatigue(int playerPowerLevel)
+    public virtual void TakeFatigue(int playerPowerLevel)
     {
         if (!hasReceivedFirstFatigue)
         {

@@ -2,80 +2,62 @@ using UnityEngine;
 
 public class BoatCrewPhysics : MonoBehaviour
 {
-    [Header("Physics Settings")]
-    [SerializeField] private float maxFallSpeed = 8f;
-    [SerializeField] private float groundCheckDistance = 0.15f;
-    
-    [Header("Grounding - Only for Land Mode")]
-    [SerializeField] private LayerMask groundLayerMask = (1 << 5);
-    [SerializeField] private bool isGrounded = false;
-    [SerializeField] private bool isInBoatMode = false;
-    
-    [Header("Physics Constraints")]
-    [SerializeField] private float maxHorizontalSpeed = 5f;
-    [SerializeField] private float maxTotalSpeed = 12f;
-    [SerializeField] private float waterDamping = 0.8f;
-    
-    [Header("Debug")]
-    [SerializeField] private bool debugPhysics = false;
+    [Header("Crew Physics Configuration")]
+    [SerializeField] private bool debugPhysics = true;
     
     private Rigidbody2D rb;
     private BoatLandEnemy boatEnemy;
     private Transform crewContainer;
     private Transform originalParent;
+    private Transform handlerRoot;
     private Vector3 originalLocalPosition;
-    private bool physicsInitialized = false;
+    
+    private bool isInBoatMode = false;
+    private bool isGrounded = false;
     private bool isParentedToBoat = false;
-    
-    public bool IsGrounded => isGrounded;
-    public bool IsInBoatMode => isInBoatMode;
-    public bool IsParentedToBoat => isParentedToBoat;
-    
-    private void Start()
+    private bool physicsInitialized = false;
+
+    private void Awake()
     {
-        if (!physicsInitialized)
-        {
-            rb = GetComponent<Rigidbody2D>();
-            boatEnemy = GetComponent<BoatLandEnemy>();
-            
-            if (rb != null && boatEnemy != null)
-            {
-                Initialize(rb, boatEnemy);
-            }
-        }
+        originalLocalPosition = transform.localPosition;
+        if (debugPhysics)
+            Debug.Log($"[PHYSICS DEBUG] {gameObject.name} - Awake, original position: {originalLocalPosition}");
     }
-    
+
     public void Initialize(Rigidbody2D rigidbody, BoatLandEnemy enemy)
     {
         rb = rigidbody;
         boatEnemy = enemy;
+        
+        if (rb == null)
+        {
+            rb = GetComponent<Rigidbody2D>();
+            if (rb == null)
+            {
+                rb = gameObject.AddComponent<Rigidbody2D>();
+                if (debugPhysics)
+                    Debug.Log($"[PHYSICS DEBUG] {gameObject.name} - Created new Rigidbody2D");
+            }
+        }
+        
         physicsInitialized = true;
-        
-        originalLocalPosition = transform.localPosition;
-        
-        SetupCrewPhysics();
-        
         if (debugPhysics)
-            GameLogger.LogVerbose($"[CREW PHYSICS] {gameObject.name} - Physics system initialized");
+            Debug.Log($"[PHYSICS DEBUG] {gameObject.name} - Initialize complete. RB: {(rb != null ? "YES" : "NO")}, Enemy: {(boatEnemy != null ? "YES" : "NO")}");
     }
-    
+
     public void SetupAtPosition(Transform container, Vector3 localPosition)
     {
-        if (container != null && !isParentedToBoat)
-        {
-            originalParent = transform.parent;
-            crewContainer = container;
-            
-            transform.SetParent(crewContainer);
-            transform.localPosition = localPosition;
-            
-            SetBoatMode(true);
-            
-            isParentedToBoat = true;
-            
-            if (debugPhysics)
-                GameLogger.LogVerbose($"[CREW PHYSICS] {gameObject.name} - Setup at position: {localPosition}");
-        }
+        crewContainer = container;
+        isParentedToBoat = true;
+        originalParent = transform.parent;
+        
+        transform.SetParent(crewContainer);
+        transform.localPosition = localPosition;
+        
+        SetBoatMode(true);
+        
+        if (debugPhysics)
+            Debug.Log($"[PHYSICS DEBUG] {gameObject.name} - Setup at position: {localPosition}, Container: {container.name}");
     }
     
     public void SetupAsChildHandler(Transform container, Transform handlerTransform, Vector3 handlerLocalPosition)
@@ -85,74 +67,134 @@ public class BoatCrewPhysics : MonoBehaviour
         
         if (handlerTransform != null)
         {
+            handlerRoot = handlerTransform;
+            originalParent = handlerTransform.parent;
+            
             handlerTransform.SetParent(crewContainer);
             handlerTransform.localPosition = handlerLocalPosition;
+            if (debugPhysics)
+                Debug.Log($"[PHYSICS DEBUG] {gameObject.name} - Setup as child handler: {handlerLocalPosition}, Handler: {handlerTransform.name}");
+        }
+        else
+        {
+            Debug.LogError($"[PHYSICS DEBUG] {gameObject.name} - Handler transform is NULL!");
         }
         
         SetBoatMode(true);
-        
-        if (debugPhysics)
-            GameLogger.LogVerbose($"[CREW PHYSICS] {gameObject.name} - Setup as child handler at: {handlerLocalPosition}");
     }
     
     public void SetBoatMode(bool onBoat)
     {
+        if (debugPhysics)
+            Debug.Log($"[PHYSICS DEBUG] {gameObject.name} - SetBoatMode({onBoat}) called. Current mode: {isInBoatMode}");
+        
         isInBoatMode = onBoat;
         
         if (isInBoatMode)
         {
+            // EN EL BARCO: Configuración Kinematic especial
             isGrounded = true;
+            SetCollidersToSolid(true);
             
             if (rb != null)
             {
                 rb.bodyType = RigidbodyType2D.Kinematic;
                 rb.freezeRotation = true;
-                rb.collisionDetectionMode = CollisionDetectionMode2D.Discrete;
                 rb.velocity = Vector2.zero;
                 rb.angularVelocity = 0f;
                 rb.gravityScale = 0f;
                 rb.drag = 0f;
-                rb.mass = 0.8f;
-                rb.angularDrag = 2f;
-                rb.constraints = RigidbodyConstraints2D.FreezeRotation;
-                rb.interpolation = RigidbodyInterpolation2D.Interpolate;
+                
+                if (debugPhysics)
+                    Debug.Log($"[PHYSICS DEBUG] {gameObject.name} - ON BOAT PHYSICS: Kinematic mode");
             }
         }
         else
         {
+            SetCollidersToSolid(false);
+            
             if (rb != null)
             {
                 rb.bodyType = RigidbodyType2D.Dynamic;
-                rb.freezeRotation = false;
-                rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
-                rb.gravityScale = 1f;
-                rb.drag = 0.5f;
+                rb.gravityScale = .1f;
+                
+                if (debugPhysics)
+                    Debug.Log($"[PHYSICS DEBUG] {gameObject.name} - OFF BOAT PHYSICS: Dynamic only, Entity handles the rest");
             }
         }
         
         if (debugPhysics)
-            GameLogger.LogVerbose($"[CREW PHYSICS] {gameObject.name} - Boat mode: {onBoat}");
+            Debug.Log($"[PHYSICS DEBUG] {gameObject.name} - SetBoatMode complete");
     }
     
     public void LeaveBoat()
     {
+        if (debugPhysics)
+            Debug.Log($"[PHYSICS DEBUG] {gameObject.name} - LeaveBoat called. IsParentedToBoat: {isParentedToBoat}");
+        
         if (isParentedToBoat)
         {
-            if (originalParent != null)
+            if (handlerRoot != null)
+            {
+                if (debugPhysics)
+                    Debug.Log($"[PHYSICS DEBUG] {gameObject.name} - Unparenting handler: {handlerRoot.name}");
+                if (originalParent != null)
+                {
+                    handlerRoot.SetParent(originalParent);
+                    if (debugPhysics)
+                        Debug.Log($"[PHYSICS DEBUG] {gameObject.name} - Handler reparented to: {originalParent.name}");
+                }
+                else
+                {
+                    handlerRoot.SetParent(null);
+                    if (debugPhysics)
+                        Debug.Log($"[PHYSICS DEBUG] {gameObject.name} - Handler set to root");
+                }
+            }
+            else if (originalParent != null)
             {
                 transform.SetParent(originalParent);
+                if (debugPhysics)
+                    Debug.Log($"[PHYSICS DEBUG] {gameObject.name} - Reparented to: {originalParent.name}");
             }
             else
             {
                 transform.SetParent(null);
+                if (debugPhysics)
+                    Debug.Log($"[PHYSICS DEBUG] {gameObject.name} - Set to root");
             }
             
             SetBoatMode(false);
-            
             isParentedToBoat = false;
             
             if (debugPhysics)
-                GameLogger.LogVerbose($"[CREW PHYSICS] {gameObject.name} - Left boat crew, unparented");
+                Debug.Log($"[PHYSICS DEBUG] {gameObject.name} - LeaveBoat complete. Position: {transform.position}");
+        }
+        else
+        {
+            if (debugPhysics)
+                Debug.Log($"[PHYSICS DEBUG] {gameObject.name} - LeaveBoat called but not parented to boat");
+        }
+    }
+    
+    private void SetCollidersToSolid(bool keepSolid)
+    {
+        if (debugPhysics)
+            Debug.Log($"[PHYSICS DEBUG] {gameObject.name} - SetCollidersToSolid({keepSolid})");
+        
+        Collider2D localCollider = GetComponent<Collider2D>();
+        if (localCollider != null)
+        {
+            localCollider.isTrigger = !keepSolid;
+        }
+        
+        Collider2D[] childColliders = GetComponentsInChildren<Collider2D>();
+        foreach (Collider2D collider in childColliders)
+        {
+            if (collider.gameObject.name == "Collider" || collider.gameObject.layer == LayerMask.NameToLayer("Enemy"))
+            {
+                collider.isTrigger = !keepSolid;
+            }
         }
     }
     
@@ -164,127 +206,6 @@ public class BoatCrewPhysics : MonoBehaviour
         }
     }
     
-    private void SetupCrewPhysics()
-    {
-        if (rb != null && boatEnemy != null && boatEnemy.State == Enemy.EnemyState.Alive)
-        {
-            rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
-            rb.interpolation = RigidbodyInterpolation2D.Interpolate;
-        }
-    }
-    
-    private void FixedUpdate()
-    {
-        if (!physicsInitialized || boatEnemy == null) return;
-        
-        UpdatePhysics();
-    }
-    
-    public void UpdatePhysics()
-    {
-        if (boatEnemy == null || boatEnemy.State != Enemy.EnemyState.Alive) return;
-        
-        if (!isInBoatMode)
-        {
-            CheckGrounded();
-            ApplyPhysicsConstraints();
-        }
-        else
-        {
-            ApplyBoatPhysicsConstraints();
-        }
-    }
-    
-    private void CheckGrounded()
-    {
-        if (rb == null || isInBoatMode) return;
-        
-        Vector2 rayOrigin = transform.position;
-        RaycastHit2D hit = Physics2D.Raycast(rayOrigin, Vector2.down, groundCheckDistance, groundLayerMask);
-        
-        bool wasGrounded = isGrounded;
-        isGrounded = hit.collider != null;
-        
-        if (debugPhysics && wasGrounded != isGrounded)
-            GameLogger.LogVerbose($"[CREW PHYSICS] {gameObject.name} - Grounded state changed: {isGrounded}");
-    }
-    
-    private void ApplyPhysicsConstraints()
-    {
-        if (rb == null || isInBoatMode) return;
-        
-        Vector2 velocity = rb.velocity;
-        
-        if (velocity.y < -maxFallSpeed)
-        {
-            velocity.y = -maxFallSpeed;
-        }
-        
-        if (Mathf.Abs(velocity.x) > maxHorizontalSpeed)
-        {
-            velocity.x = Mathf.Sign(velocity.x) * maxHorizontalSpeed;
-        }
-        
-        if (velocity.magnitude > maxTotalSpeed)
-        {
-            velocity = velocity.normalized * maxTotalSpeed;
-        }
-        
-        rb.velocity = velocity;
-        
-        if (rb.angularVelocity > 360f)
-        {
-            rb.angularVelocity = 360f;
-        }
-        else if (rb.angularVelocity < -360f)
-        {
-            rb.angularVelocity = -360f;
-        }
-    }
-    
-    private void ApplyBoatPhysicsConstraints()
-    {
-        if (rb == null || !isInBoatMode) return;
-        
-        rb.velocity = Vector2.zero;
-        rb.angularVelocity = 0f;
-    }
-    
-    public void ApplyWaterDamping()
-    {
-        if (rb == null || isInBoatMode) return;
-        
-        Vector2 velocity = rb.velocity;
-        velocity *= waterDamping;
-        rb.velocity = velocity;
-        
-        rb.angularVelocity *= waterDamping;
-        
-        if (debugPhysics)
-            GameLogger.LogVerbose($"[CREW PHYSICS] {gameObject.name} - Water damping applied");
-    }
-    
-    public void ForceStopMovement()
-    {
-        if (rb == null) return;
-        
-        rb.velocity = Vector2.zero;
-        rb.angularVelocity = 0f;
-        
-        if (debugPhysics)
-            GameLogger.LogVerbose($"[CREW PHYSICS] {gameObject.name} - Movement force stopped");
-    }
-    
-    public void ApplyImpulseForce(Vector2 force)
-    {
-        if (rb == null || isInBoatMode) return;
-        
-        rb.AddForce(force, ForceMode2D.Impulse);
-        
-        if (debugPhysics)
-            GameLogger.LogVerbose($"[CREW PHYSICS] {gameObject.name} - Impulse force applied: {force}");
-    }
-    
     public void ResetToOriginalState()
     {
         transform.localPosition = originalLocalPosition;
@@ -294,70 +215,33 @@ public class BoatCrewPhysics : MonoBehaviour
         SetBoatMode(true);
         
         if (debugPhysics)
-            GameLogger.LogVerbose($"[CREW PHYSICS] {gameObject.name} - Reset to original state");
+            Debug.Log($"[PHYSICS DEBUG] {gameObject.name} - Reset to original state");
     }
     
     public void ResetPhysics()
     {
         if (rb == null) return;
         
+        if (debugPhysics)
+            Debug.Log($"[PHYSICS DEBUG] {gameObject.name} - ResetPhysics called");
+        
         rb.velocity = Vector2.zero;
         rb.angularVelocity = 0f;
         rb.bodyType = RigidbodyType2D.Dynamic;
-        rb.gravityScale = 1f;
-        rb.drag = 0.5f;
-        rb.freezeRotation = false;
-        rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
+        
+        SetCollidersToSolid(true);
         
         isInBoatMode = false;
         isGrounded = false;
         isParentedToBoat = false;
         physicsInitialized = false;
+        handlerRoot = null;
         
         if (debugPhysics)
-            GameLogger.LogVerbose($"[CREW PHYSICS] {gameObject.name} - Physics reset to defaults");
+            Debug.Log($"[PHYSICS DEBUG] {gameObject.name} - ResetPhysics complete");
     }
     
-    public Vector2 GetVelocity()
-    {
-        return rb != null ? rb.velocity : Vector2.zero;
-    }
-    
-    public float GetAngularVelocity()
-    {
-        return rb != null ? rb.angularVelocity : 0f;
-    }
-    
-    public bool IsMoving()
-    {
-        return rb != null && rb.velocity.magnitude > 0.1f;
-    }
-    
-    public bool IsPhysicsActive()
-    {
-        return rb != null && rb.bodyType == RigidbodyType2D.Dynamic;
-    }
-    
-    private void OnDrawGizmosSelected()
-    {
-        if (!debugPhysics) return;
-        
-        Gizmos.color = isGrounded ? Color.green : Color.red;
-        Vector3 rayStart = transform.position;
-        Vector3 rayEnd = rayStart + Vector3.down * groundCheckDistance;
-        Gizmos.DrawLine(rayStart, rayEnd);
-        
-        if (isInBoatMode)
-        {
-            Gizmos.color = Color.blue;
-            Gizmos.DrawWireSphere(transform.position, 0.5f);
-        }
-        
-        if (rb != null && rb.velocity.magnitude > 0.1f)
-        {
-            Gizmos.color = Color.yellow;
-            Vector3 velocityEnd = transform.position + (Vector3)rb.velocity * 0.5f;
-            Gizmos.DrawLine(transform.position, velocityEnd);
-        }
-    }
+    public bool IsInBoatMode() => isInBoatMode;
+    public bool IsGrounded() => isGrounded;
+    public bool IsParentedToBoat() => isParentedToBoat;
 }

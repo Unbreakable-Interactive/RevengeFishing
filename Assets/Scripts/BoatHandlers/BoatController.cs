@@ -16,7 +16,7 @@ public class BoatController : MonoBehaviour
 {
     [Header("Boat Identity")]
     [SerializeField] private BoatID boatID;
-    
+        
     [Header("Required Components - AUTO ASSIGNED")]
     [SerializeField] private BoatCrewManager crewManager;
     [SerializeField] private BoatFloater boatFloater;
@@ -24,7 +24,7 @@ public class BoatController : MonoBehaviour
     [SerializeField] private SpriteRenderer boatSpriteRenderer;
     [SerializeField] private Transform crewContainer;
     public Transform CrewContainer => crewContainer;
-    
+        
     [Header("Movement System")]
     [SerializeField] private float autoMoveSpeed = 1f;
     [SerializeField] private float drivenSpeed = 2.5f;
@@ -33,46 +33,46 @@ public class BoatController : MonoBehaviour
     [SerializeField] private float boundaryBuffer = 1f;
     [SerializeField] private float currentMovementDirection = 1f;
     [SerializeField] private bool movementActive = false;
-    
+        
     [Header("Boat State System")]
     [SerializeField] private BoatState currentState = BoatState.Idle;
     [SerializeField] private bool canPlayLogic = true;
-    
+        
     [Header("Physics System")]
     [SerializeField] private float forceMultiplier = 5f;
     [SerializeField] private bool freezeBoatRotation = true;
-    
+        
     [Header("Patrol Boundaries")]
     [SerializeField] private Transform leftBoundaryPoint;
     [SerializeField] private Transform rightBoundaryPoint;
-    
+        
     [Header("Boundary References")]
     [SerializeField] private BoatBoundaryTrigger leftBoundary;
     [SerializeField] private BoatBoundaryTrigger rightBoundary;
-    
+        
     [Header("Boat Health System")]
     [SerializeField] private float currentIntegrity = 0f;
     [SerializeField] private float maxIntegrity = 200f;
     [SerializeField] private bool isDestroyed = false;
-    
+        
     [Header("Destruction System")]
     [SerializeField] private BoatPart[] boatParts;
     [SerializeField] private float destructionDelay = 2f;
     [SerializeField] private float resetDelay = 8f;
-    
+        
     [Header("Pool Management")]
     [SerializeField] private string poolName = "Boat";
     [SerializeField] private bool useObjectPool = true;
-    
+        
     private Rigidbody2D boatRigidbody;
     private float lastBoundaryCheckTime = 0f;
     private float stateTimer = 0f;
     private Vector2 cachedPosition;
     private static readonly List<Enemy> tempEnemyList = new List<Enemy>();
     private bool isInitialized = false;
-    
+        
     public static event Action<BoatController> OnBoatSunk;
-    
+        
     private void Awake()
     {
         if (boatID == null)
@@ -84,29 +84,29 @@ public class BoatController : MonoBehaviour
             boatID.GenerateNewID();
         }
     }
-    
+        
     #region Unity Lifecycle
-    
+        
     private void Update()
     {
         if (!isInitialized || !canPlayLogic || isDestroyed) return;
-        
+                
         stateTimer += Time.deltaTime;
         UpdateCurrentState();
     }
-    
+        
     private void FixedUpdate()
     {
         if (!isInitialized || isDestroyed) return;
-        
+                
         ApplyStabilityForces();
         UpdateMovement();
     }
-    
+        
     #endregion
-    
+        
     #region Initialization
-    
+        
     public void Initialize(Transform _leftBoundary, Transform _rightBoundary)
     {
         if (isInitialized)
@@ -114,10 +114,10 @@ public class BoatController : MonoBehaviour
             GameLogger.LogWarning($"[BOAT CONTROLLER] {gameObject.name} - Already initialized, skipping");
             return;
         }
-        
+                
         leftBoundaryPoint  = _leftBoundary;
         rightBoundaryPoint  = _rightBoundary;
-        
+                
         CacheComponents();
         SetupBoatPhysics();
         SetupBoatComponents();
@@ -125,27 +125,27 @@ public class BoatController : MonoBehaviour
         InitializeCrewManager();
         SetRandomInitialDirection();
         InitializeState(BoatState.Idle);
-        
+                
         isInitialized = true;
-        
+                
         GameLogger.LogVerbose($"[BOAT CONTROLLER] {gameObject.name} - Boat fully initialized with ID: {boatID.UniqueID}");
     }
-    
+        
     private void CacheComponents()
     {
         if (crewManager == null) crewManager = GetComponent<BoatCrewManager>();
         if (boatFloater == null) boatFloater = GetComponent<BoatFloater>();
         if (boatPlatform == null) boatPlatform = GetComponentInChildren<BoatPlatform>();
         if (boatSpriteRenderer == null) boatSpriteRenderer = GetComponentInChildren<SpriteRenderer>();
-        
+                
         boatRigidbody = GetComponent<Rigidbody2D>();
-        
+                
         if (boatRigidbody == null)
         {
             GameLogger.LogError($"[BOAT CONTROLLER] {gameObject.name} - Missing Rigidbody2D component!");
         }
     }
-    
+        
     private void SetupBoatPhysics()
     {
         if (boatRigidbody != null)
@@ -160,13 +160,13 @@ public class BoatController : MonoBehaviour
     {
         if (boatPlatform == null)
             boatPlatform = GetComponentInChildren<BoatPlatform>();
-        
+                
         if (boatFloater == null)
             boatFloater = GetComponentInChildren<BoatFloater>();
-        
+                
         if (crewManager == null)
             crewManager = GetComponentInChildren<BoatCrewManager>();
-        
+                
         BoatBoundaryTrigger[] boundaries = GetComponentsInChildren<BoatBoundaryTrigger>();
         foreach (var boundary in boundaries)
         {
@@ -181,13 +181,13 @@ public class BoatController : MonoBehaviour
     {
         if (boatPlatform != null)
             boatPlatform.SetBoatID(boatID);
-    
+            
         if (crewManager != null)
             crewManager.SetBoatID(boatID);
-    
+            
         if (leftBoundary != null)
             leftBoundary.SetBoatID(boatID);
-    
+            
         if (rightBoundary != null)
             rightBoundary.SetBoatID(boatID);
     }
@@ -201,7 +201,7 @@ public class BoatController : MonoBehaviour
             crewManager.StartCrewInitialization();
         }
     }
-
+        
     #endregion
 
     #region Movement System
@@ -212,12 +212,12 @@ public class BoatController : MonoBehaviour
 
         float targetSpeed = GetTargetSpeed();
         Vector2 targetVelocity = new Vector2(targetSpeed * currentMovementDirection, boatRigidbody.velocity.y);
-        
+                
         Vector2 force = (targetVelocity - boatRigidbody.velocity) * forceMultiplier;
         force.x = Mathf.Clamp(force.x, -maxMovementForce, maxMovementForce);
-        
+                
         boatRigidbody.AddForce(force, ForceMode2D.Force);
-        
+                
         if (freezeBoatRotation)
         {
             boatRigidbody.freezeRotation = true;
@@ -242,12 +242,12 @@ public class BoatController : MonoBehaviour
         lastBoundaryCheckTime = Time.time;
 
         float currentX = transform.position.x;
-        
+                
         if (leftBoundaryPoint != null && rightBoundaryPoint != null)
         {
             float leftX = leftBoundaryPoint.position.x + boundaryBuffer;
             float rightX = rightBoundaryPoint.position.x - boundaryBuffer;
-            
+                        
             if (currentX <= leftX && currentMovementDirection < 0)
             {
                 FlipDirection();
@@ -262,7 +262,7 @@ public class BoatController : MonoBehaviour
     private void FlipDirection()
     {
         currentMovementDirection *= -1f;
-        
+                
         if (boatSpriteRenderer != null)
         {
             Vector3 scale = boatSpriteRenderer.transform.localScale;
@@ -274,7 +274,7 @@ public class BoatController : MonoBehaviour
     private void SetRandomInitialDirection()
     {
         currentMovementDirection = Random.value > 0.5f ? 1f : -1f;
-        
+                
         if (boatSpriteRenderer != null)
         {
             Vector3 scale = boatSpriteRenderer.transform.localScale;
@@ -324,19 +324,19 @@ public class BoatController : MonoBehaviour
         stateTimer = 0f;
         EnterCurrentState();
     }
-    
+        
     private void ChangeState(BoatState newState)
     {
         if (currentState == newState) return;
-        
+                
         ExitCurrentState();
         currentState = newState;
         stateTimer = 0f;
         EnterCurrentState();
-        
+                
         GameLogger.LogVerbose($"[BOAT STATE] {gameObject.name} - Changed to {currentState} state");
     }
-    
+        
     private void EnterCurrentState()
     {
         switch (currentState)
@@ -344,24 +344,24 @@ public class BoatController : MonoBehaviour
             case BoatState.Idle:
                 SetMovementActive(false);
                 break;
-                
+                            
             case BoatState.AutoMove:
                 SetMovementActive(enableAutomaticMovement);
                 if (crewManager != null)
                     crewManager.AssignNavigator();
                 break;
-                
+                            
             case BoatState.Driven:
                 SetMovementActive(true);
                 break;
-                
+                            
             case BoatState.Destroyed:
                 SetMovementActive(false);
                 StartCoroutine(HandleDestruction());
                 break;
         }
     }
-    
+        
     private void ExitCurrentState()
     {
         switch (currentState)
@@ -370,12 +370,12 @@ public class BoatController : MonoBehaviour
                 if (crewManager != null)
                     crewManager.ReleaseNavigator();
                 break;
-                
+                            
             case BoatState.Driven:
                 break;
         }
     }
-    
+        
     private void UpdateCurrentState()
     {
         switch (currentState)
@@ -383,20 +383,30 @@ public class BoatController : MonoBehaviour
             case BoatState.Idle:
                 UpdateIdleState();
                 break;
-                
+                            
             case BoatState.AutoMove:
                 UpdateAutoMoveState();
                 break;
-                
+                            
             case BoatState.Driven:
                 UpdateDrivenState();
                 break;
-                
+                            
             case BoatState.Destroyed:
                 break;
         }
     }
-    
+
+    public void ChangeState_Driven()
+    {
+        ChangeState(BoatState.Driven);
+    }
+
+    public void ChangeState_AutoMove()
+    {
+        ChangeState(BoatState.AutoMove);
+    }
+        
     private void UpdateIdleState()
     {
         if (stateTimer > Random.Range(2f, 5f))
@@ -404,7 +414,7 @@ public class BoatController : MonoBehaviour
             ChangeState(BoatState.AutoMove);
         }
     }
-    
+        
     private void UpdateAutoMoveState()
     {
         if (isDestroyed)
@@ -412,13 +422,13 @@ public class BoatController : MonoBehaviour
             ChangeState(BoatState.Destroyed);
             return;
         }
-        
+                
         if (stateTimer > Random.Range(15f, 30f))
         {
             ChangeState(BoatState.Idle);
         }
     }
-    
+        
     private void UpdateDrivenState()
     {
         if (isDestroyed)
@@ -431,6 +441,24 @@ public class BoatController : MonoBehaviour
     #endregion
 
     #region Health System
+
+    public void SetInitialIntegrity(float maxIntegrityValue, float currentIntegrityValue)
+    {
+        maxIntegrity = maxIntegrityValue;
+        currentIntegrity = currentIntegrityValue;
+    }
+
+    public void OnCrewInitializationComplete()
+    {
+        if (crewManager != null && crewManager.HasActiveNavigator())
+        {
+            ChangeState_Driven();
+        }
+        else
+        {
+            ChangeState_AutoMove();
+        }
+    }
 
     public void RecalculateBoatIntegrity()
     {
@@ -584,15 +612,15 @@ public class BoatController : MonoBehaviour
         {
             Gizmos.color = Color.yellow;
             Gizmos.DrawLine(leftBoundaryPoint.position, rightBoundaryPoint.position);
-            
+                        
             Gizmos.color = Color.red;
             Vector3 leftBoundary = leftBoundaryPoint.position + Vector3.right * boundaryBuffer;
             Vector3 rightBoundary = rightBoundaryPoint.position - Vector3.right * boundaryBuffer;
-            
+                        
             Gizmos.DrawWireSphere(leftBoundary, 0.5f);
             Gizmos.DrawWireSphere(rightBoundary, 0.5f);
         }
-        
+                
         Gizmos.color = Color.blue;
         Vector3 directionIndicator = transform.position + Vector3.right * currentMovementDirection * 2f;
         Gizmos.DrawRay(transform.position, Vector3.right * currentMovementDirection * 2f);
