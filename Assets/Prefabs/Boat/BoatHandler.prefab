@@ -434,8 +434,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   crewMemberPrefab: {fileID: 1963649820016990938, guid: c45946bf32b8a4045aad4551ca754c64, type: 3}
-  maxCrewSize: 2
-  maxCrewToDeactivate: 1
+  maxCrewSize: 1
+  maxCrewToDeactivate: 0
   crewSpawnDelay: 0.5
   crewHeightAbovePlatform: 0.07
   allowCrewRandomDeactivation: 1
@@ -456,6 +456,8 @@ MonoBehaviour:
   trackCrewDisappearance: 1
   showPlatformGizmos: 1
   logCrewStates: 1
+  allCrewMembers: []
+  currentNavigator: {fileID: 0}
 --- !u!61 &5905692512076843097
 BoxCollider2D:
   m_ObjectHideFlags: 0

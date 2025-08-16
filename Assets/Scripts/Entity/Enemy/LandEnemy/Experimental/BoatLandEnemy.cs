@@ -199,10 +199,10 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
 
     public void AssignToWheel()
     {
-        isNavigating = true;
-        crewRole = CrewRole.Navigator;
-        _landMovementState = LandMovementState.Idle;
-        fishingToolEquipped = false;
+        // isNavigating = true;
+        // crewRole = CrewRole.Navigator;
+        // _landMovementState = LandMovementState.Idle;
+        // fishingToolEquipped = false;
         
         if (debugBoatCrew)
             Debug.Log($"[BOAT DEBUG] {gameObject.name} - ASSIGNED TO WHEEL! Role: {crewRole}, Navigating: {isNavigating}");
@@ -210,11 +210,11 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
 
     public void ReleaseFromWheel()
     {
-        isNavigating = false;
-        if (crewRole == CrewRole.Navigator)
-        {
-            crewRole = CrewRole.Sailor;
-        }
+        // isNavigating = false;
+        // if (crewRole == CrewRole.Navigator)
+        // {
+        //     crewRole = CrewRole.Sailor;
+        // }
         
         if (debugBoatCrew)
             Debug.Log($"[BOAT DEBUG] {gameObject.name} - RELEASED FROM WHEEL! Role: {crewRole}, Navigating: {isNavigating}");

@@ -495,6 +495,8 @@ public class BoatController : MonoBehaviour
         isDestroyed = true;
         ChangeState(BoatState.Destroyed);
         OnBoatSunk?.Invoke(this);
+        
+        StartCoroutine(HandleDestruction());
     }
 
     private IEnumerator HandleDestruction()
@@ -510,12 +512,15 @@ public class BoatController : MonoBehaviour
 
     private void DestroyBoatParts()
     {
+        boatSpriteRenderer.gameObject.SetActive(false);
+        
         if (boatParts != null)
         {
             foreach (var part in boatParts)
             {
                 if (part != null)
                 {
+                    part.gameObject.SetActive(true);
                     part.ApplyInitialForces();
                 }
             }
@@ -535,7 +540,9 @@ public class BoatController : MonoBehaviour
         {
             crewManager.Reset();
         }
-
+        
+        boatSpriteRenderer.gameObject.SetActive(true);
+        
         if (boatParts != null)
         {
             foreach (var part in boatParts)
@@ -543,6 +550,7 @@ public class BoatController : MonoBehaviour
                 if (part != null)
                 {
                     part.ResetToOriginalPosition();
+                    part.gameObject.SetActive(false);
                 }
             }
         }

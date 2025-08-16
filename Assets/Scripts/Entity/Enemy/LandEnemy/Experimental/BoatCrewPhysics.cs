@@ -92,7 +92,6 @@ public class BoatCrewPhysics : MonoBehaviour
         
         if (isInBoatMode)
         {
-            // EN EL BARCO: Configuración Kinematic especial
             isGrounded = true;
             SetCollidersToSolid(true);
             
