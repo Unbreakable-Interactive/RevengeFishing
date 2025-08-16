@@ -101,6 +101,7 @@ public class BoatController : MonoBehaviour
                 
         ApplyStabilityForces();
         UpdateMovement();
+        CheckBoundariesPeriodically();
     }
         
     #endregion
@@ -437,6 +438,25 @@ public class BoatController : MonoBehaviour
             return;
         }
     }
+
+    #endregion
+    
+    #region Boundary Checking
+
+    private void CheckBoundariesPeriodically()
+    {
+        if (Time.fixedTime - lastBoundaryCheckTime < 0.5f) return;
+        
+        lastBoundaryCheckTime = Time.fixedTime;
+        Vector2 currentPosition = transform.position;
+        
+        if (Vector2.Distance(currentPosition, cachedPosition) > 0.1f)
+        {
+            cachedPosition = currentPosition;
+        }
+    }
+
+   
 
     #endregion
 

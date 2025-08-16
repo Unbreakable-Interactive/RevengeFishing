@@ -374,7 +374,7 @@ MonoBehaviour:
   enableAutomaticMovement: 1
   boundaryBuffer: 1
   currentMovementDirection: 1
-  movementActive: 0
+  movementActive: 1
   currentState: 0
   canPlayLogic: 1
   forceMultiplier: 5

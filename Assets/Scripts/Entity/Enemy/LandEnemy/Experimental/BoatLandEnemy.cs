@@ -482,8 +482,8 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
             {
                 if (fishermanConfig != null && Random.value < fishermanConfig.equipToolChance)
                 {
-                    ScheduleNextActionWithFrequency();
                     TryEquipFishingTool();
+                    ScheduleNextActionWithFrequency();
                     return;
                 }
             }
@@ -501,12 +501,13 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
                     if (hookSpawner?.CanThrowHook() == true)
                     {
                         if (debugProbabilities)
-                            Debug.Log($"[BOAT AI] {gameObject.name} - 🎣 THROWING HOOK! (Prob: {hookThrowProbability:F1}%)");
+                            Debug.Log($"[BOAT AI] {gameObject.name} - 🎣 THROWING HOOK!");
                         
                         hookSpawner.ThrowHook();
                         hasThrownHook = true;
                         hookTimer = 0f;
                         SubscribeToHookEvents();
+                        ScheduleNextActionWithFrequency();
                         return;
                     }
                 }
@@ -515,18 +516,20 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
                     if (debugProbabilities)
                         Debug.Log($"[BOAT AI] {gameObject.name} - 🔄 UNEQUIPPING TOOL!");
                     
-                    ScheduleNextActionWithFrequency();
                     TryUnequipFishingTool();
+                    ScheduleNextActionWithFrequency();
                     return;
                 }
             }
             
             DecideMovementWithBalancedProbabilities();
-            ScheduleNextActionWithFrequency();
-            return;
         }
-
-        ChooseRandomLandAction();
+        else
+        {
+            ChooseRandomLandAction();
+        }
+        
+        ScheduleNextActionWithFrequency();
     }
 
     private void DecideMovementWithBalancedProbabilities()
@@ -588,29 +591,59 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
     {
         if (crewPhysics == null || !crewPhysics.IsParentedToBoat())
         {
+            if (debugProbabilities)
+                Debug.LogWarning($"[BOAT AI] {gameObject.name} - Cannot move: CrewPhysics not parented to boat");
+            return;
+        }
+
+        if (fishingToolEquipped && _landMovementState != LandMovementState.Idle)
+        {
+            _landMovementState = LandMovementState.Idle;
+            if (debugProbabilities)
+                Debug.Log($"[BOAT AI] {gameObject.name} - STOPPED MOVEMENT: Tool equipped");
             return;
         }
 
         Vector3 currentPos = transform.localPosition;
         float deltaTime = Time.deltaTime;
+        bool isMoving = false;
 
         switch (_landMovementState)
         {
             case LandMovementState.WalkLeft:
                 currentPos.x -= walkingSpeed * deltaTime;
+                isMoving = true;
+                if (debugProbabilities && Time.frameCount % 60 == 0)
+                    Debug.Log($"[BOAT AI] {gameObject.name} - WALKING LEFT at speed {walkingSpeed}");
                 break;
             case LandMovementState.WalkRight:
                 currentPos.x += walkingSpeed * deltaTime;
+                isMoving = true;
+                if (debugProbabilities && Time.frameCount % 60 == 0)
+                    Debug.Log($"[BOAT AI] {gameObject.name} - WALKING RIGHT at speed {walkingSpeed}");
                 break;
             case LandMovementState.RunLeft:
                 currentPos.x -= runningSpeed * deltaTime;
+                isMoving = true;
+                if (debugProbabilities && Time.frameCount % 60 == 0)
+                    Debug.Log($"[BOAT AI] {gameObject.name} - RUNNING LEFT at speed {runningSpeed}");
                 break;
             case LandMovementState.RunRight:
                 currentPos.x += runningSpeed * deltaTime;
+                isMoving = true;
+                if (debugProbabilities && Time.frameCount % 60 == 0)
+                    Debug.Log($"[BOAT AI] {gameObject.name} - RUNNING RIGHT at speed {runningSpeed}");
+                break;
+            case LandMovementState.Idle:
+                if (debugProbabilities && Time.frameCount % 120 == 0)
+                    Debug.Log($"[BOAT AI] {gameObject.name} - STAYING IDLE");
                 break;
         }
 
-        crewPhysics.SetLocalPosition(currentPos);
+        if (isMoving)
+        {
+            crewPhysics.SetLocalPosition(currentPos);
+        }
 
         if (EnemyAnimator != null)
         {
@@ -642,13 +675,17 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
         if (fishingToolEquipped || isNavigating) return;
 
         LandMovementState[] possibleStates = {
-            LandMovementState.Idle,
+            // LandMovementState.Idle,
             LandMovementState.WalkLeft,
-            LandMovementState.WalkRight
+            LandMovementState.WalkRight,
+            LandMovementState.RunLeft,
+            LandMovementState.RunRight
         };
 
         _landMovementState = possibleStates[Random.Range(0, possibleStates.Length)];
-        ScheduleNextActionWithFrequency();
+    
+        if (debugProbabilities)
+            Debug.Log($"[BOAT AI] {gameObject.name} - RANDOM ACTION: {_landMovementState}");
     }
 
     public override void ChooseRandomActionExcluding(params LandMovementState[] excludedStates)

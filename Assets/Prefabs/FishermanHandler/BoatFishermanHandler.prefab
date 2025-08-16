@@ -26,7 +26,7 @@ Transform:
   m_GameObject: {fileID: 176889430440048177}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.05070007, z: 0}
+  m_LocalPosition: {x: 0, y: 0.1967001, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 1
   m_Children: []
@@ -112,7 +112,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0.8507001}
+  m_AnchoredPosition: {x: 0, y: 0.9967001}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!223 &7926362259038859158
@@ -368,10 +368,10 @@ MonoBehaviour:
   assignedPlatform: {fileID: 0}
   debugBoatCrew: 1
   crewPhysics: {fileID: 4277006710572366899}
-  fishermanConfig: {fileID: 11400000, guid: 876c88f03b9414e67960bdc874e7d116, type: 2}
-  hookThrowProbability: 100
-  walkProbability: 0
-  runProbability: 0
+  fishermanConfig: {fileID: 11400000, guid: 93deef848c2a54c8d966d2f88dafc97f, type: 2}
+  hookThrowProbability: 33
+  walkProbability: 33
+  runProbability: 33
   aiDecisionFrequency: 1
   localBoundaryLeft: -1.5
   localBoundaryRight: 1.5
@@ -418,7 +418,7 @@ Transform:
   m_GameObject: {fileID: 3511881948687486434}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.26, y: 0.70070004, z: 0}
+  m_LocalPosition: {x: 0.26, y: 0.8467001, z: 0}
   m_LocalScale: {x: 0.07, y: 0.07, z: 0.07}
   m_ConstrainProportionsScale: 1
   m_Children: []
@@ -503,7 +503,7 @@ Transform:
   m_GameObject: {fileID: 7654646989552672936}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1.0345, y: 1.054, z: 0}
+  m_LocalPosition: {x: 1.0345, y: 1.2, z: 0}
   m_LocalScale: {x: 0.10000002, y: 2, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -552,17 +552,17 @@ LineRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_Positions:
-  - {x: 1.0345, y: 1.054, z: 0}
-  - {x: 1.0345, y: 1.0360001, z: 0}
-  - {x: 1.0345001, y: 1.0220001, z: 0}
-  - {x: 1.0345, y: 1.012, z: 0}
-  - {x: 1.0345001, y: 1.006, z: 0}
-  - {x: 1.0345, y: 1.004, z: 0}
-  - {x: 1.0344999, y: 1.006, z: 0}
-  - {x: 1.0344999, y: 1.0120001, z: 0}
-  - {x: 1.0345, y: 1.0220001, z: 0}
-  - {x: 1.0345, y: 1.036, z: 0}
-  - {x: 1.0345, y: 1.054, z: 0}
+  - {x: 1.0345, y: 1.2, z: 0}
+  - {x: 1.0345, y: 1.182, z: 0}
+  - {x: 1.0345001, y: 1.1680001, z: 0}
+  - {x: 1.0345, y: 1.158, z: 0}
+  - {x: 1.0345001, y: 1.1520001, z: 0}
+  - {x: 1.0345, y: 1.1500001, z: 0}
+  - {x: 1.0344999, y: 1.152, z: 0}
+  - {x: 1.0344999, y: 1.158, z: 0}
+  - {x: 1.0345, y: 1.1680001, z: 0}
+  - {x: 1.0345, y: 1.182, z: 0}
+  - {x: 1.0345, y: 1.2, z: 0}
   m_Parameters:
     serializedVersion: 3
     widthMultiplier: 1
@@ -832,7 +832,7 @@ Transform:
   m_GameObject: {fileID: 8618071559456417662}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.05070007, z: 0}
+  m_LocalPosition: {x: 0, y: 0.1967001, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 1
   m_Children: []
