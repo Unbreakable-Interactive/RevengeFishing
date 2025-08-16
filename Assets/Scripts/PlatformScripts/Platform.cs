@@ -153,4 +153,16 @@ public class Platform : MonoBehaviour
     {
         UnregisterEnemy((Enemy)landEnemy);
     }
+    
+    public void GetRegisteredEnemies(List<Enemy> outputList)
+    {
+        if (outputList == null) return;
+        
+        outputList.Clear();
+        outputList.AddRange(assignedEnemies);
+    }
+    
+    public List<Enemy> GetRegisteredEnemies() => new List<Enemy>(assignedEnemies);
+    
+    public int GetEnemyCount() => assignedEnemies.Count;
 }

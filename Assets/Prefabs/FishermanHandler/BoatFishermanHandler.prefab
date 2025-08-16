@@ -366,10 +366,11 @@ MonoBehaviour:
   lineReductionVariation: 0.4
   animator: {fileID: 2694603455566713901}
   assignedPlatform: {fileID: 0}
-  debugBoatCrew: 0
+  debugBoatCrew: 1
   crewPhysics: {fileID: 4277006710572366899}
   fishermanConfig: {fileID: 11400000, guid: 876c88f03b9414e67960bdc874e7d116, type: 2}
-  boundaryBuffer: 0.5
+  localBoundaryLeft: -1.5
+  localBoundaryRight: 1.5
   enableHookThrowing: 1
   crewRole: 0
   isNavigating: 0
@@ -391,8 +392,11 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 64
   isGrounded: 0
-  boatSyncMultiplier: 2
-  maxSyncForce: 100
+  isInBoatMode: 0
+  maxHorizontalSpeed: 5
+  maxTotalSpeed: 12
+  waterDamping: 0.8
+  debugPhysics: 0
 --- !u!1 &3511881948687486434
 GameObject:
   m_ObjectHideFlags: 0
@@ -918,7 +922,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 314844239601557528, guid: d864e1d7d3d7d86458db1be6c7ac35ab, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 5.92
+      value: -0.25
       objectReference: {fileID: 0}
     - target: {fileID: 314844239601557528, guid: d864e1d7d3d7d86458db1be6c7ac35ab, type: 3}
       propertyPath: m_LocalPosition.z
@@ -959,6 +963,10 @@ PrefabInstance:
     - target: {fileID: 7442979135199402340, guid: d864e1d7d3d7d86458db1be6c7ac35ab, type: 3}
       propertyPath: isOnBoat
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7442979135199402340, guid: d864e1d7d3d7d86458db1be6c7ac35ab, type: 3}
+      propertyPath: waterSurfaceY
+      value: -0.25
       objectReference: {fileID: 0}
     - target: {fileID: 8258166059126711420, guid: d864e1d7d3d7d86458db1be6c7ac35ab, type: 3}
       propertyPath: m_Name

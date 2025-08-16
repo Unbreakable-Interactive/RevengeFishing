@@ -15,13 +15,15 @@ public enum BoatState
 public class BoatController : MonoBehaviour
 {
     [Header("Boat Identity")]
-    [SerializeField] private BoatID boatID = new BoatID();
+    [SerializeField] private BoatID boatID;
     
     [Header("Required Components - AUTO ASSIGNED")]
     [SerializeField] private BoatCrewManager crewManager;
     [SerializeField] private BoatFloater boatFloater;
     [SerializeField] private BoatPlatform boatPlatform;
     [SerializeField] private SpriteRenderer boatSpriteRenderer;
+    [SerializeField] private Transform crewContainer;
+    public Transform CrewContainer => crewContainer;
     
     [Header("Movement System")]
     [SerializeField] private float autoMoveSpeed = 1f;
@@ -71,6 +73,18 @@ public class BoatController : MonoBehaviour
     
     public static event Action<BoatController> OnBoatSunk;
     
+    private void Awake()
+    {
+        if (boatID == null)
+        {
+            boatID = new BoatID();
+        }
+        else
+        {
+            boatID.GenerateNewID();
+        }
+    }
+    
     #region Unity Lifecycle
     
     private void Update()
@@ -114,7 +128,7 @@ public class BoatController : MonoBehaviour
         
         isInitialized = true;
         
-        GameLogger.LogError($"[BOAT CONTROLLER] {gameObject.name} - Boat fully initialized with ID: {boatID.UniqueID}");
+        GameLogger.LogVerbose($"[BOAT CONTROLLER] {gameObject.name} - Boat fully initialized with ID: {boatID.UniqueID}");
     }
     
     private void CacheComponents()
@@ -161,9 +175,6 @@ public class BoatController : MonoBehaviour
             else
                 rightBoundary = boundary;
         }
-        
-        // if (leftBoundaryPoint != null) leftBoundaryX = leftBoundaryPoint.position.x;
-        // if (rightBoundaryPoint != null) rightBoundaryX = rightBoundaryPoint.position.x;
     }
 
     private void ConfigureAllBoatIDs()
@@ -179,204 +190,135 @@ public class BoatController : MonoBehaviour
     
         if (rightBoundary != null)
             rightBoundary.SetBoatID(boatID);
-        
-        leftBoundary.SetBoatID(boatID);
-        rightBoundary.SetBoatID(boatID);
-    
-        GameLogger.LogVerbose($"[BOAT CONTROLLER] All components configured with BoatID: {boatID.UniqueID}");
     }
 
     private void InitializeCrewManager()
     {
-        if (crewManager != null)
+        if (crewManager != null && boatPlatform != null && boatFloater != null)
         {
             crewManager.Initialize(this, boatPlatform, boatFloater);
             crewManager.SetupBoundaries(leftBoundary, rightBoundary);
             crewManager.StartCrewInitialization();
         }
     }
-    
-    private void SetRandomInitialDirection()
-    {
-        currentMovementDirection = Random.Range(0, 2) == 0 ? -1f : 1f;
-        
-        // float currentX = transform.position.x;
-        // if (currentX <= leftBoundaryX + 1f)
-        // {
-        //     currentMovementDirection = 1f;
-        // }
-        // else if (currentX >= rightBoundaryX - 1f)
-        // {
-        //     currentMovementDirection = -1f;
-        // }
-    }
-    
+
     #endregion
-    
+
     #region Movement System
-    
+
     private void UpdateMovement()
     {
-        if (!enableAutomaticMovement || currentState == BoatState.Destroyed) return;
+        if (!movementActive || boatRigidbody == null) return;
+
+        float targetSpeed = GetTargetSpeed();
+        Vector2 targetVelocity = new Vector2(targetSpeed * currentMovementDirection, boatRigidbody.velocity.y);
         
-        if (!movementActive && (currentState == BoatState.AutoMove || currentState == BoatState.Driven))
-        {
-            StartMovement();
-            return;
-        }
+        Vector2 force = (targetVelocity - boatRigidbody.velocity) * forceMultiplier;
+        force.x = Mathf.Clamp(force.x, -maxMovementForce, maxMovementForce);
         
-        if (movementActive)
+        boatRigidbody.AddForce(force, ForceMode2D.Force);
+        
+        if (freezeBoatRotation)
         {
-            CheckBoundaries();
-            ApplyMovementForce();
+            boatRigidbody.freezeRotation = true;
         }
+
+        CheckBoundaries();
     }
-    
+
+    private float GetTargetSpeed()
+    {
+        return currentState switch
+        {
+            BoatState.AutoMove => autoMoveSpeed,
+            BoatState.Driven => drivenSpeed,
+            _ => 0f
+        };
+    }
+
     private void CheckBoundaries()
     {
-        if (Time.time - lastBoundaryCheckTime < 0.1f) return;
+        if (Time.time - lastBoundaryCheckTime < 0.5f) return;
         lastBoundaryCheckTime = Time.time;
+
+        float currentX = transform.position.x;
         
-        cachedPosition = transform.position;
-        
-        bool hitLeft = cachedPosition.x <= leftBoundaryPoint.position.x && currentMovementDirection < 0;
-        bool hitRight = cachedPosition.x >= rightBoundaryPoint.position.x && currentMovementDirection > 0;
-        
-        if (hitLeft || hitRight)
+        if (leftBoundaryPoint != null && rightBoundaryPoint != null)
         {
-            currentMovementDirection *= -1f;
-            UpdateVisualDirection();
+            float leftX = leftBoundaryPoint.position.x + boundaryBuffer;
+            float rightX = rightBoundaryPoint.position.x - boundaryBuffer;
             
-            GameLogger.LogVerbose($"[BOAT BOUNDARY] {gameObject.name} - Hit boundary at {cachedPosition.x:F1}, direction now: {(currentMovementDirection > 0 ? "RIGHT" : "LEFT")}");
+            if (currentX <= leftX && currentMovementDirection < 0)
+            {
+                FlipDirection();
+            }
+            else if (currentX >= rightX && currentMovementDirection > 0)
+            {
+                FlipDirection();
+            }
         }
     }
-    
-    private void ApplyMovementForce()
+
+    private void FlipDirection()
     {
-        if (boatRigidbody == null || !movementActive) return;
+        currentMovementDirection *= -1f;
         
-        float currentSpeed = GetCurrentMovementSpeed();
-        float targetForce = currentMovementDirection * currentSpeed * forceMultiplier;
+        if (boatSpriteRenderer != null)
+        {
+            Vector3 scale = boatSpriteRenderer.transform.localScale;
+            scale.x = Mathf.Abs(scale.x) * currentMovementDirection;
+            boatSpriteRenderer.transform.localScale = scale;
+        }
+    }
+
+    private void SetRandomInitialDirection()
+    {
+        currentMovementDirection = Random.value > 0.5f ? 1f : -1f;
         
-        Vector2 force = Vector2.right * targetForce;
-        boatRigidbody.AddForce(force);
-    }
-    
-    private float GetCurrentMovementSpeed()
-    {
-        switch (currentState)
+        if (boatSpriteRenderer != null)
         {
-            case BoatState.AutoMove:
-                return autoMoveSpeed;
-            case BoatState.Driven:
-                return drivenSpeed;
-            case BoatState.Destroyed:
-                return 0f;
-            default:
-                return autoMoveSpeed;
+            Vector3 scale = boatSpriteRenderer.transform.localScale;
+            scale.x = Mathf.Abs(scale.x) * currentMovementDirection;
+            boatSpriteRenderer.transform.localScale = scale;
         }
     }
-    
-    private void StartMovement()
+
+    public void SetMovementDirection(float direction)
     {
-        movementActive = true;
-        GameLogger.LogVerbose($"[BOAT MOVEMENT] {gameObject.name} - Movement started, direction: {(currentMovementDirection > 0 ? "RIGHT" : "LEFT")}");
+        currentMovementDirection = Mathf.Sign(direction);
     }
-    
-    private void StopMovement()
+
+    public void SetMovementActive(bool active)
     {
-        movementActive = false;
-        if (boatRigidbody != null)
-        {
-            boatRigidbody.velocity = Vector2.zero;
-        }
-        GameLogger.LogVerbose($"[BOAT MOVEMENT] {gameObject.name} - Movement stopped");
+        movementActive = active;
     }
-    
+
     #endregion
-    
-    #region Visual System
-    
-    private void UpdateVisualDirection()
+
+    #region Stability Forces
+
+    private void ApplyStabilityForces()
     {
-        if (boatSpriteRenderer != null)
+        if (boatRigidbody == null) return;
+
+        Vector2 stabilityForce = Vector2.zero;
+
+        if (Mathf.Abs(boatRigidbody.angularVelocity) > 0.1f)
         {
-            boatSpriteRenderer.flipX = currentMovementDirection < 0;
+            stabilityForce.y = -boatRigidbody.angularVelocity * 2f;
+        }
+
+        if (stabilityForce.magnitude > 0.01f)
+        {
+            boatRigidbody.AddForce(stabilityForce, ForceMode2D.Force);
         }
     }
-    
-    private void ActivateBoatPartsDestruction()
-    {
-        if (boatSpriteRenderer != null)
-        {
-            boatSpriteRenderer.gameObject.SetActive(false);
-        }
-        
-        StartCoroutine(BatchExplosionSequence());
-    }
-    
-    private IEnumerator BatchExplosionSequence()
-    {
-        List<int> remainingParts = new List<int>();
-        
-        for (int i = 0; i < boatParts.Length; i++)
-        {
-            if (boatParts[i] != null)
-            {
-                boatParts[i].gameObject.SetActive(true);
-                remainingParts.Add(i);
-            }
-        }
-        
-        int maxSimultaneousExplosions = 3;
-        float explosionDelayRange = 0.3f;
-        
-        while (remainingParts.Count > 0)
-        {
-            int batchSize = Mathf.Min(maxSimultaneousExplosions, remainingParts.Count);
-            
-            for (int i = 0; i < batchSize; i++)
-            {
-                int randomIndex = Random.Range(0, remainingParts.Count);
-                int partIndex = remainingParts[randomIndex];
-                
-                if (boatParts[partIndex] != null)
-                {
-                    boatParts[partIndex].ApplyInitialForces();
-                }
-                
-                remainingParts.RemoveAt(randomIndex);
-            }
-            
-            if (remainingParts.Count > 0)
-            {
-                yield return new WaitForSeconds(Random.Range(0.1f, explosionDelayRange));
-            }
-        }
-    }
-    
-    private void ResetBoatPartsVisual()
-    {
-        for (int i = 0; i < boatParts.Length; i++)
-        {
-            if (boatParts[i] != null)
-            {
-                boatParts[i].gameObject.SetActive(false);
-                boatParts[i].ResetToOriginalPosition();
-            }
-        }
-        
-        if (boatSpriteRenderer != null)
-        {
-            boatSpriteRenderer.gameObject.SetActive(true);
-        }
-    }
-    
+
     #endregion
-    
-    #region State Machine
-    
-    private void InitializeState(BoatState startState)
+
+    #region State System
+
+    public void InitializeState(BoatState startState)
     {
         currentState = startState;
         stateTimer = 0f;
@@ -392,7 +334,7 @@ public class BoatController : MonoBehaviour
         stateTimer = 0f;
         EnterCurrentState();
         
-        GameLogger.LogError($"[BOAT STATE] {gameObject.name} - Changed to {currentState} state");
+        GameLogger.LogVerbose($"[BOAT STATE] {gameObject.name} - Changed to {currentState} state");
     }
     
     private void EnterCurrentState()
@@ -400,16 +342,36 @@ public class BoatController : MonoBehaviour
         switch (currentState)
         {
             case BoatState.Idle:
-                EnterIdleState();
+                SetMovementActive(false);
                 break;
+                
             case BoatState.AutoMove:
-                EnterAutoMoveState();
+                SetMovementActive(enableAutomaticMovement);
+                if (crewManager != null)
+                    crewManager.AssignNavigator();
                 break;
+                
             case BoatState.Driven:
-                EnterDrivenState();
+                SetMovementActive(true);
                 break;
+                
             case BoatState.Destroyed:
-                EnterDestroyedState();
+                SetMovementActive(false);
+                StartCoroutine(HandleDestruction());
+                break;
+        }
+    }
+    
+    private void ExitCurrentState()
+    {
+        switch (currentState)
+        {
+            case BoatState.AutoMove:
+                if (crewManager != null)
+                    crewManager.ReleaseNavigator();
+                break;
+                
+            case BoatState.Driven:
                 break;
         }
     }
@@ -421,229 +383,154 @@ public class BoatController : MonoBehaviour
             case BoatState.Idle:
                 UpdateIdleState();
                 break;
+                
             case BoatState.AutoMove:
                 UpdateAutoMoveState();
                 break;
+                
             case BoatState.Driven:
                 UpdateDrivenState();
                 break;
+                
             case BoatState.Destroyed:
-                UpdateDestroyedState();
                 break;
         }
-    }
-    
-    private void ExitCurrentState()
-    {
-        switch (currentState)
-        {
-            case BoatState.Idle:
-                ExitIdleState();
-                break;
-            case BoatState.AutoMove:
-                ExitAutoMoveState();
-                break;
-            case BoatState.Driven:
-                ExitDrivenState();
-                break;
-        }
-    }
-    
-    #endregion
-    
-    #region State Implementations
-    
-    private void EnterIdleState()
-    {
-        StopMovement();
-        if (crewManager != null) crewManager.ReleaseNavigator();
     }
     
     private void UpdateIdleState()
     {
-        if (stateTimer >= 2f)
+        if (stateTimer > Random.Range(2f, 5f))
         {
             ChangeState(BoatState.AutoMove);
         }
     }
     
-    private void ExitIdleState() { }
-    
-    private void EnterAutoMoveState()
+    private void UpdateAutoMoveState()
     {
-        if (crewManager != null) crewManager.ReleaseNavigator();
-        StartMovement();
-    }
-    
-    private void UpdateAutoMoveState() { }
-    
-    private void ExitAutoMoveState() { }
-    
-    private void EnterDrivenState()
-    {
-        if (crewManager != null) crewManager.AssignNavigator();
-        StartMovement();
-    }
-    
-    private void UpdateDrivenState() { }
-    
-    private void ExitDrivenState() { }
-    
-    private void EnterDestroyedState()
-    {
-        StopMovement();
-        canPlayLogic = false;
-        isDestroyed = true;
-        
-        ActivateBoatPartsDestruction();
-        OnBoatSunk?.Invoke(this);
-        
-        StartCoroutine(ResetBoatAfterDelay());
-    }
-    
-    private void UpdateDestroyedState() { }
-    
-    #endregion
-    
-    #region Physics & Stability
-    
-    private void ApplyStabilityForces()
-    {
-        if (boatRigidbody != null)
+        if (isDestroyed)
         {
-            if (freezeBoatRotation)
-            {
-                boatRigidbody.angularVelocity = 0f;
-                transform.rotation = Quaternion.identity;
-            }
-            
-            float maxSpeed = GetCurrentMovementSpeed() * 2f;
-            if (boatRigidbody.velocity.magnitude > maxSpeed)
-            {
-                boatRigidbody.velocity = boatRigidbody.velocity.normalized * maxSpeed;
-            }
-        }
-    }
-    
-    #endregion
-    
-    #region Crew Management & Integrity
-    
-    public void StartCrewInitialization()
-    {
-        if (crewManager != null)
-        {
-            crewManager.StartCrewInitialization();
-        }
-    }
-    
-    public void RecalculateBoatIntegrity()
-    {
-        if (crewManager == null) return;
-        
-        currentIntegrity = 0f;
-        var allCrew = crewManager.GetAllCrewMembers();
-        
-        foreach (var crew in allCrew)
-        {
-            if (crew != null && 
-                crew.ParentContainer != null && 
-                crew.ParentContainer.activeInHierarchy && 
-                crew.State == Enemy.EnemyState.Alive)
-            {
-                currentIntegrity += crew.PowerLevel;
-            }
+            ChangeState(BoatState.Destroyed);
+            return;
         }
         
-        maxIntegrity = currentIntegrity;
-        
-        int activeCrewCount = crewManager.GetActiveCrewCount();
-        
-        if (activeCrewCount <= 0 && !isDestroyed && allCrew.Count > 0)
+        if (stateTimer > Random.Range(15f, 30f))
         {
-            SinkBoat();
-        }
-        else if (activeCrewCount > 0 && isDestroyed && currentState != BoatState.Destroyed)
-        {
-            isDestroyed = false;
-            canPlayLogic = true;
             ChangeState(BoatState.Idle);
         }
     }
     
-    public void SinkBoat()
+    private void UpdateDrivenState()
     {
-        if (!isDestroyed)
+        if (isDestroyed)
         {
             ChangeState(BoatState.Destroyed);
+            return;
         }
     }
-    
+
     #endregion
-    
-    #region Destruction & Reset
-    
-    private IEnumerator ResetBoatAfterDelay()
+
+    #region Health System
+
+    public void RecalculateBoatIntegrity()
     {
+        if (!isInitialized) return;
+
+        currentIntegrity = 0f;
+        tempEnemyList.Clear();
+
+        if (boatPlatform != null)
+        {
+            boatPlatform.GetRegisteredEnemies(tempEnemyList);
+
+            foreach (var enemy in tempEnemyList)
+            {
+                if (enemy != null && enemy.State == Enemy.EnemyState.Alive)
+                {
+                    currentIntegrity += enemy.PowerLevel;
+                }
+            }
+        }
+
+        tempEnemyList.Clear();
+
+        if (currentIntegrity <= 0f && !isDestroyed)
+        {
+            TriggerDestruction();
+        }
+    }
+
+    public void TriggerDestruction()
+    {
+        if (isDestroyed) return;
+
+        isDestroyed = true;
+        ChangeState(BoatState.Destroyed);
+        OnBoatSunk?.Invoke(this);
+    }
+
+    private IEnumerator HandleDestruction()
+    {
+        yield return new WaitForSeconds(destructionDelay);
+
+        DestroyBoatParts();
+
         yield return new WaitForSeconds(resetDelay);
-        
-        ResetBoatPartsVisual();
+
         ResetBoat();
     }
-    
+
+    private void DestroyBoatParts()
+    {
+        if (boatParts != null)
+        {
+            foreach (var part in boatParts)
+            {
+                if (part != null)
+                {
+                    part.ApplyInitialForces();
+                }
+            }
+        }
+    }
+
+    #endregion
+
+    #region Reset System
+
     public void ResetBoat()
     {
-        currentIntegrity = 0f;
         isDestroyed = false;
-        canPlayLogic = true;
-        
+        currentIntegrity = 0f;
+
         if (crewManager != null)
         {
             crewManager.Reset();
         }
-        
+
+        if (boatParts != null)
+        {
+            foreach (var part in boatParts)
+            {
+                if (part != null)
+                {
+                    part.ResetToOriginalPosition();
+                }
+            }
+        }
+
         SetRandomInitialDirection();
         ChangeState(BoatState.Idle);
-        
-        GameLogger.LogError($"[BOAT RESET] {gameObject.name} - Boat reset completed");
+
+        if (useObjectPool)
+        {
+            ReturnToPool();
+        }
     }
-    
-    #endregion
-    
-    #region Public Interface
-    
-    public void SetMovementState_AutoMove()
+
+    private void ReturnToPool()
     {
-        if (!isInitialized) return;
-        ChangeState(BoatState.AutoMove);
-    }
-    
-    public void SetMovementState_Driven()
-    {
-        if (!isInitialized) return;
-        ChangeState(BoatState.Driven);
-    }
-    
-    public void SetAutomaticMovementEnabled(bool enabled)
-    {
-        enableAutomaticMovement = enabled;
-        if (!enabled) StopMovement();
-    }
-    
-    public void DestroyBoat()
-    {
-        if (!isInitialized) return;
-        ChangeState(BoatState.Destroyed);
-    }
-    
-    public void ReturnToPool()
-    {
-        isInitialized = false;
-        canPlayLogic = false;
-        isDestroyed = false;
-        StopMovement();
-        
-        if (useObjectPool && SimpleObjectPool.Instance != null)
+        if (SimpleObjectPool.Instance != null)
         {
             SimpleObjectPool.Instance.ReturnToPool(poolName, gameObject);
         }
@@ -652,64 +539,64 @@ public class BoatController : MonoBehaviour
             gameObject.SetActive(false);
         }
     }
-    
-    // Getters
-    public float GetCurrentIntegrity() => currentIntegrity;
-    public float GetMaxIntegrity() => maxIntegrity;
-    public bool IsDestroyed() => isDestroyed;
-    public bool IsMovementActive() => movementActive;
-    public float GetCurrentDirection() => currentMovementDirection;
-    public BoatState GetCurrentState() => currentState;
-    public bool IsInitialized() => isInitialized;
-    public BoatFloater BoatFloater => boatFloater;
-    public BoatPlatform BoatPlatform => boatPlatform;
-    public BoatCrewManager CrewManager => crewManager;
-    
-    public List<Enemy> GetAllCrewMembers()
-    {
-        tempEnemyList.Clear();
-        
-        if (crewManager != null)
-        {
-            var boatCrew = crewManager.GetAllCrewMembers();
-            for (int i = 0; i < boatCrew.Count; i++)
-            {
-                tempEnemyList.Add(boatCrew[i]);
-            }
-        }
-        
-        return tempEnemyList;
-    }
-    
+
     #endregion
-    
-    #region Debug
-    
+
+    #region Public Interface
+
+    public BoatState GetCurrentState()
+    {
+        return currentState;
+    }
+
+    public float GetCurrentIntegrity()
+    {
+        return currentIntegrity;
+    }
+
+    public float GetMaxIntegrity()
+    {
+        return maxIntegrity;
+    }
+
+    public bool IsDestroyed()
+    {
+        return isDestroyed;
+    }
+
+    public string GetBoatID()
+    {
+        return boatID?.UniqueID ?? "NO_ID";
+    }
+
+    public int GetActiveCrewCount()
+    {
+        return crewManager?.GetActiveCrewCount() ?? 0;
+    }
+
+    #endregion
+
+    #region Debug Methods
+
     private void OnDrawGizmosSelected()
     {
         if (leftBoundaryPoint != null && rightBoundaryPoint != null)
         {
-            Gizmos.color = Color.red;
-            Gizmos.DrawLine(
-                new Vector3(leftBoundaryPoint.position.x, transform.position.y - 2f, 0),
-                new Vector3(leftBoundaryPoint.position.x, transform.position.y + 2f, 0)
-            );
-            Gizmos.DrawLine(
-                new Vector3(rightBoundaryPoint.position.x, transform.position.y - 2f, 0),
-                new Vector3(rightBoundaryPoint.position.x, transform.position.y + 2f, 0)
-            );
-            
             Gizmos.color = Color.yellow;
-            Gizmos.DrawLine(
-                new Vector3(leftBoundaryPoint.position.x, transform.position.y, 0),
-                new Vector3(rightBoundaryPoint.position.x, transform.position.y, 0)
-            );
+            Gizmos.DrawLine(leftBoundaryPoint.position, rightBoundaryPoint.position);
             
-            Gizmos.color = Color.green;
-            float arrowX = transform.position.x + currentMovementDirection * 2f;
-            Gizmos.DrawLine(transform.position, new Vector3(arrowX, transform.position.y, 0));
+            Gizmos.color = Color.red;
+            Vector3 leftBoundary = leftBoundaryPoint.position + Vector3.right * boundaryBuffer;
+            Vector3 rightBoundary = rightBoundaryPoint.position - Vector3.right * boundaryBuffer;
+            
+            Gizmos.DrawWireSphere(leftBoundary, 0.5f);
+            Gizmos.DrawWireSphere(rightBoundary, 0.5f);
         }
+        
+        Gizmos.color = Color.blue;
+        Vector3 directionIndicator = transform.position + Vector3.right * currentMovementDirection * 2f;
+        Gizmos.DrawRay(transform.position, Vector3.right * currentMovementDirection * 2f);
     }
-    
+
     #endregion
 }

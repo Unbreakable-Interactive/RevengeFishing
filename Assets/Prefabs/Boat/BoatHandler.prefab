@@ -90,12 +90,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e1082162df3af433ba7940f07dfaea8b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  boatID:
-    _uniqueID: Boat_1bb50b88
-  crewManager: {fileID: 1128441753762711215}
   isLeftBoundary: 1
   debugTriggers: 1
-  preventionCheckRadius: 1.2
+  boatID: 
 --- !u!1 &842847640607169338
 GameObject:
   m_ObjectHideFlags: 0
@@ -364,10 +361,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6999758537aed416690b2ed86486b5b2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  boatID:
+    _uniqueID: Boat_713767d8
   crewManager: {fileID: 1128441753762711215}
   boatFloater: {fileID: 3385205366214559734}
   boatPlatform: {fileID: 8531477562920402828}
   boatSpriteRenderer: {fileID: 4981744675166538355}
+  crewContainer: {fileID: 7460143873047510890}
   autoMoveSpeed: 1
   drivenSpeed: 2.5
   maxMovementForce: 2.5
@@ -381,8 +381,6 @@ MonoBehaviour:
   freezeBoatRotation: 0
   leftBoundaryPoint: {fileID: 0}
   rightBoundaryPoint: {fileID: 0}
-  leftBoundaryX: 0
-  rightBoundaryX: 0
   leftBoundary: {fileID: 1736860403605829746}
   rightBoundary: {fileID: 8710223552841239171}
   currentIntegrity: 100
@@ -435,12 +433,29 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 16bcba11d4bc14d5182514465279d494, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  crewMemberPrefab: {fileID: 1963649820016990938, guid: c45946bf32b8a4045aad4551ca754c64, type: 3}
+  maxCrewSize: 2
+  maxCrewToDeactivate: 1
+  crewSpawnDelay: 0.5
+  crewHeightAbovePlatform: 0.07
+  allowCrewRandomDeactivation: 1
   boatID:
     _uniqueID: Boat_08a48edb
-  boatFishermanPrefab: {fileID: 1963649820016990938, guid: c45946bf32b8a4045aad4551ca754c64, type: 3}
-  maxCrewMembers: 2
-  maxInactiveCrewMembers: 1
-  allCrewMembers: []
+  boatController: {fileID: 6631260583467594784}
+  boatPlatform: {fileID: 8531477562920402828}
+  boatFloater: {fileID: 3385205366214559734}
+  crewContainer: {fileID: 7460143873047510890}
+  spawnPoints:
+  - {fileID: 4120316064714226126}
+  - {fileID: 7554559386534790929}
+  leftBoundary: {fileID: 1736860403605829746}
+  rightBoundary: {fileID: 8710223552841239171}
+  calculatedLeftBoundary: -1.5
+  calculatedRightBoundary: 1.5
+  debugCrewManager: 1
+  trackCrewDisappearance: 1
+  showPlatformGizmos: 1
+  logCrewStates: 1
 --- !u!61 &5905692512076843097
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -977,12 +992,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e1082162df3af433ba7940f07dfaea8b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  boatID:
-    _uniqueID: Boat_1bb50b88
-  crewManager: {fileID: 1128441753762711215}
   isLeftBoundary: 0
   debugTriggers: 1
-  preventionCheckRadius: 1.2
+  boatID: 
 --- !u!1 &6424523540721141613
 GameObject:
   m_ObjectHideFlags: 0
@@ -1190,16 +1202,10 @@ MonoBehaviour:
   assignedEnemies: []
   showDebugInfo: 1
   identifier: 1
-  lastPosition: {x: 0, y: 0, z: 0}
-  currentVelocity: {x: 0, y: 0, z: 0}
-  trackMovement: 1
-  syncForceMultiplier: 2
   boatID:
     _uniqueID: Boat_1bb50b88
   autoDetectBoatID: 1
-  forceSyncCrew: 1
-  syncThreshold: 0.05
-  debugSync: 0
+  debugPlatform: 0
 --- !u!61 &611578597188868134
 BoxCollider2D:
   m_ObjectHideFlags: 0
