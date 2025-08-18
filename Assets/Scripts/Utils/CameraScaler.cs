@@ -1,6 +1,8 @@
 using UnityEngine;
 using Cinemachine;
 
+// ! Revisar y optimizar los llamados de FindObjectOfType
+
 public class CameraScaler : MonoBehaviour
 {
     [Header("Camera Distance Settings")]
@@ -23,10 +25,12 @@ public class CameraScaler : MonoBehaviour
     private void Awake()
     {
         if (playerScaler == null)
-            playerScaler = FindObjectOfType<PlayerScaler>();
+            GameLogger.LogError("No PlayerScaler component found!");
+            // playerScaler = FindObjectOfType<PlayerScaler>();
 
         if (virtualCamera == null)
-            virtualCamera = FindObjectOfType<CinemachineVirtualCamera>();
+            GameLogger.LogError("No CinemachineVirtualCamera component found!");
+            // virtualCamera = FindObjectOfType<CinemachineVirtualCamera>();
 
         if (virtualCamera != null)
         {
@@ -36,70 +40,55 @@ public class CameraScaler : MonoBehaviour
 
     private void InitializeCameraBody()
     {
-        // Try to get Transposer component
         transposer = virtualCamera.GetCinemachineComponent<CinemachineTransposer>();
         if (transposer != null)
         {
             baseOffset = transposer.m_FollowOffset;
             baseDistance = baseOffset.z;
-            Debug.Log($"CameraScaler: Found Transposer, Base Follow Offset: {baseOffset}, Distance: {baseDistance}");
+            GameLogger.LogVerbose($"CameraScaler: Found Transposer, Base Follow Offset: {baseOffset}, Distance: {baseDistance}");
             return;
         }
 
-        // Try to get Framing Transposer component
         framingTransposer = virtualCamera.GetCinemachineComponent<CinemachineFramingTransposer>();
         if (framingTransposer != null)
         {
-            // For Framing Transposer, use Camera Distance
             baseDistance = framingTransposer.m_CameraDistance;
-            Debug.Log($"CameraScaler: Found Framing Transposer, Base Camera Distance: {baseDistance}");
+            GameLogger.LogVerbose($"CameraScaler: Found Framing Transposer, Base Camera Distance: {baseDistance}");
             return;
         }
 
-        Debug.LogError("CameraScaler: Virtual Camera doesn't have Transposer or Framing Transposer body!");
+        GameLogger.LogError("CameraScaler: Virtual Camera doesn't have Transposer or Framing Transposer body!");
     }
 
     private void Start()
     {
         if (playerScaler == null)
         {
-            Debug.LogError("CameraScaler: No PlayerScaler found!");
+            GameLogger.LogError("CameraScaler: No PlayerScaler found!");
             return;
         }
 
         if (virtualCamera == null)
         {
-            Debug.LogError("CameraScaler: No Virtual Camera found!");
+            GameLogger.LogError("CameraScaler: No Virtual Camera found!");
             return;
         }
 
-        currentDistance = Mathf.Abs(baseDistance); // Use absolute value for distance
+        currentDistance = Mathf.Abs(baseDistance);
         targetDistance = currentDistance;
 
-        Debug.Log($"CameraScaler initialized: Base distance {baseDistance}");
+        GameLogger.LogVerbose($"CameraScaler initialized: Base distance {baseDistance}");
     }
 
     private void Update()
     {
         if (playerScaler == null || virtualCamera == null) return;
 
-        // Get player scale
         float playerScale = playerScaler.GetCurrentScaleMultiplier();
-
-        // Calculate target distance - scale proportionally
         float newTargetDistance = Mathf.Abs(baseDistance) * playerScale;
 
-        // Debug logging
-        if (Time.frameCount % 60 == 0) // Once per second
-        {
-            //Debug.Log($"Player Scale: {playerScale:F2}, Target Distance: {newTargetDistance:F1}, Current: {currentDistance:F1}");
-        }
-
-        // Update target if changed
         targetDistance = newTargetDistance;
-        //Debug.Log($"CAMERA DISTANCE CHANGE: Player {playerScale:F2}x to Distance {targetDistance:F1}");
 
-        // Apply smooth or instant movement
         if (smoothMovement)
         {
             currentDistance = Mathf.Lerp(currentDistance, targetDistance, moveSpeed * Time.deltaTime);
@@ -109,7 +98,6 @@ public class CameraScaler : MonoBehaviour
             currentDistance = targetDistance;
         }
 
-        // Update the CORRECT Cinemachine property
         UpdateCameraDistance();
     }
 
@@ -117,23 +105,18 @@ public class CameraScaler : MonoBehaviour
     {
         if (transposer != null)
         {
-            // Update Transposer Follow Offset Z
             Vector3 newOffset = baseOffset;
-            newOffset.z = -currentDistance; // Negative for camera behind
+            newOffset.z = -currentDistance;
             transposer.m_FollowOffset = newOffset;
 
-            Debug.Log($"Updated Transposer Follow Offset Z to: {newOffset.z:F1}");
+            GameLogger.LogVerbose($"Updated Transposer Follow Offset Z to: {newOffset.z:F1}");
         }
         else if (framingTransposer != null)
         {
-            // Update Framing Transposer Camera Distance
             framingTransposer.m_CameraDistance = currentDistance;
-
-            //Debug.Log($"Updated Framing Transposer Camera Distance to: {currentDistance:F1}");
         }
     }
 
-    // Public methods for debugging
     public float GetCurrentDistance() => currentDistance;
     public float GetTargetDistance() => targetDistance;
     public string GetBodyType()

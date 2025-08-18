@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -14,12 +13,12 @@ public class IdleDetector : MonoBehaviour
 
         if (parentEnemy == null)
         {
-            Debug.LogError($"IdleDetector on {gameObject.name} could not find parent Enemy component!");
+            GameLogger.LogError($"IdleDetector on {gameObject.name} could not find parent Enemy component!");
         }
 
         if (detectorCollider == null || !detectorCollider.isTrigger)
         {
-            Debug.LogError($"IdleDetector on {gameObject.name} needs a trigger collider!");
+            GameLogger.LogError($"IdleDetector on {gameObject.name} needs a trigger collider!");
         }
     }
 
@@ -68,7 +67,7 @@ public class IdleDetector : MonoBehaviour
             {
                 if (IsEnemyIdle(otherDetector.parentEnemy))
                 {
-                    Debug.Log($"{parentEnemy.name} found overlap with idle enemy {otherDetector.parentEnemy.name}");
+                    GameLogger.LogVerbose($"{parentEnemy.name} found overlap with idle enemy {otherDetector.parentEnemy.name}");
                     return true;
                 }
             }

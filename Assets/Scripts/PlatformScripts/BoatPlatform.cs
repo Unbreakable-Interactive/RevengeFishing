@@ -1,248 +1,67 @@
-using System.Collections.Generic;
 using UnityEngine;
-using Utils;
 
 public class BoatPlatform : Platform, IBoatComponent
 {
-    [Header("Boat Identity - ASSIGN IN EDITOR")]
-    [SerializeField] private BoatID boatID = new BoatID();
+    [Header("Boat Integration")]
+    [SerializeField] private BoatID boatID;
+    [SerializeField] private bool autoDetectBoatID = true;
     
-    [Header("Required References - ASSIGN IN EDITOR")]
-    [SerializeField] private BoatCrewManager crewManager;
+     private bool isInitialized = false;
     
-    [Header("BOAT SPECIFIC SETTINGS")]
-    [SerializeField] private bool autoStartMovementOnRegistration = true;
-    [SerializeField] private bool debugBoatTriggers = true;
-    [SerializeField] private BoatFloater boatFloater;
-    
-    public string GetBoatID() => boatID.UniqueID;
     public void SetBoatID(BoatID newBoatID) => boatID = newBoatID;
+    
+    public void Initialize()
+    {
+        if (isInitialized) return;
+        
+        if (platformCollider == null)
+            platformCollider = GetComponent<Collider2D>();
+            
+        if (platformCollider != null)
+            platformCollider.isTrigger = true;
+        
+        if (autoDetectBoatID && boatID == null)
+        {
+            boatID = GetComponentInParent<BoatID>();
+        }
+        
+        isInitialized = true;
+        
+        GameLogger.LogVerbose($"[BOAT PLATFORM] {GetBoatID()} - Platform initialized");
+    }
     
     protected override void Start()
     {
         base.Start();
         
-        if (boatFloater == null)
+        if (!isInitialized)
         {
-            boatFloater = GetComponentInParent<BoatFloater>();
+            Initialize();
         }
-        
-        if (debugBoatTriggers)
-        {
-            Debug.Log($"BoatPlatform: Initialized on {gameObject.name} with ID {boatID}");
-        }
-    }
-    
-    void OnCollisionEnter2D(Collision2D collision)
-    {
-        Enemy enemy = collision.gameObject.GetComponent<Enemy>();
-        if (enemy != null && enemy is BoatLandEnemy boatEnemy)
-        {
-            if (!DoesBoatEnemyBelongToThisBoat(boatEnemy))
-            {
-                if (debugBoatTriggers)
-                {
-                    Debug.Log($"BoatPlatform: REJECTED - {boatEnemy.name} (ID: {boatEnemy.GetBoatID()}) rejected by boat (ID: {GetBoatID()})");
-                }
-                return;
-            }
-            
-            if (boatEnemy.landEnemyConfig != null && identifier == boatEnemy.landEnemyConfig.identifier)
-            {
-                RegisterEnemyOnCollision(enemy);
-            }
-        }
-    }
-    
-    protected override void RegisterEnemyOnCollision(Enemy enemy)
-    {
-        if (enemy == null || enemy.gameObject == null) return;
-        
-        if (!(enemy is BoatLandEnemy boatEnemy))
-        {
-            if (debugBoatTriggers)
-                Debug.Log($"BoatPlatform: REJECTED - {enemy.name} is not BoatLandEnemy");
-            return;
-        }
-        
-        if (!DoesBoatEnemyBelongToThisBoat(boatEnemy))
-        {
-            if (debugBoatTriggers)
-            {
-                Debug.Log($"BoatPlatform: REGISTRATION DENIED - {boatEnemy.name} (ID: {boatEnemy.GetBoatID()}) cannot register on boat (ID: {boatID})");
-            }
-            return;
-        }
-        
-        if (assignedEnemies.Contains(enemy)) return;
-        
-        Platform previousPlatform = boatEnemy.GetAssignedPlatform();
-        if (previousPlatform != null && previousPlatform != this)
-        {
-            if (previousPlatform is BoatPlatform otherBoatPlatform)
-            {
-                if (otherBoatPlatform.GetBoatID() != GetBoatID())
-                {
-                    if (debugBoatTriggers)
-                        Debug.Log($"BoatPlatform: BOAT TRANSFER BLOCKED - {enemy.name} cannot switch boats");
-                    return;
-                }
-            }
-            
-            previousPlatform.UnregisterEnemy(enemy);
-            if (showDebugInfo)
-                Debug.Log($"Enemy {enemy.name} MOVED from {previousPlatform.name} to {gameObject.name}");
-        }
-        
-        assignedEnemies.Add(enemy);
-        boatEnemy.SetAssignedPlatform(this);
-        
-        boatEnemy.OnPlatformAssigned(this);
-        
-        Collider2D enemyCollider = enemy.GetComponent<Collider2D>();
-        if (enemyCollider != null)
-        {
-            Collider2D platformCollider = GetComponent<Collider2D>();
-            if (platformCollider != null)
-                Physics2D.IgnoreCollision(platformCollider, enemyCollider, false);
-        }
-
-        boatEnemy.platformBoundsCalculated = true;
-
-        if (debugBoatTriggers)
-            Debug.Log($"BOAT ASSIGNMENT SUCCESS: {enemy.name} assigned to boat platform {gameObject.name} (ID: {boatID}). Total: {assignedEnemies.Count}");
-        
-        TriggerBoatMovement(enemy);
-    }
-    
-    private bool DoesBoatEnemyBelongToThisBoat(BoatLandEnemy boatEnemy)
-    {
-        bool matches = boatID.Matches(boatEnemy.GetBoatID());
-        
-        if (debugBoatTriggers)
-        {
-            Debug.Log($"BoatPlatform OWNERSHIP CHECK: BoatEnemy {boatEnemy.name} (ID: {boatEnemy.GetBoatID()}) vs Platform (ID: {boatID}) = {matches}");
-        }
-        
-        return matches;
     }
     
     public override void RegisterEnemyAtRuntime(Enemy enemy)
     {
-        if (enemy != null && !assignedEnemies.Contains(enemy))
-        {
-            if (!(enemy is BoatLandEnemy boatEnemy))
-            {
-                if (debugBoatTriggers)
-                    Debug.Log($"BoatPlatform RUNTIME: REJECTED - {enemy.name} is not BoatLandEnemy");
-                return;
-            }
-            
-            if (!DoesBoatEnemyBelongToThisBoat(boatEnemy))
-            {
-                if (debugBoatTriggers)
-                {
-                    Debug.Log($"BoatPlatform RUNTIME: DENIED {boatEnemy.name} (ID: {boatEnemy.GetBoatID()}) - wrong boat (ID: {boatID})");
-                }
-                return;
-            }
-            
-            assignedEnemies.Add(enemy);
-            boatEnemy.SetAssignedPlatform(this);
-
-            Collider2D enemyCollider = enemy.GetComponent<Collider2D>();
-            if (enemyCollider != null)
-            {
-                Collider2D platformCollider = GetComponent<Collider2D>();
-                if (platformCollider != null)
-                {
-                    Physics2D.IgnoreCollision(enemyCollider, platformCollider, false);
-                }
-            }
-
-            if (debugBoatTriggers)
-            {
-                Debug.Log($"BOAT RUNTIME SUCCESS: {enemy.name} assigned to boat platform {gameObject.name} (ID: {boatID})");
-            }
-            
-            TriggerBoatMovement(enemy);
-        }
-    }
-    
-    private void TriggerBoatMovement(Enemy enemy)
-    {
-        if (!autoStartMovementOnRegistration) return;
+        base.RegisterEnemyAtRuntime(enemy);
         
-        if (boatFloater != null)
+        if (enemy is BoatLandEnemy boatEnemy)
         {
-            boatFloater.RecalculateBuoyancy();
-            boatFloater.OnRegisteredToPlatform(this);
-            
-            if (debugBoatTriggers)
-            {
-                Debug.Log($"BoatPlatform: Triggered boat movement for {enemy.name} on boat {boatFloater.name}");
-            }
-        }
-        else if (debugBoatTriggers)
-        {
-            Debug.LogWarning($"BoatPlatform: Cannot trigger boat movement - BoatFloater not found!");
+            GameLogger.LogVerbose($"[BOAT PLATFORM] {GetBoatID()} - Registered boat crew member: {enemy.name}, Total enemies: {assignedEnemies.Count}");
         }
     }
     
-    public void SetBoatFloater(BoatFloater floater)
+    public override void UnregisterEnemy(Enemy enemy)
     {
-        boatFloater = floater;
+        base.UnregisterEnemy(enemy);
         
-        if (debugBoatTriggers)
+        if (enemy is BoatLandEnemy boatEnemy)
         {
-            Debug.Log($"BoatPlatform: BoatFloater manually assigned: {floater.name}");
+            GameLogger.LogVerbose($"[BOAT PLATFORM] {GetBoatID()} - Unregistered boat crew member: {enemy.name}");
         }
     }
     
-    public BoatFloater GetBoatFloater()
+    public string GetBoatID()
     {
-        return boatFloater;
-    }
-    
-    public void ForceStartBoatMovement()
-    {
-        if (boatFloater != null)
-        {
-            boatFloater.ForceStartMovement();
-            
-            if (debugBoatTriggers)
-            {
-                Debug.Log("BoatPlatform: Force started boat movement");
-            }
-        }
-    }
-    
-    public void StopBoatMovement()
-    {
-        if (boatFloater != null)
-        {
-            boatFloater.StopMovement();
-            
-            if (debugBoatTriggers)
-            {
-                Debug.Log("BoatPlatform: Stopped boat movement");
-            }
-        }
-    }
-    
-    public bool IsBoatMoving()
-    {
-        return boatFloater != null && boatFloater.IsMovementActive();
-    }
-    
-    public List<BoatLandEnemy> GetAssignedBoatEnemies()
-    {
-        List<BoatLandEnemy> boatEnemies = new List<BoatLandEnemy>();
-        foreach (Enemy enemy in assignedEnemies)
-        {
-            if (enemy is BoatLandEnemy boatEnemy)
-                boatEnemies.Add(boatEnemy);
-        }
-        return boatEnemies;
+        return boatID?.UniqueID ?? "NO_ID";
     }
 }

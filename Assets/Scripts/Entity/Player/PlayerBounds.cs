@@ -28,11 +28,11 @@ public class PlayerBounds : MonoBehaviour
             playerTransform = playerMovementScript.transform;
             playerRb = playerTransform.GetComponent<Rigidbody2D>();
             player = playerMovementScript;
-            Debug.Log("PlayerBounds initialized with player reference");
+            GameLogger.Log("PlayerBounds initialized with player reference");
         }
         else
         {
-            Debug.LogError("PlayerBounds: No PlayerMovement provided!");
+            GameLogger.LogError("PlayerBounds: No PlayerMovement provided!");
         }
     }
 
@@ -49,7 +49,7 @@ public class PlayerBounds : MonoBehaviour
             // Allow upward exit for jumping
             if (allowUpwardExit && playerPos.y > bounds.max.y)
             {
-                Debug.Log("Player jumped above bounds - allowed");
+                GameLogger.LogVerbose("Player jumped above bounds - allowed");
                 return;
             }
 
@@ -59,17 +59,17 @@ public class PlayerBounds : MonoBehaviour
             if (playerPos.x < bounds.min.x) // Left boundary
             {
                 bounceDirection = Vector2.right;
-                Debug.Log("Player hit left boundary");
+                GameLogger.LogVerbose("Player hit left boundary");
             }
             else if (playerPos.x > bounds.max.x) // Right boundary  
             {
                 bounceDirection = Vector2.left;
-                Debug.Log("Player hit right boundary");
+                GameLogger.LogVerbose("Player hit right boundary");
             }
             else if (playerPos.y < bounds.min.y) // Bottom boundary
             {
                 bounceDirection = Vector2.up;
-                Debug.Log("Player hit bottom boundary");
+                GameLogger.LogVerbose("Player hit bottom boundary");
             }
 
             // Apply bounce
@@ -81,7 +81,7 @@ public class PlayerBounds : MonoBehaviour
                 // Handle rotation based on current movement mode
                 HandleBounceRotation(newVelocity);
 
-                Debug.Log($"Applied bounce: {newVelocity * bounceForce}");
+                GameLogger.LogVerbose($"Applied bounce: {newVelocity * bounceForce}");
             }
         }
     }
@@ -92,7 +92,7 @@ public class PlayerBounds : MonoBehaviour
         {
             // In air: The HandleAirborneRotation() will automatically rotate to face velocity
             // No need to override - it will happen automatically next frame
-            Debug.Log("Airborne bounce - auto-rotation will handle this");
+            GameLogger.LogVerbose("Airborne bounce - auto-rotation will handle this");
         }
         else
         {
@@ -101,9 +101,8 @@ public class PlayerBounds : MonoBehaviour
             {
                 float angle = Mathf.Atan2(newVelocity.y, newVelocity.x) * Mathf.Rad2Deg;
                 playerTransform.rotation = Quaternion.AngleAxis(angle, Vector3.forward);
-                Debug.Log($"Underwater bounce - rotated to face: {angle:F1}°");
+                GameLogger.LogVerbose($"Underwater bounce - rotated to face: {angle:F1}°");
             }
         }
     }
-
 }

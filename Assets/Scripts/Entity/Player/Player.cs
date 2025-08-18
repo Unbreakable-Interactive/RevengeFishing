@@ -6,6 +6,10 @@ using static Enemy;
 
 public class Player : Entity
 {
+    private static readonly int IsInfant = Animator.StringToHash("isInfant");
+    private static readonly int IsJuvie = Animator.StringToHash("isJuvie");
+    private static readonly int IsBiting = Animator.StringToHash("isBiting");
+
     public enum Phase
     {
         Infant,
@@ -41,8 +45,11 @@ public class Player : Entity
     private bool hasAppliedBoost = false; // Track if boost was already applied
 
     [SerializeField] protected HungerHandler hungerHandler;
-
+    [SerializeField] protected MouthMagnet magnet;
+    
     public HungerHandler HungerHandler => hungerHandler;
+    
+    public MouthMagnet Magnet => magnet;
 
     [SerializeField] protected Status status;
     [SerializeField] protected Phase currentPhase;
@@ -121,7 +128,7 @@ public class Player : Entity
         }
         else
         {
-            Debug.LogWarning("Multiple Player instances found! Destroying duplicate.");
+            GameLogger.LogWarning("Multiple Player instances found! Destroying duplicate.");
             Destroy(gameObject);
         }
 
@@ -140,11 +147,11 @@ public class Player : Entity
             mainCamera = Camera.main;
             if (mainCamera == null)
             {
-                Debug.LogWarning("No main camera found! Please assign camera reference in Player component.");
+                GameLogger.LogWarning("No main camera found! Please assign camera reference in Player component.");
             }
         }
 
-        animator = GetComponent<Animator>();
+        // animator = GetComponent<Animator>();
 
         currentPhase = Phase.Infant; // Start in the Infant phase
         //change the next line once an actual fix is found for player threshold not assigning properly
@@ -231,28 +238,28 @@ public class Player : Entity
         {
             case Phase.Infant:
                 currentPhase = Phase.Juvenile;
-                animator?.SetBool("isInfant", false);
-                animator?.SetBool("isJuvie", true);
+                animator.SetBool(IsInfant, false);
+                animator.SetBool(IsJuvie, true);
                 nextPowerLevel = playerConfig.phaseThresholds.adult;
-                Debug.Log("Player matured to Juvenile phase!");
+                GameLogger.Log("Player matured to Juvenile phase!");
                 break;
             case Phase.Juvenile:
                 currentPhase = Phase.Adult;
                 nextPowerLevel = playerConfig.phaseThresholds.beast;
-                Debug.Log("Player matured to Adult phase!");
+                GameLogger.Log("Player matured to Adult phase!");
                 break;
             case Phase.Adult:
                 currentPhase = Phase.Beast;
                 nextPowerLevel = playerConfig.phaseThresholds.monster;
-                Debug.Log("Player matured to Beast phase!");
+                GameLogger.Log("Player matured to Beast phase!");
                 break;
             case Phase.Beast:
                 currentPhase = Phase.Monster;
                 nextPowerLevel = playerConfig.phaseThresholds.victory; //Change this to the desired value for winning the game
-                Debug.Log("Player matured to Monster phase!");
+                GameLogger.Log("Player matured to Monster phase!");
                 break;
             case Phase.Monster:
-                Debug.Log("Victory!");
+                GameLogger.Log("Victory!");
                 //transition to victory scene
                 SceneManager.LoadScene("Victory");
                 break;
@@ -330,7 +337,7 @@ public class Player : Entity
 
     public void TriggerBite()
     {
-        animator?.SetTrigger("isBiting");
+        animator.SetTrigger(IsBiting);
     }
 
     public void TakeFishingFatigue(float fatigueDamage)
@@ -561,7 +568,7 @@ public class Player : Entity
         DeathManager.SetDeathType(deathType);
 
         // Optional: Add death animation or effects here
-        Debug.Log($"Player died: {deathType}");
+        GameLogger.Log($"Player died: {deathType}");
 
         // Optional: Brief pause before scene transition
         yield return new WaitForSeconds(0f);
@@ -805,7 +812,7 @@ public class Player : Entity
 
         if (mainCamera == null)
         {
-            Debug.LogError("Player: Camera is null! Cannot get mouse world position.");
+            GameLogger.LogError("Player: Camera is null! Cannot get mouse world position.");
             return Vector2.zero;
         }
 
@@ -836,7 +843,7 @@ public class Player : Entity
     //Passes Debugger messages through enabled check
     void DebugLog(string message)
     {
-        if (enableDebugLogs) Debug.Log(message);
+        if (enableDebugLogs) GameLogger.Log(message);
     }
     #endregion
 }

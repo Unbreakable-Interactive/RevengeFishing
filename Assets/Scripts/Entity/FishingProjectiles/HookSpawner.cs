@@ -38,7 +38,7 @@ public class HookSpawner : MonoBehaviour
 
     public void Initialize()
     {
-        Debug.Log($"HookSpawner.Initialize() called on {gameObject.name}");
+        GameLogger.LogVerbose($"HookSpawner.Initialize() called on {gameObject.name}");
 
         rodAttachRope = GetComponentInChildren<Rope>();
         rodAttachRope.gameObject.GetComponent<LineRenderer>().enabled = false;
@@ -50,12 +50,12 @@ public class HookSpawner : MonoBehaviour
             hookHandlerPrefab = Resources.Load<GameObject>(AssetNames.HOOKHANDLER_PREFAB_NAME);
             if (hookHandlerPrefab == null)
             {
-                Debug.LogError($"HookSpawner on {gameObject.name}: hookHandlerPrefab is missing! Assign it in Inspector or place FishingHookHandler in Resources folder!");
+                GameLogger.LogError($"HookSpawner on {gameObject.name}: hookHandlerPrefab is missing! Assign it in Inspector or place FishingHookHandler in Resources folder!");
                 return;
             }
             else
             {
-                Debug.Log($"HookSpawner on {gameObject.name}: Auto-found hookHandlerPrefab in Resources");
+                GameLogger.LogVerbose($"HookSpawner on {gameObject.name}: Auto-found hookHandlerPrefab in Resources");
             }
         }
 
@@ -67,30 +67,30 @@ public class HookSpawner : MonoBehaviour
             spawnGO.transform.SetParent(transform);
             spawnGO.transform.localPosition = new Vector3(1f, 0f, 0f); // In front of fisherman
             spawnPoint = spawnGO.transform;
-            Debug.Log($"HookSpawner on {gameObject.name}: Auto-created spawn point");
+            GameLogger.LogVerbose($"HookSpawner on {gameObject.name}: Auto-created spawn point");
         }
 
-        Debug.Log($"HookSpawner initialized successfully on {gameObject.name}: CanThrow={CanThrowHook()}");
+        GameLogger.LogVerbose($"HookSpawner initialized successfully on {gameObject.name}: CanThrow={CanThrowHook()}");
     }
 
     public bool CanThrowHook()
     {
         bool canThrow = hookHandlerPrefab != null && spawnPoint != null && currentHook == null;
-        Debug.Log($"CanThrowHook() on {gameObject.name}: Prefab={hookHandlerPrefab != null}, SpawnPoint={spawnPoint != null}, NoHook={currentHook == null} -> Result={canThrow}");
+        GameLogger.LogVerbose($"CanThrowHook() on {gameObject.name}: Prefab={hookHandlerPrefab != null}, SpawnPoint={spawnPoint != null}, NoHook={currentHook == null} -> Result={canThrow}");
         return canThrow;
     }
 
     public void ThrowHook()
     {
-        Debug.Log($"ThrowHook() called on {gameObject.name}: CanThrow={CanThrowHook()}");
-        
-        if (!CanThrowHook()) 
+        GameLogger.LogVerbose($"ThrowHook() called on {gameObject.name}: CanThrow={CanThrowHook()}");
+
+        if (!CanThrowHook())
         {
-            Debug.LogError($"ThrowHook() FAILED on {gameObject.name}: CanThrow=false");
+            GameLogger.LogError($"ThrowHook() FAILED on {gameObject.name}: CanThrow=false");
             return;
         }
-        
-        throwDirection = new Vector3(Random.Range(0.2f, 1f) * transform.localScale.x, Random.Range(-0.1f, 0.3f), .2f) ;
+
+        throwDirection = new Vector3(Random.Range(0.2f, 1f) * transform.localScale.x, Random.Range(-0.1f, 0.3f), .2f);
 
         // hookMaxDistance = originalMaxDistance;
         hookMaxDistance = originalMaxDistance + (Random.Range(-2f, 1f));
@@ -98,7 +98,7 @@ public class HookSpawner : MonoBehaviour
         // Instantiate the hook handler
         currentHookHandler = Instantiate(hookHandlerPrefab, spawnPoint.position, spawnPoint.rotation);
         curHookHandler = currentHookHandler.GetComponent<HookPartsHandler>();
-        Debug.Log($"Instantiated hook handler: {currentHookHandler.name} at {spawnPoint.position}");
+        GameLogger.LogVerbose($"Instantiated hook handler: {currentHookHandler.name} at {spawnPoint.position}");
 
         // Find the actual fishing hook within the handler
         // currentHook = currentHookHandler.GetComponentInChildren<FishingProjectile>();
@@ -122,11 +122,11 @@ public class HookSpawner : MonoBehaviour
 
             currentHook.ThrowProjectile(throwDirection, throwForce);
 
-            Debug.Log($"Hook thrown successfully by {gameObject.name}! Spawn point: {spawnPoint.position}");
+            GameLogger.LogVerbose($"Hook thrown successfully by {gameObject.name}! Spawn point: {spawnPoint.position}");
         }
         else
         {
-            Debug.LogError($"No FishingProjectile found in {hookHandlerPrefab.name}!");
+            GameLogger.LogError($"No FishingProjectile found in {hookHandlerPrefab.name}!");
             Destroy(currentHookHandler);
             currentHookHandler = null;
             curHookHandler = null;
@@ -150,11 +150,11 @@ public class HookSpawner : MonoBehaviour
                 waterCheck.entityMovement = hookMovement;
             }
 
-            Debug.Log("Water detection configured for fishing hook!");
+            GameLogger.LogVerbose("Water detection configured for fishing hook!");
         }
         else
         {
-            Debug.LogWarning("WaterCheck component not found in hook handler!");
+            GameLogger.LogWarning("WaterCheck component not found in hook handler!");
         }
     }
 
@@ -178,14 +178,14 @@ public class HookSpawner : MonoBehaviour
 
                 if (currentHook.IsAboveWater) currentHook.GetComponentInChildren<CircleCollider2D>().enabled = false;
 
-                //Debug.Log($"Hook being retracted gradually - remaining length: {newLength:F1}");
+                //GameLogger.LogVerbose($"Hook being retracted gradually - remaining length: {newLength:F1}");
             }
             else
             {
                 // When line is very short, start destruction
                 currentHook.RetractProjectile();
                 rodAttachRope.gameObject.GetComponent<LineRenderer>().enabled = false;
-                Debug.Log($"Hook retraction complete - destroying hook");
+                GameLogger.LogVerbose($"Hook retraction complete - destroying hook");
             }
         }
     }
@@ -212,7 +212,7 @@ public class HookSpawner : MonoBehaviour
         return 0;
     }
 
-    
+
     public bool HasActiveHook() => currentHookHandler != null;
 
     /// <summary>
@@ -233,6 +233,6 @@ public class HookSpawner : MonoBehaviour
         // Reset max distance when hook is destroyed
         hookMaxDistance = originalMaxDistance;
 
-        Debug.Log($"Hook handler and references cleared for {gameObject.name}");
+        GameLogger.LogVerbose($"Hook handler and references cleared for {gameObject.name}");
     }
 }

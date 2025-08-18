@@ -267,17 +267,23 @@ public class SpriteAtlasAutoCreator : EditorWindow
     private void ScanIllustrationFolders()
     {
         discoveredFolders.Clear();
-        
-        string basePath = "Assets/Illustrations";
-        if (!Directory.Exists(basePath))
+    
+        string[] searchPaths = {
+            "Assets/Illustrations",
+            "Assets/Materials/Sprites",    // NUEVO
+            "Assets/Materials/Rocks",      // NUEVO
+            "Assets/Sprites/New"           // NUEVO
+        };
+    
+        foreach (string basePath in searchPaths)
         {
-            EditorUtility.DisplayDialog("Error", "Illustrations folder not found!", "OK");
-            return;
+            if (Directory.Exists(basePath))
+            {
+                ScanFolder(basePath, "");
+            }
         }
-
-        ScanFolder(basePath, "");
+    
         hasScanned = true;
-        
         Debug.Log($"Scan complete! Found {discoveredFolders.Count} categorized folders.");
     }
 
@@ -633,10 +639,36 @@ public class SpriteAtlasAutoCreator : EditorWindow
     {
         string atlasPath = $"{atlasOutputPath}/{atlasName}.spriteatlas";
         
+        if (File.Exists(atlasPath))
+        {
+            Debug.LogWarning($"Atlas ya existe, eliminando: {atlasPath}");
+            AssetDatabase.DeleteAsset(atlasPath);
+            AssetDatabase.Refresh();
+        }
+
+        var validFolders = new List<string>();
+        foreach (string folderPath in folders)
+        {
+            string assetPath = folderPath.Replace(Application.dataPath, "Assets");
+            if (AssetDatabase.IsValidFolder(assetPath))
+            {
+                validFolders.Add(folderPath);
+            }
+            else
+            {
+                Debug.LogWarning($"Carpeta no válida ignorada: {assetPath}");
+            }
+        }
+        
+        if (validFolders.Count == 0)
+        {
+            Debug.LogError($"No hay carpetas válidas para crear atlas: {atlasName}");
+            return;
+        }
+
         SpriteAtlas atlas = new SpriteAtlas();
         var platformSettings = GetPlatformSettings(selectedPlatform);
         
-        // Apply platform-optimized texture settings
         var textureSettings = new SpriteAtlasTextureSettings()
         {
             readable = platformSettings.readable,
@@ -645,7 +677,6 @@ public class SpriteAtlasAutoCreator : EditorWindow
             filterMode = platformSettings.filterMode
         };
         
-        // Apply platform-optimized packing settings
         var packingSettings = new SpriteAtlasPackingSettings()
         {
             blockOffset = 1,
@@ -658,11 +689,9 @@ public class SpriteAtlasAutoCreator : EditorWindow
         atlas.SetTextureSettings(textureSettings);
         atlas.SetPackingSettings(packingSettings);
 
-        // ✅ APPLY ALL PLATFORM OVERRIDES - NEVER 4096!
         ApplyAllPlatformSettings(atlas, selectedPlatform);
 
-        // Add folders to atlas
-        foreach (string folderPath in folders)
+        foreach (string folderPath in validFolders)
         {
             string assetPath = folderPath.Replace(Application.dataPath, "Assets");
             Object folderAsset = AssetDatabase.LoadAssetAtPath<Object>(assetPath);
@@ -671,11 +700,28 @@ public class SpriteAtlasAutoCreator : EditorWindow
             {
                 atlas.Add(new Object[] { folderAsset });
             }
+            else
+            {
+                Debug.LogError($"No se pudo cargar carpeta: {assetPath}");
+            }
         }
 
-        AssetDatabase.CreateAsset(atlas, atlasPath);
-        
-        Debug.Log($"✅ FIXED: Created atlas with ALL platform overrides: {atlasName} (Max size: 2048 for ALL platforms - NEVER 4096!)");
+        try
+        {
+            AssetDatabase.CreateAsset(atlas, atlasPath);
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+            
+            Debug.Log($"✅ Atlas creado exitosamente: {atlasName} con {validFolders.Count} carpetas");
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"Error creando atlas {atlasName}: {e.Message}");
+            if (File.Exists(atlasPath))
+            {
+                AssetDatabase.DeleteAsset(atlasPath);
+            }
+        }
     }
     
     private void ApplyAllPlatformSettings(SpriteAtlas atlas, PlatformPreset targetPlatform)

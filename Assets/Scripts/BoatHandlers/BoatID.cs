@@ -15,6 +15,8 @@ public class BoatID
     public void GenerateNewID()
     {
         _uniqueID = $"Boat_{System.Guid.NewGuid().ToString("N")[0..8]}";
+        
+        GameLogger.LogVerbose($"[BOAT ID] Generated new unique ID: {_uniqueID}");
     }
     
     public bool Matches(BoatID other)

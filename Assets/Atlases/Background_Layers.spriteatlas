@@ -1,0 +1,144 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!687078895 &4343727234628468602
+SpriteAtlas:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Background_Layers
+  m_EditorData:
+    serializedVersion: 2
+    textureSettings:
+      serializedVersion: 2
+      anisoLevel: 0
+      compressionQuality: 0
+      maxTextureSize: 0
+      textureCompression: 0
+      filterMode: 1
+      generateMipMaps: 0
+      readable: 0
+      crunchedCompression: 0
+      sRGB: 1
+    platformSettings:
+    - serializedVersion: 3
+      m_BuildTarget: DefaultTexturePlatform
+      m_MaxTextureSize: 2048
+      m_ResizeAlgorithm: 0
+      m_TextureFormat: -1
+      m_TextureCompression: 1
+      m_CompressionQuality: 50
+      m_CrunchedCompression: 1
+      m_AllowsAlphaSplitting: 1
+      m_Overridden: 1
+      m_IgnorePlatformSupport: 0
+      m_AndroidETC2FallbackOverride: 0
+      m_ForceMaximumCompressionQuality_BC6H_BC7: 0
+    - serializedVersion: 3
+      m_BuildTarget: Android
+      m_MaxTextureSize: 2048
+      m_ResizeAlgorithm: 0
+      m_TextureFormat: 50
+      m_TextureCompression: 1
+      m_CompressionQuality: 50
+      m_CrunchedCompression: 1
+      m_AllowsAlphaSplitting: 1
+      m_Overridden: 1
+      m_IgnorePlatformSupport: 0
+      m_AndroidETC2FallbackOverride: 0
+      m_ForceMaximumCompressionQuality_BC6H_BC7: 0
+    - serializedVersion: 3
+      m_BuildTarget: iPhone
+      m_MaxTextureSize: 2048
+      m_ResizeAlgorithm: 0
+      m_TextureFormat: 33
+      m_TextureCompression: 1
+      m_CompressionQuality: 50
+      m_CrunchedCompression: 1
+      m_AllowsAlphaSplitting: 1
+      m_Overridden: 1
+      m_IgnorePlatformSupport: 0
+      m_AndroidETC2FallbackOverride: 0
+      m_ForceMaximumCompressionQuality_BC6H_BC7: 0
+    - serializedVersion: 3
+      m_BuildTarget: WebGL
+      m_MaxTextureSize: 2048
+      m_ResizeAlgorithm: 0
+      m_TextureFormat: 12
+      m_TextureCompression: 1
+      m_CompressionQuality: 50
+      m_CrunchedCompression: 1
+      m_AllowsAlphaSplitting: 0
+      m_Overridden: 1
+      m_IgnorePlatformSupport: 0
+      m_AndroidETC2FallbackOverride: 0
+      m_ForceMaximumCompressionQuality_BC6H_BC7: 0
+    - serializedVersion: 3
+      m_BuildTarget: Standalone
+      m_MaxTextureSize: 2048
+      m_ResizeAlgorithm: 0
+      m_TextureFormat: 12
+      m_TextureCompression: 1
+      m_CompressionQuality: 70
+      m_CrunchedCompression: 1
+      m_AllowsAlphaSplitting: 0
+      m_Overridden: 1
+      m_IgnorePlatformSupport: 0
+      m_AndroidETC2FallbackOverride: 0
+      m_ForceMaximumCompressionQuality_BC6H_BC7: 0
+    packingSettings:
+      serializedVersion: 2
+      padding: 2
+      blockOffset: 1
+      allowAlphaSplitting: 0
+      enableRotation: 1
+      enableTightPacking: 1
+      enableAlphaDilation: 1
+    secondaryTextureSettings: {}
+    variantMultiplier: 1
+    packables:
+    - {fileID: 102900000, guid: 2ff89d2ddf3ed254c8b1924a01310adb, type: 3}
+    - {fileID: 102900000, guid: 9272e3d0303365646aba3b1155dfb5e4, type: 3}
+    bindAsDefault: 1
+    isAtlasV2: 0
+    cachedData: {fileID: 0}
+    packedSpriteRenderDataKeys:
+    - 24ba2632b43cf114b8d1dcf8ec190cd0: 21300000
+    - 09c982f206510514b891030f76c891be: 21300000
+    - 96bb5515afab8f94283f31415b316f8b: 21300000
+    - db7adf25ae5eb034c83277fbe1f58fd1: 21300000
+    - fd32df3574433c342849d780c535a106: 21300000
+    - 7e96ed950ac9c874b954007ebbf5b877: 21300000
+    - 67033307628021348b0b433b492349d3: 21300000
+    - 255b287bc0502024f844c89760e61739: 21300000
+    - a510bdcbf39547b4cb8c304928e5d800: 21300000
+    - 02ad8ede9a6093b4083a39c8074397c9: 21300000
+    - e1da9a5fe33200e46af45b578ba5dd7d: 21300000
+  m_MasterAtlas: {fileID: 0}
+  m_PackedSprites:
+  - {fileID: 21300000, guid: 24ba2632b43cf114b8d1dcf8ec190cd0, type: 3}
+  - {fileID: 21300000, guid: 09c982f206510514b891030f76c891be, type: 3}
+  - {fileID: 21300000, guid: 96bb5515afab8f94283f31415b316f8b, type: 3}
+  - {fileID: 21300000, guid: db7adf25ae5eb034c83277fbe1f58fd1, type: 3}
+  - {fileID: 21300000, guid: fd32df3574433c342849d780c535a106, type: 3}
+  - {fileID: 21300000, guid: 7e96ed950ac9c874b954007ebbf5b877, type: 3}
+  - {fileID: 21300000, guid: 67033307628021348b0b433b492349d3, type: 3}
+  - {fileID: 21300000, guid: 255b287bc0502024f844c89760e61739, type: 3}
+  - {fileID: 21300000, guid: a510bdcbf39547b4cb8c304928e5d800, type: 3}
+  - {fileID: 21300000, guid: 02ad8ede9a6093b4083a39c8074397c9, type: 3}
+  - {fileID: 21300000, guid: e1da9a5fe33200e46af45b578ba5dd7d, type: 3}
+  m_PackedSpriteNamesToIndex:
+  - Nm11
+  - Nm12
+  - Nm9
+  - Nm2
+  - Nm8
+  - Nm1
+  - Nm3
+  - Nm4
+  - Nm7
+  - NL1
+  - Nm10
+  m_RenderDataMap: {}
+  m_Tag: Background_Layers
+  m_IsVariant: 0

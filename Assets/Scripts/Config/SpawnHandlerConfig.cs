@@ -6,7 +6,6 @@ public enum SpawnHandlerType
     Zone
 }
 
-
 [CreateAssetMenu(fileName = "New Spawn Config", menuName = "Fishing Game/Spawn Config")]
 public class SpawnHandlerConfig : ScriptableObject
 {
@@ -19,7 +18,7 @@ public class SpawnHandlerConfig : ScriptableObject
     public string poolName = "LandFisherman";
     
     [Header("Spawn Handler Type")]
-    [Tooltip("For PerPoint type you can have multiple SpawnPoints /nFor Zone type you MUST HAVE ONLY 2 SPAWNPOINTS TO MAKE A SPAWN ZONE")]
+    [Tooltip("For PerPoint type you can have multiple SpawnPoints.\nFor Zone type you MUST HAVE ONLY 2 SPAWNPOINTS TO MAKE A SPAWN ZONE")]
     public SpawnHandlerType spawnHandlerType;
     
     [Tooltip("What type of enemy this is")]
@@ -39,12 +38,12 @@ public class SpawnHandlerConfig : ScriptableObject
     public int keepActiveAtOnce = 3;
     
     [Space(10)]
-    [Header("Boat Settings (only for boats)")]
-    [Tooltip("For boats: spawn this many then wait")]
+    [Header("Cycle Settings (only for Cycles spawn type)")]
+    [Tooltip("For cycles: spawn this many then wait")]
     [Range(1, 3)]
     public int spawnThisManyPerCycle = 1;
     
-    [Tooltip("For boats: wait this long before next cycle")]
+    [Tooltip("For cycles: wait this long before next cycle")]
     [Range(10f, 60f)]
     public float waitBetweenCycles = 30f;
     
@@ -82,7 +81,6 @@ public class SpawnHandlerConfig : ScriptableObject
     public enum EnemyType
     {
         LandFisherman,
-        BoatFisherman,
         Boat
     }
 
@@ -97,7 +95,6 @@ public class SpawnHandlerConfig : ScriptableObject
         return spawnEveryXSeconds + Random.Range(-randomVariation, randomVariation);
     }
 
-    
     public bool IsUnlocked(int playerLevel)
     {
         return !needsUnlock || playerLevel >= playerLevelNeeded;
@@ -116,28 +113,14 @@ public class SpawnHandlerConfig : ScriptableObject
     {
         configName = "Land Fisherman Spawner";
         poolName = "LandFisherman"; 
+        spawnHandlerType = SpawnHandlerType.PerPoint;
         enemyType = EnemyType.LandFisherman;
         spawnType = SpawnType.Continuous;
         spawnEveryXSeconds = 4f;
         keepActiveAtOnce = 3;
         needsUnlock = false;
         gizmoColor = Color.green;
-        Debug.Log("Setup para Land Fisherman - Pool: LandFisherman");
-    }
-    
-    [ContextMenu("Setup for Boat Fisherman")]
-    private void SetupBoatFisherman()
-    {
-        configName = "Boat Fisherman Spawner";
-        poolName = "BoatFisherman"; 
-        enemyType = EnemyType.BoatFisherman;
-        spawnType = SpawnType.OneTime;
-        spawnEveryXSeconds = 0.1f;
-        spawnThisManyPerCycle = 2;
-        waitBetweenCycles = 45f;
-        needsUnlock = false;
-        gizmoColor = Color.blue;
-        Debug.Log("Setup para Boat Fisherman - Pool: BoatFisherman");
+        GameLogger.Log("Setup para Land Fisherman - Pool: LandFisherman");
     }
     
     [ContextMenu("Setup for Boat")]
@@ -145,6 +128,7 @@ public class SpawnHandlerConfig : ScriptableObject
     {
         configName = "Boat Spawner";
         poolName = "Boat";
+        spawnHandlerType = SpawnHandlerType.Zone;
         enemyType = EnemyType.Boat;
         spawnType = SpawnType.OneTime;
         spawnEveryXSeconds = 5f;
@@ -154,14 +138,16 @@ public class SpawnHandlerConfig : ScriptableObject
         dontSpawnFartherThan = 60f;
         showLogs = true;
         gizmoColor = Color.cyan;
-        Debug.Log("🚤 BOAT CONFIG: OneTime spawn with initial crew!");
+        GameLogger.Log("BOAT CONFIG: OneTime spawn with initial crew!");
     }
     
+#if UNITY_EDITOR
     [ContextMenu("Setup for TESTING - Continuous Respawn")]
     private void SetupTestingContinuousRespawn()
     {
         configName = "TESTING - Continuous Respawn";
         poolName = "LandFisherman";
+        spawnHandlerType = SpawnHandlerType.PerPoint;
         enemyType = EnemyType.LandFisherman;
         spawnType = SpawnType.Continuous; 
         spawnEveryXSeconds = 8f; 
@@ -171,6 +157,7 @@ public class SpawnHandlerConfig : ScriptableObject
         dontSpawnFartherThan = 25f;
         showLogs = true;
         gizmoColor = Color.yellow;
-        Debug.Log("⚡ TESTING MODE: Continuous respawn configured - enemy will respawn after being eaten!");
+        GameLogger.Log("TESTING MODE: Continuous respawn configured - enemy will respawn after being eaten!");
     }
+#endif
 }

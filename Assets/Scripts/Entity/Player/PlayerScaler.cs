@@ -23,7 +23,7 @@ public class PlayerScaler : MonoBehaviour
     {
         if (scalingConfig == null)
         {
-            Debug.LogError("PlayerScaler: No scaling config assigned!");
+            GameLogger.LogError("PlayerScaler: No scaling config assigned!");
             return;
         }
 
@@ -83,7 +83,7 @@ public class PlayerScaler : MonoBehaviour
         if (Mathf.Abs(currentScaleMultiplier - targetScaleMultiplier) < 0.01f)
         {
             currentScaleMultiplier = targetScaleMultiplier;
-            Debug.Log($"Player scaling complete: {currentScaleMultiplier:F2}x (Power Level: {currentPowerLevel})");
+            GameLogger.LogVerbose($"Player scaling complete: {currentScaleMultiplier:F2}x (Power Level: {currentPowerLevel})");
         }
     }
 

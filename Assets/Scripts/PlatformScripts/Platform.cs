@@ -7,10 +7,7 @@ public class Platform : MonoBehaviour
     [Header("Assigned Enemies")]
     public List<Enemy> assignedEnemies = new List<Enemy>();
     
-    [Header("Debug")]
-    public bool showDebugInfo = true;
-
-    private Collider2D platformCollider;
+    protected Collider2D platformCollider;
 
     [SerializeField] protected TypeIdentifier identifier;
 
@@ -21,7 +18,7 @@ public class Platform : MonoBehaviour
         platformCollider = GetComponent<Collider2D>();
         if (platformCollider == null)
         {
-            Debug.LogError($"Platform {gameObject.name} missing Collider2D component!");
+            GameLogger.LogError($"Platform {gameObject.name} missing Collider2D component!");
             return;
         }
         gameObject.layer = LayerMask.NameToLayer(LayerNames.PLATFORM);
@@ -34,10 +31,7 @@ public class Platform : MonoBehaviour
 
         SetupSelectiveCollisions();
 
-        if (showDebugInfo)
-        {
-            Debug.Log($"Platform {gameObject.name} set up selective collisions");
-        }
+        GameLogger.LogVerbose($"Platform {gameObject.name} set up selective collisions");
     }
 
     void OnCollisionEnter2D(Collision2D collision)
@@ -64,8 +58,7 @@ public class Platform : MonoBehaviour
         if (previousPlatform != null && previousPlatform != this)
         {
             previousPlatform.UnregisterEnemy(enemy);
-            if (showDebugInfo)
-                Debug.Log($"Enemy {enemy.name} MOVED from {previousPlatform.name} to {gameObject.name}");
+            GameLogger.LogVerbose($"Enemy {enemy.name} MOVED from {previousPlatform.name} to {gameObject.name}");
         }
         
         assignedEnemies.Add(enemy);
@@ -83,8 +76,7 @@ public class Platform : MonoBehaviour
 
         landEnemy.platformBoundsCalculated = true;
 
-        if (showDebugInfo)
-            Debug.Log($"Enemy {enemy.name} assigned to platform {gameObject.name}. Total enemies: {assignedEnemies.Count}");
+        GameLogger.LogVerbose($"Enemy {enemy.name} assigned to platform {gameObject.name}. Total enemies: {assignedEnemies.Count}");
     }
 
     public virtual void RegisterEnemyAtRuntime(Enemy enemy)
@@ -106,10 +98,8 @@ public class Platform : MonoBehaviour
                 }
             }
 
-            if (showDebugInfo)
-            {
-                Debug.Log($"Auto-assigned {enemy.name} to platform {gameObject.name}");
-            }
+            
+            GameLogger.LogVerbose($"Auto-assigned {enemy.name} to platform {gameObject.name}");
         }
     }
 
@@ -153,4 +143,16 @@ public class Platform : MonoBehaviour
     {
         UnregisterEnemy((Enemy)landEnemy);
     }
+    
+    public void GetRegisteredEnemies(List<Enemy> outputList)
+    {
+        if (outputList == null) return;
+        
+        outputList.Clear();
+        outputList.AddRange(assignedEnemies);
+    }
+    
+    public List<Enemy> GetRegisteredEnemies() => new List<Enemy>(assignedEnemies);
+    
+    public int GetEnemyCount() => assignedEnemies.Count;
 }

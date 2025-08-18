@@ -26,7 +26,7 @@ Transform:
   m_GameObject: {fileID: 176889430440048177}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1.2, z: 0}
+  m_LocalPosition: {x: 0, y: 0.1967001, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 1
   m_Children: []
@@ -112,7 +112,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 2}
+  m_AnchoredPosition: {x: 0, y: 0.9967001}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!223 &7926362259038859158
@@ -207,8 +207,7 @@ GameObject:
   - component: {fileID: 4993868596264358822}
   - component: {fileID: 2694603455566713901}
   - component: {fileID: 2752949202772209852}
-  - component: {fileID: 4143942327312340731}
-  - component: {fileID: 4966504455565441911}
+  - component: {fileID: 4277006710572366899}
   m_Layer: 7
   m_Name: Fisherman
   m_TagString: Enemy
@@ -251,7 +250,7 @@ Rigidbody2D:
   m_Mass: 1
   m_LinearDrag: 0
   m_AngularDrag: 0.05
-  m_GravityScale: 1
+  m_GravityScale: 0
   m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2
@@ -276,7 +275,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   hookHandlerPrefab: {fileID: 2202176723642426590, guid: 96755b07ec09907448fa89c168d540f4, type: 3}
-  spawnPoint: {fileID: 0}
+  spawnPoint: {fileID: 501529545610769876}
   throwForce: 10
   hookMaxDistance: 8
 --- !u!95 &2694603455566713901
@@ -338,6 +337,7 @@ MonoBehaviour:
   enableDebugMessages: 1
   bodyCollider: {fileID: 3479015762017106946}
   parentContainer: {fileID: 1963649820016990938}
+  isReturningToPool: 0
   swimForce: 0
   minSwimSpeed: 0
   landEnemyConfig: {fileID: 11400000, guid: 93c90735659e547458403c343be80b20, type: 2}
@@ -356,33 +356,28 @@ MonoBehaviour:
   maxUpwardVelocity: 0
   weight: 0
   hasStartedFloating: 0
+  hookSpawner: {fileID: 4993868596264358822}
   hookTimer: 1
   hookDuration: 8
+  subscribedHook: {fileID: 0}
   isPullingPlayer: 0
   minLineLength: 6
   maxLineReduction: 1.5
   lineReductionVariation: 0.4
+  animator: {fileID: 2694603455566713901}
   assignedPlatform: {fileID: 0}
-  useKinematicBoatPhysics: 1
-  kinematicGravityForce: 9.8
-  groundCheckLayers:
-    serializedVersion: 2
-    m_Bits: 64
-  groundCheckDistance: 0.2
-  kinematicAirGravity: 2
-  kinematicUnderwaterGravity: -0.2
-  gravityTransitionSpeed: 2
-  maxMoveDistance: 0.1
-  platformLayers:
-    serializedVersion: 2
-    m_Bits: 64
-  collisionSafetyMargin: 0.05
-  platformStickDistance: 0.15
-  fishermanConfig: {fileID: 11400000, guid: 876c88f03b9414e67960bdc874e7d116, type: 2}
-  allowMovementOnPlatform: 1
-  platformMovementChance: 0.6
-  boatCrewMass: 0.5
---- !u!114 &4143942327312340731
+  crewPhysics: {fileID: 4277006710572366899}
+  fishermanConfig: {fileID: 11400000, guid: 93deef848c2a54c8d966d2f88dafc97f, type: 2}
+  hookThrowProbability: 33
+  walkProbability: 33
+  runProbability: 33
+  aiDecisionFrequency: 1
+  localBoundaryLeft: -1.5
+  localBoundaryRight: 1.5
+  enableHookThrowing: 1
+  crewRole: 0
+  isNavigating: 0
+--- !u!114 &4277006710572366899
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -391,23 +386,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 2561211109777225482}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e8c126e2e482a4621902dce36f0bba33, type: 3}
+  m_Script: {fileID: 11500000, guid: 2c4aee941e7cb46c58329d4bf102f59b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  debugMovement: 1
---- !u!114 &4966504455565441911
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2561211109777225482}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 00da059a9e90942d1b116a704cf7c7b8, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  debugMode: 1
 --- !u!1 &3511881948687486434
 GameObject:
   m_ObjectHideFlags: 0
@@ -434,7 +415,7 @@ Transform:
   m_GameObject: {fileID: 3511881948687486434}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.26, y: 1.85, z: 0}
+  m_LocalPosition: {x: 0.26, y: 0.8467001, z: 0}
   m_LocalScale: {x: 0.07, y: 0.07, z: 0.07}
   m_ConstrainProportionsScale: 1
   m_Children: []
@@ -519,7 +500,7 @@ Transform:
   m_GameObject: {fileID: 7654646989552672936}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1.0345, y: 2.2033, z: 0}
+  m_LocalPosition: {x: 1.0345, y: 1.2, z: 0}
   m_LocalScale: {x: 0.10000002, y: 2, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -568,17 +549,17 @@ LineRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_Positions:
-  - {x: 1.0345, y: 2.2033, z: 0}
-  - {x: 1.0345, y: 2.1853, z: 0}
-  - {x: 1.0345001, y: 2.1713002, z: 0}
-  - {x: 1.0345, y: 2.1613, z: 0}
-  - {x: 1.0345001, y: 2.1553001, z: 0}
-  - {x: 1.0345, y: 2.1533, z: 0}
-  - {x: 1.0344999, y: 2.1553001, z: 0}
-  - {x: 1.0344999, y: 2.1613, z: 0}
-  - {x: 1.0345, y: 2.1713002, z: 0}
-  - {x: 1.0345, y: 2.1852999, z: 0}
-  - {x: 1.0345, y: 2.2033, z: 0}
+  - {x: 1.0345, y: 1.2, z: 0}
+  - {x: 1.0345, y: 1.182, z: 0}
+  - {x: 1.0345001, y: 1.1680001, z: 0}
+  - {x: 1.0345, y: 1.158, z: 0}
+  - {x: 1.0345001, y: 1.1520001, z: 0}
+  - {x: 1.0345, y: 1.1500001, z: 0}
+  - {x: 1.0344999, y: 1.152, z: 0}
+  - {x: 1.0344999, y: 1.158, z: 0}
+  - {x: 1.0345, y: 1.1680001, z: 0}
+  - {x: 1.0345, y: 1.182, z: 0}
+  - {x: 1.0345, y: 1.2, z: 0}
   m_Parameters:
     serializedVersion: 3
     widthMultiplier: 1
@@ -719,9 +700,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d2328aedfae58994584044d24494e314, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  faceCamera: 1
+  displayText: {fileID: 2426049732161016549}
+  mainCamera: {fileID: 0}
   entity: {fileID: 2752949202772209852}
   showAbsolutePowerLevel: 1
-  faceCamera: 1
 --- !u!222 &7546795088030066811
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -846,7 +829,7 @@ Transform:
   m_GameObject: {fileID: 8618071559456417662}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1.2, z: 0}
+  m_LocalPosition: {x: 0, y: 0.1967001, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 1
   m_Children: []
@@ -931,7 +914,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 314844239601557528, guid: d864e1d7d3d7d86458db1be6c7ac35ab, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 5.92
+      value: -0.35
       objectReference: {fileID: 0}
     - target: {fileID: 314844239601557528, guid: d864e1d7d3d7d86458db1be6c7ac35ab, type: 3}
       propertyPath: m_LocalPosition.z
@@ -969,6 +952,14 @@ PrefabInstance:
       propertyPath: target
       value: 
       objectReference: {fileID: 2561211109777225482}
+    - target: {fileID: 7442979135199402340, guid: d864e1d7d3d7d86458db1be6c7ac35ab, type: 3}
+      propertyPath: isOnBoat
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7442979135199402340, guid: d864e1d7d3d7d86458db1be6c7ac35ab, type: 3}
+      propertyPath: waterSurfaceY
+      value: -0.35
+      objectReference: {fileID: 0}
     - target: {fileID: 8258166059126711420, guid: d864e1d7d3d7d86458db1be6c7ac35ab, type: 3}
       propertyPath: m_Name
       value: WaterLine

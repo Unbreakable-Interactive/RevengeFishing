@@ -203,6 +203,7 @@ MonoBehaviour:
     m_RotationOrder: 4
   scaleWithPlayer: 1
   showDebugGizmos: 1
+  playerScaler: {fileID: 2299430188239530610}
   attractedEntities: []
 --- !u!1 &6436991216858690687
 GameObject:
@@ -343,6 +344,7 @@ MonoBehaviour:
     _hunger: 0
     _maxHunger: 0
     _maxHungerBonus: 0
+  magnet: {fileID: 5682015124687868118}
   status: 0
   currentPhase: 0
   nextPowerLevel: 0
@@ -370,8 +372,8 @@ MonoBehaviour:
   lineExtensionAmount: 1
   maxLineExtension: 10
   lineExtensionSpeedPenalty: 0.6
-  playerSpriteRenderer: {fileID: 0}
-  animator: {fileID: 0}
+  playerSpriteRenderer: {fileID: 2849642784151798417}
+  animator: {fileID: -2646521994517316191}
   enableDebugLogs: 0
   colliderToShare: {fileID: 5938476875424283519}
 --- !u!114 &2299430188239530610

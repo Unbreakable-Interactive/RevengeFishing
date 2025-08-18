@@ -31,40 +31,36 @@ public class PoolingConfig : ScriptableObject
         public int maxSize = 15;
     }
 
-    // Quick setup buttons
     [ContextMenu("Setup Default Pools")]
     private void SetupDefaultPools()
     {
         poolConfigs.Clear();
         
-        // Add Land Fisherman pool
         PoolData landFishermanPool = new PoolData();
         landFishermanPool.poolName = "LandFisherman";
         landFishermanPool.initialSize = 6;
         landFishermanPool.maxSize = 20;
         poolConfigs.Add(landFishermanPool);
         
-        // Add Boat Fisherman pool
         PoolData boatFishermanPool = new PoolData();
         boatFishermanPool.poolName = "BoatFisherman";
         boatFishermanPool.initialSize = 4;
         boatFishermanPool.maxSize = 12;
         poolConfigs.Add(boatFishermanPool);
         
-        // Add Boat pool  
         PoolData boatPool = new PoolData();
         boatPool.poolName = "Boat";
         boatPool.initialSize = 3;
         boatPool.maxSize = 8;
         poolConfigs.Add(boatPool);
         
-        Debug.Log("Setup 3 pools: LandFisherman, BoatFisherman, Boat");
+        GameLogger.Log("Setup 3 pools: LandFisherman, BoatFisherman, Boat");
     }
     
     [ContextMenu("Clear All Pools")]
     private void ClearAllPools()
     {
         poolConfigs.Clear();
-        Debug.Log("All pools cleared. Use 'Setup Default Pools' to recreate them.");
+        GameLogger.Log("All pools cleared. Use 'Setup Default Pools' to recreate them.");
     }
 }

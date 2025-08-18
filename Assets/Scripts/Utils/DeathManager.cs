@@ -7,7 +7,7 @@ public class DeathManager : MonoBehaviour
     public static void SetDeathType(Player.Status deathType)
     {
         LastDeathType = deathType;
-        Debug.Log($"Death type set to: {deathType}");
+        GameLogger.LogVerbose($"Death type set to: {deathType}");
     }
 
     public static string GetDeathMessage(Player.Status deathType)

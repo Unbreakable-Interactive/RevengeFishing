@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 public class WaterCheckFollow : MonoBehaviour
@@ -7,6 +8,8 @@ public class WaterCheckFollow : MonoBehaviour
 
     public GameObject target;
 
+    public bool isOnBoat = false;
+    
     void Start()
     {
         GetComponent<Collider2D>().isTrigger = true;
@@ -16,6 +19,13 @@ public class WaterCheckFollow : MonoBehaviour
     void Update()
     {
         // Follow player horizontally, stay at fixed Y
-        transform.position = new Vector3(target.transform.position.x, waterSurfaceY, transform.position.z);
+        if(!isOnBoat)
+            transform.position = new Vector3(target.transform.position.x, waterSurfaceY, transform.position.z);
+    }
+
+    private void FixedUpdate()
+    {
+        if(isOnBoat)
+            transform.position = new Vector3(target.transform.position.x, waterSurfaceY, transform.position.z);
     }
 }

@@ -1,101 +1,112 @@
-using System;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class BoatFloater : MonoBehaviour
 {
-    [Header("Core Systems")]
-    [SerializeField] private BoatPhysicsSystem physicsSystem;
-    [SerializeField] private BoatMovementSystem movementSystem;
-    [SerializeField] private BoatVisualSystem visualSystem;
-    [SerializeField] private BoatBuoyancySystem buoyancySystem;
+    [Header("Buoyancy Settings")]
+    [SerializeField] private float depthBeforeSubmerged = 1f;
+    [SerializeField] private float displacementAmount = 3f;
+    [SerializeField] private float waterDrag = 0.99f;
+    [SerializeField] private float waterAngularDrag = 0.5f;
     
     [Header("Float Points")]
-    public Transform[] floatPoints = new Transform[3];
+    [SerializeField] private List<Transform> floatPoints = new List<Transform>();
     
-    [Header("Control")]
-    [SerializeField] private bool enableFloaterMovement = true;
+    [Header("Movement")]
+    [SerializeField] private bool enableAutomaticMovement = false;
+    [SerializeField] private float movementForce = 5f;
+    [SerializeField] private float currentDirection = 1f;
     
-    private Rigidbody2D rb;
-    private WaterPhysics waterPhysics;
+    [SerializeField] private Rigidbody2D rb;
+    [SerializeField] private List<Enemy> crewMembers = new List<Enemy>();
     
-    public void Initialize()
-    {
-        rb = GetComponent<Rigidbody2D>();
-        waterPhysics = WaterPhysics.Instance;
-        
-        if (ValidateFloatPoints())
-        {
-            physicsSystem.Initialize(rb, waterPhysics);
-            buoyancySystem.Initialize(rb, waterPhysics, floatPoints);
-            movementSystem.Initialize(rb, visualSystem);
-            visualSystem.Initialize();
-        }
-    }
-    
-    private bool ValidateFloatPoints()
-    {
-        if (floatPoints[0] == null || floatPoints[1] == null || floatPoints[2] == null)
-        {
-            Debug.LogError("BoatFloater: Float Points not assigned in inspector.");
-            return false;
-        }
-        return true;
-    }
-
-    #if UNITY_EDITOR
-    private void Update()
-    {
-        if(Input.GetKeyDown(KeyCode.Alpha1))
-            movementSystem.SetMovementState_Driven();
-        
-        if(Input.GetKeyDown(KeyCode.Alpha2))
-            movementSystem.SetMovementState_AutoMove();
-    }
-    #endif
-
+  
     void FixedUpdate()
     {
-        if (!enableFloaterMovement || waterPhysics == null) return;
+        ApplyBuoyancy();
         
-        buoyancySystem.UpdateBuoyancy();
-        movementSystem.UpdateMovement();
-        physicsSystem.UpdatePhysics();
+        if (enableAutomaticMovement)
+        {
+            ApplyMovement();
+        }
     }
-
-    #region Public Methods
-
-    public void InitializeCrew(List<Enemy> crewMembers)
+    
+    private void ApplyBuoyancy()
     {
-        buoyancySystem.InitializeCrew(crewMembers);
+        if (WaterPhysics.Instance == null || floatPoints.Count == 0) return;
+        
+        foreach (Transform floatPoint in floatPoints)
+        {
+            rb.AddForceAtPosition(Physics2D.gravity / floatPoints.Count, floatPoint.position, ForceMode2D.Force);
+            
+            float waveHeight = WaterPhysics.Instance.GetWaterHeightAt(floatPoint.position, transform);
+            
+            if (floatPoint.position.y < waveHeight)
+            {
+                float displacementMultiplier = Mathf.Clamp01((waveHeight - floatPoint.position.y) / depthBeforeSubmerged) * displacementAmount;
+                
+                rb.AddForceAtPosition(
+                    new Vector2(0f, Mathf.Abs(Physics2D.gravity.y) * displacementMultiplier),
+                    floatPoint.position,
+                    ForceMode2D.Force
+                );
+                
+                rb.velocity += -rb.velocity * (displacementMultiplier * waterDrag * Time.fixedDeltaTime);
+                rb.angularVelocity += displacementMultiplier * -rb.angularVelocity * waterAngularDrag * Time.fixedDeltaTime;
+            }
+        }
+    }
+    
+    private void ApplyMovement()
+    {
+        rb.AddForce(Vector2.right * (currentDirection * movementForce), ForceMode2D.Force);
+    }
+    
+    public void SetAutomaticMovementEnabled(bool enabled)
+    {
+        enableAutomaticMovement = enabled;
+    }
+    
+    public void SetMovementDirection(float direction)
+    {
+        currentDirection = Mathf.Clamp(direction, -1f, 1f);
+    }
+    
+    public void ForceStartMovement()
+    {
+        enableAutomaticMovement = true;
+    }
+    
+    public void StopMovement()
+    {
+        enableAutomaticMovement = false;
+    }
+    
+    public bool IsMovementActive()
+    {
+        return enableAutomaticMovement;
+    }
+    
+    public float GetCurrentMovementDirection()
+    {
+        return currentDirection;
+    }
+    
+    public void InitializeCrew(List<Enemy> crew)
+    {
+        crewMembers = crew;
     }
     
     public void InitializeBoundaries(Transform leftBoundary, Transform rightBoundary)
     {
-        movementSystem.InitializeBoundaries(leftBoundary, rightBoundary);
     }
     
     public void OnRegisteredToPlatform(Platform platform)
     {
-        movementSystem.OnRegisteredToPlatform(platform);
     }
     
     public void RecalculateBuoyancy()
     {
-        buoyancySystem.RecalculateBuoyancy();
+        displacementAmount = 15f + (crewMembers.Count * 2f);
     }
-
-    #endregion
-    
-    public void SetAutomaticMovementEnabled(bool enabled) => movementSystem.SetAutomaticMovementEnabled(enabled);
-    public void ForceStartMovement() => movementSystem.ForceStartMovement();
-    public void StopMovement() => movementSystem.StopMovement();
-    public bool IsMovementActive() => movementSystem.IsMovementActive();
-    public float GetCurrentMovementDirection() => movementSystem.GetCurrentMovementDirection();
-    
-    public void SetHorizontalForce(float force) => physicsSystem.SetHorizontalForce(force);
-    public void AddHorizontalForce(float additionalForce) => physicsSystem.AddHorizontalForce(additionalForce);
-    
-    public float GetCurrentDirectionMultiplier() => visualSystem.GetCurrentDirectionMultiplier();
-    public void SetBoatSpriteRenderer(SpriteRenderer renderer) => visualSystem.SetBoatSpriteRenderer(renderer);
 }

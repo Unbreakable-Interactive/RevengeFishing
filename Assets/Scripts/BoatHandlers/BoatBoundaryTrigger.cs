@@ -1,222 +1,113 @@
 using UnityEngine;
 
-public class BoatBoundaryTrigger : MonoBehaviour, IBoatComponent
+[RequireComponent(typeof(Collider2D))]
+public class BoatBoundaryTrigger : MonoBehaviour
 {
-    [Header("Boat Identity - ASSIGN IN EDITOR")]
-    [SerializeField] private BoatID boatID = new BoatID();
-    
-    [Header("Required References - ASSIGN IN EDITOR")]
-    [SerializeField] private BoatCrewManager crewManager;
-    
-    [Header("Boundary Settings")]
     [SerializeField] private bool isLeftBoundary = true;
-    [SerializeField] private bool debugTriggers = true;
+    [SerializeField] private string boatID = "";
     
-    public string GetBoatID() => boatID.UniqueID;
-    public void SetBoatID(BoatID newBoatID) => boatID = newBoatID;
+    private const int ENEMY_LAYER = 6;
     
-    private void Awake()
+    public bool IsLeftBoundary => isLeftBoundary;
+    
+    public void SetBoatID(BoatID newBoatID)
     {
-        ValidateRequiredReferences();
-    }
-    
-    private void ValidateRequiredReferences()
-    {
-        if (crewManager == null)
-            throw new System.Exception($"BoatBoundaryTrigger on {gameObject.name}: crewManager must be assigned in editor!");
+        if (newBoatID != null)
+        {
+            boatID = newBoatID.UniqueID;
+        }
     }
     
     private void Start()
     {
-        string boundType = isLeftBoundary ? "LEFT" : "RIGHT";
-        Debug.Log($"BoatBoundaryTrigger: {boundType} boundary initialized on {gameObject.name} with ID {boatID} and crewManager: {crewManager.name}");
+        Collider2D col = GetComponent<Collider2D>();
+        if (col != null)
+        {
+            col.isTrigger = true;
+        }
+        
+        BoatPlatform platform = GetComponentInParent<BoatPlatform>();
+        if (platform != null)
+        {
+            boatID = platform.GetBoatID();
+        }
+        
+        GameLogger.LogVerbose($"[BOUNDARY TRIGGER] {(isLeftBoundary ? "LEFT" : "RIGHT")} boundary initialized - ID: {boatID}");
     }
     
     private void OnTriggerEnter2D(Collider2D other)
     {
-        if (other.gameObject.layer != 6) return;
+        if (other.gameObject.layer != ENEMY_LAYER) return;
         
-        if (debugTriggers)
-            Debug.Log($"BoatBoundaryTrigger: Enemy layer object detected - {other.gameObject.name}");
+        BoatLandEnemy enemy = FindBoatLandEnemyInHierarchy(other.gameObject);
         
-        LandEnemy enemy = FindLandEnemyInHierarchy(other.gameObject);
+        if (enemy == null || !ShouldProcess(enemy)) return;
         
-        if (enemy == null)
-        {
-            if (debugTriggers)
-                Debug.Log($"BoatBoundaryTrigger: NO LandEnemy found in hierarchy of {other.gameObject.name}");
-            return;
-        }
-        
-        if (debugTriggers)
-            Debug.Log($"BoatBoundaryTrigger: Found LandEnemy {enemy.name}");
-        
-        if (ShouldProcess(enemy))
-        {
-            if (debugTriggers)
-                Debug.Log($"BoatBoundaryTrigger: PROCESSING {enemy.name} (belongs to this boat)");
-            StopEnemyMovement(enemy);
-        }
-        else
-        {
-            if (debugTriggers)
-            {
-                string enemyID = enemy is IBoatComponent comp ? comp.GetBoatID() : "NO_ID";
-                Debug.Log($"BoatBoundaryTrigger: IGNORING {enemy.name} (ID: {enemyID}) - doesn't belong to this boat (ID: {boatID})");
-            }
-        }
+        GameLogger.LogVerbose($"[BOUNDARY HIT] {enemy.name} hit {(isLeftBoundary ? "LEFT" : "RIGHT")} boundary - handled by BoatLandEnemy");
     }
     
-    private void OnTriggerStay2D(Collider2D other)
-    {
-        if (other.gameObject.layer != 6) return;
-        
-        LandEnemy enemy = FindLandEnemyInHierarchy(other.gameObject);
-        if (enemy != null && ShouldProcess(enemy))
-        {
-            StopEnemyMovement(enemy);
-        }
-    }
+    // private void OnTriggerEnter2D(Collider2D other)
+    // {
+    //     if (other.gameObject.layer != ENEMY_LAYER) return;
+    //
+    //     BoatLandEnemy enemy = FindBoatLandEnemyInHierarchy(other.gameObject);
+    //
+    //     if (enemy == null || !ShouldProcess(enemy)) return;
+    //
+    //     if (debugTriggers)
+    //         GameLogger.LogVerbose($"[BOUNDARY HIT] {enemy.name} hit {(isLeftBoundary ? "LEFT" : "RIGHT")} boundary - calling OnBoundaryHit!");
+    //
+    //     enemy.OnBoundaryHit(isLeftBoundary);
+    // }
     
-    private LandEnemy FindLandEnemyInHierarchy(GameObject obj)
+    private BoatLandEnemy FindBoatLandEnemyInHierarchy(GameObject go)
     {
-        LandEnemy enemy = obj.GetComponent<LandEnemy>();
+        BoatLandEnemy enemy = go.GetComponent<BoatLandEnemy>();
         if (enemy != null) return enemy;
         
-        Transform current = obj.transform;
-        while (current != null)
-        {
-            enemy = current.GetComponent<LandEnemy>();
-            if (enemy != null)
-            {
-                if (debugTriggers)
-                    Debug.Log($"BoatBoundaryTrigger: Found LandEnemy {enemy.name} in parent {current.name}");
-                return enemy;
-            }
-            current = current.parent;
-        }
+        enemy = go.GetComponentInParent<BoatLandEnemy>();
+        if (enemy != null) return enemy;
         
-        return null;
+        enemy = go.GetComponentInChildren<BoatLandEnemy>();
+        return enemy;
     }
     
-    private bool ShouldProcess(LandEnemy enemy)
+    private bool ShouldProcess(BoatLandEnemy enemy)
     {
-        if (enemy == null)
+        if (enemy == null) return false;
+        
+        string enemyBoatID = enemy.GetBoatID();
+        
+        if (string.IsNullOrEmpty(enemyBoatID) || string.IsNullOrEmpty(boatID))
         {
-            if (debugTriggers)
-                Debug.Log("BoatBoundaryTrigger: Enemy is NULL in ShouldProcess");
+            GameLogger.LogWarning($"[BOUNDARY] Missing BoatID - Enemy: '{enemyBoatID}', Boundary: '{boatID}'");
             return false;
         }
         
-        if (enemy is IBoatComponent boatComponent)
-        {
-            bool belongsToThisBoat = boatID.Matches(boatComponent.GetBoatID());
-            
-            if (debugTriggers)
-            {
-                Debug.Log($"BoatBoundaryTrigger: {enemy.name} (ID: {boatComponent.GetBoatID()}) belongs to this boat (ID: {boatID})? {belongsToThisBoat}");
-            }
-            
-            return belongsToThisBoat;
-        }
+        bool belongs = enemyBoatID == boatID;
         
-        if (debugTriggers)
-        {
-            Debug.Log($"BoatBoundaryTrigger: {enemy.name} doesn't implement IBoatComponent - rejecting");
-        }
-        
-        return false;
+        if (!belongs)
+            GameLogger.LogVerbose($"[BOUNDARY] Enemy {enemy.name} (ID: {enemyBoatID}) doesn't belong to this boat (ID: {boatID})");
+            
+        return belongs;
     }
     
-    private void StopEnemyMovement(LandEnemy enemy)
+    private void OnDrawGizmosSelected()
     {
-        var currentState = enemy.MovementStateLand;
+        Collider2D col = GetComponent<Collider2D>();
+        if (col == null) return;
         
-        if (debugTriggers)
-            Debug.Log($"BoatBoundaryTrigger: StopEnemyMovement called for {enemy.name}, current state: {currentState}");
+        Gizmos.color = isLeftBoundary ? Color.red : Color.blue;
         
-        bool shouldStop = false;
-        
-        if (isLeftBoundary && (currentState == LandEnemy.LandMovementState.WalkLeft || currentState == LandEnemy.LandMovementState.RunLeft))
+        if (col is BoxCollider2D box)
         {
-            shouldStop = true;
-            if (debugTriggers)
-                Debug.Log($"BoatBoundaryTrigger: {enemy.name} is moving LEFT toward LEFT boundary - SHOULD STOP");
+            Gizmos.matrix = transform.localToWorldMatrix;
+            Gizmos.DrawWireCube(box.offset, box.size);
         }
-        else if (!isLeftBoundary && (currentState == LandEnemy.LandMovementState.WalkRight || currentState == LandEnemy.LandMovementState.RunRight))
+        else if (col is CircleCollider2D circle)
         {
-            shouldStop = true;
-            if (debugTriggers)
-                Debug.Log($"BoatBoundaryTrigger: {enemy.name} is moving RIGHT toward RIGHT boundary - SHOULD STOP");
-        }
-        else
-        {
-            if (debugTriggers)
-                Debug.Log($"BoatBoundaryTrigger: {enemy.name} current state {currentState} doesn't need stopping at {(isLeftBoundary ? "LEFT" : "RIGHT")} boundary");
-        }
-        
-        if (shouldStop)
-        {
-            if (debugTriggers)
-                Debug.Log($"BoatBoundaryTrigger: STOPPING {enemy.name} at {(isLeftBoundary ? "LEFT" : "RIGHT")} boundary");
-            
-            if (debugTriggers)
-                Debug.Log($"BoatBoundaryTrigger: {enemy.name} state BEFORE: {enemy.MovementStateLand}");
-            enemy.MovementStateLand = LandEnemy.LandMovementState.Idle;
-            if (debugTriggers)
-                Debug.Log($"BoatBoundaryTrigger: {enemy.name} state AFTER: {enemy.MovementStateLand}");
-            
-            Rigidbody2D fishermanRb = enemy.GetComponent<Rigidbody2D>();
-            if (fishermanRb != null)
-            {
-                Vector2 velocityBefore = fishermanRb.velocity;
-                if (debugTriggers)
-                    Debug.Log($"BoatBoundaryTrigger: {enemy.name} velocity BEFORE: {velocityBefore}");
-                
-                Vector2 velocity = fishermanRb.velocity;
-                velocity.x = 0f;
-                fishermanRb.velocity = velocity;
-                
-                Vector2 velocityAfter = fishermanRb.velocity;
-                if (debugTriggers)
-                    Debug.Log($"BoatBoundaryTrigger: {enemy.name} velocity AFTER: {velocityAfter}");
-            }
-            else
-            {
-                Debug.LogError($"BoatBoundaryTrigger: {enemy.name} has NO Rigidbody2D!");
-            }
-            
-            LandEnemy.LandMovementState[] excludedStates;
-            if (isLeftBoundary)
-            {
-                excludedStates = new[] { 
-                    LandEnemy.LandMovementState.WalkLeft, 
-                    LandEnemy.LandMovementState.RunLeft 
-                };
-                if (debugTriggers)
-                    Debug.Log($"BoatBoundaryTrigger: Excluding LEFT movements for {enemy.name}");
-            }
-            else
-            {
-                excludedStates = new[] { 
-                    LandEnemy.LandMovementState.WalkRight, 
-                    LandEnemy.LandMovementState.RunRight 
-                };
-                if (debugTriggers)
-                    Debug.Log($"BoatBoundaryTrigger: Excluding RIGHT movements for {enemy.name}");
-            }
-            
-            try
-            {
-                enemy.ChooseRandomActionExcluding(excludedStates);
-                enemy.ScheduleNextAction();
-                if (debugTriggers)
-                    Debug.Log($"BoatBoundaryTrigger: Successfully scheduled new action for {enemy.name}");
-            }
-            catch (System.Exception e)
-            {
-                Debug.LogError($"BoatBoundaryTrigger: Exception in ChooseRandomActionExcluding for {enemy.name}: {e.Message}");
-            }
+            Gizmos.matrix = transform.localToWorldMatrix;
+            Gizmos.DrawWireSphere(circle.offset, circle.radius);
         }
     }
 }
