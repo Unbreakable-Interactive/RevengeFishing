@@ -369,9 +369,9 @@ MonoBehaviour:
   debugBoatCrew: 1
   crewPhysics: {fileID: 4277006710572366899}
   fishermanConfig: {fileID: 11400000, guid: 93deef848c2a54c8d966d2f88dafc97f, type: 2}
-  hookThrowProbability: 33
-  walkProbability: 33
-  runProbability: 33
+  hookThrowProbability: 0
+  walkProbability: 50
+  runProbability: 50
   aiDecisionFrequency: 1
   localBoundaryLeft: -1.5
   localBoundaryRight: 1.5

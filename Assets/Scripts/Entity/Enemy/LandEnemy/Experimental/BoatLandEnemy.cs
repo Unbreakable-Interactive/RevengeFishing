@@ -613,23 +613,27 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
             case LandMovementState.WalkLeft:
                 currentPos.x -= walkingSpeed * deltaTime;
                 isMoving = true;
+                transform.localScale = new Vector3(-1f, 1f, 1f);
                 if (debugProbabilities && Time.frameCount % 60 == 0)
                     Debug.Log($"[BOAT AI] {gameObject.name} - WALKING LEFT at speed {walkingSpeed}");
                 break;
             case LandMovementState.WalkRight:
                 currentPos.x += walkingSpeed * deltaTime;
                 isMoving = true;
+                transform.localScale = new Vector3(1f, 1f, 1f);
                 if (debugProbabilities && Time.frameCount % 60 == 0)
                     Debug.Log($"[BOAT AI] {gameObject.name} - WALKING RIGHT at speed {walkingSpeed}");
                 break;
             case LandMovementState.RunLeft:
                 currentPos.x -= runningSpeed * deltaTime;
                 isMoving = true;
+                transform.localScale = new Vector3(-1f, 1f, 1f);
                 if (debugProbabilities && Time.frameCount % 60 == 0)
                     Debug.Log($"[BOAT AI] {gameObject.name} - RUNNING LEFT at speed {runningSpeed}");
                 break;
             case LandMovementState.RunRight:
                 currentPos.x += runningSpeed * deltaTime;
+                transform.localScale = new Vector3(1f, 1f, 1f);
                 isMoving = true;
                 if (debugProbabilities && Time.frameCount % 60 == 0)
                     Debug.Log($"[BOAT AI] {gameObject.name} - RUNNING RIGHT at speed {runningSpeed}");
