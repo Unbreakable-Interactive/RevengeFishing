@@ -5,6 +5,14 @@ using Random = UnityEngine.Random;
 
 public class LandEnemy : Enemy, IBoatComponent
 {
+    // Animation names hashed for optimization
+    protected static readonly int IsRising = Animator.StringToHash("isRising");
+    protected static readonly int IsSinking = Animator.StringToHash("isSinking");
+    protected static readonly int IsWalking = Animator.StringToHash("isWalking");
+    protected static readonly int IsRunning = Animator.StringToHash("isRunning");
+    protected static readonly int IsIdle = Animator.StringToHash("isIdle");
+    protected static readonly int RodEquipped = Animator.StringToHash("rodEquipped");
+
     [Header("Land Enemy Configuration")]
     public LandEnemyConfig landEnemyConfig;
 
@@ -217,7 +225,7 @@ public class LandEnemy : Enemy, IBoatComponent
         base.Update();
         if (hasStartedFloating && rb.velocity.y > 0)
         {
-            if (!animator.GetBool("isRising")) animator?.SetBool("isRising", true);
+            if (!animator.GetBool(IsRising)) animator?.SetBool(IsRising, true);
         }
     }
 
@@ -509,7 +517,7 @@ public class LandEnemy : Enemy, IBoatComponent
     {
         base.TriggerDefeat();
         OnFishingToolUnequipped();
-        animator?.SetBool("isSinking", true);
+        animator?.SetBool(IsSinking, true);
     }
 
     protected virtual void CheckPlatformBounds()
@@ -566,35 +574,35 @@ public class LandEnemy : Enemy, IBoatComponent
         switch (_landMovementState)
         {
             case LandMovementState.Idle:
-                animator?.SetBool("isWalking", false);
-                animator?.SetBool("isRunning", false);
-                animator?.SetBool("isIdle", true);
+                animator?.SetBool(IsWalking, false);
+                animator?.SetBool(IsRunning, false);
+                animator?.SetBool(IsIdle, true);
                 break;
             case LandMovementState.WalkLeft:
-                animator?.SetBool("isWalking", true);
-                animator?.SetBool("isRunning", false);
-                animator?.SetBool("isIdle", false);
+                animator?.SetBool(IsWalking, true);
+                animator?.SetBool(IsRunning, false);
+                animator?.SetBool(IsIdle, false);
                 transform.localScale = new Vector3(-1f, 1f, 1f);
                 movement = Vector2.left * walkingSpeed;
                 break;
             case LandMovementState.WalkRight:
-                animator?.SetBool("isWalking", true);
-                animator?.SetBool("isRunning", false);
-                animator?.SetBool("isIdle", false);
+                animator?.SetBool(IsWalking, true);
+                animator?.SetBool(IsRunning, false);
+                animator?.SetBool(IsIdle, false);
                 transform.localScale = new Vector3(1f, 1f, 1f);
                 movement = Vector2.right * walkingSpeed;
                 break;
             case LandMovementState.RunLeft:
-                animator?.SetBool("isWalking", false);
-                animator?.SetBool("isRunning", true);
-                animator?.SetBool("isIdle", false);
+                animator?.SetBool(IsWalking, false);
+                animator?.SetBool(IsRunning, true);
+                animator?.SetBool(IsIdle, false);
                 transform.localScale = new Vector3(-1f, 1f, 1f);
                 movement = Vector2.left * runningSpeed;
                 break;
             case LandMovementState.RunRight:
-                animator?.SetBool("isWalking", false);
-                animator?.SetBool("isRunning", true);
-                animator?.SetBool("isIdle", false);
+                animator?.SetBool(IsWalking, false);
+                animator?.SetBool(IsRunning, true);
+                animator?.SetBool(IsIdle, false);
                 transform.localScale = new Vector3(1f, 1f, 1f);
                 movement = Vector2.right * runningSpeed;
                 break;
@@ -694,19 +702,18 @@ public class LandEnemy : Enemy, IBoatComponent
 
     protected virtual void OnFishingToolEquipped()
     {
-        animator?.SetBool("rodEquipped", true);
+        animator?.SetBool(RodEquipped, true);
     }
 
     protected virtual void OnFishingToolUnequipped()
     {
-        animator?.SetBool("rodEquipped", false);
+        animator?.SetBool(RodEquipped, false);
     }
 
     public virtual void DropTool()
     {
         if (toolDropPrefab != null)
         {
-            //GameObject droppedToolHandler = 
             Instantiate(toolDropPrefab, transform.position, transform.rotation);
             if (assignedPlatform != null && assignedPlatform.showDebugInfo)
             {

@@ -49,6 +49,20 @@ public class BoatBoundaryTrigger : MonoBehaviour
             GameLogger.LogVerbose($"[BOUNDARY HIT] {enemy.name} hit {(isLeftBoundary ? "LEFT" : "RIGHT")} boundary - handled by BoatLandEnemy");
     }
     
+    // private void OnTriggerEnter2D(Collider2D other)
+    // {
+    //     if (other.gameObject.layer != ENEMY_LAYER) return;
+    //
+    //     BoatLandEnemy enemy = FindBoatLandEnemyInHierarchy(other.gameObject);
+    //
+    //     if (enemy == null || !ShouldProcess(enemy)) return;
+    //
+    //     if (debugTriggers)
+    //         GameLogger.LogVerbose($"[BOUNDARY HIT] {enemy.name} hit {(isLeftBoundary ? "LEFT" : "RIGHT")} boundary - calling OnBoundaryHit!");
+    //
+    //     enemy.OnBoundaryHit(isLeftBoundary);
+    // }
+    
     private BoatLandEnemy FindBoatLandEnemyInHierarchy(GameObject go)
     {
         BoatLandEnemy enemy = go.GetComponent<BoatLandEnemy>();

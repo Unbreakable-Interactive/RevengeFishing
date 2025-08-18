@@ -4,13 +4,6 @@ using UnityEngine;
 
 public class BoatLandEnemy : LandEnemy, IBoatComponent
 {
-    private static readonly int IsWalking = Animator.StringToHash("isWalking");
-    private static readonly int IsRunning = Animator.StringToHash("isRunning");
-    private static readonly int IsIdle = Animator.StringToHash("isIdle");
-    private static readonly int IsRising = Animator.StringToHash("isRising");
-    private static readonly int IsSinking = Animator.StringToHash("isSinking");
-    private static readonly int RodEquipped = Animator.StringToHash("rodEquipped");
-
     [Header("Boat Identity")]
     [SerializeField] private bool debugBoatCrew = true;
 
@@ -443,34 +436,25 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
         CheckBoatPlatformBounds();
     }
 
-    protected virtual void CheckBoatPlatformBounds()
-    {
-        if (crewPhysics == null || !crewPhysics.IsParentedToBoat()) return;
-
-        float localX = transform.localPosition.x;
-
-        if (localX <= localBoundaryLeft && (_landMovementState == LandMovementState.WalkLeft || _landMovementState == LandMovementState.RunLeft))
-        {
-            Vector3 clampedPos = transform.localPosition;
-            clampedPos.x = localBoundaryLeft + 0.1f;
-            crewPhysics.SetLocalPosition(clampedPos);
-            StopMovementAndChooseNewAction(LandMovementState.WalkLeft, LandMovementState.RunLeft);
-        }
-        else if (localX >= localBoundaryRight && (_landMovementState == LandMovementState.WalkRight || _landMovementState == LandMovementState.RunRight))
-        {
-            Vector3 clampedPos = transform.localPosition;
-            clampedPos.x = localBoundaryRight - 0.1f;
-            crewPhysics.SetLocalPosition(clampedPos);
-            StopMovementAndChooseNewAction(LandMovementState.WalkRight, LandMovementState.RunRight);
-        }
-    }
-
+    // private void StopMovementAndChooseNewAction(params LandMovementState[] excludedStates)
+    // {
+    //     _landMovementState = LandMovementState.Idle;
+    //     ChooseRandomActionExcluding(excludedStates);
+    //     ScheduleNextActionWithFrequency();
+    // }
+    
     private void StopMovementAndChooseNewAction(params LandMovementState[] excludedStates)
     {
         _landMovementState = LandMovementState.Idle;
+    
+        nextActionTime = Time.time + 0.1f;
+    
         ChooseRandomActionExcluding(excludedStates);
-        ScheduleNextActionWithFrequency();
+    
+        if (debugProbabilities)
+            Debug.Log($"[BOUNDARY RESPONSE] {gameObject.name} excluded {string.Join(", ", excludedStates)} → chose {_landMovementState}");
     }
+
 
     protected virtual void MakeBoatAIDecision()
     {
@@ -817,5 +801,28 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
 
         CleanupBoatSystems();
         base.TriggerEscape();
+    }
+    
+    
+    protected virtual void CheckBoatPlatformBounds()
+    {
+        if (crewPhysics == null || !crewPhysics.IsParentedToBoat()) return;
+
+        float localX = transform.localPosition.x;
+
+        if (localX <= localBoundaryLeft && (_landMovementState == LandMovementState.WalkLeft || _landMovementState == LandMovementState.RunLeft))
+        {
+            Vector3 clampedPos = transform.localPosition;
+            clampedPos.x = localBoundaryLeft + 0.1f;
+            crewPhysics.SetLocalPosition(clampedPos);
+            StopMovementAndChooseNewAction(LandMovementState.WalkLeft, LandMovementState.RunLeft);
+        }
+        else if (localX >= localBoundaryRight && (_landMovementState == LandMovementState.WalkRight || _landMovementState == LandMovementState.RunRight))
+        {
+            Vector3 clampedPos = transform.localPosition;
+            clampedPos.x = localBoundaryRight - 0.1f;
+            crewPhysics.SetLocalPosition(clampedPos);
+            StopMovementAndChooseNewAction(LandMovementState.WalkRight, LandMovementState.RunRight);
+        }
     }
 }

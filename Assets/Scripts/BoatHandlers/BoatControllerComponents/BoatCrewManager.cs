@@ -26,8 +26,12 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
     [Header("Boundaries")]
     [SerializeField] private BoatBoundaryTrigger leftBoundary;
     [SerializeField] private BoatBoundaryTrigger rightBoundary;
+
+    [SerializeField] private bool isAutocalculatingInPlatform = true;
+    
     [SerializeField] private float calculatedLeftBoundary = -1.5f;
     [SerializeField] private float calculatedRightBoundary = 1.5f;
+    [SerializeField] private float boundOffset;
     
     [Header("Debug & Monitoring")]
     [SerializeField] private bool debugCrewManager = true;
@@ -433,19 +437,73 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
     
     private void CalculatePlatformBounds()
     {
-        if (boatPlatform?.PlatformCollider != null)
+        if (isAutocalculatingInPlatform)
         {
-            Bounds bounds = boatPlatform.PlatformCollider.bounds;
-            calculatedLeftBoundary = bounds.min.x - crewContainer.position.x - 0.3f;
-            calculatedRightBoundary = bounds.max.x - crewContainer.position.x + 0.3f;
+            if (boatPlatform?.PlatformCollider != null)
+            {
+                Bounds bounds = boatPlatform.PlatformCollider.bounds;
+                calculatedLeftBoundary = bounds.min.x - crewContainer.position.x - boundOffset;
+                calculatedRightBoundary = bounds.max.x - crewContainer.position.x + boundOffset;
             
-            platformTopWorld = new Vector3(bounds.center.x, bounds.max.y, bounds.center.z);
-            platformTopLocal = crewContainer.InverseTransformPoint(platformTopWorld);
-            calculatedPlatformHeight = platformTopLocal.y;
+                platformTopWorld = new Vector3(bounds.center.x, bounds.max.y, bounds.center.z);
+                platformTopLocal = crewContainer.InverseTransformPoint(platformTopWorld);
+                calculatedPlatformHeight = platformTopLocal.y;
+                
+                if (debugCrewManager)
+                    GameLogger.LogVerbose($"[CREW BOUNDS] {GetBoatID()} - Using PLATFORM COLLIDER method");
+            }
+        }
+        else
+        {
+            if (leftBoundary != null && rightBoundary != null)
+            {
+                Vector3 leftBoundaryLocal = crewContainer.InverseTransformPoint(leftBoundary.transform.position);
+                Vector3 rightBoundaryLocal = crewContainer.InverseTransformPoint(rightBoundary.transform.position);
+                
+                calculatedLeftBoundary = leftBoundaryLocal.x + boundOffset;
+                calculatedRightBoundary = rightBoundaryLocal.x - boundOffset;
+                
+                if (boatPlatform?.PlatformCollider != null)
+                {
+                    Bounds bounds = boatPlatform.PlatformCollider.bounds;
+                    platformTopWorld = new Vector3(bounds.center.x, bounds.max.y, bounds.center.z);
+                    platformTopLocal = crewContainer.InverseTransformPoint(platformTopWorld);
+                    calculatedPlatformHeight = platformTopLocal.y;
+                }
+                else
+                {
+                    calculatedPlatformHeight = (leftBoundaryLocal.y + rightBoundaryLocal.y) * 0.5f;
+                }
+                
+                if (debugCrewManager)
+                {
+                    GameLogger.LogVerbose($"[CREW BOUNDS] {GetBoatID()} - Using BOUNDARY TRIGGERS method");
+                    GameLogger.LogVerbose($"[CREW BOUNDS] Left Boundary World: {leftBoundary.transform.position} → Local: {leftBoundaryLocal}");
+                    GameLogger.LogVerbose($"[CREW BOUNDS] Right Boundary World: {rightBoundary.transform.position} → Local: {rightBoundaryLocal}");
+                }
+            }
+            else
+            {
+                calculatedLeftBoundary = -1.5f;
+                calculatedRightBoundary = 1.5f;
+                calculatedPlatformHeight = 0.1f;
+                
+                if (debugCrewManager)
+                    GameLogger.LogWarning($"[CREW BOUNDS] {GetBoatID()} - Missing boundaries! Using fallback values");
+            }
+        }
+        
+        if (calculatedLeftBoundary >= calculatedRightBoundary)
+        {
+            GameLogger.LogError($"[CREW BOUNDS] {GetBoatID()} - Invalid bounds! Left: {calculatedLeftBoundary}, Right: {calculatedRightBoundary}");
+        
+            float center = (calculatedLeftBoundary + calculatedRightBoundary) * 0.5f;
+            calculatedLeftBoundary = center - 1f;
+            calculatedRightBoundary = center + 1f;
         }
         
         if (debugCrewManager)
-            GameLogger.LogVerbose($"[CREW BOUNDS] {GetBoatID()} - Platform bounds: Left={calculatedLeftBoundary:F2}, Right={calculatedRightBoundary:F2}, Height={calculatedPlatformHeight:F2}");
+            GameLogger.LogVerbose($"[CREW BOUNDS] {GetBoatID()} - FINAL Platform bounds: Left={calculatedLeftBoundary:F2}, Right={calculatedRightBoundary:F2}, Height={calculatedPlatformHeight:F2}");
     }
     
     private void InitializeFloaterWithActiveCrew()
