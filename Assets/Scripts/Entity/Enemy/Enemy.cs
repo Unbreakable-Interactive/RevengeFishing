@@ -6,26 +6,26 @@ public abstract class Enemy : Entity
 {
     public enum Tier
     {
-        Tier1=0,
-        Tier2=1,
-        Tier3=2,
-        Tier4=3,
-        Tier5=4,
-        Tier6=5
+        Tier1 = 0,
+        Tier2 = 1,
+        Tier3 = 2,
+        Tier4 = 3,
+        Tier5 = 4,
+        Tier6 = 5
     }
 
     public enum EnemyState
     {
-        Alive=0,
-        Defeated=1,
-        Eaten=2,
-        Dead=3
+        Alive = 0,
+        Defeated = 1,
+        Eaten = 2,
+        Dead = 3
     }
 
     [SerializeField] protected Tier _tier;
     [SerializeField] protected EnemyState _state;
     public EnemyState State => _state;
-    
+
     [Header("Player Reference")]
     [SerializeField] protected Player player;
 
@@ -39,7 +39,7 @@ public abstract class Enemy : Entity
     [SerializeField] protected float minActionTime = 1f;
     [SerializeField] protected float maxActionTime = 4f;
     [SerializeField] protected float nextActionTime;
-    
+
     [Header("Debug")]
     [SerializeField] protected bool enableDebugMessages = false;
 
@@ -49,11 +49,11 @@ public abstract class Enemy : Entity
 
     public Collider2D BodyCollider => bodyCollider;
     public GameObject ParentContainer => parentContainer;
-    
+
     public Action<Enemy> OnEnemyDied;
-    
+
     [HideInInspector] public bool isReturningToPool = false;
-    
+
     public float NextActionTime
     {
         get { return nextActionTime; }
@@ -81,14 +81,14 @@ public abstract class Enemy : Entity
     protected virtual void Start()
     {
         entityType = EntityType.Enemy;
-    
+
         if (player == null)
         {
             player = Player.Instance;
         }
 
         AutoAssignReferences();
-        
+
         Initialize();
     }
 
@@ -207,7 +207,7 @@ public abstract class Enemy : Entity
         hasReceivedFirstFatigue = false;
         canPullPlayer = false;
         entityFatigue.fatigue = 0;
-        
+
         if (enableDebugMessages)
             GameLogger.LogVerbose($"{gameObject.name}: Fatigue reset to 0");
     }
@@ -215,7 +215,7 @@ public abstract class Enemy : Entity
     public virtual void ChangeState_Alive()
     {
         _state = EnemyState.Alive;
-        
+
         if (rb != null)
         {
             rb.velocity = Vector2.zero;
@@ -228,12 +228,12 @@ public abstract class Enemy : Entity
         {
             bodyCollider.isTrigger = false;
         }
-        
+
         if (this is LandEnemy landEnemy)
         {
             landEnemy.HasStartedFloating = false;
         }
-        
+
         if (enableDebugMessages)
             GameLogger.LogVerbose($"{gameObject.name}: State changed to Alive, physics reset");
     }
@@ -279,13 +279,13 @@ public abstract class Enemy : Entity
         GameLogger.Log($"{gameObject.name} has been EATEN!");
         ChangeState_Eaten();
         InterruptAllActions();
-        
+
         MouthMagnet magnet = player.GetComponentInChildren<MouthMagnet>();
         if (magnet != null)
         {
             magnet.RemoveEntity(this);
         }
-        
+
         player.TriggerBite();
         TriggerDead();
     }
@@ -301,22 +301,23 @@ public abstract class Enemy : Entity
             player.GainPowerFromEating(_powerLevel);
             GameLogger.Log($"Player consumed {gameObject.name} with power level {_powerLevel}");
         }
-        
+
         EnemyDie();
     }
 
     protected virtual void TriggerEscape()
     {
         GameLogger.Log($"{gameObject.name} has ESCAPED! The player can no longer catch this enemy.");
+        player.GetComponentInChildren<MouthMagnet>().RemoveEntity(this);
         ReturnToPool();
     }
 
     protected virtual void EnemyDie()
     {
         GameLogger.Log($"{gameObject.name} has been REVERSE FISHED!");
-        
+
         OnEnemyDied?.Invoke(this);
-        
+
         ReturnToPool();
     }
 
@@ -327,9 +328,9 @@ public abstract class Enemy : Entity
             GameLogger.LogVerbose($"{gameObject.name} already returning to pool, skipping duplicate call");
             return;
         }
-        
+
         isReturningToPool = true;
-        
+
         GameObject handler = parentContainer != null ? parentContainer : FindMyHandler();
 
         if (handler == null)
@@ -356,7 +357,7 @@ public abstract class Enemy : Entity
             gameObject.SetActive(false);
         }
     }
-    
+
     private GameObject FindMyHandler()
     {
         if (parentContainer != null)
@@ -365,31 +366,31 @@ public abstract class Enemy : Entity
         }
 
         Transform current = transform;
-    
+
         while (current != null)
         {
             string name = current.name.ToLower();
-        
-            if (name.Contains("landfishermanhandler") || 
+
+            if (name.Contains("landfishermanhandler") ||
                 name.Contains("fishermanhandler"))
             {
                 return current.gameObject;
             }
-        
+
             current = current.parent;
         }
-    
+
         return null;
     }
 
     private void NotifySpawnHandlerOfDeath()
     {
         SpawnHandler[] allSpawnHandlers = FindObjectsOfType<SpawnHandler>();
-        
+
         foreach (SpawnHandler handler in allSpawnHandlers)
         {
-            if (handler.config != null && 
-                this is LandEnemy && 
+            if (handler.config != null &&
+                this is LandEnemy &&
                 handler.config.enemyType == SpawnHandlerConfig.EnemyType.LandFisherman)
             {
                 handler.OnEnemyDestroyed(gameObject);
@@ -401,7 +402,7 @@ public abstract class Enemy : Entity
     protected virtual void CleanupBeforePoolReturn()
     {
         StopAllCoroutines();
-        
+
         if (this is LandEnemy landEnemy)
         {
             if (landEnemy.GetAssignedPlatform() != null)

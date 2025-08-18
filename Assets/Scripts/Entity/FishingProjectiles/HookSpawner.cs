@@ -59,6 +59,7 @@ public class HookSpawner : MonoBehaviour
             }
         }
 
+        if (spawnPoint == null) spawnPoint = rodAttachRope.gameObject.transform;
         if (spawnPoint == null)
         {
             // Auto-create spawn point
