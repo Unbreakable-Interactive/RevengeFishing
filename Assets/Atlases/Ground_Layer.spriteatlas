@@ -6,7 +6,7 @@ SpriteAtlas:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Gameplay_Static
+  m_Name: Ground_Layer
   m_EditorData:
     serializedVersion: 2
     textureSettings:
@@ -23,22 +23,22 @@ SpriteAtlas:
     platformSettings:
     - serializedVersion: 3
       m_BuildTarget: DefaultTexturePlatform
-      m_MaxTextureSize: 1024
+      m_MaxTextureSize: 2048
       m_ResizeAlgorithm: 0
       m_TextureFormat: -1
       m_TextureCompression: 1
       m_CompressionQuality: 50
-      m_CrunchedCompression: 0
-      m_AllowsAlphaSplitting: 0
+      m_CrunchedCompression: 1
+      m_AllowsAlphaSplitting: 1
       m_Overridden: 1
       m_IgnorePlatformSupport: 0
       m_AndroidETC2FallbackOverride: 0
       m_ForceMaximumCompressionQuality_BC6H_BC7: 0
     - serializedVersion: 3
       m_BuildTarget: Android
-      m_MaxTextureSize: 1024
+      m_MaxTextureSize: 2048
       m_ResizeAlgorithm: 0
-      m_TextureFormat: 47
+      m_TextureFormat: 50
       m_TextureCompression: 1
       m_CompressionQuality: 50
       m_CrunchedCompression: 1
@@ -49,24 +49,24 @@ SpriteAtlas:
       m_ForceMaximumCompressionQuality_BC6H_BC7: 0
     - serializedVersion: 3
       m_BuildTarget: iPhone
-      m_MaxTextureSize: 1024
+      m_MaxTextureSize: 2048
       m_ResizeAlgorithm: 0
-      m_TextureFormat: 50
+      m_TextureFormat: 33
       m_TextureCompression: 1
       m_CompressionQuality: 50
-      m_CrunchedCompression: 0
-      m_AllowsAlphaSplitting: 0
+      m_CrunchedCompression: 1
+      m_AllowsAlphaSplitting: 1
       m_Overridden: 1
       m_IgnorePlatformSupport: 0
       m_AndroidETC2FallbackOverride: 0
       m_ForceMaximumCompressionQuality_BC6H_BC7: 0
     - serializedVersion: 3
       m_BuildTarget: WebGL
-      m_MaxTextureSize: 512
+      m_MaxTextureSize: 2048
       m_ResizeAlgorithm: 0
       m_TextureFormat: 12
       m_TextureCompression: 1
-      m_CompressionQuality: 75
+      m_CompressionQuality: 50
       m_CrunchedCompression: 1
       m_AllowsAlphaSplitting: 0
       m_Overridden: 1
@@ -717,5 +717,5 @@ SpriteAtlas:
   - A2e
   - 5s
   m_RenderDataMap: {}
-  m_Tag: Gameplay_Static
+  m_Tag: Ground_Layer
   m_IsVariant: 0
