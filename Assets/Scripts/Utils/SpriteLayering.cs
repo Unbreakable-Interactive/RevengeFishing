@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class RodSpriteLayering : MonoBehaviour
+public class SpriteLayering : MonoBehaviour
 {
     private Camera mainCamera;
     [SerializeField] private float waterSurface;

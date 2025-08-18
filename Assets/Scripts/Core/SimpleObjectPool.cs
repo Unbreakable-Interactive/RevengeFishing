@@ -234,6 +234,10 @@ public class SimpleObjectPool : MonoBehaviour
         {
             ResetBoatFishermanHandlerPositions(handler);
         }
+        else if (handler.name.ToLower().Contains("boat"))
+        {
+            ResetBoatHandlerPositions(handler);
+        }
     }
 
     private void ResetLandFishermanHandlerPositions(GameObject handler)
@@ -274,6 +278,31 @@ public class SimpleObjectPool : MonoBehaviour
             
             GameLogger.LogVerbose($"Reset Fisherman local position in {handler.name}");
         }
+    }
+
+    private void ResetBoatHandlerPositions(GameObject handler)
+    {
+        Transform handlerTransform = handler.transform;
+        
+        // Reset boat controller integrity and state
+        BoatController boatController = handler.GetComponent<BoatController>();
+        if (boatController != null)
+        {
+            boatController.ResetBoat();
+            GameLogger.LogVerbose($"Reset BoatController for {handler.name}");
+        }
+        
+        // Reset any boat parts to their original positions
+        BoatPart[] boatParts = handler.GetComponentsInChildren<BoatPart>();
+        foreach (var part in boatParts)
+        {
+            if (part != null)
+            {
+                part.ResetToOriginalPosition();
+            }
+        }
+        
+        GameLogger.LogVerbose($"Reset boat handler positions for {handler.name}");
     }
 
     void CleanupHandler(GameObject handler)

@@ -208,6 +208,14 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
         
         if (boatController != null)
         {
+            // Ensure we don't set 0 integrity
+            if (totalPowerLevel <= 0f)
+            {
+                totalPowerLevel = boatController.GetMaxIntegrity(); // Use the prefab's default
+                activePowerLevel = totalPowerLevel;
+                GameLogger.LogWarning($"[CREW INTEGRITY] {GetBoatID()} - No crew power found, using default integrity: {totalPowerLevel}");
+            }
+            
             boatController.SetInitialIntegrity(totalPowerLevel, activePowerLevel);
         }
         
