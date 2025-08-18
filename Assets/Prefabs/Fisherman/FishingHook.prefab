@@ -77,8 +77,8 @@ GameObject:
   m_Component:
   - component: {fileID: 9079909360616689597}
   - component: {fileID: 4048927617224973841}
-  - component: {fileID: 53763512692988648}
   - component: {fileID: 2356560897641432879}
+  - component: {fileID: 53763512692988648}
   - component: {fileID: 3126174731786038201}
   m_Layer: 0
   m_Name: FishingHook
@@ -161,6 +161,33 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!50 &2356560897641432879
+Rigidbody2D:
+  serializedVersion: 4
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3932039236167525111}
+  m_BodyType: 0
+  m_Simulated: 1
+  m_UseFullKinematicContacts: 0
+  m_UseAutoMass: 0
+  m_Mass: 1
+  m_LinearDrag: 0
+  m_AngularDrag: 0.05
+  m_GravityScale: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_Interpolate: 0
+  m_SleepingMode: 1
+  m_CollisionDetection: 0
+  m_Constraints: 0
 --- !u!114 &53763512692988648
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -234,33 +261,6 @@ MonoBehaviour:
   snapParticles: {fileID: 0}
   stretchSound: {fileID: 0}
   snapSound: {fileID: 0}
---- !u!50 &2356560897641432879
-Rigidbody2D:
-  serializedVersion: 4
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3932039236167525111}
-  m_BodyType: 0
-  m_Simulated: 1
-  m_UseFullKinematicContacts: 0
-  m_UseAutoMass: 0
-  m_Mass: 1
-  m_LinearDrag: 0
-  m_AngularDrag: 0.05
-  m_GravityScale: 1
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_Interpolate: 0
-  m_SleepingMode: 1
-  m_CollisionDetection: 0
-  m_Constraints: 0
 --- !u!120 &3126174731786038201
 LineRenderer:
   serializedVersion: 2
@@ -374,6 +374,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7244508698831430092}
+  - component: {fileID: 1821353179378100415}
   - component: {fileID: 2454960926440440285}
   m_Layer: 0
   m_Name: Sprite
@@ -397,6 +398,19 @@ Transform:
   m_Children: []
   m_Father: {fileID: 9079909360616689597}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1821353179378100415
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9054268069914657743}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5fe46d70d26195340857cb6db2459719, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  waterSurface: -0.19
 --- !u!212 &2454960926440440285
 SpriteRenderer:
   m_ObjectHideFlags: 0
