@@ -9,7 +9,6 @@ public class BoatWaterCheckFollow : MonoBehaviour
     [Header("BOAT SAFETY EXTENSIONS")]
     [SerializeField] private float minDistanceFromBoat = 1.0f;
     [SerializeField] private bool enableBoatSafetyCheck = true;
-    [SerializeField] private bool debugBoatPositioning = false;
     
     private Transform boatTransform;
     private BoatFloater associatedBoat;
@@ -19,10 +18,7 @@ public class BoatWaterCheckFollow : MonoBehaviour
         GetComponent<Collider2D>().isTrigger = true;
         FindAssociatedBoat();
         
-        if (debugBoatPositioning)
-        {
-            GameLogger.LogVerbose($"🚤 BoatWaterCheckFollow: Initialized with boat safety for {gameObject.name}");
-        }
+        GameLogger.LogVerbose($"BoatWaterCheckFollow: Initialized with boat safety for {gameObject.name}");
     }
 
     void Update()
@@ -79,11 +75,8 @@ public class BoatWaterCheckFollow : MonoBehaviour
             }
         }
         
-        if (debugBoatPositioning)
-        {
-            string status = associatedBoat != null ? $"Found: {associatedBoat.name}" : "Not found";
-            GameLogger.LogVerbose($"🚤 Associated boat: {status}");
-        }
+        string status = associatedBoat != null ? $"Found: {associatedBoat.name}" : "Not found";
+        GameLogger.LogVerbose($"Associated boat: {status}");
     }
     
     private bool ShouldApplyBoatSafety()
@@ -101,10 +94,7 @@ public class BoatWaterCheckFollow : MonoBehaviour
         
         transform.position = new Vector3(target.transform.position.x, targetY, transform.position.z);
         
-        if (debugBoatPositioning)
-        {
-            GameLogger.LogVerbose($"🚤 Boat Safety: Boat Y={boatY:F2}, Safe Y={safeWaterlineY:F2}, Using Y={targetY:F2}");
-        }
+        GameLogger.LogVerbose($"🚤 Boat Safety: Boat Y={boatY:F2}, Safe Y={safeWaterlineY:F2}, Using Y={targetY:F2}");
     }
     
     public void SetMinimumDistanceFromBoat(float distance)

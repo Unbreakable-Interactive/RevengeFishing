@@ -7,9 +7,6 @@ public class Platform : MonoBehaviour
     [Header("Assigned Enemies")]
     public List<Enemy> assignedEnemies = new List<Enemy>();
     
-    [Header("Debug")]
-    public bool showDebugInfo = true;
-
     protected Collider2D platformCollider;
 
     [SerializeField] protected TypeIdentifier identifier;
@@ -34,10 +31,7 @@ public class Platform : MonoBehaviour
 
         SetupSelectiveCollisions();
 
-        if (showDebugInfo)
-        {
-            GameLogger.LogVerbose($"Platform {gameObject.name} set up selective collisions");
-        }
+        GameLogger.LogVerbose($"Platform {gameObject.name} set up selective collisions");
     }
 
     void OnCollisionEnter2D(Collision2D collision)
@@ -64,8 +58,7 @@ public class Platform : MonoBehaviour
         if (previousPlatform != null && previousPlatform != this)
         {
             previousPlatform.UnregisterEnemy(enemy);
-            if (showDebugInfo)
-                GameLogger.LogVerbose($"Enemy {enemy.name} MOVED from {previousPlatform.name} to {gameObject.name}");
+            GameLogger.LogVerbose($"Enemy {enemy.name} MOVED from {previousPlatform.name} to {gameObject.name}");
         }
         
         assignedEnemies.Add(enemy);
@@ -83,8 +76,7 @@ public class Platform : MonoBehaviour
 
         landEnemy.platformBoundsCalculated = true;
 
-        if (showDebugInfo)
-            GameLogger.LogVerbose($"Enemy {enemy.name} assigned to platform {gameObject.name}. Total enemies: {assignedEnemies.Count}");
+        GameLogger.LogVerbose($"Enemy {enemy.name} assigned to platform {gameObject.name}. Total enemies: {assignedEnemies.Count}");
     }
 
     public virtual void RegisterEnemyAtRuntime(Enemy enemy)
@@ -106,10 +98,8 @@ public class Platform : MonoBehaviour
                 }
             }
 
-            if (showDebugInfo)
-            {
-                GameLogger.LogVerbose($"Auto-assigned {enemy.name} to platform {gameObject.name}");
-            }
+            
+            GameLogger.LogVerbose($"Auto-assigned {enemy.name} to platform {gameObject.name}");
         }
     }
 

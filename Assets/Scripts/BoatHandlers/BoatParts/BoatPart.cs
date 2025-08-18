@@ -17,7 +17,6 @@ public class BoatPart : MonoBehaviour
     [Header("Performance Optimization")]
     [SerializeField] private float waterCheckInterval = 0.2f;
     [SerializeField] private bool enableBuoyancy = true;
-    [SerializeField] private bool debugFloatation = false;
     
     [Header("Dynamic Physics")]
     [SerializeField] private float physicsLifetime = 15f;
@@ -55,10 +54,7 @@ public class BoatPart : MonoBehaviour
         
         if (rb == null)
         {
-            if (debugFloatation)
-            {
-                GameLogger.LogWarning($"BoatPart {gameObject.name} - No Rigidbody2D found after enabling dynamic physics");
-            }
+            GameLogger.LogWarning($"BoatPart {gameObject.name} - No Rigidbody2D found after enabling dynamic physics");
             return;
         }
         
@@ -84,10 +80,8 @@ public class BoatPart : MonoBehaviour
             physicsLifetimeCoroutine = StartCoroutine(PhysicsLifetimeManager());
         }
         
-        if (debugFloatation)
-        {
-            GameLogger.LogVerbose($"BoatPart {gameObject.name} - Applied destruction forces: {explosionForce * forceMultiplier}");
-        }
+    
+        GameLogger.LogVerbose($"BoatPart {gameObject.name} - Applied destruction forces: {explosionForce * forceMultiplier}");
     }
     
     private void EnableDynamicPhysics()
@@ -113,11 +107,8 @@ public class BoatPart : MonoBehaviour
         
         isDynamicPhysicsActive = true;
         
-        if (debugFloatation)
-        {
-            GameLogger.LogVerbose($"BoatPart {gameObject.name} - Dynamic physics enabled with mass {rb.mass}");
-        }
-    }
+        GameLogger.LogVerbose($"BoatPart {gameObject.name} - Dynamic physics enabled with mass {rb.mass}");
+}
     
     private void SetPhysicsMode(bool aboveWater)
     {
@@ -136,11 +127,8 @@ public class BoatPart : MonoBehaviour
             isInWaterMode = true;
         }
         
-        if (debugFloatation)
-        {
-            string mode = aboveWater ? "AIR" : "WATER";
-            GameLogger.LogVerbose($"BoatPart {gameObject.name} - Physics mode: {mode} (gravity: {rb.gravityScale}, drag: {rb.drag})");
-        }
+        string mode = aboveWater ? "AIR" : "WATER";
+        GameLogger.LogVerbose($"BoatPart {gameObject.name} - Physics mode: {mode} (gravity: {rb.gravityScale}, drag: {rb.drag})");
     }
     
     private IEnumerator StartOptimizedWaterDetection()
@@ -150,10 +138,7 @@ public class BoatPart : MonoBehaviour
         waterCheckEnabled = true;
         lastWaterCheckTime = Time.time;
         
-        if (debugFloatation)
-        {
-            GameLogger.LogVerbose($"BoatPart {gameObject.name} - Optimized water detection activated");
-        }
+        GameLogger.LogVerbose($"BoatPart {gameObject.name} - Optimized water detection activated");
     }
     
     private IEnumerator PhysicsLifetimeManager()
@@ -170,10 +155,7 @@ public class BoatPart : MonoBehaviour
                 
                 if (rb != null && rb.velocity.magnitude < velocityThreshold)
                 {
-                    if (debugFloatation)
-                    {
-                        GameLogger.LogVerbose($"BoatPart {gameObject.name} - Early cleanup due to low velocity");
-                    }
+                    GameLogger.LogVerbose($"BoatPart {gameObject.name} - Early cleanup due to low velocity");
                     break;
                 }
             }
@@ -270,10 +252,7 @@ public class BoatPart : MonoBehaviour
         
         gameObject.SetActive(false);
         
-        if (debugFloatation)
-        {
-            GameLogger.LogVerbose($"BoatPart {gameObject.name} - Dynamic physics disabled and part deactivated");
-        }
+        GameLogger.LogVerbose($"BoatPart {gameObject.name} - Dynamic physics disabled and part deactivated");
     }
     
     public void ResetToOriginalPosition()
@@ -317,11 +296,8 @@ public class BoatPart : MonoBehaviour
         StopAllCoroutines();
         
         gameObject.SetActive(true);
-        
-        if (debugFloatation)
-        {
-            GameLogger.LogVerbose($"BoatPart {gameObject.name} - Reset to original position");
-        }
+       
+        GameLogger.LogVerbose($"BoatPart {gameObject.name} - Reset to original position");
     }
     
     public void SetBuoyancyEnabled(bool enabled)

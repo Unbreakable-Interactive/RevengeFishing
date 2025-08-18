@@ -6,10 +6,7 @@ public class BoatPlatform : Platform, IBoatComponent
     [SerializeField] private BoatID boatID;
     [SerializeField] private bool autoDetectBoatID = true;
     
-    [Header("Debug")]
-    [SerializeField] private bool debugPlatform = false;
-    
-    private bool isInitialized = false;
+     private bool isInitialized = false;
     
     public void SetBoatID(BoatID newBoatID) => boatID = newBoatID;
     
@@ -30,8 +27,7 @@ public class BoatPlatform : Platform, IBoatComponent
         
         isInitialized = true;
         
-        if (debugPlatform)
-            GameLogger.LogVerbose($"[BOAT PLATFORM] {GetBoatID()} - Platform initialized");
+        GameLogger.LogVerbose($"[BOAT PLATFORM] {GetBoatID()} - Platform initialized");
     }
     
     protected override void Start()
@@ -50,8 +46,7 @@ public class BoatPlatform : Platform, IBoatComponent
         
         if (enemy is BoatLandEnemy boatEnemy)
         {
-            if (debugPlatform)
-                GameLogger.LogVerbose($"[BOAT PLATFORM] {GetBoatID()} - Registered boat crew member: {enemy.name}, Total enemies: {assignedEnemies.Count}");
+            GameLogger.LogVerbose($"[BOAT PLATFORM] {GetBoatID()} - Registered boat crew member: {enemy.name}, Total enemies: {assignedEnemies.Count}");
         }
     }
     
@@ -61,8 +56,7 @@ public class BoatPlatform : Platform, IBoatComponent
         
         if (enemy is BoatLandEnemy boatEnemy)
         {
-            if (debugPlatform)
-                GameLogger.LogVerbose($"[BOAT PLATFORM] {GetBoatID()} - Unregistered boat crew member: {enemy.name}");
+            GameLogger.LogVerbose($"[BOAT PLATFORM] {GetBoatID()} - Unregistered boat crew member: {enemy.name}");
         }
     }
     

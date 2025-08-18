@@ -6,9 +6,6 @@ public class SimpleObjectPool : MonoBehaviour
     [Header("Configuration")]
     [SerializeField] private PoolingConfig poolingConfig;
     
-    [Header("Runtime Info (Read Only)")]
-    [SerializeField] private bool showDebugInfo = true;
-    
     private Dictionary<string, Queue<GameObject>> availableHandlers = new Dictionary<string, Queue<GameObject>>();
     private Dictionary<string, HashSet<GameObject>> usedHandlers = new Dictionary<string, HashSet<GameObject>>();
     private Dictionary<string, GameObject> poolContainers = new Dictionary<string, GameObject>();
@@ -20,7 +17,6 @@ public class SimpleObjectPool : MonoBehaviour
         if (Instance == null)
         {
             Instance = this;
-            // DontDestroyOnLoad(gameObject);
         }
         else
         {
@@ -100,8 +96,7 @@ public class SimpleObjectPool : MonoBehaviour
         {
             handlerToSpawn = available.Dequeue();
             
-            if (showDebugInfo)
-                GameLogger.LogVerbose($"Reused handler from pool '{poolName}'. Available left: {available.Count}");
+            GameLogger.LogVerbose($"Reused handler from pool '{poolName}'. Available left: {available.Count}");
         }
         else
         {
@@ -111,8 +106,7 @@ public class SimpleObjectPool : MonoBehaviour
                 handlerToSpawn = Instantiate(poolData.prefab, poolContainers[poolName].transform);
                 handlerToSpawn.name = $"{poolName}Handler_{used.Count:00}";
                 
-                if (showDebugInfo)
-                    GameLogger.LogVerbose($"Created new handler for pool '{poolName}' (pool was empty). Total: {used.Count + 1}");
+                GameLogger.LogVerbose($"Created new handler for pool '{poolName}' (pool was empty). Total: {used.Count + 1}");
             }
             else
             {
@@ -138,8 +132,7 @@ public class SimpleObjectPool : MonoBehaviour
     {
         if (handler == null || !handler.activeInHierarchy)
         {
-            if (showDebugInfo)
-                GameLogger.LogVerbose($"Cannot return to pool '{poolName}' - handler is null or already inactive");
+            GameLogger.LogVerbose($"Cannot return to pool '{poolName}' - handler is null or already inactive");
             return;
         }
         
@@ -154,8 +147,7 @@ public class SimpleObjectPool : MonoBehaviour
 
         if (!used.Contains(handler))
         {
-            if (showDebugInfo)
-                GameLogger.LogVerbose($"Handler not found in used pool '{poolName}', skipping return");
+            GameLogger.LogVerbose($"Handler not found in used pool '{poolName}', skipping return");
             return;
         }
 
@@ -177,10 +169,7 @@ public class SimpleObjectPool : MonoBehaviour
             }
         }
 
-        if (showDebugInfo)
-        {
-            GameLogger.LogVerbose($"Returned handler to pool '{poolName}'. Available: {available.Count}, Used: {used.Count}");
-        }
+        GameLogger.LogVerbose($"Returned handler to pool '{poolName}'. Available: {available.Count}, Used: {used.Count}");
     }
 
     void ResetHandler(GameObject handler, Vector3 spawnPosition)
@@ -232,10 +221,7 @@ public class SimpleObjectPool : MonoBehaviour
             enemy.Initialize();
         }
 
-        // Physics2D.SyncTransforms();
-
-        if (showDebugInfo)
-            GameLogger.LogVerbose($"Handler {handler.name} completely reset with child positions corrected at {spawnPosition}");
+        GameLogger.LogVerbose($"Handler {handler.name} completely reset with child positions corrected at {spawnPosition}");
     }
 
     private void ResetChildPositions(GameObject handler)
@@ -261,8 +247,7 @@ public class SimpleObjectPool : MonoBehaviour
             fishermanTransform.localRotation = Quaternion.identity;
             fishermanTransform.localScale = Vector3.one;
             
-            if (showDebugInfo)
-                GameLogger.LogVerbose($"Reset Fisherman local position to (0, 0, 0) in {handler.name}");
+            GameLogger.LogVerbose($"Reset Fisherman local position to (0, 0, 0) in {handler.name}");
         }
         
         Transform waterLineTransform = handlerTransform.Find("WaterLine");
@@ -272,8 +257,7 @@ public class SimpleObjectPool : MonoBehaviour
             waterLineTransform.localRotation = Quaternion.identity;
             waterLineTransform.localScale = Vector3.one;
             
-            if (showDebugInfo)
-                GameLogger.LogVerbose($"Reset WaterLine local position to (0, -0.3, 0) in {handler.name}");
+            GameLogger.LogVerbose($"Reset WaterLine local position to (0, -0.3, 0) in {handler.name}");
         }
     }
 
@@ -288,8 +272,7 @@ public class SimpleObjectPool : MonoBehaviour
             fishermanTransform.localRotation = Quaternion.identity;
             fishermanTransform.localScale = Vector3.one;
             
-            if (showDebugInfo)
-                GameLogger.LogVerbose($"Reset Fisherman local position in {handler.name}");
+            GameLogger.LogVerbose($"Reset Fisherman local position in {handler.name}");
         }
     }
 
@@ -316,8 +299,7 @@ public class SimpleObjectPool : MonoBehaviour
             }
         }
 
-        if (showDebugInfo)
-            GameLogger.LogVerbose($"Handler {handler.name} cleaned up and returned to pool");
+        GameLogger.LogVerbose($"Handler {handler.name} cleaned up and returned to pool");
     }
 
     PoolingConfig.PoolData GetPoolData(string poolName)
@@ -355,14 +337,6 @@ public class SimpleObjectPool : MonoBehaviour
             int available = GetAvailableCount(poolName);
             int used = GetUsedCount(poolName);
             GameLogger.Log($"Pool '{poolName}': {available} available handlers, {used} used handlers, {available + used} total");
-        }
-    }
-
-    void Update()
-    {
-        if (Input.GetKeyDown(KeyCode.F9))
-        {
-            LogPoolStats();
         }
     }
 }

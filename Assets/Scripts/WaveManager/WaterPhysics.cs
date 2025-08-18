@@ -77,7 +77,6 @@ public class WaterPhysics : MonoBehaviour
     [SerializeField] private bool preventBoatInterference = true;
     [SerializeField] private float boatIsolationDistance = 5f;
     [SerializeField] private bool disableBoatWaves = true;
-    [SerializeField] private bool debugWaveIsolation = false;
     
     [SerializeField] private List<WaveParticle> waveParticles = new List<WaveParticle>();
     private ComputeBuffer waveParticleBuffer;
@@ -119,16 +118,12 @@ public class WaterPhysics : MonoBehaviour
         {
             InitializeApproximationGrid();
         }
-        
-        if (debugWaveIsolation)
-        {
-            GameLogger.LogVerbose($"WaterPhysics: Boat wave isolation = {preventBoatInterference}, Disable boat waves = {disableBoatWaves}");
-        }
+       
+        GameLogger.LogVerbose($"WaterPhysics: Boat wave isolation = {preventBoatInterference}, Disable boat waves = {disableBoatWaves}");
     }
     
     void Update()
     {
-        // Update wave particles
         for (int i = waveParticles.Count - 1; i >= 0; i--)
         {
             if (!waveParticles[i].Update(Time.deltaTime))
@@ -303,10 +298,7 @@ public class WaterPhysics : MonoBehaviour
             {
                 if (IsWaveFromNearbyBoat(particle, requestingBoat))
                 {
-                    if (debugWaveIsolation)
-                    {
-                        GameLogger.LogVerbose($"WaveIsolation: Ignoring wave from nearby boat for {requestingBoat.name}");
-                    }
+                    GameLogger.LogVerbose($"WaveIsolation: Ignoring wave from nearby boat for {requestingBoat.name}");
                     continue;
                 }
             }
@@ -369,7 +361,7 @@ public class WaterPhysics : MonoBehaviour
         Vector3 pos3D = new Vector3(position.x, transform.position.y, position.y);
         AddWaveParticle(pos3D, intensity);
         
-        if (debugWaveIsolation && sourceBoat != null)
+        if (sourceBoat != null)
         {
             GameLogger.LogVerbose($"WaveCreated: Position {position}, Intensity {intensity:F1}, Source: {sourceBoat.name}");
         }
@@ -386,10 +378,8 @@ public class WaterPhysics : MonoBehaviour
         {
             if (disableBoatWaves && other.GetComponent<BoatFloater>() != null)
             {
-                if (debugWaveIsolation)
-                {
-                    GameLogger.LogVerbose($"WaveBlocked: Boat {other.name} wave creation disabled");
-                }
+                
+                GameLogger.LogVerbose($"WaveBlocked: Boat {other.name} wave creation disabled");
                 return;
             }
             
@@ -397,10 +387,7 @@ public class WaterPhysics : MonoBehaviour
             {
                 if (AreOtherBoatsNearby(other.transform.position, other.transform))
                 {
-                    if (debugWaveIsolation)
-                    {
-                        GameLogger.LogVerbose($"WaveBlocked: Boat {other.name} near other boats, wave creation skipped");
-                    }
+                    GameLogger.LogVerbose($"WaveBlocked: Boat {other.name} near other boats, wave creation skipped");
                     return;
                 }
             }
@@ -408,10 +395,7 @@ public class WaterPhysics : MonoBehaviour
             float intensity = other.GetComponent<Rigidbody2D>().mass * 0.5f;
             AddWaveParticle(other.transform.position, intensity);
             
-            if (debugWaveIsolation)
-            {
-                GameLogger.LogVerbose($"WaveCreated: {other.name} created wave with intensity {intensity:F1}");
-            }
+            GameLogger.LogVerbose($"WaveCreated: {other.name} created wave with intensity {intensity:F1}");
         }
     }
     
@@ -445,20 +429,14 @@ public class WaterPhysics : MonoBehaviour
         preventBoatInterference = enabled;
         boatIsolationDistance = distance;
         
-        if (debugWaveIsolation)
-        {
-            GameLogger.LogVerbose($"WaterPhysics: Boat isolation set to {enabled}, distance {distance}");
-        }
+        GameLogger.LogVerbose($"WaterPhysics: Boat isolation set to {enabled}, distance {distance}");
     }
     
     public void SetDisableBoatWaves(bool disabled)
     {
         disableBoatWaves = disabled;
         
-        if (debugWaveIsolation)
-        {
-            GameLogger.LogVerbose($"WaterPhysics: Boat waves disabled = {disabled}");
-        }
+        GameLogger.LogVerbose($"WaterPhysics: Boat waves disabled = {disabled}");
     }
     
     private void OnDestroy()

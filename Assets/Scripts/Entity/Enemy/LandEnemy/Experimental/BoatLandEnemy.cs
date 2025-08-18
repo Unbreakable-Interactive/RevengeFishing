@@ -5,7 +5,6 @@ using UnityEngine;
 public class BoatLandEnemy : LandEnemy, IBoatComponent
 {
     [Header("Boat Identity")]
-    [SerializeField] private bool debugBoatCrew = true;
 
     [Header("Boat Crew Systems")]
     [SerializeField] private BoatCrewPhysics crewPhysics;
@@ -37,9 +36,6 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
     [SerializeField] private CrewRole crewRole = CrewRole.Sailor;
     [SerializeField] private bool isNavigating = false;
 
-    [Header("Debug Probabilities")]
-    [SerializeField] private bool debugProbabilities = false;
-
     private Transform crewContainer;
     private bool boatContextInitialized = false;
     private bool isHandlingDefeat = false;
@@ -64,15 +60,13 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
     {
         localBoundaryLeft = left;
         localBoundaryRight = right;
-        if (debugBoatCrew)
-            Debug.Log($"[BOAT DEBUG] {gameObject.name} - Set boundaries: Left={left:F2}, Right={right:F2}");
+        GameLogger.Log($"[BOAT DEBUG] {gameObject.name} - Set boundaries: Left={left:F2}, Right={right:F2}");
     }
 
     public override void SetSubscribedHook(FishingProjectile fishingHook)
     {
         base.SetSubscribedHook(fishingHook);
-        if (debugBoatCrew)
-            Debug.Log($"[BOAT DEBUG] {gameObject.name} - Hook subscribed: {(fishingHook != null ? fishingHook.name : "NULL")}");
+        GameLogger.Log($"[BOAT DEBUG] {gameObject.name} - Hook subscribed: {(fishingHook != null ? fishingHook.name : "NULL")}");
     }
 
     public override void Initialize()
@@ -81,11 +75,8 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
         SetPowerLevel(powerLevel);
         base.Initialize();
         
-        if (debugBoatCrew)
-        {
-            Debug.Log($"[BOAT DEBUG] {gameObject.name} - Initialize: Balanced Power Level {_powerLevel}, State: {_state}");
-            Debug.Log($"[BOAT DEBUG] {gameObject.name} - Fatigue: {entityFatigue.fatigue}/{entityFatigue.maxFatigue}");
-        }
+        GameLogger.Log($"[BOAT DEBUG] {gameObject.name} - Initialize: Balanced Power Level {_powerLevel}, State: {_state}");
+        GameLogger.Log($"[BOAT DEBUG] {gameObject.name} - Fatigue: {entityFatigue.fatigue}/{entityFatigue.maxFatigue}");
     }
 
     private int CalculateBalancedBoatCrewPowerLevel()
@@ -105,24 +96,18 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
         
         balancedPowerLevel = Mathf.Clamp(balancedPowerLevel, 80, 500);
         
-        if (debugBoatCrew)
-        {
-            Debug.Log($"[BOAT DEBUG] {gameObject.name} - Crew Power Calculation:");
-            Debug.Log($"    Player Power: {playerPowerLevel}");
-            Debug.Log($"    Multiplier: {randomMultiplier:F2}");
-            Debug.Log($"    Crew Power: {balancedPowerLevel}");
-        }
-        
+        GameLogger.Log($"[BOAT DEBUG] {gameObject.name} - Crew Power Calculation:");
+        GameLogger.Log($"    Player Power: {playerPowerLevel}");
+        GameLogger.Log($"    Multiplier: {randomMultiplier:F2}");
+        GameLogger.Log($"    Crew Power: {balancedPowerLevel}");
+    
         return balancedPowerLevel;
     }
 
     public override void TakeFatigue(int playerPowerLevel)
     {
-        if (debugBoatCrew)
-        {
-            Debug.Log($"[BOAT DEBUG] {gameObject.name} - BEFORE: Fatigue {entityFatigue.fatigue}/{entityFatigue.maxFatigue}, State: {_state}");
-            Debug.Log($"[BOAT DEBUG] {gameObject.name} - Player hitting with power: {playerPowerLevel}");
-        }
+        GameLogger.Log($"[BOAT DEBUG] {gameObject.name} - BEFORE: Fatigue {entityFatigue.fatigue}/{entityFatigue.maxFatigue}, State: {_state}");
+        GameLogger.Log($"[BOAT DEBUG] {gameObject.name} - Player hitting with power: {playerPowerLevel}");
 
         int fatigueToAdd = CalculateBalancedFatigueIncrease(playerPowerLevel);
         
@@ -136,16 +121,12 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
 
         entityFatigue.fatigue += fatigueToAdd;
 
-        if (debugBoatCrew)
-        {
-            Debug.Log($"[BOAT DEBUG] {gameObject.name} - Fatigue added: {fatigueToAdd}");
-            Debug.Log($"[BOAT DEBUG] {gameObject.name} - AFTER: Fatigue {entityFatigue.fatigue}/{entityFatigue.maxFatigue}, State: {_state}");
-        }
+        GameLogger.Log($"[BOAT DEBUG] {gameObject.name} - Fatigue added: {fatigueToAdd}");
+        GameLogger.Log($"[BOAT DEBUG] {gameObject.name} - AFTER: Fatigue {entityFatigue.fatigue}/{entityFatigue.maxFatigue}, State: {_state}");
 
         if (entityFatigue.fatigue >= entityFatigue.maxFatigue && _state == EnemyState.Alive)
         {
-            if (debugBoatCrew)
-                Debug.Log($"[BOAT DEBUG] {gameObject.name} - FATIGUE FULL! Triggering defeat...");
+            GameLogger.Log($"[BOAT DEBUG] {gameObject.name} - FATIGUE FULL! Triggering defeat...");
             TriggerDefeat();
         }
     }
@@ -171,14 +152,11 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
         
         finalFatigue = Mathf.Clamp(finalFatigue, 10, 100);
         
-        if (debugBoatCrew)
-        {
-            Debug.Log($"[BOAT DEBUG] {gameObject.name} - Fatigue Calculation:");
-            Debug.Log($"    Player Power: {playerPowerLevel}, Crew Power: {_powerLevel}");
-            Debug.Log($"    Power Ratio: {powerRatio:F2}");
-            Debug.Log($"    Base Fatigue: {baseFatigue}, Adjustment: {adjustmentMultiplier:F2}");
-            Debug.Log($"    Final Fatigue: {finalFatigue}");
-        }
+        GameLogger.Log($"[BOAT DEBUG] {gameObject.name} - Fatigue Calculation:");
+        GameLogger.Log($"    Player Power: {playerPowerLevel}, Crew Power: {_powerLevel}");
+        GameLogger.Log($"    Power Ratio: {powerRatio:F2}");
+        GameLogger.Log($"    Base Fatigue: {baseFatigue}, Adjustment: {adjustmentMultiplier:F2}");
+        GameLogger.Log($"    Final Fatigue: {finalFatigue}");
         
         return finalFatigue;
     }
@@ -186,8 +164,7 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
     protected override void EnemySetup()
     {
         base.EnemySetup();
-        if (debugBoatCrew)
-            Debug.Log($"[BOAT DEBUG] {gameObject.name} - EnemySetup completed, State: {_state}");
+        GameLogger.Log($"[BOAT DEBUG] {gameObject.name} - EnemySetup completed, State: {_state}");
     }
 
     public void AssignToWheel()
@@ -197,8 +174,7 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
         // _landMovementState = LandMovementState.Idle;
         // fishingToolEquipped = false;
         
-        if (debugBoatCrew)
-            Debug.Log($"[BOAT DEBUG] {gameObject.name} - ASSIGNED TO WHEEL! Role: {crewRole}, Navigating: {isNavigating}");
+        GameLogger.Log($"[BOAT DEBUG] {gameObject.name} - ASSIGNED TO WHEEL! Role: {crewRole}, Navigating: {isNavigating}");
     }
 
     public void ReleaseFromWheel()
@@ -209,8 +185,7 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
         //     crewRole = CrewRole.Sailor;
         // }
         
-        if (debugBoatCrew)
-            Debug.Log($"[BOAT DEBUG] {gameObject.name} - RELEASED FROM WHEEL! Role: {crewRole}, Navigating: {isNavigating}");
+        GameLogger.Log($"[BOAT DEBUG] {gameObject.name} - RELEASED FROM WHEEL! Role: {crewRole}, Navigating: {isNavigating}");
     }
 
     public void InitializeBoatContext(BoatController controller, BoatFloater floater, BoatPlatform platform)
@@ -221,8 +196,7 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
         InitializeBoatCrewSystems();
         boatContextInitialized = true;
         
-        if (debugBoatCrew)
-            Debug.Log($"[BOAT DEBUG] {gameObject.name} - Boat context initialized");
+        GameLogger.Log($"[BOAT DEBUG] {gameObject.name} - Boat context initialized");
     }
 
     private void InitializeBoatCrewSystems()
@@ -238,8 +212,7 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
         if (crewPhysics != null)
         {
             isOnBoat = true;
-            if (debugBoatCrew)
-                Debug.Log($"[BOAT DEBUG] {gameObject.name} - Joined boat crew");
+            GameLogger.Log($"[BOAT DEBUG] {gameObject.name} - Joined boat crew");
         }
     }
 
@@ -249,8 +222,7 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
         {
             crewPhysics.SetupAtPosition(container, localPosition);
             isOnBoat = true;
-            if (debugBoatCrew)
-                Debug.Log($"[BOAT DEBUG] {gameObject.name} - Joined boat crew at position: {localPosition}");
+            GameLogger.Log($"[BOAT DEBUG] {gameObject.name} - Joined boat crew at position: {localPosition}");
         }
     }
 
@@ -261,8 +233,7 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
             GameObject handlerRoot = transform.parent?.gameObject ?? gameObject;
             crewPhysics.SetupAsChildHandler(container, handlerRoot.transform, handlerLocalPosition);
             isOnBoat = true;
-            if (debugBoatCrew)
-                Debug.Log($"[BOAT DEBUG] {gameObject.name} - Joined boat crew as child at position: {handlerLocalPosition}");
+            GameLogger.Log($"[BOAT DEBUG] {gameObject.name} - Joined boat crew as child at position: {handlerLocalPosition}");
         }
     }
 
@@ -272,8 +243,7 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
         {
             crewPhysics.LeaveBoat();
             isOnBoat = false;
-            if (debugBoatCrew)
-                Debug.Log($"[BOAT DEBUG] {gameObject.name} - Left boat crew");
+            GameLogger.Log($"[BOAT DEBUG] {gameObject.name} - Left boat crew");
         }
     }
 
@@ -290,8 +260,7 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
         }
         else if (_state == EnemyState.Defeated && isOnBoat && !hasFallenFromBoat && !isHandlingDefeat)
         {
-            if (debugBoatCrew)
-                Debug.Log($"[BOAT DEBUG] {gameObject.name} - DEFEATED AND ON BOAT! Triggering fall...");
+            GameLogger.Log($"[BOAT DEBUG] {gameObject.name} - DEFEATED AND ON BOAT! Triggering fall...");
             HandleFallFromBoat();
             hasFallenFromBoat = true;
         }
@@ -335,8 +304,7 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
         {
             subscribedHook = fishingHook;
             fishingHook.OnPlayerInteraction += OnHookPlayerInteraction;
-            if (debugBoatCrew)
-                Debug.Log($"[BOAT DEBUG] {gameObject.name} - Subscribed to hook events: {fishingHook.name}");
+            GameLogger.Log($"[BOAT DEBUG] {gameObject.name} - Subscribed to hook events: {fishingHook.name}");
         }
     }
 
@@ -346,9 +314,8 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
 
         hasInteractedWithPlayer = true;
         base.OnHookPlayerInteraction(isBeingHeld);
-        
-        if (debugBoatCrew)
-            Debug.Log($"[BOAT DEBUG] {gameObject.name} - Player interaction handled once. IsBeingHeld: {isBeingHeld}");
+
+        GameLogger.Log($"[BOAT DEBUG] {gameObject.name} - Player interaction handled once. IsBeingHeld: {isBeingHeld}");
 
         StartCoroutine(ResetInteractionFlag());
     }
@@ -364,8 +331,7 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
         if (isHandlingDefeat) return;
 
         isHandlingDefeat = true;
-        if (debugBoatCrew)
-            Debug.Log($"[BOAT DEBUG] {gameObject.name} - Handling fall from boat");
+        GameLogger.Log($"[BOAT DEBUG] {gameObject.name} - Handling fall from boat");
             
         LeaveBoatCrew();
 
@@ -383,29 +349,25 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
 
     public override void SetMovementMode(bool aboveWater)
     {
-        if (debugBoatCrew)
-            Debug.Log($"[BOAT DEBUG] {gameObject.name} - SetMovementMode called: aboveWater={aboveWater}, isOnBoat={isOnBoat}");
+        GameLogger.Log($"[BOAT DEBUG] {gameObject.name} - SetMovementMode called: aboveWater={aboveWater}, isOnBoat={isOnBoat}");
 
         if (isOnBoat)
         {
             if (crewPhysics != null)
                 crewPhysics.SetBoatMode(true);
             
-            if (debugBoatCrew)
-                Debug.Log($"[BOAT DEBUG] {gameObject.name} - Boat movement mode: {(aboveWater ? "Above Water" : "In Water")} - STAYING KINEMATIC");
+            GameLogger.Log($"[BOAT DEBUG] {gameObject.name} - Boat movement mode: {(aboveWater ? "Above Water" : "In Water")} - STAYING KINEMATIC");
             return;
         }
 
-        if (debugBoatCrew)
-            Debug.Log($"[BOAT DEBUG] {gameObject.name} - CALLING BASE SetMovementMode({aboveWater})");
+        GameLogger.Log($"[BOAT DEBUG] {gameObject.name} - CALLING BASE SetMovementMode({aboveWater})");
         
         base.SetMovementMode(aboveWater);
         
         if (crewPhysics != null)
             crewPhysics.SetBoatMode(false);
         
-        if (debugBoatCrew)
-            Debug.Log($"[BOAT DEBUG] {gameObject.name} - BASE SetMovementMode complete. RigidbodyType: {(rb != null ? rb.bodyType.ToString() : "NULL")}, Gravity: {(rb != null ? rb.gravityScale.ToString("F2") : "NULL")}");
+        GameLogger.Log($"[BOAT DEBUG] {gameObject.name} - BASE SetMovementMode complete. RigidbodyType: {(rb != null ? rb.bodyType.ToString() : "NULL")}, Gravity: {(rb != null ? rb.gravityScale.ToString("F2") : "NULL")}");
     }
 
     public override void LandMovement()
@@ -451,8 +413,7 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
     
         ChooseRandomActionExcluding(excludedStates);
     
-        if (debugProbabilities)
-            Debug.Log($"[BOUNDARY RESPONSE] {gameObject.name} excluded {string.Join(", ", excludedStates)} → chose {_landMovementState}");
+        GameLogger.Log($"[BOUNDARY RESPONSE] {gameObject.name} excluded {string.Join(", ", excludedStates)} → chose {_landMovementState}");
     }
 
 
@@ -475,17 +436,13 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
             {
                 float randomValue = Random.Range(0f, 100f);
                 
-                if (debugProbabilities)
-                {
-                    Debug.Log($"[BOAT AI] {gameObject.name} - Random: {randomValue:F1}%, Hook Threshold: {hookThrowProbability:F1}%");
-                }
+                GameLogger.Log($"[BOAT AI] {gameObject.name} - Random: {randomValue:F1}%, Hook Threshold: {hookThrowProbability:F1}%");
                 
                 if (randomValue <= hookThrowProbability)
                 {
                     if (hookSpawner?.CanThrowHook() == true)
                     {
-                        if (debugProbabilities)
-                            Debug.Log($"[BOAT AI] {gameObject.name} - 🎣 THROWING HOOK!");
+                        GameLogger.Log($"[BOAT AI] {gameObject.name} - 🎣 THROWING HOOK!");
                         
                         hookSpawner.ThrowHook();
                         hasThrownHook = true;
@@ -497,8 +454,7 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
                 }
                 else if (fishermanConfig != null && Random.value < fishermanConfig.unequipToolChance)
                 {
-                    if (debugProbabilities)
-                        Debug.Log($"[BOAT AI] {gameObject.name} - 🔄 UNEQUIPPING TOOL!");
+                    GameLogger.Log($"[BOAT AI] {gameObject.name} - 🔄 UNEQUIPPING TOOL!");
                     
                     TryUnequipFishingTool();
                     ScheduleNextActionWithFrequency();
@@ -523,14 +479,11 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
         
         float randomValue = Random.Range(0f, 100f);
         
-        if (debugProbabilities)
-        {
-            Debug.Log($"[BOAT AI] {gameObject.name} - Movement Decision:");
-            Debug.Log($"    Hook Prob: {hookThrowProbability:F1}%");
-            Debug.Log($"    Remaining: {remainingProbability:F1}%");
-            Debug.Log($"    Walk from remaining: {walkProbability:F1}% = {actualWalkChance:F1}% total");
-            Debug.Log($"    Random: {randomValue:F1}%");
-        }
+        GameLogger.Log($"[BOAT AI] {gameObject.name} - Movement Decision:");
+        GameLogger.Log($"    Hook Prob: {hookThrowProbability:F1}%");
+        GameLogger.Log($"    Remaining: {remainingProbability:F1}%");
+        GameLogger.Log($"    Walk from remaining: {walkProbability:F1}% = {actualWalkChance:F1}% total");
+        GameLogger.Log($"    Random: {randomValue:F1}%");
         
         if (randomValue <= actualWalkChance)
         {
@@ -540,23 +493,20 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
             {
                 _landMovementState = Random.value < 0.5f ? LandMovementState.RunLeft : LandMovementState.RunRight;
                 
-                if (debugProbabilities)
-                    Debug.Log($"[BOAT AI] {gameObject.name} - 🏃 RUNNING {(_landMovementState == LandMovementState.RunLeft ? "LEFT" : "RIGHT")} (Prob: {runProbability:F1}%)");
+                GameLogger.Log($"[BOAT AI] {gameObject.name} - 🏃 RUNNING {(_landMovementState == LandMovementState.RunLeft ? "LEFT" : "RIGHT")} (Prob: {runProbability:F1}%)");
             }
             else
             {
                 _landMovementState = Random.value < 0.5f ? LandMovementState.WalkLeft : LandMovementState.WalkRight;
                 
-                if (debugProbabilities)
-                    Debug.Log($"[BOAT AI] {gameObject.name} - 🚶 WALKING {(_landMovementState == LandMovementState.WalkLeft ? "LEFT" : "RIGHT")}");
+                GameLogger.Log($"[BOAT AI] {gameObject.name} - 🚶 WALKING {(_landMovementState == LandMovementState.WalkLeft ? "LEFT" : "RIGHT")}");
             }
         }
         else
         {
             _landMovementState = LandMovementState.Idle;
             
-            if (debugProbabilities)
-                Debug.Log($"[BOAT AI] {gameObject.name} - 🧍 STAYING IDLE");
+            GameLogger.Log($"[BOAT AI] {gameObject.name} - 🧍 STAYING IDLE");
         }
     }
 
@@ -567,24 +517,21 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
     
         nextActionTime = Time.time + adjustedInterval;
     
-        if (debugProbabilities)
-            Debug.Log($"[BOAT AI] {gameObject.name} - Next action in {adjustedInterval:F1}s (freq: {aiDecisionFrequency:F1}x)");
+        GameLogger.Log($"[BOAT AI] {gameObject.name} - Next action in {adjustedInterval:F1}s (freq: {aiDecisionFrequency:F1}x)");
     }
 
     private void ExecuteBoatLandMovementBehaviour()
     {
         if (crewPhysics == null || !crewPhysics.IsParentedToBoat())
         {
-            if (debugProbabilities)
-                Debug.LogWarning($"[BOAT AI] {gameObject.name} - Cannot move: CrewPhysics not parented to boat");
+            GameLogger.LogWarning($"[BOAT AI] {gameObject.name} - Cannot move: CrewPhysics not parented to boat");
             return;
         }
 
         if (fishingToolEquipped && _landMovementState != LandMovementState.Idle)
         {
             _landMovementState = LandMovementState.Idle;
-            if (debugProbabilities)
-                Debug.Log($"[BOAT AI] {gameObject.name} - STOPPED MOVEMENT: Tool equipped");
+            GameLogger.Log($"[BOAT AI] {gameObject.name} - STOPPED MOVEMENT: Tool equipped");
             return;
         }
 
@@ -598,33 +545,33 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
                 currentPos.x -= walkingSpeed * deltaTime;
                 isMoving = true;
                 transform.localScale = new Vector3(-1f, 1f, 1f);
-                if (debugProbabilities && Time.frameCount % 60 == 0)
-                    Debug.Log($"[BOAT AI] {gameObject.name} - WALKING LEFT at speed {walkingSpeed}");
+                if (Time.frameCount % 60 == 0)
+                    GameLogger.Log($"[BOAT AI] {gameObject.name} - WALKING LEFT at speed {walkingSpeed}");
                 break;
             case LandMovementState.WalkRight:
                 currentPos.x += walkingSpeed * deltaTime;
                 isMoving = true;
                 transform.localScale = new Vector3(1f, 1f, 1f);
-                if (debugProbabilities && Time.frameCount % 60 == 0)
-                    Debug.Log($"[BOAT AI] {gameObject.name} - WALKING RIGHT at speed {walkingSpeed}");
+                if (Time.frameCount % 60 == 0)
+                    GameLogger.Log($"[BOAT AI] {gameObject.name} - WALKING RIGHT at speed {walkingSpeed}");
                 break;
             case LandMovementState.RunLeft:
                 currentPos.x -= runningSpeed * deltaTime;
                 isMoving = true;
                 transform.localScale = new Vector3(-1f, 1f, 1f);
-                if (debugProbabilities && Time.frameCount % 60 == 0)
-                    Debug.Log($"[BOAT AI] {gameObject.name} - RUNNING LEFT at speed {runningSpeed}");
+                if (Time.frameCount % 60 == 0)
+                    GameLogger.Log($"[BOAT AI] {gameObject.name} - RUNNING LEFT at speed {runningSpeed}");
                 break;
             case LandMovementState.RunRight:
                 currentPos.x += runningSpeed * deltaTime;
                 transform.localScale = new Vector3(1f, 1f, 1f);
                 isMoving = true;
-                if (debugProbabilities && Time.frameCount % 60 == 0)
-                    Debug.Log($"[BOAT AI] {gameObject.name} - RUNNING RIGHT at speed {runningSpeed}");
+                if (Time.frameCount % 60 == 0)
+                    GameLogger.Log($"[BOAT AI] {gameObject.name} - RUNNING RIGHT at speed {runningSpeed}");
                 break;
             case LandMovementState.Idle:
-                if (debugProbabilities && Time.frameCount % 120 == 0)
-                    Debug.Log($"[BOAT AI] {gameObject.name} - STAYING IDLE");
+                if (Time.frameCount % 120 == 0)
+                    GameLogger.Log($"[BOAT AI] {gameObject.name} - STAYING IDLE");
                 break;
         }
 
@@ -672,8 +619,7 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
 
         _landMovementState = possibleStates[Random.Range(0, possibleStates.Length)];
     
-        if (debugProbabilities)
-            Debug.Log($"[BOAT AI] {gameObject.name} - RANDOM ACTION: {_landMovementState}");
+        GameLogger.Log($"[BOAT AI] {gameObject.name} - RANDOM ACTION: {_landMovementState}");
     }
 
     public override void ChooseRandomActionExcluding(params LandMovementState[] excludedStates)
@@ -724,8 +670,7 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
         EnemyAnimator?.SetBool(IsRising, false);
         EnemyAnimator?.SetBool(IsSinking, false);
         
-        if (debugBoatCrew)
-            Debug.Log($"[BOAT DEBUG] {gameObject.name} - Reset to original state");
+        GameLogger.Log($"[BOAT DEBUG] {gameObject.name} - Reset to original state");
     }
 
     private void CleanupBoatSystems()
@@ -760,17 +705,13 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
 
     protected override void TriggerDefeat()
     {
-        if (debugBoatCrew)
-        {
-            Debug.Log($"[BOAT DEBUG] {gameObject.name} - TriggerDefeat called. Current state: {_state}, IsOnBoat: {isOnBoat}");
-        }
+        GameLogger.Log($"[BOAT DEBUG] {gameObject.name} - TriggerDefeat called. Current state: {_state}, IsOnBoat: {isOnBoat}");
 
         CleanupFishingTools();
 
         if (isOnBoat)
         {
-            if (debugBoatCrew)
-                Debug.Log($"[BOAT DEBUG] {gameObject.name} - Enemy defeated while on boat, will handle fall from boat");
+            GameLogger.Log($"[BOAT DEBUG] {gameObject.name} - Enemy defeated while on boat, will handle fall from boat");
             
             LeaveBoatCrew();
             
@@ -787,8 +728,7 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
         }
         else
         {
-            if (debugBoatCrew)
-                Debug.Log($"[BOAT DEBUG] {gameObject.name} - Enemy defeated while not on boat, normal defeat behavior");
+            GameLogger.Log($"[BOAT DEBUG] {gameObject.name} - Enemy defeated while not on boat, normal defeat behavior");
         }
 
         base.TriggerDefeat();
@@ -796,8 +736,7 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
 
     protected override void TriggerEscape()
     {
-        if (debugBoatCrew)
-            Debug.Log($"[BOAT DEBUG] {gameObject.name} - TriggerEscape called");
+        GameLogger.Log($"[BOAT DEBUG] {gameObject.name} - TriggerEscape called");
 
         CleanupBoatSystems();
         base.TriggerEscape();

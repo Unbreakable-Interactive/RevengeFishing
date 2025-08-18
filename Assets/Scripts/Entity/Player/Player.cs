@@ -6,6 +6,10 @@ using static Enemy;
 
 public class Player : Entity
 {
+    private static readonly int IsInfant = Animator.StringToHash("isInfant");
+    private static readonly int IsJuvie = Animator.StringToHash("isJuvie");
+    private static readonly int IsBiting = Animator.StringToHash("isBiting");
+
     public enum Phase
     {
         Infant,
@@ -234,8 +238,8 @@ public class Player : Entity
         {
             case Phase.Infant:
                 currentPhase = Phase.Juvenile;
-                animator.SetBool("isInfant", false);
-                animator.SetBool("isJuvie", true);
+                animator.SetBool(IsInfant, false);
+                animator.SetBool(IsJuvie, true);
                 nextPowerLevel = playerConfig.phaseThresholds.adult;
                 GameLogger.Log("Player matured to Juvenile phase!");
                 break;
@@ -333,7 +337,7 @@ public class Player : Entity
 
     public void TriggerBite()
     {
-        animator.SetTrigger("isBiting");
+        animator.SetTrigger(IsBiting);
     }
 
     public void TakeFishingFatigue(float fatigueDamage)

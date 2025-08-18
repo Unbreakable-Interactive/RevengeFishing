@@ -2,9 +2,6 @@ using UnityEngine;
 
 public class BoatCrewPhysics : MonoBehaviour
 {
-    [Header("Crew Physics Configuration")]
-    [SerializeField] private bool debugPhysics = true;
-    
     private Rigidbody2D rb;
     private BoatLandEnemy boatEnemy;
     private Transform crewContainer;
@@ -20,8 +17,7 @@ public class BoatCrewPhysics : MonoBehaviour
     private void Awake()
     {
         originalLocalPosition = transform.localPosition;
-        if (debugPhysics)
-            Debug.Log($"[PHYSICS DEBUG] {gameObject.name} - Awake, original position: {originalLocalPosition}");
+        GameLogger.Log($"[PHYSICS DEBUG] {gameObject.name} - Awake, original position: {originalLocalPosition}");
     }
 
     public void Initialize(Rigidbody2D rigidbody, BoatLandEnemy enemy)
@@ -35,14 +31,12 @@ public class BoatCrewPhysics : MonoBehaviour
             if (rb == null)
             {
                 rb = gameObject.AddComponent<Rigidbody2D>();
-                if (debugPhysics)
-                    Debug.Log($"[PHYSICS DEBUG] {gameObject.name} - Created new Rigidbody2D");
+                GameLogger.Log($"[PHYSICS DEBUG] {gameObject.name} - Created new Rigidbody2D");
             }
         }
         
         physicsInitialized = true;
-        if (debugPhysics)
-            Debug.Log($"[PHYSICS DEBUG] {gameObject.name} - Initialize complete. RB: {(rb != null ? "YES" : "NO")}, Enemy: {(boatEnemy != null ? "YES" : "NO")}");
+        GameLogger.Log($"[PHYSICS DEBUG] {gameObject.name} - Initialize complete. RB: {(rb != null ? "YES" : "NO")}, Enemy: {(boatEnemy != null ? "YES" : "NO")}");
     }
 
     public void SetupAtPosition(Transform container, Vector3 localPosition)
@@ -56,8 +50,7 @@ public class BoatCrewPhysics : MonoBehaviour
         
         SetBoatMode(true);
         
-        if (debugPhysics)
-            Debug.Log($"[PHYSICS DEBUG] {gameObject.name} - Setup at position: {localPosition}, Container: {container.name}");
+        GameLogger.Log($"[PHYSICS DEBUG] {gameObject.name} - Setup at position: {localPosition}, Container: {container.name}");
     }
     
     public void SetupAsChildHandler(Transform container, Transform handlerTransform, Vector3 handlerLocalPosition)
@@ -72,12 +65,11 @@ public class BoatCrewPhysics : MonoBehaviour
             
             handlerTransform.SetParent(crewContainer);
             handlerTransform.localPosition = handlerLocalPosition;
-            if (debugPhysics)
-                Debug.Log($"[PHYSICS DEBUG] {gameObject.name} - Setup as child handler: {handlerLocalPosition}, Handler: {handlerTransform.name}");
+            GameLogger.Log($"[PHYSICS DEBUG] {gameObject.name} - Setup as child handler: {handlerLocalPosition}, Handler: {handlerTransform.name}");
         }
         else
         {
-            Debug.LogError($"[PHYSICS DEBUG] {gameObject.name} - Handler transform is NULL!");
+            GameLogger.LogError($"[PHYSICS DEBUG] {gameObject.name} - Handler transform is NULL!");
         }
         
         SetBoatMode(true);
@@ -85,8 +77,7 @@ public class BoatCrewPhysics : MonoBehaviour
     
     public void SetBoatMode(bool onBoat)
     {
-        if (debugPhysics)
-            Debug.Log($"[PHYSICS DEBUG] {gameObject.name} - SetBoatMode({onBoat}) called. Current mode: {isInBoatMode}");
+        GameLogger.Log($"[PHYSICS DEBUG] {gameObject.name} - SetBoatMode({onBoat}) called. Current mode: {isInBoatMode}");
         
         isInBoatMode = onBoat;
         
@@ -104,8 +95,7 @@ public class BoatCrewPhysics : MonoBehaviour
                 rb.gravityScale = 0f;
                 rb.drag = 0f;
                 
-                if (debugPhysics)
-                    Debug.Log($"[PHYSICS DEBUG] {gameObject.name} - ON BOAT PHYSICS: Kinematic mode");
+                GameLogger.Log($"[PHYSICS DEBUG] {gameObject.name} - ON BOAT PHYSICS: Kinematic mode");
             }
         }
         else
@@ -117,69 +107,58 @@ public class BoatCrewPhysics : MonoBehaviour
                 rb.bodyType = RigidbodyType2D.Dynamic;
                 rb.gravityScale = .1f;
                 
-                if (debugPhysics)
-                    Debug.Log($"[PHYSICS DEBUG] {gameObject.name} - OFF BOAT PHYSICS: Dynamic only, Entity handles the rest");
+                GameLogger.Log($"[PHYSICS DEBUG] {gameObject.name} - OFF BOAT PHYSICS: Dynamic only, Entity handles the rest");
             }
         }
         
-        if (debugPhysics)
-            Debug.Log($"[PHYSICS DEBUG] {gameObject.name} - SetBoatMode complete");
+        GameLogger.Log($"[PHYSICS DEBUG] {gameObject.name} - SetBoatMode complete");
     }
     
     public void LeaveBoat()
     {
-        if (debugPhysics)
-            Debug.Log($"[PHYSICS DEBUG] {gameObject.name} - LeaveBoat called. IsParentedToBoat: {isParentedToBoat}");
+        GameLogger.Log($"[PHYSICS DEBUG] {gameObject.name} - LeaveBoat called. IsParentedToBoat: {isParentedToBoat}");
         
         if (isParentedToBoat)
         {
             if (handlerRoot != null)
             {
-                if (debugPhysics)
-                    Debug.Log($"[PHYSICS DEBUG] {gameObject.name} - Unparenting handler: {handlerRoot.name}");
+                GameLogger.Log($"[PHYSICS DEBUG] {gameObject.name} - Unparenting handler: {handlerRoot.name}");
                 if (originalParent != null)
                 {
                     handlerRoot.SetParent(originalParent);
-                    if (debugPhysics)
-                        Debug.Log($"[PHYSICS DEBUG] {gameObject.name} - Handler reparented to: {originalParent.name}");
+                    GameLogger.Log($"[PHYSICS DEBUG] {gameObject.name} - Handler reparented to: {originalParent.name}");
                 }
                 else
                 {
                     handlerRoot.SetParent(null);
-                    if (debugPhysics)
-                        Debug.Log($"[PHYSICS DEBUG] {gameObject.name} - Handler set to root");
+                    GameLogger.Log($"[PHYSICS DEBUG] {gameObject.name} - Handler set to root");
                 }
             }
             else if (originalParent != null)
             {
                 transform.SetParent(originalParent);
-                if (debugPhysics)
-                    Debug.Log($"[PHYSICS DEBUG] {gameObject.name} - Reparented to: {originalParent.name}");
+                GameLogger.Log($"[PHYSICS DEBUG] {gameObject.name} - Reparented to: {originalParent.name}");
             }
             else
             {
                 transform.SetParent(null);
-                if (debugPhysics)
-                    Debug.Log($"[PHYSICS DEBUG] {gameObject.name} - Set to root");
+                GameLogger.Log($"[PHYSICS DEBUG] {gameObject.name} - Set to root");
             }
             
             SetBoatMode(false);
             isParentedToBoat = false;
             
-            if (debugPhysics)
-                Debug.Log($"[PHYSICS DEBUG] {gameObject.name} - LeaveBoat complete. Position: {transform.position}");
+            GameLogger.Log($"[PHYSICS DEBUG] {gameObject.name} - LeaveBoat complete. Position: {transform.position}");
         }
         else
         {
-            if (debugPhysics)
-                Debug.Log($"[PHYSICS DEBUG] {gameObject.name} - LeaveBoat called but not parented to boat");
+            GameLogger.Log($"[PHYSICS DEBUG] {gameObject.name} - LeaveBoat called but not parented to boat");
         }
     }
     
     private void SetCollidersToSolid(bool keepSolid)
     {
-        if (debugPhysics)
-            Debug.Log($"[PHYSICS DEBUG] {gameObject.name} - SetCollidersToSolid({keepSolid})");
+        GameLogger.Log($"[PHYSICS DEBUG] {gameObject.name} - SetCollidersToSolid({keepSolid})");
         
         Collider2D localCollider = GetComponent<Collider2D>();
         if (localCollider != null)
@@ -213,16 +192,14 @@ public class BoatCrewPhysics : MonoBehaviour
         
         SetBoatMode(true);
         
-        if (debugPhysics)
-            Debug.Log($"[PHYSICS DEBUG] {gameObject.name} - Reset to original state");
+        GameLogger.Log($"[PHYSICS DEBUG] {gameObject.name} - Reset to original state");
     }
     
     public void ResetPhysics()
     {
         if (rb == null) return;
         
-        if (debugPhysics)
-            Debug.Log($"[PHYSICS DEBUG] {gameObject.name} - ResetPhysics called");
+        GameLogger.Log($"[PHYSICS DEBUG] {gameObject.name} - ResetPhysics called");
         
         rb.velocity = Vector2.zero;
         rb.angularVelocity = 0f;
@@ -236,8 +213,7 @@ public class BoatCrewPhysics : MonoBehaviour
         physicsInitialized = false;
         handlerRoot = null;
         
-        if (debugPhysics)
-            Debug.Log($"[PHYSICS DEBUG] {gameObject.name} - ResetPhysics complete");
+        GameLogger.Log($"[PHYSICS DEBUG] {gameObject.name} - ResetPhysics complete");
     }
     
     public bool IsInBoatMode() => isInBoatMode;

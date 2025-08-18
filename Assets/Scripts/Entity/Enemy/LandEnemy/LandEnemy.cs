@@ -153,7 +153,7 @@ public class LandEnemy : Enemy, IBoatComponent
         {
             nextActionTime = Time.time + Random.Range(1f, 3f);
             
-            if (assignedPlatform != null && assignedPlatform.showDebugInfo)
+            if (assignedPlatform != null)
                 GameLogger.LogVerbose($"{gameObject.name}: Next action scheduled for {nextActionTime:F1}");
         }
         else
@@ -675,7 +675,7 @@ public class LandEnemy : Enemy, IBoatComponent
         fishingToolEquipped = true;
         OnFishingToolEquipped();
 
-        if (assignedPlatform != null && assignedPlatform.showDebugInfo)
+        if (assignedPlatform != null)
         {
             GameLogger.LogVerbose($"{gameObject.name} equipped fishing tool");
         }
@@ -692,7 +692,7 @@ public class LandEnemy : Enemy, IBoatComponent
         ChooseRandomLandAction();
         ScheduleNextAction();
 
-        if (assignedPlatform != null && assignedPlatform.showDebugInfo)
+        if (assignedPlatform != null)
         {
             GameLogger.LogVerbose($"{gameObject.name} put away fishing tool");
         }
@@ -715,7 +715,7 @@ public class LandEnemy : Enemy, IBoatComponent
         if (toolDropPrefab != null)
         {
             Instantiate(toolDropPrefab, transform.position, transform.rotation);
-            if (assignedPlatform != null && assignedPlatform.showDebugInfo)
+            if (assignedPlatform != null)
             {
                 GameLogger.LogVerbose($"{gameObject.name} dropped their tool");
             }

@@ -4,7 +4,6 @@ using UnityEngine;
 public class BoatBoundaryTrigger : MonoBehaviour
 {
     [SerializeField] private bool isLeftBoundary = true;
-    [SerializeField] private bool debugTriggers = false;
     [SerializeField] private string boatID = "";
     
     private const int ENEMY_LAYER = 6;
@@ -33,8 +32,7 @@ public class BoatBoundaryTrigger : MonoBehaviour
             boatID = platform.GetBoatID();
         }
         
-        if (debugTriggers)
-            GameLogger.LogVerbose($"[BOUNDARY TRIGGER] {(isLeftBoundary ? "LEFT" : "RIGHT")} boundary initialized - ID: {boatID}");
+        GameLogger.LogVerbose($"[BOUNDARY TRIGGER] {(isLeftBoundary ? "LEFT" : "RIGHT")} boundary initialized - ID: {boatID}");
     }
     
     private void OnTriggerEnter2D(Collider2D other)
@@ -45,8 +43,7 @@ public class BoatBoundaryTrigger : MonoBehaviour
         
         if (enemy == null || !ShouldProcess(enemy)) return;
         
-        if (debugTriggers)
-            GameLogger.LogVerbose($"[BOUNDARY HIT] {enemy.name} hit {(isLeftBoundary ? "LEFT" : "RIGHT")} boundary - handled by BoatLandEnemy");
+        GameLogger.LogVerbose($"[BOUNDARY HIT] {enemy.name} hit {(isLeftBoundary ? "LEFT" : "RIGHT")} boundary - handled by BoatLandEnemy");
     }
     
     // private void OnTriggerEnter2D(Collider2D other)
@@ -83,14 +80,13 @@ public class BoatBoundaryTrigger : MonoBehaviour
         
         if (string.IsNullOrEmpty(enemyBoatID) || string.IsNullOrEmpty(boatID))
         {
-            if (debugTriggers)
-                GameLogger.LogWarning($"[BOUNDARY] Missing BoatID - Enemy: '{enemyBoatID}', Boundary: '{boatID}'");
+            GameLogger.LogWarning($"[BOUNDARY] Missing BoatID - Enemy: '{enemyBoatID}', Boundary: '{boatID}'");
             return false;
         }
         
         bool belongs = enemyBoatID == boatID;
         
-        if (debugTriggers && !belongs)
+        if (!belongs)
             GameLogger.LogVerbose($"[BOUNDARY] Enemy {enemy.name} (ID: {enemyBoatID}) doesn't belong to this boat (ID: {boatID})");
             
         return belongs;
@@ -98,8 +94,6 @@ public class BoatBoundaryTrigger : MonoBehaviour
     
     private void OnDrawGizmosSelected()
     {
-        if (!debugTriggers) return;
-        
         Collider2D col = GetComponent<Collider2D>();
         if (col == null) return;
         

@@ -6,9 +6,6 @@ public class PortPlatform : MonoBehaviour
     [Header("Platform Settings")]
     public float platformSurfaceOffset = 0.1f;
 
-    [Header("Debug")]
-    public bool showDebugGizmos = true;
-
     private BoxCollider2D platformCollider;
     private Dictionary<GameObject, EnemyPlatformData> enemiesOnPlatform = new Dictionary<GameObject, EnemyPlatformData>();
 
@@ -176,7 +173,7 @@ public class PortPlatform : MonoBehaviour
 
     void OnDrawGizmos()
     {
-        if (showDebugGizmos && platformCollider != null)
+        if (platformCollider != null)
         {
             // Draw platform bounds
             Gizmos.color = Color.green;

@@ -4,43 +4,39 @@ public static class GameLogger
 {
     public static void Log(object message)
     {
-#if ENABLE_DEBUG_LOGS
-        Debug.Log(message);
-#endif
+        if (DebugManager.Settings.enableAllLogs && DebugManager.Settings.enableGameLogger)
+            Debug.Log(message);
     }
     
     public static void LogWarning(object message)
     {
-#if ENABLE_DEBUG_LOGS
-        Debug.LogWarning(message);
-#endif
+        if (DebugManager.Settings.enableAllLogs && DebugManager.Settings.enableGameLogger)
+            Debug.LogWarning(message);
     }
     
     public static void LogError(object message)
     {
-#if ENABLE_DEBUG_LOGS
-        Debug.LogError(message);
-#endif
+        if (DebugManager.Settings.enableAllLogs && DebugManager.Settings.enableGameLogger)
+            Debug.LogError(message);
     }
     
     public static void LogVerbose(object message)
     {
-#if ENABLE_VERBOSE_LOGS
-        Debug.Log($"[VERBOSE] {message}");
-#endif
+        if (DebugManager.Settings.enableAllLogs && DebugManager.Settings.enableVerboseLogs)
+            Debug.Log($"[VERBOSE] {message}");
     }
     
     public static void LogEditor(object message)
     {
 #if UNITY_EDITOR
-        Debug.Log($"[EDITOR] {message}");
+        if (DebugManager.Settings.enableAllLogs)
+            Debug.Log($"[EDITOR] {message}");
 #endif
     }
     
     public static void LogPerformance(object message)
     {
-#if ENABLE_DEBUG_LOGS && !UNITY_STANDALONE
-        Debug.Log($"[PERF] {message}");
-#endif
+        if (DebugManager.Settings.enableAllLogs && DebugManager.Settings.enablePerformanceLogs)
+            Debug.Log($"[PERF] {message}");
     }
 }

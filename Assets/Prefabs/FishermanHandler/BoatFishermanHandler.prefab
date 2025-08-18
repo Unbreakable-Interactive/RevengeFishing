@@ -366,7 +366,6 @@ MonoBehaviour:
   lineReductionVariation: 0.4
   animator: {fileID: 2694603455566713901}
   assignedPlatform: {fileID: 0}
-  debugBoatCrew: 1
   crewPhysics: {fileID: 4277006710572366899}
   fishermanConfig: {fileID: 11400000, guid: 93deef848c2a54c8d966d2f88dafc97f, type: 2}
   hookThrowProbability: 0
@@ -378,7 +377,6 @@ MonoBehaviour:
   enableHookThrowing: 1
   crewRole: 0
   isNavigating: 0
-  debugProbabilities: 0
 --- !u!114 &4277006710572366899
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -391,7 +389,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2c4aee941e7cb46c58329d4bf102f59b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  debugPhysics: 0
 --- !u!1 &3511881948687486434
 GameObject:
   m_ObjectHideFlags: 0

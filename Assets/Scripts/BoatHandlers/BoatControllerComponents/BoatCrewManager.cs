@@ -34,10 +34,7 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
     [SerializeField] private float boundOffset;
     
     [Header("Debug & Monitoring")]
-    [SerializeField] private bool debugCrewManager = true;
-    [SerializeField] private bool trackCrewDisappearance = true;
     [SerializeField] private bool showPlatformGizmos = true;
-    [SerializeField] private bool logCrewStates = true;
     
     [SerializeField] private List<BoatLandEnemy> allCrewMembers = new List<BoatLandEnemy>();
     private List<GameObject> crewHandlerRoots = new List<GameObject>();
@@ -70,8 +67,7 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
         
         isInitialized = true;
         
-        if (debugCrewManager)
-            GameLogger.LogVerbose($"[CREW MANAGER] {GetBoatID()} - Initialized with max crew: {maxCrewSize}, max deactivate: {maxCrewToDeactivate}");
+        GameLogger.LogVerbose($"[CREW MANAGER] {GetBoatID()} - Initialized with max crew: {maxCrewSize}, max deactivate: {maxCrewToDeactivate}");
     }
     
     public void SetupBoundaries(BoatBoundaryTrigger left, BoatBoundaryTrigger right)
@@ -79,8 +75,7 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
         leftBoundary = left;
         rightBoundary = right;
         
-        if (debugCrewManager)
-            GameLogger.LogVerbose($"[CREW BOUNDARIES] {GetBoatID()} - Boundaries set: Left={calculatedLeftBoundary:F2}, Right={calculatedRightBoundary:F2}");
+        GameLogger.LogVerbose($"[CREW BOUNDARIES] {GetBoatID()} - Boundaries set: Left={calculatedLeftBoundary:F2}, Right={calculatedRightBoundary:F2}");
     }
     
     public void StartCrewInitialization()
@@ -102,8 +97,7 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
             yield break;
         }
         
-        if (debugCrewManager)
-            GameLogger.LogVerbose($"[CREW INSTANT INIT] {GetBoatID()} - Starting instant crew initialization (max: {maxCrewSize})");
+        GameLogger.LogVerbose($"[CREW INSTANT INIT] {GetBoatID()} - Starting instant crew initialization (max: {maxCrewSize})");
         
         for (int i = 0; i < maxCrewSize; i++)
         {
@@ -120,8 +114,7 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
                 
                 ConfigureCrewMember(newCrewMember, i);
                 
-                if (debugCrewManager)
-                    GameLogger.LogVerbose($"[CREW INSTANT SPAWN] {GetBoatID()} - Spawned crew member {i}: {newCrewMember.name}");
+                GameLogger.LogVerbose($"[CREW INSTANT SPAWN] {GetBoatID()} - Spawned crew member {i}: {newCrewMember.name}");
             }
         }
         
@@ -135,8 +128,7 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
         
         currentActiveCrewCount = GetActiveCrewCount();
         
-        if (debugCrewManager)
-            GameLogger.LogVerbose($"[CREW INSTANT INIT COMPLETE] {GetBoatID()} - Total spawned: {allCrewMembers.Count}, Active: {currentActiveCrewCount}, Navigator: {(currentNavigator != null ? currentNavigator.name : "NONE")}");
+        GameLogger.LogVerbose($"[CREW INSTANT INIT COMPLETE] {GetBoatID()} - Total spawned: {allCrewMembers.Count}, Active: {currentActiveCrewCount}, Navigator: {(currentNavigator != null ? currentNavigator.name : "NONE")}");
         
         yield return null;
         
@@ -150,8 +142,7 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
     {
         if (!allowCrewRandomDeactivation || maxCrewToDeactivate <= 0)
         {
-            if (debugCrewManager)
-                GameLogger.LogVerbose($"[CREW INSTANT DEACTIVATION] {GetBoatID()} - Random deactivation disabled or maxCrewToDeactivate is 0");
+            GameLogger.LogVerbose($"[CREW INSTANT DEACTIVATION] {GetBoatID()} - Random deactivation disabled or maxCrewToDeactivate is 0");
             return;
         }
         
@@ -163,8 +154,7 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
             crewToDeactivate = maxCrewSize - minRequired;
         }
         
-        if (debugCrewManager)
-            GameLogger.LogVerbose($"[CREW INSTANT DEACTIVATION] {GetBoatID()} - Will deactivate {crewToDeactivate} of {maxCrewSize} crew members instantly");
+        GameLogger.LogVerbose($"[CREW INSTANT DEACTIVATION] {GetBoatID()} - Will deactivate {crewToDeactivate} of {maxCrewSize} crew members instantly");
         
         List<int> availableIndices = new List<int>();
         for (int i = 0; i < allCrewMembers.Count; i++)
@@ -183,10 +173,7 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
                 crewHandlerRoots[crewIndex].SetActive(false);
                 originalCrewActiveStates[crewIndex] = false;
                 
-                LogCrewStateChange(allCrewMembers[crewIndex], "INSTANT_RANDOM_DEACTIVATION", $"Index {crewIndex} deactivated during instant initialization");
-                
-                if (debugCrewManager)
-                    GameLogger.LogVerbose($"[CREW INSTANT DEACTIVATION] {GetBoatID()} - Deactivated crew at index {crewIndex}: {allCrewMembers[crewIndex].name}");
+                GameLogger.LogVerbose($"[CREW INSTANT DEACTIVATION] {GetBoatID()} - Deactivated crew at index {crewIndex}: {allCrewMembers[crewIndex].name}");
             }
         }
         
@@ -197,10 +184,6 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
         if (finalActiveCount < expectedMin || finalActiveCount > expectedMax)
         {
             GameLogger.LogError($"[CREW INSTANT DEACTIVATION ERROR] {GetBoatID()} - Active count {finalActiveCount} outside expected range [{expectedMin}-{expectedMax}]!");
-        }
-        else if (debugCrewManager)
-        {
-            GameLogger.LogVerbose($"[CREW INSTANT DEACTIVATION SUCCESS] {GetBoatID()} - Final active crew: {finalActiveCount} (range: {expectedMin}-{expectedMax})");
         }
     }
     
@@ -228,16 +211,14 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
             boatController.SetInitialIntegrity(totalPowerLevel, activePowerLevel);
         }
         
-        if (debugCrewManager)
-            GameLogger.LogVerbose($"[CREW INSTANT INTEGRITY] {GetBoatID()} - Calculated Max: {totalPowerLevel}, Current: {activePowerLevel}");
+        GameLogger.LogVerbose($"[CREW INSTANT INTEGRITY] {GetBoatID()} - Calculated Max: {totalPowerLevel}, Current: {activePowerLevel}");
     }
     
     private IEnumerator InitializeCrewWithDelay()
     {
         yield return new WaitForSeconds(0.1f);
         
-        if (debugCrewManager)
-            GameLogger.LogVerbose($"[CREW INIT] {GetBoatID()} - Starting crew spawning (max: {maxCrewSize})");
+        GameLogger.LogVerbose($"[CREW INIT] {GetBoatID()} - Starting crew spawning (max: {maxCrewSize})");
         
         for (int i = 0; i < maxCrewSize; i++)
         {
@@ -254,8 +235,7 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
                 
                 ConfigureCrewMember(newCrewMember, i);
                 
-                if (debugCrewManager)
-                    GameLogger.LogVerbose($"[CREW SPAWN] {GetBoatID()} - Spawned crew member {i}: {newCrewMember.name}");
+                GameLogger.LogVerbose($"[CREW SPAWN] {GetBoatID()} - Spawned crew member {i}: {newCrewMember.name}");
             }
             
             yield return new WaitForSeconds(crewSpawnDelay);
@@ -267,16 +247,14 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
         
         currentActiveCrewCount = GetActiveCrewCount();
         
-        if (debugCrewManager)
-            GameLogger.LogVerbose($"[CREW INIT COMPLETE] {GetBoatID()} - Total spawned: {allCrewMembers.Count}, Active: {currentActiveCrewCount}");
+        GameLogger.LogVerbose($"[CREW INIT COMPLETE] {GetBoatID()} - Total spawned: {allCrewMembers.Count}, Active: {currentActiveCrewCount}");
     }
     
     private void ApplyRandomCrewDeactivation()
     {
         if (!allowCrewRandomDeactivation || maxCrewToDeactivate <= 0)
         {
-            if (debugCrewManager)
-                GameLogger.LogVerbose($"[CREW DEACTIVATION] {GetBoatID()} - Random deactivation disabled or maxCrewToDeactivate is 0");
+            GameLogger.LogVerbose($"[CREW DEACTIVATION] {GetBoatID()} - Random deactivation disabled or maxCrewToDeactivate is 0");
             return;
         }
         
@@ -288,8 +266,7 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
             crewToDeactivate = maxCrewSize - minRequired;
         }
         
-        if (debugCrewManager)
-            GameLogger.LogVerbose($"[CREW DEACTIVATION] {GetBoatID()} - Will deactivate {crewToDeactivate} of {maxCrewSize} crew members (guaranteed active: {maxCrewSize - crewToDeactivate})");
+        GameLogger.LogVerbose($"[CREW DEACTIVATION] {GetBoatID()} - Will deactivate {crewToDeactivate} of {maxCrewSize} crew members (guaranteed active: {maxCrewSize - crewToDeactivate})");
         
         List<int> availableIndices = new List<int>();
         for (int i = 0; i < allCrewMembers.Count; i++)
@@ -308,10 +285,7 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
                 crewHandlerRoots[crewIndex].SetActive(false);
                 originalCrewActiveStates[crewIndex] = false;
                 
-                LogCrewStateChange(allCrewMembers[crewIndex], "RANDOM_DEACTIVATION", $"Index {crewIndex} deactivated during initialization");
-                
-                if (debugCrewManager)
-                    GameLogger.LogVerbose($"[CREW DEACTIVATION] {GetBoatID()} - Deactivated crew at index {crewIndex}: {allCrewMembers[crewIndex].name}");
+                GameLogger.LogVerbose($"[CREW DEACTIVATION] {GetBoatID()} - Deactivated crew at index {crewIndex}: {allCrewMembers[crewIndex].name}");
             }
         }
         
@@ -322,10 +296,6 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
         if (finalActiveCount < expectedMin || finalActiveCount > expectedMax)
         {
             GameLogger.LogError($"[CREW DEACTIVATION ERROR] {GetBoatID()} - Active count {finalActiveCount} outside expected range [{expectedMin}-{expectedMax}]!");
-        }
-        else if (debugCrewManager)
-        {
-            GameLogger.LogVerbose($"[CREW DEACTIVATION SUCCESS] {GetBoatID()} - Final active crew: {finalActiveCount} (range: {expectedMin}-{expectedMax})");
         }
     }
     
@@ -368,8 +338,7 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
             GameLogger.LogWarning($"[CREW SPAWN] {GetBoatID()} - HookSpawner not found in {crewHandlerObj.name} - fisherman won't be able to throw hooks!");
         }
         
-        if (debugCrewManager)
-            GameLogger.LogVerbose($"[CREW SPAWN] {GetBoatID()} - {boatFisherman.name} spawned at: {worldPosition} from prefab: {crewMemberPrefab.name}");
+        GameLogger.LogVerbose($"[CREW SPAWN] {GetBoatID()} - {boatFisherman.name} spawned at: {worldPosition} from prefab: {crewMemberPrefab.name}");
         
         return boatFisherman;
     }
@@ -384,8 +353,7 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
         
         GameObject handlerRoot = boatFisherman.transform.parent?.gameObject ?? boatFisherman.gameObject;
         
-        if (debugCrewManager)
-            GameLogger.LogVerbose($"[CREW CONFIG] {GetBoatID()} - Configuring {boatFisherman.name} (Handler: {handlerRoot.name})");
+        GameLogger.LogVerbose($"[CREW CONFIG] {GetBoatID()} - Configuring {boatFisherman.name} (Handler: {handlerRoot.name})");
         
         boatFisherman.SetBoatID(boatID);
         boatFisherman.SetAssignedPlatform(boatPlatform);
@@ -417,8 +385,7 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
         
         boatFisherman.OnEnemyDied += OnCrewMemberDied;
         
-        if (debugCrewManager)
-            GameLogger.LogVerbose($"[CREW CONFIG COMPLETE] {GetBoatID()} - {boatFisherman.name} configured and assigned to platform");
+        GameLogger.LogVerbose($"[CREW CONFIG COMPLETE] {GetBoatID()} - {boatFisherman.name} configured and assigned to platform");
     }
     
     private Vector3 CalculateCrewMemberWorldPosition(int index)
@@ -449,8 +416,7 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
                 platformTopLocal = crewContainer.InverseTransformPoint(platformTopWorld);
                 calculatedPlatformHeight = platformTopLocal.y;
                 
-                if (debugCrewManager)
-                    GameLogger.LogVerbose($"[CREW BOUNDS] {GetBoatID()} - Using PLATFORM COLLIDER method");
+                GameLogger.LogVerbose($"[CREW BOUNDS] {GetBoatID()} - Using PLATFORM COLLIDER method");
             }
         }
         else
@@ -475,12 +441,9 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
                     calculatedPlatformHeight = (leftBoundaryLocal.y + rightBoundaryLocal.y) * 0.5f;
                 }
                 
-                if (debugCrewManager)
-                {
-                    GameLogger.LogVerbose($"[CREW BOUNDS] {GetBoatID()} - Using BOUNDARY TRIGGERS method");
-                    GameLogger.LogVerbose($"[CREW BOUNDS] Left Boundary World: {leftBoundary.transform.position} → Local: {leftBoundaryLocal}");
-                    GameLogger.LogVerbose($"[CREW BOUNDS] Right Boundary World: {rightBoundary.transform.position} → Local: {rightBoundaryLocal}");
-                }
+                GameLogger.LogVerbose($"[CREW BOUNDS] {GetBoatID()} - Using BOUNDARY TRIGGERS method");
+                GameLogger.LogVerbose($"[CREW BOUNDS] Left Boundary World: {leftBoundary.transform.position} → Local: {leftBoundaryLocal}");
+                GameLogger.LogVerbose($"[CREW BOUNDS] Right Boundary World: {rightBoundary.transform.position} → Local: {rightBoundaryLocal}");
             }
             else
             {
@@ -488,8 +451,7 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
                 calculatedRightBoundary = 1.5f;
                 calculatedPlatformHeight = 0.1f;
                 
-                if (debugCrewManager)
-                    GameLogger.LogWarning($"[CREW BOUNDS] {GetBoatID()} - Missing boundaries! Using fallback values");
+                GameLogger.LogWarning($"[CREW BOUNDS] {GetBoatID()} - Missing boundaries! Using fallback values");
             }
         }
         
@@ -502,8 +464,7 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
             calculatedRightBoundary = center + 1f;
         }
         
-        if (debugCrewManager)
-            GameLogger.LogVerbose($"[CREW BOUNDS] {GetBoatID()} - FINAL Platform bounds: Left={calculatedLeftBoundary:F2}, Right={calculatedRightBoundary:F2}, Height={calculatedPlatformHeight:F2}");
+        GameLogger.LogVerbose($"[CREW BOUNDS] {GetBoatID()} - FINAL Platform bounds: Left={calculatedLeftBoundary:F2}, Right={calculatedRightBoundary:F2}, Height={calculatedPlatformHeight:F2}");
     }
     
     private void InitializeFloaterWithActiveCrew()
@@ -513,25 +474,24 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
             List<Enemy> activeCrewAsEnemies = GetActiveCrewMembers().Cast<Enemy>().ToList();
             boatFloater.InitializeCrew(activeCrewAsEnemies);
             
-            if (debugCrewManager)
-                GameLogger.LogVerbose($"[CREW FLOATER] {GetBoatID()} - Floater initialized with {activeCrewAsEnemies.Count} active crew members");
+            GameLogger.LogVerbose($"[CREW FLOATER] {GetBoatID()} - Floater initialized with {activeCrewAsEnemies.Count} active crew members");
         }
     }
     
     public void AssignNavigator()
     {
-        Debug.Log($"[CREW DEBUG] {GetBoatID()} - AssignNavigator called. Current navigator: {(currentNavigator != null ? currentNavigator.name : "NULL")}");
+        GameLogger.Log($"[CREW DEBUG] {GetBoatID()} - AssignNavigator called. Current navigator: {(currentNavigator != null ? currentNavigator.name : "NULL")}");
         
         if (currentNavigator != null && IsValidCrewMember(currentNavigator))
         {
-            Debug.Log($"[CREW DEBUG] {GetBoatID()} - Current navigator {currentNavigator.name} is still valid");
+            GameLogger.Log($"[CREW DEBUG] {GetBoatID()} - Current navigator {currentNavigator.name} is still valid");
             return;
         }
         
         currentNavigator = null;
         
         List<BoatLandEnemy> availableCrew = GetActiveCrewMembers();
-        Debug.Log($"[CREW DEBUG] {GetBoatID()} - Available crew count: {availableCrew.Count}");
+        GameLogger.Log($"[CREW DEBUG] {GetBoatID()} - Available crew count: {availableCrew.Count}");
         
         if (availableCrew.Count > 0)
         {
@@ -541,7 +501,7 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
             {
                 bool isValid = IsValidCrewMember(crew);
                 bool isNavigating = crew.IsNavigating();
-                Debug.Log($"[CREW DEBUG] {GetBoatID()} - Checking {crew.name}: Valid={isValid}, Navigating={isNavigating}, State={crew.State}, OnBoat={crew.isOnBoat}");
+                GameLogger.Log($"[CREW DEBUG] {GetBoatID()} - Checking {crew.name}: Valid={isValid}, Navigating={isNavigating}, State={crew.State}, OnBoat={crew.isOnBoat}");
                 
                 if (isValid && !isNavigating)
                 {
@@ -549,41 +509,40 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
                 }
             }
             
-            Debug.Log($"[CREW DEBUG] {GetBoatID()} - Valid navigators count: {validNavigators.Count}");
+            GameLogger.Log($"[CREW DEBUG] {GetBoatID()} - Valid navigators count: {validNavigators.Count}");
             
             if (validNavigators.Count > 0)
             {
                 BoatLandEnemy selectedNavigator = validNavigators[Random.Range(0, validNavigators.Count)];
-                Debug.Log($"[CREW DEBUG] {GetBoatID()} - Selected navigator: {selectedNavigator.name}");
+                GameLogger.Log($"[CREW DEBUG] {GetBoatID()} - Selected navigator: {selectedNavigator.name}");
                 
                 if (IsValidCrewMember(selectedNavigator))
                 {
                     currentNavigator = selectedNavigator;
                     currentNavigator.AssignToWheel();
                     
-                    Debug.Log($"[CREW DEBUG] {GetBoatID()} - Navigator assigned successfully: {selectedNavigator.name}, Role: {selectedNavigator.GetCrewRole()}, Navigating: {selectedNavigator.IsNavigating()}");
+                    GameLogger.Log($"[CREW DEBUG] {GetBoatID()} - Navigator assigned successfully: {selectedNavigator.name}, Role: {selectedNavigator.GetCrewRole()}, Navigating: {selectedNavigator.IsNavigating()}");
                     
                     if (boatController != null)
                     {
                         boatController.ChangeState_Driven();
                     }
                     
-                    if (debugCrewManager)
-                        GameLogger.LogVerbose($"[CREW NAVIGATOR] {GetBoatID()} - Navigator assigned successfully");
+                    GameLogger.LogVerbose($"[CREW NAVIGATOR] {GetBoatID()} - Navigator assigned successfully");
                 }
                 else
                 {
-                    Debug.LogWarning($"[CREW DEBUG] {GetBoatID()} - Selected navigator became invalid immediately after selection!");
+                    GameLogger.LogWarning($"[CREW DEBUG] {GetBoatID()} - Selected navigator became invalid immediately after selection!");
                 }
             }
             else
             {
-                Debug.LogWarning($"[CREW DEBUG] {GetBoatID()} - No valid navigators available from {availableCrew.Count} active crew members");
+                GameLogger.LogWarning($"[CREW DEBUG] {GetBoatID()} - No valid navigators available from {availableCrew.Count} active crew members");
             }
         }
         else
         {
-            Debug.LogWarning($"[CREW DEBUG] {GetBoatID()} - No active crew members available for navigation");
+            GameLogger.LogWarning($"[CREW DEBUG] {GetBoatID()} - No active crew members available for navigation");
         }
     }
     
@@ -591,7 +550,7 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
     {
         if (currentNavigator != null)
         {
-            Debug.Log($"[CREW DEBUG] {GetBoatID()} - Releasing navigator: {currentNavigator.name}");
+            GameLogger.Log($"[CREW DEBUG] {GetBoatID()} - Releasing navigator: {currentNavigator.name}");
             
             if (IsValidCrewMember(currentNavigator))
             {
@@ -605,12 +564,11 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
             
             currentNavigator = null;
             
-            if (debugCrewManager)
-                GameLogger.LogVerbose($"[CREW NAVIGATOR] {GetBoatID()} - Navigator released");
+            GameLogger.LogVerbose($"[CREW NAVIGATOR] {GetBoatID()} - Navigator released");
         }
         else
         {
-            Debug.Log($"[CREW DEBUG] {GetBoatID()} - No navigator to release");
+            GameLogger.Log($"[CREW DEBUG] {GetBoatID()} - No navigator to release");
         }
     }
     
@@ -662,7 +620,6 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
     {
         if (deadCrew is BoatLandEnemy boatEnemy)
         {
-            LogCrewStateChange(boatEnemy, "DEATH_EVENT", "OnEnemyDied event triggered");
             HandleCrewMemberDeath(boatEnemy);
         }
         
@@ -673,14 +630,13 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
     {
         if (!BoatEnemyBelongToBoat(deadCrewMember))
         {
-            if (debugCrewManager)
-                GameLogger.LogWarning($"[CREW DEATH] {GetBoatID()} - Crew member doesn't belong to this boat");
+            GameLogger.LogWarning($"[CREW DEATH] {GetBoatID()} - Crew member doesn't belong to this boat");
             return;
         }
         
         if (currentNavigator == deadCrewMember)
         {
-            Debug.Log($"[CREW DEBUG] {GetBoatID()} - Current navigator {deadCrewMember.name} died, clearing currentNavigator");
+            GameLogger.Log($"[CREW DEBUG] {GetBoatID()} - Current navigator {deadCrewMember.name} died, clearing currentNavigator");
             currentNavigator = null;
         }
         
@@ -695,10 +651,8 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
         if (crewIndex >= 0 && crewIndex < crewHandlerRoots.Count)
         {
             crewHandlerRoots[crewIndex].SetActive(false);
-            LogCrewStateChange(deadCrewMember, "DEATH_DEACTIVATION", $"Handler deactivated due to death at index {crewIndex}");
             
-            if (debugCrewManager)
-                GameLogger.LogVerbose($"[CREW DEATH] {GetBoatID()} - {deadCrewMember.name} handler deactivated. Remaining active: {GetActiveCrewCount()}");
+            GameLogger.LogVerbose($"[CREW DEATH] {GetBoatID()} - {deadCrewMember.name} handler deactivated. Remaining active: {GetActiveCrewCount()}");
         }
         
         StartCoroutine(DelayedIntegrityRecalculation());
@@ -747,67 +701,7 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
         
         currentActiveCrewCount = GetActiveCrewCount();
         
-        if (debugCrewManager)
-            GameLogger.LogVerbose($"[CREW RESET] {GetBoatID()} - All crew reset to original state. Active: {currentActiveCrewCount}");
-    }
-    
-    private void LogCrewStateChange(BoatLandEnemy crew, string reason, string details)
-    {
-        if (!trackCrewDisappearance) return;
-        
-        bool isHandlerActive = crew.transform.parent?.gameObject.activeInHierarchy ?? crew.gameObject.activeInHierarchy;
-        
-        GameLogger.LogError($"🚨 [CREW STATE CHANGE] {crew.name} - REASON: {reason}");
-        GameLogger.LogError($"    BOAT: {GetBoatID()}");
-        GameLogger.LogError($"    DETAILS: {details}");
-        GameLogger.LogError($"    CREW STATE: {crew.State}");
-        GameLogger.LogError($"    ON BOAT: {crew.isOnBoat}");
-        GameLogger.LogError($"    HANDLER ACTIVE: {isHandlerActive}");
-        GameLogger.LogError($"    ACTIVE CREW COUNT: {GetActiveCrewCount()}/{allCrewMembers.Count}");
-    }
-    
-    public void LogCurrentCrewStatus()
-    {
-        if (!logCrewStates) return;
-        
-        GameLogger.Log($"=== CREW STATUS FOR BOAT {GetBoatID()} ===");
-        GameLogger.Log($"Total Crew: {allCrewMembers.Count}, Active: {GetActiveCrewCount()}");
-        
-        for (int i = 0; i < allCrewMembers.Count; i++)
-        {
-            var crew = allCrewMembers[i];
-            var handler = i < crewHandlerRoots.Count ? crewHandlerRoots[i] : null;
-            
-            if (crew != null)
-            {
-                bool handlerActive = handler?.activeInHierarchy ?? false;
-                GameLogger.Log($"  [{i}] {crew.name} - State: {crew.State}, OnBoat: {crew.isOnBoat}, Handler Active: {handlerActive}, Role: {crew.GetCrewRole()}, Navigating: {crew.IsNavigating()}");
-            }
-            else
-            {
-                GameLogger.Log($"  [{i}] NULL CREW MEMBER");
-            }
-        }
-        GameLogger.Log($"=== END CREW STATUS ===");
-    }
-    
-    private void Update()
-    {
-        int newActiveCount = GetActiveCrewCount();
-        if (newActiveCount != currentActiveCrewCount)
-        {
-            if (trackCrewDisappearance)
-            {
-                GameLogger.LogError($"⚠️ [CREW COUNT CHANGE] {GetBoatID()} - Active crew changed from {currentActiveCrewCount} to {newActiveCount}");
-                LogCurrentCrewStatus();
-            }
-            currentActiveCrewCount = newActiveCount;
-        }
-        
-        if (Input.GetKeyDown(KeyCode.F7))
-        {
-            LogCurrentCrewStatus();
-        }
+        GameLogger.LogVerbose($"[CREW RESET] {GetBoatID()} - All crew reset to original state. Active: {currentActiveCrewCount}");
     }
     
     private void OnDrawGizmosSelected()
@@ -844,8 +738,7 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
     {
         if (currentNavigator == navigatorToRelease)
         {
-            if (debugCrewManager)
-                GameLogger.LogVerbose($"[CREW NAVIGATOR] {GetBoatID()} - Force releasing navigator {navigatorToRelease.name}");
+            GameLogger.LogVerbose($"[CREW NAVIGATOR] {GetBoatID()} - Force releasing navigator {navigatorToRelease.name}");
             
             currentNavigator = null;
             
