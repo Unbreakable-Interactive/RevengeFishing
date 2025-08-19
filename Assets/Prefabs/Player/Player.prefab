@@ -138,6 +138,8 @@ MonoBehaviour:
   enableDebugLogs: 0
   rotationSpeed: 720
   baseDamagePercent: 5
+  velocityThreshold: 0.1
+  enableApexDetection: 1
   showChargeEffect: 1
   chargeColor: {r: 1, g: 0, b: 0, a: 1}
 --- !u!1 &5736262942231147453
@@ -465,7 +467,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   player: {fileID: 5706962072255297144}
   abilities: []
-  ability1Key: 113
+  ability1Key: 323
   ability2Key: 101
   ability3Key: 114
   enableDebugLogs: 0
