@@ -695,6 +695,11 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
         base.TriggerDefeat();
     }
 
+    public void DefeatFromBoatDestruction()
+    {
+        TriggerDefeat();
+    }
+
     protected override void TriggerEscape()
     {
         GameLogger.Log($"[BOAT DEBUG] {gameObject.name} - TriggerEscape called");

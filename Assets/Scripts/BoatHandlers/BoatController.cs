@@ -566,6 +566,9 @@ public class BoatController : MonoBehaviour
         ChangeState(BoatState.Destroyed);
         OnBoatSunk?.Invoke(this);
         
+        // Defeat all crew members as if they were caught by fishing rod
+        DefeatAllCrewMembers();
+        
         // Immediately destroy boat parts for visual feedback
         DestroyBoatParts();
         
@@ -607,6 +610,22 @@ public class BoatController : MonoBehaviour
     public float GetMaxIntegrity()
     {
         return maxIntegrity;
+    }
+
+    private void DefeatAllCrewMembers()
+    {
+        if (crewManager == null) return;
+
+        List<BoatLandEnemy> allCrew = crewManager.GetAllCrewMembers();
+        
+        foreach (var crewMember in allCrew)
+        {
+            if (crewMember != null && crewMember.gameObject != null)
+            {
+                // Trigger the same defeat state as if caught by fishing rod
+                crewMember.DefeatFromBoatDestruction();
+            }
+        }
     }
 
     #endregion
