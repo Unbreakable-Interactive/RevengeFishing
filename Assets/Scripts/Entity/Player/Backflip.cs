@@ -82,6 +82,9 @@ public class Backflip : AbilityBase
         chargeLevel = Mathf.Max(1, chargeLevel); // Ensure at least 1 charge
         hasContactedBoat = false;
         
+        // Update animation: Now backflipping is active, set power based on charge level
+        UpdateBackflipAnimation();
+        
         // Disable player's auto-rotation and sprite flipping to prevent interference
         originalAutoRotateInAir = player.GetAutoRotateInAir();
         originalSpriteFlipping = player.GetSpriteFlipping();
@@ -119,6 +122,9 @@ public class Backflip : AbilityBase
         hasReachedApex = false;
         chargeLevel = 1; // Start with 1 charge
         hasContactedBoat = false;
+        
+        // Update animation: Show charging animation immediately
+        UpdateBackflipAnimation();
         
         // Initialize velocity tracking
         Rigidbody2D rb = player.GetComponent<Rigidbody2D>();
@@ -171,6 +177,9 @@ public class Backflip : AbilityBase
         
         chargeLevel++;
         
+        // Update animation power whenever charge changes
+        UpdateBackflipAnimation();
+        
         DebugLog($"Increased charge level to: {chargeLevel} (Total damage: {GetTotalDamage()}) - State: {(isWaitingForApex ? "Waiting for apex" : "Active charging")}");
         
         // Visual/audio feedback for charging
@@ -197,6 +206,19 @@ public class Backflip : AbilityBase
         spriteRenderer.color = Color.Lerp(originalColor, chargeColor, 0.7f);
         yield return new WaitForSeconds(0.1f);
         spriteRenderer.color = originalColor;
+    }
+    
+    private void UpdateBackflipAnimation()
+    {
+        if (player == null) return;
+        
+        // Show backflip animation whenever the ability is active and has charges
+        bool shouldShowBackflip = (isCharging || isWaitingForApex) && chargeLevel > 0;
+        
+        // Set animation parameters
+        player.SetBackflipAnimation(shouldShowBackflip, chargeLevel);
+        
+        DebugLog($"Animation Updated - isBackflipping: {shouldShowBackflip}, power: {chargeLevel}");
     }
     
     private int GetTotalDamage()
@@ -262,6 +284,9 @@ public class Backflip : AbilityBase
             player.transform.rotation = Quaternion.Euler(0, 0, targetRotationAngle);
             isPerformingInitialFlip = false;
             
+            // Now that initial flip is complete, update animation to show backflipping
+            UpdateBackflipAnimation();
+            
             DebugLog($"Initial flip completed! Start: {startRotation:F1}°, Final: {targetRotationAngle:F1}°");
             return;
         }
@@ -298,6 +323,9 @@ public class Backflip : AbilityBase
     
     private void CompleteBackflip()
     {
+        // Turn off backflip animation
+        player.SetBackflipAnimation(false, 0);
+        
         // Reset all rotation state
         isPerformingFinalFlip = false;
         isPerformingInitialFlip = false;
@@ -318,6 +346,9 @@ public class Backflip : AbilityBase
         if (!isCharging) return;
         
         DebugLog($"Ending backflip - Final charge level: {chargeLevel}, contacted boat: {hasContactedBoat}");
+        
+        // Turn off backflip animation when ending
+        player.SetBackflipAnimation(false, 0);
         
         // Perform final 180-degree rotation to return upright
         StartFinalRotation();
@@ -341,6 +372,12 @@ public class Backflip : AbilityBase
     {
         DebugLog("Cancelling backflip");
         
+        // Turn off backflip animation
+        if (player != null)
+        {
+            player.SetBackflipAnimation(false, 0);
+        }
+        
         // Reset all states
         isWaitingForApex = false;
         isCharging = false;
@@ -355,11 +392,17 @@ public class Backflip : AbilityBase
     // Safety method to restore settings if something goes wrong
     private void OnDisable()
     {
-        if (player != null && (isCharging || isPerformingFinalFlip || isPerformingInitialFlip))
+        if (player != null)
         {
-            player.SetAutoRotateInAir(originalAutoRotateInAir);
-            player.SetSpriteFlipping(originalSpriteFlipping);
-            DebugLog("Settings restored (OnDisable safety)");
+            // Turn off backflip animation on disable
+            player.SetBackflipAnimation(false, 0);
+            
+            if (isCharging || isPerformingFinalFlip || isPerformingInitialFlip)
+            {
+                player.SetAutoRotateInAir(originalAutoRotateInAir);
+                player.SetSpriteFlipping(originalSpriteFlipping);
+                DebugLog("Settings restored (OnDisable safety)");
+            }
         }
         
         // Reset all states on disable

@@ -9,6 +9,8 @@ public class Player : Entity
     private static readonly int IsInfant = Animator.StringToHash("isInfant");
     private static readonly int IsJuvie = Animator.StringToHash("isJuvie");
     private static readonly int IsBiting = Animator.StringToHash("isBiting");
+    private static readonly int IsBackflipping = Animator.StringToHash("isBackflipping");
+    private static readonly int BackflipPower = Animator.StringToHash("backflipPower");
 
     public enum Phase
     {
@@ -151,7 +153,7 @@ public class Player : Entity
             }
         }
 
-        // animator = GetComponent<Animator>();
+        if (animator == null) animator = GetComponent<Animator>();
 
         currentPhase = Phase.Infant; // Start in the Infant phase
         //change the next line once an actual fix is found for player threshold not assigning properly
@@ -929,5 +931,65 @@ public class Player : Entity
     {
         return !IsFacingLeft();
     }
+
     #endregion
+
+    #region Backflip Animation Control
+    // Methods for Backflip ability to control animation parameters
+    public void SetBackflipAnimation(bool isBackflipping, int backflipPower = 0)
+    {
+        if (animator != null)
+        {
+            animator.SetBool(IsBackflipping, isBackflipping);
+            animator.SetInteger(BackflipPower, backflipPower);
+
+            if (enableDebugLogs)
+            {
+                GameLogger.LogVerbose($"[Player Animation] Backflip animation updated: isBackflipping={isBackflipping}, power={backflipPower}");
+            }
+        }
+        else
+        {
+            GameLogger.LogWarning("[Player Animation] Animator is null! Cannot set backflip animation.");
+        }
+    }
+
+    public void SetBackflippingState(bool isBackflipping)
+    {
+        if (animator != null)
+        {
+            animator.SetBool(IsBackflipping, isBackflipping);
+
+            if (enableDebugLogs)
+            {
+                GameLogger.LogVerbose($"[Player Animation] Backflip state updated: isBackflipping={isBackflipping}");
+            }
+        }
+    }
+
+    public void SetBackflipPower(int backflipPower)
+    {
+        if (animator != null)
+        {
+            animator.SetInteger(BackflipPower, backflipPower);
+
+            if (enableDebugLogs)
+            {
+                GameLogger.LogVerbose($"[Player Animation] Backflip power updated: power={backflipPower}");
+            }
+        }
+    }
+
+    // Getter methods for debugging
+    public bool GetBackflippingState()
+    {
+        return animator != null ? animator.GetBool(IsBackflipping) : false;
+    }
+
+    public int GetBackflipPower()
+    {
+        return animator != null ? animator.GetInteger(BackflipPower) : 0;
+    }
+    #endregion
+
 }
