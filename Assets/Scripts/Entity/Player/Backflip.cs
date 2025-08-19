@@ -6,14 +6,24 @@ public class Backflip : AbilityBase
     [SerializeField] private float rotationSpeed = 360f; // Reduced speed for better control
     [SerializeField] private float baseDamagePercent = 5f; // 5% of power level per charge
     
+    [Header("Apex Detection")]
+    [SerializeField] private float velocityThreshold = 0.1f; // How close to 0 velocity to consider apex
+    [SerializeField] private bool enableApexDetection = true;
+    
     [Header("Visual Effects")]
     [SerializeField] private bool showChargeEffect = true;
     [SerializeField] private Color chargeColor = Color.red;
     
     // Backflip state tracking
     private bool isCharging = false;
+    private bool isWaitingForApex = false; // New state: ability activated but waiting for apex
+    private bool hasReachedApex = false; // New state: player has reached apex and is falling
     private int chargeLevel = 0;
     private bool hasContactedBoat = false;
+    
+    // Apex detection tracking
+    private float previousVerticalVelocity = 0f;
+    private bool wasGoingUp = false;
     
     // Rotation tracking
     private bool isPerformingInitialFlip = false;
@@ -44,14 +54,22 @@ public class Backflip : AbilityBase
     
     protected override void OnActivate()
     {
-        if (!isCharging)
+        if (!isCharging && !isWaitingForApex)
         {
-            // First activation - start the backflip with initial rotation
-            StartBackflip();
+            // First activation - check if we need to wait for apex
+            if (enableApexDetection && IsPlayerGoingUp())
+            {
+                StartWaitingForApex();
+            }
+            else
+            {
+                // Start immediately if player is already falling or apex detection is disabled
+                StartBackflip();
+            }
         }
-        else
+        else if (isWaitingForApex || (isCharging && !isPerformingInitialFlip))
         {
-            // Additional activations - only increase charge (no rotation)
+            // Additional activations - increase charge level
             IncreaseCharge();
         }
     }
@@ -59,7 +77,9 @@ public class Backflip : AbilityBase
     private void StartBackflip()
     {
         isCharging = true;
-        chargeLevel = 1;
+        isWaitingForApex = false;
+        hasReachedApex = true; // Mark as reached apex since we're starting the damaging phase
+        chargeLevel = Mathf.Max(1, chargeLevel); // Ensure at least 1 charge
         hasContactedBoat = false;
         
         // Disable player's auto-rotation and sprite flipping to prevent interference
@@ -92,13 +112,66 @@ public class Backflip : AbilityBase
         DebugLog($"Started backflip - Facing: {(player.IsFacingLeft() ? "LEFT" : "RIGHT")}, Start: {startRotation:F1}°, Target: {targetRotationAngle}°, Rotation needed: {rotationDifference:F1}°");
     }
     
+    private void StartWaitingForApex()
+    {
+        isWaitingForApex = true;
+        isCharging = false;
+        hasReachedApex = false;
+        chargeLevel = 1; // Start with 1 charge
+        hasContactedBoat = false;
+        
+        // Initialize velocity tracking
+        Rigidbody2D rb = player.GetComponent<Rigidbody2D>();
+        if (rb != null)
+        {
+            previousVerticalVelocity = rb.velocity.y;
+            wasGoingUp = previousVerticalVelocity > 0;
+        }
+        
+        DebugLog($"Waiting for apex - Current velocity: {previousVerticalVelocity:F2}, Going up: {wasGoingUp}");
+    }
+    
+    private bool IsPlayerGoingUp()
+    {
+        Rigidbody2D rb = player.GetComponent<Rigidbody2D>();
+        if (rb == null) return false;
+        
+        return rb.velocity.y > velocityThreshold;
+    }
+    
+    private bool CheckForApex()
+    {
+        Rigidbody2D rb = player.GetComponent<Rigidbody2D>();
+        if (rb == null) return false;
+        
+        float currentVelocity = rb.velocity.y;
+        
+        // Apex reached when:
+        // 1. We were going up and now velocity is near zero or negative
+        // 2. Or velocity crosses from positive to negative
+        bool apexReached = false;
+        
+        if (wasGoingUp && currentVelocity <= velocityThreshold)
+        {
+            apexReached = true;
+            DebugLog($"Apex detected: velocity changed from {previousVerticalVelocity:F2} to {currentVelocity:F2}");
+        }
+        
+        // Update tracking
+        previousVerticalVelocity = currentVelocity;
+        wasGoingUp = currentVelocity > velocityThreshold;
+        
+        return apexReached;
+    }
+    
     private void IncreaseCharge()
     {
-        if (!isCharging || isPerformingInitialFlip) return;
+        // Allow charging during waiting phase or active charging phase (but not during initial flip)
+        if (!isWaitingForApex && (!isCharging || isPerformingInitialFlip)) return;
         
         chargeLevel++;
         
-        DebugLog($"Increased charge level to: {chargeLevel} (Total damage: {GetTotalDamage()})");
+        DebugLog($"Increased charge level to: {chargeLevel} (Total damage: {GetTotalDamage()}) - State: {(isWaitingForApex ? "Waiting for apex" : "Active charging")}");
         
         // Visual/audio feedback for charging
         if (showChargeEffect)
@@ -135,6 +208,25 @@ public class Backflip : AbilityBase
     
     void Update()
     {
+        // Handle waiting for apex phase
+        if (isWaitingForApex)
+        {
+            if (CheckForApex())
+            {
+                DebugLog("Apex reached! Starting backflip damage phase.");
+                StartBackflip();
+            }
+            
+            // Safety: Cancel if player returns to water while waiting
+            if (!player.IsAboveWater)
+            {
+                DebugLog("Player returned to water while waiting for apex. Cancelling.");
+                CancelBackflip();
+            }
+            
+            return;
+        }
+        
         if (!isCharging && !isPerformingFinalFlip) return;
         
         // Handle initial rotation (first half-flip)
@@ -147,12 +239,6 @@ public class Backflip : AbilityBase
         if (isPerformingFinalFlip)
         {
             UpdateFinalRotation();
-        }
-        
-        // Check for boat collisions while charging (alternative to OnTriggerEnter2D)
-        if (isCharging && !isPerformingInitialFlip)
-        {
-            CheckForBoatCollisions();
         }
         
         // Check if player has returned to water (only if we're charging and not mid-rotation)
@@ -240,6 +326,7 @@ public class Backflip : AbilityBase
         isCharging = false;
         chargeLevel = 0;
         hasContactedBoat = false;
+        hasReachedApex = false;
         
         // Safety: If we're not doing final flip, restore settings immediately
         if (!isPerformingFinalFlip)
@@ -250,6 +337,21 @@ public class Backflip : AbilityBase
         }
     }
     
+    private void CancelBackflip()
+    {
+        DebugLog("Cancelling backflip");
+        
+        // Reset all states
+        isWaitingForApex = false;
+        isCharging = false;
+        chargeLevel = 0;
+        hasContactedBoat = false;
+        hasReachedApex = false;
+        
+        // No rotation cleanup needed since we haven't started rotating yet
+        DebugLog("Backflip cancelled");
+    }
+    
     // Safety method to restore settings if something goes wrong
     private void OnDisable()
     {
@@ -258,6 +360,12 @@ public class Backflip : AbilityBase
             player.SetAutoRotateInAir(originalAutoRotateInAir);
             player.SetSpriteFlipping(originalSpriteFlipping);
             DebugLog("Settings restored (OnDisable safety)");
+        }
+        
+        // Reset all states on disable
+        if (isWaitingForApex)
+        {
+            CancelBackflip();
         }
     }
     
@@ -289,72 +397,30 @@ public class Backflip : AbilityBase
     
     private void OnTriggerEnter2D(Collider2D other)
     {
+        // Only deal damage if we're in the charging phase (after apex) and not during initial flip
         if (!isCharging || hasContactedBoat || isPerformingInitialFlip) return;
+        
+        // Additional check: only deal damage if we've reached apex (on the way down)
+        if (!hasReachedApex) return;
         
         // Check if we hit a boat
         BoatController boat = other.GetComponentInParent<BoatController>();
         if (boat != null)
         {
-            DealDamageToBoat(boat);
+            HandleBoatCollision(boat);
         }
     }
     
-    // Alternative collision detection using physics overlap
-    private void CheckForBoatCollisions()
+    // Public method for collision forwarder to call
+    public void HandleBoatCollision(BoatController boat)
     {
+        // Only deal damage if we're in the charging phase (after apex) and not during initial flip
         if (!isCharging || hasContactedBoat || isPerformingInitialFlip) return;
         
-        // Use physics to detect nearby boats
-        Collider2D playerCollider = player.GetComponent<Collider2D>();
-        if (playerCollider == null)
-        {
-            // Fallback: check for boats in a radius around player
-            CheckBoatsInRadius();
-            return;
-        }
+        // Additional check: only deal damage if we've reached apex (on the way down)
+        if (!hasReachedApex) return;
         
-        // Check for overlapping colliders
-        ContactFilter2D filter = new ContactFilter2D();
-        filter.useTriggers = true;
-        filter.useLayerMask = false;
-        
-        Collider2D[] results = new Collider2D[10];
-        int hitCount = playerCollider.OverlapCollider(filter, results);
-        
-        for (int i = 0; i < hitCount; i++)
-        {
-            if (results[i] != null)
-            {
-                BoatController boat = results[i].GetComponentInParent<BoatController>();
-                if (boat != null)
-                {
-                    DealDamageToBoat(boat);
-                    break; // Only hit one boat at a time
-                }
-            }
-        }
-    }
-    
-    private void CheckBoatsInRadius()
-    {
-        // Find all boats in the scene and check distance
-        BoatController[] boats = FindObjectsOfType<BoatController>();
-        float attackRadius = 2f; // Attack range in units
-        
-        foreach (BoatController boat in boats)
-        {
-            if (boat != null && boat.gameObject.activeInHierarchy)
-            {
-                float distance = Vector2.Distance(player.transform.position, boat.transform.position);
-                
-                if (distance <= attackRadius)
-                {
-                    DebugLog($"Found boat within attack radius: {distance:F1} units");
-                    DealDamageToBoat(boat);
-                    break; // Only hit one boat at a time
-                }
-            }
-        }
+        DealDamageToBoat(boat);
     }
     
     private void DealDamageToBoat(BoatController boat)
@@ -388,7 +454,10 @@ public class Backflip : AbilityBase
     
     // Public properties for debugging/UI
     public bool IsCharging => isCharging;
+    public bool IsWaitingForApex => isWaitingForApex;
+    public bool HasReachedApex => hasReachedApex;
     public int ChargeLevel => chargeLevel;
     public int PotentialDamage => GetTotalDamage();
     public bool IsFlipping => isPerformingInitialFlip || isPerformingFinalFlip;
+    public bool IsActive => isCharging || isWaitingForApex || isPerformingFinalFlip;
 }

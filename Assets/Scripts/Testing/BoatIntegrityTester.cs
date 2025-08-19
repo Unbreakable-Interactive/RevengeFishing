@@ -75,14 +75,14 @@ public class BoatIntegrityTester : MonoBehaviour
                 rightBoundary.position = spawnPosition + Vector3.right * 10f;
                 
                 // Check integrity before initialization
-                DebugLog($"⚠️ Before initialization: Integrity {lastSpawnedBoat.GetCurrentIntegrity()}/{lastSpawnedBoat.GetMaxIntegrity()}");
+                DebugLog($"Before initialization: Integrity {lastSpawnedBoat.GetCurrentIntegrity()}/{lastSpawnedBoat.GetMaxIntegrity()}");
                 
                 lastSpawnedBoat.Initialize(leftBoundary, rightBoundary);
                 
                 // Wait a frame for crew initialization
                 StartCoroutine(CheckIntegrityAfterDelay());
                 
-                DebugLog($"✅ Spawned test boat at {spawnPosition}");
+                DebugLog($"Spawned test boat at {spawnPosition}");
             }
             else
             {
@@ -101,15 +101,18 @@ public class BoatIntegrityTester : MonoBehaviour
         
         if (lastSpawnedBoat != null)
         {
-            DebugLog($"✅ After initialization: Integrity {lastSpawnedBoat.GetCurrentIntegrity()}/{lastSpawnedBoat.GetMaxIntegrity()}");
+            float currentIntegrity = lastSpawnedBoat.GetCurrentIntegrity();
+            float maxIntegrity = lastSpawnedBoat.GetMaxIntegrity();
             
-            if (lastSpawnedBoat.GetCurrentIntegrity() <= 0)
+            DebugLog($"After initialization: Integrity {currentIntegrity}/{maxIntegrity}");
+            
+            if (currentIntegrity <= 0)
             {
-                DebugLog("🚨 PROBLEM: Boat still has 0 integrity after initialization!");
+                DebugLog("WARNING: Boat still has 0 integrity after initialization!");
                 
                 // Force set integrity for testing
                 lastSpawnedBoat.SetInitialIntegrity(100f, 100f);
-                DebugLog($"🔧 Manually set integrity: {lastSpawnedBoat.GetCurrentIntegrity()}/{lastSpawnedBoat.GetMaxIntegrity()}");
+                DebugLog($"Manually set integrity: {lastSpawnedBoat.GetCurrentIntegrity()}/{lastSpawnedBoat.GetMaxIntegrity()}");
             }
         }
     }

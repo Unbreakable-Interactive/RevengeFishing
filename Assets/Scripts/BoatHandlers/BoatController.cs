@@ -57,7 +57,7 @@ public class BoatController : MonoBehaviour
         
     [Header("Destruction System")]
     [SerializeField] private BoatPart[] boatParts;
-    [SerializeField] private float destructionDelay = 2f;
+    [SerializeField] private float destructionDelay = 2f; // DEPRECATED: Destruction is now immediate
     [SerializeField] private float resetDelay = 8f;
         
     [Header("Pool Management")]
@@ -366,7 +366,7 @@ public class BoatController : MonoBehaviour
                             
             case BoatState.Destroyed:
                 SetMovementActive(false);
-                StartCoroutine(HandleDestruction());
+                // HandleDestruction is already started in TriggerDestruction()
                 break;
         }
     }
@@ -566,15 +566,17 @@ public class BoatController : MonoBehaviour
         ChangeState(BoatState.Destroyed);
         OnBoatSunk?.Invoke(this);
         
+        // Immediately destroy boat parts for visual feedback
+        DestroyBoatParts();
+        
+        // Start the reset timer (but destruction is immediate)
         StartCoroutine(HandleDestruction());
     }
 
     private IEnumerator HandleDestruction()
     {
-        yield return new WaitForSeconds(destructionDelay);
-
-        DestroyBoatParts();
-
+        // No delay for destruction anymore - it happened immediately
+        // Only wait for reset
         yield return new WaitForSeconds(resetDelay);
 
         ResetBoat();
