@@ -23,6 +23,8 @@ public abstract class Entity : MonoBehaviour
     [SerializeField] protected float underwaterDrag = 0.5f;
     [SerializeField] protected float underwaterMaxSpeed = 5f;
 
+    
+    
     [Header("Entity Type")]
     [SerializeField] protected EntityType entityType = EntityType.Generic;
 

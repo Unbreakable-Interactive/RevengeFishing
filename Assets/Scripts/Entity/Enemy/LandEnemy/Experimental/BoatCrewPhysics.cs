@@ -24,7 +24,7 @@ public class BoatCrewPhysics : MonoBehaviour
     {
         rb = rigidbody;
         boatEnemy = enemy;
-        
+
         if (rb == null)
         {
             rb = GetComponent<Rigidbody2D>();
@@ -89,11 +89,6 @@ public class BoatCrewPhysics : MonoBehaviour
             if (rb != null)
             {
                 rb.bodyType = RigidbodyType2D.Kinematic;
-                rb.freezeRotation = true;
-                rb.velocity = Vector2.zero;
-                rb.angularVelocity = 0f;
-                rb.gravityScale = 0f;
-                rb.drag = 0f;
                 
                 GameLogger.Log($"[PHYSICS DEBUG] {gameObject.name} - ON BOAT PHYSICS: Kinematic mode");
             }
@@ -105,7 +100,6 @@ public class BoatCrewPhysics : MonoBehaviour
             if (rb != null)
             {
                 rb.bodyType = RigidbodyType2D.Dynamic;
-                rb.gravityScale = .1f;
                 
                 GameLogger.Log($"[PHYSICS DEBUG] {gameObject.name} - OFF BOAT PHYSICS: Dynamic only, Entity handles the rest");
             }
@@ -117,7 +111,7 @@ public class BoatCrewPhysics : MonoBehaviour
     public void LeaveBoat()
     {
         GameLogger.Log($"[PHYSICS DEBUG] {gameObject.name} - LeaveBoat called. IsParentedToBoat: {isParentedToBoat}");
-        
+    
         if (isParentedToBoat)
         {
             if (handlerRoot != null)
@@ -144,10 +138,10 @@ public class BoatCrewPhysics : MonoBehaviour
                 transform.SetParent(null);
                 GameLogger.Log($"[PHYSICS DEBUG] {gameObject.name} - Set to root");
             }
-            
+        
             SetBoatMode(false);
             isParentedToBoat = false;
-            
+        
             GameLogger.Log($"[PHYSICS DEBUG] {gameObject.name} - LeaveBoat complete. Position: {transform.position}");
         }
         else
@@ -155,6 +149,7 @@ public class BoatCrewPhysics : MonoBehaviour
             GameLogger.Log($"[PHYSICS DEBUG] {gameObject.name} - LeaveBoat called but not parented to boat");
         }
     }
+
     
     private void SetCollidersToSolid(bool keepSolid)
     {
