@@ -132,7 +132,7 @@ MonoBehaviour:
   description: Moby Dick slams his body on ships to destroy them.
   costType: 0
   resourceCost: 0
-  minimumPhase: 0
+  minimumPhase: 1
   requiresUnderwater: 0
   requiresAboveWater: 1
   enableDebugLogs: 0
@@ -467,8 +467,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   player: {fileID: 5706962072255297144}
   abilities: []
-  ability1Key: 323
-  ability2Key: 101
+  ability1Key: 324
+  ability2Key: 323
   ability3Key: 114
   enableDebugLogs: 0
 --- !u!114 &2299430188239530610
