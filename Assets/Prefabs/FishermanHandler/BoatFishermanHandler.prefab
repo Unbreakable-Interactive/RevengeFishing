@@ -250,7 +250,7 @@ Rigidbody2D:
   m_Mass: 1
   m_LinearDrag: 0
   m_AngularDrag: 0.05
-  m_GravityScale: 0
+  m_GravityScale: 1
   m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2
@@ -260,7 +260,7 @@ Rigidbody2D:
     m_Bits: 0
   m_Interpolate: 0
   m_SleepingMode: 1
-  m_CollisionDetection: 1
+  m_CollisionDetection: 0
   m_Constraints: 4
 --- !u!114 &4993868596264358822
 MonoBehaviour:
@@ -320,7 +320,7 @@ MonoBehaviour:
   airGravityScale: 2
   airDrag: 1.5
   airMaxSpeed: 3
-  underwaterGravityScale: -0.2
+  underwaterGravityScale: -0.1
   underwaterDrag: 1
   underwaterMaxSpeed: 5
   entityType: 2
@@ -389,6 +389,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2c4aee941e7cb46c58329d4bf102f59b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  underwaterGravityScale: 0
 --- !u!1 &3511881948687486434
 GameObject:
   m_ObjectHideFlags: 0

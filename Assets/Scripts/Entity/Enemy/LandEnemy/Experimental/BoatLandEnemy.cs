@@ -466,8 +466,10 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
         
         base.SetMovementMode(aboveWater);
         
-        if (crewPhysics != null)
+        if (crewPhysics != null && crewPhysics.IsParentedToBoat())
+        {
             crewPhysics.SetBoatMode(false);
+        }
         
         GameLogger.Log($"[BOAT DEBUG] {gameObject.name} - BASE SetMovementMode complete. RigidbodyType: {(rb != null ? rb.bodyType.ToString() : "NULL")}, Gravity: {(rb != null ? rb.gravityScale.ToString("F2") : "NULL")}");
     }
