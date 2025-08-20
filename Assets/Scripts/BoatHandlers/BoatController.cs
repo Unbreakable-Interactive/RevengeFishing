@@ -22,6 +22,7 @@ public class BoatController : MonoBehaviour
     [SerializeField] private BoatFloater boatFloater;
     [SerializeField] private BoatPlatform boatPlatform;
     [SerializeField] private SpriteRenderer boatSpriteRenderer;
+    [SerializeField] private FlashColorOnce flashColor;
     [SerializeField] private Transform crewContainer;
     public Transform CrewContainer => crewContainer;
         
@@ -485,6 +486,10 @@ public class BoatController : MonoBehaviour
         currentIntegrity -= damageAmount;
         GameLogger.Log($"[BOAT DAMAGE] {gameObject.name} - Took {damageAmount} damage. Integrity: {currentIntegrity}/{maxIntegrity}");
 
+        // boatSpriteRenderer.color = Color.red;
+        flashColor.Flash();
+        // StartCoroutine(TriggerDamage());
+        
         // Check if boat is destroyed
         if (currentIntegrity <= 0f)
         {
@@ -492,6 +497,12 @@ public class BoatController : MonoBehaviour
             TriggerDestruction();
         }
     }
+
+    // IEnumerator TriggerDamage()
+    // {
+    //     yield return new WaitForSeconds(0.5f);
+    //     boatSpriteRenderer.color = Color.white;
+    // }
 
     public void TakeDamageFromPlayer(float damageAmount, string damageSource = "Unknown")
     {
