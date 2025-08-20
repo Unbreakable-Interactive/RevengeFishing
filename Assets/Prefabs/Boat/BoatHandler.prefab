@@ -364,6 +364,7 @@ MonoBehaviour:
   boatFloater: {fileID: 3385205366214559734}
   boatPlatform: {fileID: 8531477562920402828}
   boatSpriteRenderer: {fileID: 4981744675166538355}
+  flashColor: {fileID: 4977375209971515018}
   crewContainer: {fileID: 7460143873047510890}
   autoMoveSpeed: 1
   drivenSpeed: 2.5
@@ -498,6 +499,7 @@ GameObject:
   - component: {fileID: 5221161365901039543}
   - component: {fileID: 4981744675166538355}
   - component: {fileID: 1945603896363213425}
+  - component: {fileID: 4977375209971515018}
   m_Layer: 6
   m_Name: Boat
   m_TagString: Untagged
@@ -617,6 +619,21 @@ BoxCollider2D:
   serializedVersion: 2
   m_Size: {x: 3.228, y: 1.128}
   m_EdgeRadius: 0
+--- !u!114 &4977375209971515018
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3197334178101885014}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5df5ed4fdf8e64c7086883d232433d78, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  targetRenderer: {fileID: 4981744675166538355}
+  flashColor: {r: 1, g: 0, b: 0, a: 1}
+  seconds: 0.2
 --- !u!1 &3595285260455224602
 GameObject:
   m_ObjectHideFlags: 0
