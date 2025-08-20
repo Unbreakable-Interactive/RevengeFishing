@@ -235,8 +235,21 @@ public class Backflip : AbilityBase
         {
             if (CheckForApex())
             {
-                DebugLog("Apex reached! Starting backflip damage phase.");
-                StartBackflip();
+                // Check mutual exclusivity before starting backflip
+                if (abilitySystem.IsLastActivatedAirborneAbility(this))
+                {
+                    DebugLog("Apex reached! Backflip is the active ability. Starting backflip damage phase.");
+                    
+                    // Cancel other airborne abilities
+                    abilitySystem.CancelOtherAirborneAbilities(this);
+                    
+                    StartBackflip();
+                }
+                else
+                {
+                    DebugLog("Apex reached but another ability was activated more recently. Cancelling Backflip.");
+                    CancelBackflip();
+                }
             }
             
             // Safety: Cancel if player returns to water while waiting
@@ -368,7 +381,7 @@ public class Backflip : AbilityBase
         }
     }
     
-    private void CancelBackflip()
+    public void CancelBackflip()
     {
         DebugLog("Cancelling backflip");
         

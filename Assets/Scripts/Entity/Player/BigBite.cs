@@ -209,8 +209,21 @@ public class BigBite : AbilityBase
         {
             if (CheckForApex())
             {
-                DebugLog("Apex reached! Starting Big Bite eating phase.");
-                StartBigBite();
+                // Check mutual exclusivity before starting big bite
+                if (abilitySystem.IsLastActivatedAirborneAbility(this))
+                {
+                    DebugLog("Apex reached! Big Bite is the active ability. Starting Big Bite eating phase.");
+                    
+                    // Cancel other airborne abilities
+                    abilitySystem.CancelOtherAirborneAbilities(this);
+                    
+                    StartBigBite();
+                }
+                else
+                {
+                    DebugLog("Apex reached but another ability was activated more recently. Cancelling Big Bite.");
+                    CancelBigBite();
+                }
             }
             
             // Safety: Cancel if player returns to water while waiting
@@ -249,7 +262,7 @@ public class BigBite : AbilityBase
         isMouthOpen = false;
     }
     
-    private void CancelBigBite()
+    public void CancelBigBite()
     {
         DebugLog("Cancelling Big Bite");
         

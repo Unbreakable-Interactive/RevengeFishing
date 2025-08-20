@@ -481,6 +481,7 @@ MonoBehaviour:
   ability2Key: 323
   ability3Key: 114
   enableDebugLogs: 0
+  enableMutualExclusivity: 1
 --- !u!114 &2299430188239530610
 MonoBehaviour:
   m_ObjectHideFlags: 0

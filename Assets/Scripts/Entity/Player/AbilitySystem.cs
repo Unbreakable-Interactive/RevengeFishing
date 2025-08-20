@@ -17,7 +17,14 @@ public class AbilitySystem : MonoBehaviour
     [Header("Debug")]
     [SerializeField] private bool enableDebugLogs = false;
     
+    [Header("Mutual Exclusivity System")]
+    [SerializeField] private bool enableMutualExclusivity = true; // Toggle for mutual exclusivity
+    
     private Dictionary<KeyCode, AbilityBase> keyToAbilityMap = new Dictionary<KeyCode, AbilityBase>();
+    
+    // Mutual exclusivity tracking
+    private AbilityBase lastActivatedAirborneAbility = null;
+    private float lastAirborneActivationTime = 0f;
 
     void Start()
     {
@@ -27,8 +34,9 @@ public class AbilitySystem : MonoBehaviour
     void Update()
     {
         HandleAbilityInput();
+        HandleMutualExclusivityReset();
     }
-    
+        
     private void InitializeAbilitySystem()
     {
         // Get Player component if not assigned
@@ -104,6 +112,15 @@ public class AbilitySystem : MonoBehaviour
         if (ability.CanActivate())
         {
             ability.Activate();
+            
+            // Track airborne abilities for mutual exclusivity
+            if (enableMutualExclusivity && player.IsAboveWater)
+            {
+                lastActivatedAirborneAbility = ability;
+                lastAirborneActivationTime = Time.time;
+                DebugLog($"Tracked airborne ability activation: {ability.GetType().Name} at {lastAirborneActivationTime}");
+            }
+            
             DebugLog($"Activated ability: {ability.GetType().Name}");
             return true;
         }
@@ -156,6 +173,77 @@ public class AbilitySystem : MonoBehaviour
         {
             abilities.Remove(ability);
             DebugLog($"Unregistered ability: {ability.GetType().Name}");
+        }
+    }
+    
+    #region Mutual Exclusivity System
+    
+    /// <summary>
+    /// Checks if this ability is the most recently activated airborne ability
+    /// </summary>
+    public bool IsLastActivatedAirborneAbility(AbilityBase ability)
+    {
+        if (!enableMutualExclusivity) return true; // No mutual exclusivity
+        
+        return lastActivatedAirborneAbility == ability;
+    }
+    
+    /// <summary>
+    /// Called when abilities reach apex to determine which one should continue
+    /// </summary>
+    public AbilityBase GetActiveAirborneAbility()
+    {
+        return lastActivatedAirborneAbility;
+    }
+    
+    /// <summary>
+    /// Cancels all airborne abilities except the specified one
+    /// </summary>
+    public void CancelOtherAirborneAbilities(AbilityBase activeAbility)
+    {
+        if (!enableMutualExclusivity) return;
+        
+        foreach (var ability in abilities)
+        {
+            if (ability != activeAbility)
+            {
+                // Check if ability has a cancel method (we'll add this to abilities)
+                if (ability is Backflip backflip && backflip.IsWaitingForApex)
+                {
+                    DebugLog($"Cancelling Backflip due to mutual exclusivity with {activeAbility.GetType().Name}");
+                    backflip.CancelBackflip();
+                }
+                else if (ability is BigBite bigBite && bigBite.IsWaitingForApex)
+                {
+                    DebugLog($"Cancelling Big Bite due to mutual exclusivity with {activeAbility.GetType().Name}");
+                    bigBite.CancelBigBite();
+                }
+            }
+        }
+    }
+    
+    /// <summary>
+    /// Resets mutual exclusivity tracking when player returns to water
+    /// </summary>
+    public void ResetMutualExclusivity()
+    {
+        if (lastActivatedAirborneAbility != null)
+        {
+            DebugLog($"Resetting mutual exclusivity - was tracking {lastActivatedAirborneAbility.GetType().Name}");
+        }
+        
+        lastActivatedAirborneAbility = null;
+        lastAirborneActivationTime = 0f;
+    }
+    
+    #endregion
+        
+    private void HandleMutualExclusivityReset()
+    {
+        // Reset mutual exclusivity when player returns to water
+        if (enableMutualExclusivity && lastActivatedAirborneAbility != null && !player.IsAboveWater)
+        {
+            ResetMutualExclusivity();
         }
     }
     
