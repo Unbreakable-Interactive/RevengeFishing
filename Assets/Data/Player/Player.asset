@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   startingPowerLevel: 100
   phaseThresholds:
-    juvenile: 500
+    juvenile: 120
     adult: 2500
     beast: 12500
     monster: 62500

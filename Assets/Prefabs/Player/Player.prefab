@@ -84,6 +84,64 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!1 &5646095624845970053
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3296098354048414518}
+  - component: {fileID: 3113595378992839013}
+  m_Layer: 0
+  m_Name: Abilities
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3296098354048414518
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5646095624845970053}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0.021520017, y: 0.07663765, z: 0.19213162}
+  m_LocalScale: {x: 0.4, y: 0.4, z: 0.4}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4283144278362533936}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &3113595378992839013
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5646095624845970053}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fd25e1b02caf03146a229dd64909a079, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  abilityName: Back-Flip
+  description: Moby Dick slams his body on ships to destroy them.
+  costType: 0
+  resourceCost: 0
+  minimumPhase: 1
+  requiresUnderwater: 0
+  requiresAboveWater: 1
+  enableDebugLogs: 0
+  rotationSpeed: 720
+  baseDamagePercent: 5
+  velocityThreshold: 0.1
+  enableApexDetection: 1
+  showChargeEffect: 1
+  chargeColor: {r: 1, g: 0, b: 0, a: 1}
 --- !u!1 &5736262942231147453
 GameObject:
   m_ObjectHideFlags: 0
@@ -215,6 +273,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5719622611857122817}
   - component: {fileID: 5938476875424283519}
+  - component: {fileID: 413149389492801470}
   m_Layer: 0
   m_Name: Collider
   m_TagString: PlayerCollider
@@ -272,6 +331,21 @@ CircleCollider2D:
   m_Offset: {x: -0.1, y: 0}
   serializedVersion: 2
   m_Radius: 0.2
+--- !u!114 &413149389492801470
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6436991216858690687}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2d8947b52e48a574cb3c2539751b8a43, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  player: {fileID: 5706962072255297144}
+  abilitySystem: {fileID: 1609196705297687871}
+  enableDebugLogs: 0
 --- !u!1 &6728867108004361845
 GameObject:
   m_ObjectHideFlags: 0
@@ -282,6 +356,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4283144278362533936}
   - component: {fileID: 5706962072255297144}
+  - component: {fileID: 1609196705297687871}
   - component: {fileID: 2299430188239530610}
   - component: {fileID: 6169990416566653775}
   - component: {fileID: 5374213318811793880}
@@ -311,6 +386,7 @@ Transform:
   - {fileID: 5719622611857122817}
   - {fileID: 3204486526590883613}
   - {fileID: 5634029587548624354}
+  - {fileID: 3296098354048414518}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &5706962072255297144
@@ -376,6 +452,25 @@ MonoBehaviour:
   animator: {fileID: -2646521994517316191}
   enableDebugLogs: 0
   colliderToShare: {fileID: 5938476875424283519}
+  abilitySystem: {fileID: 0}
+--- !u!114 &1609196705297687871
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6728867108004361845}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 00924bea6eb3b2749953d27e95a8aa13, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  player: {fileID: 5706962072255297144}
+  abilities: []
+  ability1Key: 324
+  ability2Key: 323
+  ability3Key: 114
+  enableDebugLogs: 0
 --- !u!114 &2299430188239530610
 MonoBehaviour:
   m_ObjectHideFlags: 0

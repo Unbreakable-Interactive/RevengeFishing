@@ -12,6 +12,45 @@ public class WaterCheck : MonoBehaviour
     private void Start()
     {
         GetComponent<Collider2D>().isTrigger = true;
+        
+        // Auto-assign references if not set
+        if (entityMovement == null)
+        {
+            entityMovement = FindObjectOfType<Player>();
+            if (entityMovement != null)
+            {
+                GameLogger.LogVerbose("[WATER WALL] Auto-assigned Player as entityMovement");
+            }
+        }
+        
+        if (targetCollider == null && entityMovement != null)
+        {
+            targetCollider = entityMovement.GetComponent<Collider2D>();
+            if (targetCollider != null)
+            {
+                GameLogger.LogVerbose("[WATER WALL] Auto-assigned Player collider as targetCollider");
+            }
+        }
+    }
+
+    private void Update()
+    {
+        // Continuously update wall state when player is in water
+        if (enableHookBasedTriggerControl && 
+            entityMovement != null && 
+            entityMovement.GetComponent<Player>() != null && 
+            !entityMovement.IsAboveWater)
+        {
+            bool hasAnyBitingHooks = HasAnyActiveBitingHooks();
+            bool shouldBeWall = hasAnyBitingHooks;
+            bool currentlyWall = !GetComponent<Collider2D>().isTrigger;
+            
+            if (shouldBeWall != currentlyWall)
+            {
+                GetComponent<Collider2D>().isTrigger = !shouldBeWall;
+                GameLogger.LogVerbose($"[WATER WALL] Wall state changed - Hooks: {hasAnyBitingHooks}, Wall Active: {shouldBeWall}");
+            }
+        }
     }
 
     private void OnTriggerExit2D(Collider2D other)
@@ -24,6 +63,18 @@ public class WaterCheck : MonoBehaviour
         {
             entityMovement.SetMovementMode(aboveWater);
             GameLogger.LogVerbose($"{other.name} {(aboveWater ? "exited" : "entered")} water!");
+        }
+
+        // Handle wall logic when player tries to exit water
+        if (enableHookBasedTriggerControl && 
+            entityMovement != null && 
+            entityMovement.GetComponent<Player>() != null && 
+            aboveWater) // Player trying to exit water
+        {
+            bool hasAnyBitingHooks = HasAnyActiveBitingHooks();
+            GetComponent<Collider2D>().isTrigger = !hasAnyBitingHooks;
+            
+            GameLogger.LogVerbose($"[WATER WALL] Player trying to exit water - Hooks: {hasAnyBitingHooks}, Wall Active: {!GetComponent<Collider2D>().isTrigger}");
         }
     }
 
@@ -38,9 +89,32 @@ public class WaterCheck : MonoBehaviour
             entityMovement.GetComponent<Player>() != null && 
             !entityMovement.IsAboveWater)
         {
-            bool hasHooksFromThisEnemy = HasActiveHooksFromThisEnemy();
-            GetComponent<Collider2D>().isTrigger = !hasHooksFromThisEnemy;
+            bool hasAnyBitingHooks = HasAnyActiveBitingHooks();
+            GetComponent<Collider2D>().isTrigger = !hasAnyBitingHooks;
+            
+            GameLogger.LogVerbose($"[WATER WALL] Player in water - Hooks: {hasAnyBitingHooks}, Wall Active: {!GetComponent<Collider2D>().isTrigger}");
         }
+    }
+
+    private bool HasAnyActiveBitingHooks()
+    {
+        Player player = Player.Instance;
+        if (player == null)
+        {
+            GameLogger.LogVerbose("[WATER WALL] No Player.Instance found");
+            return false;
+        }
+        
+        if (player.activeBitingHooks == null)
+        {
+            GameLogger.LogVerbose("[WATER WALL] Player.activeBitingHooks is null");
+            return false;
+        }
+        
+        int hookCount = player.activeBitingHooks.Count;
+        GameLogger.LogVerbose($"[WATER WALL] Player has {hookCount} active biting hooks");
+        
+        return hookCount > 0;
     }
 
     private bool HasActiveHooksFromThisEnemy()
@@ -122,5 +196,12 @@ public class WaterCheck : MonoBehaviour
     public void SetHookBasedTriggerControl(bool enabled)
     {
         enableHookBasedTriggerControl = enabled;
+    }
+
+    // Debug method to manually test wall functionality
+    public void ForceWallState(bool isWall)
+    {
+        GetComponent<Collider2D>().isTrigger = !isWall;
+        GameLogger.LogVerbose($"[WATER WALL] Manually set wall state to: {isWall}");
     }
 }
