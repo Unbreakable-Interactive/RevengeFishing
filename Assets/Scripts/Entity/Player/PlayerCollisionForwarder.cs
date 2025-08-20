@@ -60,6 +60,22 @@ public class PlayerCollisionForwarder : MonoBehaviour
                 backflip.HandleBoatCollision(boat);
             }
         }
+        
+        // Get the Big Bite ability specifically
+        BigBite bigBite = abilitySystem.GetAbility<BigBite>();
+        
+        if (bigBite != null && bigBite.IsCharging && bigBite.IsMouthOpen)
+        {
+            // Check if we hit an enemy
+            Enemy enemy = other.GetComponentInParent<Enemy>();
+            if (enemy != null)
+            {
+                DebugLog($"Forwarding enemy collision to Big Bite ability: {enemy.name}");
+                
+                // Call the eating method
+                bigBite.HandleEnemyCollision(enemy);
+            }
+        }
     }
     
     void DebugLog(string message)

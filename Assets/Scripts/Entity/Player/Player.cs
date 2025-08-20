@@ -11,6 +11,8 @@ public class Player : Entity
     private static readonly int IsBiting = Animator.StringToHash("isBiting");
     private static readonly int IsBackflipping = Animator.StringToHash("isBackflipping");
     private static readonly int BackflipPower = Animator.StringToHash("backflipPower");
+    private static readonly int IsBigBiting = Animator.StringToHash("isBigBiting");
+    private static readonly int BigBitePower = Animator.StringToHash("bigBitePower");
 
     public enum Phase
     {
@@ -608,10 +610,28 @@ public class Player : Entity
 
     protected void SpecialAbilityTwo() //this will be the Big Bite ability
     {
-        // Implementation for future Big Bite ability
+        // Implementation for Big Bite ability
         if (abilitySystem != null)
         {
-            // abilitySystem.TryActivateAbility<BigBite>();
+            BigBite bigBite = abilitySystem.GetAbility<BigBite>();
+            if (bigBite != null)
+            {
+                bigBite.TriggerBigBite();
+            }
+            else
+            {
+                if (enableDebugLogs)
+                {
+                    GameLogger.LogWarning("[Player] No Big Bite ability found in ability system!");
+                }
+            }
+        }
+        else
+        {
+            if (enableDebugLogs)
+            {
+                GameLogger.LogWarning("[Player] No ability system found!");
+            }
         }
     }
 
@@ -989,6 +1009,64 @@ public class Player : Entity
     public int GetBackflipPower()
     {
         return animator != null ? animator.GetInteger(BackflipPower) : 0;
+    }
+    #endregion
+    
+    #region Big Bite Animation Control
+    // Methods for Big Bite ability to control animation parameters
+    public void SetBigBiteAnimation(bool isBigBiting, int bigBitePower = 0)
+    {
+        if (animator != null)
+        {
+            animator.SetBool(IsBigBiting, isBigBiting);
+            animator.SetInteger(BigBitePower, bigBitePower);
+            
+            if (enableDebugLogs)
+            {
+                GameLogger.LogVerbose($"[Player Animation] Big Bite animation updated: isBigBiting={isBigBiting}, power={bigBitePower}");
+            }
+        }
+        else
+        {
+            GameLogger.LogWarning("[Player Animation] Animator is null! Cannot set big bite animation.");
+        }
+    }
+    
+    public void SetBigBitingState(bool isBigBiting)
+    {
+        if (animator != null)
+        {
+            animator.SetBool(IsBigBiting, isBigBiting);
+            
+            if (enableDebugLogs)
+            {
+                GameLogger.LogVerbose($"[Player Animation] Big Bite state updated: isBigBiting={isBigBiting}");
+            }
+        }
+    }
+    
+    public void SetBigBitePower(int bigBitePower)
+    {
+        if (animator != null)
+        {
+            animator.SetInteger(BigBitePower, bigBitePower);
+            
+            if (enableDebugLogs)
+            {
+                GameLogger.LogVerbose($"[Player Animation] Big Bite power updated: power={bigBitePower}");
+            }
+        }
+    }
+    
+    // Getter methods for debugging
+    public bool GetBigBitingState()
+    {
+        return animator != null ? animator.GetBool(IsBigBiting) : false;
+    }
+    
+    public int GetBigBitePower()
+    {
+        return animator != null ? animator.GetInteger(BigBitePower) : 0;
     }
     #endregion
 
