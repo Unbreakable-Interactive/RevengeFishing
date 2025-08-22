@@ -22,6 +22,7 @@ public class BoatController : MonoBehaviour
     [SerializeField] private BoatFloater boatFloater;
     [SerializeField] private BoatPlatform boatPlatform;
     [SerializeField] private SpriteRenderer boatSpriteRenderer;
+    [SerializeField] private FlashColorOnce flashColor;
     [SerializeField] private Transform crewContainer;
     public Transform CrewContainer => crewContainer;
         
@@ -57,7 +58,7 @@ public class BoatController : MonoBehaviour
         
     [Header("Destruction System")]
     [SerializeField] private BoatPart[] boatParts;
-    [SerializeField] private float destructionDelay = 2f;
+    [SerializeField] private float destructionDelay = 2f; // DEPRECATED: Destruction is now immediate
     [SerializeField] private float resetDelay = 8f;
         
     [Header("Pool Management")]
@@ -123,6 +124,14 @@ public class BoatController : MonoBehaviour
         SetupBoatPhysics();
         SetupBoatComponents();
         ConfigureAllBoatIDs();
+        
+        // Set default integrity in case crew initialization fails
+        if (currentIntegrity <= 0f)
+        {
+            currentIntegrity = maxIntegrity;
+            GameLogger.LogVerbose($"[BOAT CONTROLLER] {gameObject.name} - Set default integrity: {currentIntegrity}/{maxIntegrity}");
+        }
+        
         InitializeCrewManager();
         SetRandomInitialDirection();
         InitializeState(BoatState.Idle);
@@ -358,7 +367,7 @@ public class BoatController : MonoBehaviour
                             
             case BoatState.Destroyed:
                 SetMovementActive(false);
-                StartCoroutine(HandleDestruction());
+                // HandleDestruction is already started in TriggerDestruction()
                 break;
         }
     }
@@ -466,6 +475,42 @@ public class BoatController : MonoBehaviour
     {
         maxIntegrity = maxIntegrityValue;
         currentIntegrity = currentIntegrityValue;
+        
+        GameLogger.LogVerbose($"[BOAT CONTROLLER] {gameObject.name} - Integrity initialized: {currentIntegrity}/{maxIntegrity}");
+    }
+
+    public void TakeDamage(float damageAmount)
+    {
+        if (isDestroyed) return;
+
+        currentIntegrity -= damageAmount;
+        GameLogger.Log($"[BOAT DAMAGE] {gameObject.name} - Took {damageAmount} damage. Integrity: {currentIntegrity}/{maxIntegrity}");
+
+        // boatSpriteRenderer.color = Color.red;
+        flashColor.Flash();
+        // StartCoroutine(TriggerDamage());
+        
+        // Check if boat is destroyed
+        if (currentIntegrity <= 0f)
+        {
+            currentIntegrity = 0f;
+            TriggerDestruction();
+        }
+    }
+
+    // IEnumerator TriggerDamage()
+    // {
+    //     yield return new WaitForSeconds(0.5f);
+    //     boatSpriteRenderer.color = Color.white;
+    // }
+
+    public void TakeDamageFromPlayer(float damageAmount, string damageSource = "Unknown")
+    {
+        if (isDestroyed) return;
+
+        float integritytBefore = currentIntegrity;
+        TakeDamage(damageAmount);
+        GameLogger.Log($"[BOAT DAMAGE] {gameObject.name} - Player dealt {damageAmount} damage with {damageSource}. Integrity: {integritytBefore} → {currentIntegrity}");
     }
 
     public void OnCrewInitializationComplete()
@@ -484,7 +529,8 @@ public class BoatController : MonoBehaviour
     {
         if (!isInitialized) return;
 
-        currentIntegrity = 0f;
+        // Reset crew-based integrity calculation
+        float crewIntegrity = 0f;
         tempEnemyList.Clear();
 
         if (boatPlatform != null)
@@ -495,14 +541,29 @@ public class BoatController : MonoBehaviour
             {
                 if (enemy != null && enemy.State == Enemy.EnemyState.Alive)
                 {
-                    currentIntegrity += enemy.PowerLevel;
+                    crewIntegrity += enemy.PowerLevel;
                 }
             }
         }
 
         tempEnemyList.Clear();
 
-        if (currentIntegrity <= 0f && !isDestroyed)
+        // Set the boat's integrity to crew-based integrity if not damaged
+        if (currentIntegrity <= 0f)
+        {
+            currentIntegrity = crewIntegrity;
+            GameLogger.LogVerbose($"[BOAT INTEGRITY] {gameObject.name} - Integrity set to crew power: {currentIntegrity}");
+        }
+        
+        // If we have no crew and haven't set initial integrity, use max integrity
+        if (currentIntegrity <= 0f && crewIntegrity <= 0f)
+        {
+            currentIntegrity = maxIntegrity;
+            GameLogger.LogVerbose($"[BOAT INTEGRITY] {gameObject.name} - No crew found, using max integrity: {currentIntegrity}");
+        }
+
+        // Trigger destruction only if boat was damaged and now has no crew
+        if (crewIntegrity <= 0f && currentIntegrity <= 0f && !isDestroyed)
         {
             TriggerDestruction();
         }
@@ -516,15 +577,20 @@ public class BoatController : MonoBehaviour
         ChangeState(BoatState.Destroyed);
         OnBoatSunk?.Invoke(this);
         
+        // Defeat all crew members as if they were caught by fishing rod
+        DefeatAllCrewMembers();
+        
+        // Immediately destroy boat parts for visual feedback
+        DestroyBoatParts();
+        
+        // Start the reset timer (but destruction is immediate)
         StartCoroutine(HandleDestruction());
     }
 
     private IEnumerator HandleDestruction()
     {
-        yield return new WaitForSeconds(destructionDelay);
-
-        DestroyBoatParts();
-
+        // No delay for destruction anymore - it happened immediately
+        // Only wait for reset
         yield return new WaitForSeconds(resetDelay);
 
         ResetBoat();
@@ -547,6 +613,32 @@ public class BoatController : MonoBehaviour
         }
     }
 
+    public float GetCurrentIntegrity()
+    {
+        return currentIntegrity;
+    }
+    
+    public float GetMaxIntegrity()
+    {
+        return maxIntegrity;
+    }
+
+    private void DefeatAllCrewMembers()
+    {
+        if (crewManager == null) return;
+
+        List<BoatLandEnemy> allCrew = crewManager.GetAllCrewMembers();
+        
+        foreach (var crewMember in allCrew)
+        {
+            if (crewMember != null && crewMember.gameObject != null)
+            {
+                // Trigger the same defeat state as if caught by fishing rod
+                crewMember.DefeatFromBoatDestruction();
+            }
+        }
+    }
+
     #endregion
 
     #region Reset System
@@ -554,7 +646,7 @@ public class BoatController : MonoBehaviour
     public void ResetBoat()
     {
         isDestroyed = false;
-        currentIntegrity = 0f;
+        currentIntegrity = maxIntegrity; // Start with full integrity
 
         if (crewManager != null)
         {
@@ -577,6 +669,8 @@ public class BoatController : MonoBehaviour
 
         SetRandomInitialDirection();
         ChangeState(BoatState.Idle);
+        
+        GameLogger.LogVerbose($"[BOAT RESET] {gameObject.name} - Reset with integrity: {currentIntegrity}/{maxIntegrity}");
 
         if (useObjectPool)
         {
@@ -603,16 +697,6 @@ public class BoatController : MonoBehaviour
     public BoatState GetCurrentState()
     {
         return currentState;
-    }
-
-    public float GetCurrentIntegrity()
-    {
-        return currentIntegrity;
-    }
-
-    public float GetMaxIntegrity()
-    {
-        return maxIntegrity;
     }
 
     public bool IsDestroyed()

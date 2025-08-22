@@ -9,6 +9,10 @@ public class Player : Entity
     private static readonly int IsInfant = Animator.StringToHash("isInfant");
     private static readonly int IsJuvie = Animator.StringToHash("isJuvie");
     private static readonly int IsBiting = Animator.StringToHash("isBiting");
+    private static readonly int IsBackflipping = Animator.StringToHash("isBackflipping");
+    private static readonly int BackflipPower = Animator.StringToHash("backflipPower");
+    private static readonly int IsBigBiting = Animator.StringToHash("isBigBiting");
+    private static readonly int BigBitePower = Animator.StringToHash("bigBitePower");
 
     public enum Phase
     {
@@ -52,7 +56,7 @@ public class Player : Entity
     public MouthMagnet Magnet => magnet;
 
     [SerializeField] protected Status status;
-    [SerializeField] protected Phase currentPhase;
+    [SerializeField] public Phase currentPhase;
     [SerializeField] protected int nextPowerLevel; //minimum power level to reach next phase
 
     [Header("Rotation Settings")]
@@ -151,7 +155,7 @@ public class Player : Entity
             }
         }
 
-        // animator = GetComponent<Animator>();
+        if (animator == null) animator = GetComponent<Animator>();
 
         currentPhase = Phase.Infant; // Start in the Infant phase
         //change the next line once an actual fix is found for player threshold not assigning properly
@@ -173,13 +177,16 @@ public class Player : Entity
         base.Update(); // Call base Update to handle movement mode
         
         //playerSpriteRenderer.flipY = (transform.rotation.z > 0.7f || transform.rotation.z < -0.7f);
-        if (transform.rotation.z > 0.7f || transform.rotation.z < -0.7f)
+        if (allowSpriteFlipping)
         {
-            transform.localScale = new Vector3(transform.localScale.x, -Mathf.Abs(transform.localScale.y), transform.localScale.z); // Flip sprite vertically
-        }
-        else
-        {
-            transform.localScale = new Vector3(transform.localScale.x, Mathf.Abs(transform.localScale.y), transform.localScale.z); // Flip sprite vertically
+            if (transform.rotation.z > 0.7f || transform.rotation.z < -0.7f)
+            {
+                transform.localScale = new Vector3(transform.localScale.x, -Mathf.Abs(transform.localScale.y), transform.localScale.z); // Flip sprite vertically
+            }
+            else
+            {
+                transform.localScale = new Vector3(transform.localScale.x, Mathf.Abs(transform.localScale.y), transform.localScale.z); // Unflip sprite vertically
+            }
         }
 
         if (activeBitingHooks != null && activeBitingHooks.Count > 0) CheckMaxHookDistanceState();
@@ -581,14 +588,51 @@ public class Player : Entity
 
     #region Special Abilities
 
+    [Header("Ability System")]
+    [SerializeField] private AbilitySystem abilitySystem;
+
     protected void SpecialAbilityOne() //this will be the Backflip ability
     {
-
+        if (abilitySystem != null)
+        {
+            abilitySystem.TryActivateAbility<Backflip>();
+        }
+        else
+        {
+            // Fallback: try to find Backflip component directly
+            Backflip backflip = GetComponent<Backflip>();
+            if (backflip != null)
+            {
+                backflip.TriggerBackflip();
+            }
+        }
     }
 
     protected void SpecialAbilityTwo() //this will be the Big Bite ability
     {
-
+        // Implementation for Big Bite ability
+        if (abilitySystem != null)
+        {
+            BigBite bigBite = abilitySystem.GetAbility<BigBite>();
+            if (bigBite != null)
+            {
+                bigBite.TriggerBigBite();
+            }
+            else
+            {
+                if (enableDebugLogs)
+                {
+                    GameLogger.LogWarning("[Player] No Big Bite ability found in ability system!");
+                }
+            }
+        }
+        else
+        {
+            if (enableDebugLogs)
+            {
+                GameLogger.LogWarning("[Player] No ability system found!");
+            }
+        }
     }
 
     #endregion
@@ -845,5 +889,185 @@ public class Player : Entity
     {
         if (enableDebugLogs) GameLogger.Log(message);
     }
+    
+    // Public method to control auto-rotation (for abilities like Backflip)
+    public void SetAutoRotateInAir(bool enabled)
+    {
+        autoRotateInAir = enabled;
+    }
+    
+    public bool GetAutoRotateInAir()
+    {
+        return autoRotateInAir;
+    }
+    
+    // Public method to control sprite flipping (for abilities like Backflip)
+    private bool allowSpriteFlipping = true;
+    
+    public void SetSpriteFlipping(bool enabled)
+    {
+        allowSpriteFlipping = enabled;
+    }
+    
+    public bool GetSpriteFlipping()
+    {
+        return allowSpriteFlipping;
+    }
+    
+    // Get player facing direction based on movement direction
+    public bool IsFacingLeft()
+    {
+        // Primary method: Check velocity direction
+        if (rb != null && rb.velocity.magnitude > 0.1f)
+        {
+            bool facingLeft = rb.velocity.x < 0;
+            GameLogger.Log($"[Player] IsFacingLeft: Using velocity direction (velocity.x = {rb.velocity.x:F2}) = {facingLeft}");
+            return facingLeft;
+        }
+        
+        // Secondary method: Check target rotation (where player is turning to face)
+        if (targetRotation != null)
+        {
+            Vector3 forward = targetRotation * Vector3.right; // Player's forward direction
+            bool facingLeft = forward.x < 0;
+            GameLogger.Log($"[Player] IsFacingLeft: Using target rotation direction (forward.x = {forward.x:F2}) = {facingLeft}");
+            return facingLeft;
+        }
+        
+        // Fallback method: Check sprite renderer if available
+        if (playerSpriteRenderer != null)
+        {
+            bool facingLeft = playerSpriteRenderer.flipX;
+            GameLogger.Log($"[Player] IsFacingLeft: Using SpriteRenderer.flipX = {facingLeft}");
+            return facingLeft;
+        }
+        
+        // Final fallback: assume facing right
+        GameLogger.Log($"[Player] IsFacingLeft: All methods failed, defaulting to facing RIGHT");
+        return false;
+    }
+    
+    public bool IsFacingRight()
+    {
+        return !IsFacingLeft();
+    }
+
     #endregion
+
+    #region Backflip Animation Control
+    // Methods for Backflip ability to control animation parameters
+    public void SetBackflipAnimation(bool isBackflipping, int backflipPower = 0)
+    {
+        if (animator != null)
+        {
+            animator.SetBool(IsBackflipping, isBackflipping);
+            animator.SetInteger(BackflipPower, backflipPower);
+
+            if (enableDebugLogs)
+            {
+                GameLogger.LogVerbose($"[Player Animation] Backflip animation updated: isBackflipping={isBackflipping}, power={backflipPower}");
+            }
+        }
+        else
+        {
+            GameLogger.LogWarning("[Player Animation] Animator is null! Cannot set backflip animation.");
+        }
+    }
+
+    public void SetBackflippingState(bool isBackflipping)
+    {
+        if (animator != null)
+        {
+            animator.SetBool(IsBackflipping, isBackflipping);
+
+            if (enableDebugLogs)
+            {
+                GameLogger.LogVerbose($"[Player Animation] Backflip state updated: isBackflipping={isBackflipping}");
+            }
+        }
+    }
+
+    public void SetBackflipPower(int backflipPower)
+    {
+        if (animator != null)
+        {
+            animator.SetInteger(BackflipPower, backflipPower);
+
+            if (enableDebugLogs)
+            {
+                GameLogger.LogVerbose($"[Player Animation] Backflip power updated: power={backflipPower}");
+            }
+        }
+    }
+
+    // Getter methods for debugging
+    public bool GetBackflippingState()
+    {
+        return animator != null ? animator.GetBool(IsBackflipping) : false;
+    }
+
+    public int GetBackflipPower()
+    {
+        return animator != null ? animator.GetInteger(BackflipPower) : 0;
+    }
+    #endregion
+    
+    #region Big Bite Animation Control
+    // Methods for Big Bite ability to control animation parameters
+    public void SetBigBiteAnimation(bool isBigBiting, int bigBitePower = 0)
+    {
+        if (animator != null)
+        {
+            animator.SetBool(IsBigBiting, isBigBiting);
+            animator.SetInteger(BigBitePower, bigBitePower);
+            
+            if (enableDebugLogs)
+            {
+                GameLogger.LogVerbose($"[Player Animation] Big Bite animation updated: isBigBiting={isBigBiting}, power={bigBitePower}");
+            }
+        }
+        else
+        {
+            GameLogger.LogWarning("[Player Animation] Animator is null! Cannot set big bite animation.");
+        }
+    }
+    
+    public void SetBigBitingState(bool isBigBiting)
+    {
+        if (animator != null)
+        {
+            animator.SetBool(IsBigBiting, isBigBiting);
+            
+            if (enableDebugLogs)
+            {
+                GameLogger.LogVerbose($"[Player Animation] Big Bite state updated: isBigBiting={isBigBiting}");
+            }
+        }
+    }
+    
+    public void SetBigBitePower(int bigBitePower)
+    {
+        if (animator != null)
+        {
+            animator.SetInteger(BigBitePower, bigBitePower);
+            
+            if (enableDebugLogs)
+            {
+                GameLogger.LogVerbose($"[Player Animation] Big Bite power updated: power={bigBitePower}");
+            }
+        }
+    }
+    
+    // Getter methods for debugging
+    public bool GetBigBitingState()
+    {
+        return animator != null ? animator.GetBool(IsBigBiting) : false;
+    }
+    
+    public int GetBigBitePower()
+    {
+        return animator != null ? animator.GetInteger(BigBitePower) : 0;
+    }
+    #endregion
+
 }

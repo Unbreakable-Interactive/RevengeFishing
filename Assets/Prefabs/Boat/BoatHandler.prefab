@@ -91,7 +91,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   isLeftBoundary: 1
-  debugTriggers: 1
   boatID: 
 --- !u!1 &842847640607169338
 GameObject:
@@ -259,7 +258,6 @@ MonoBehaviour:
   buoyancyStartDelay: 1.5
   waterCheckInterval: 0.25
   enableBuoyancy: 1
-  debugFloatation: 0
   physicsLifetime: 15
   velocityThreshold: 0.1
   autoCleanup: 1
@@ -366,6 +364,7 @@ MonoBehaviour:
   boatFloater: {fileID: 3385205366214559734}
   boatPlatform: {fileID: 8531477562920402828}
   boatSpriteRenderer: {fileID: 4981744675166538355}
+  flashColor: {fileID: 4977375209971515018}
   crewContainer: {fileID: 7460143873047510890}
   autoMoveSpeed: 1
   drivenSpeed: 2.5
@@ -453,10 +452,7 @@ MonoBehaviour:
   calculatedLeftBoundary: -1.1
   calculatedRightBoundary: 1.1
   boundOffset: 0
-  debugCrewManager: 1
-  trackCrewDisappearance: 1
   showPlatformGizmos: 1
-  logCrewStates: 1
   allCrewMembers: []
   currentNavigator: {fileID: 0}
 --- !u!1 &2049951311662369099
@@ -502,6 +498,8 @@ GameObject:
   m_Component:
   - component: {fileID: 5221161365901039543}
   - component: {fileID: 4981744675166538355}
+  - component: {fileID: 1945603896363213425}
+  - component: {fileID: 4977375209971515018}
   m_Layer: 6
   m_Name: Boat
   m_TagString: Untagged
@@ -576,6 +574,66 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!61 &1945603896363213425
+BoxCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3197334178101885014}
+  m_Enabled: 1
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 1
+  m_UsedByEffector: 0
+  m_UsedByComposite: 0
+  m_Offset: {x: 0, y: 0}
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0.5, y: 0.5}
+    oldSize: {x: 3.228, y: 1.128}
+    newSize: {x: 3.228, y: 1.128}
+    adaptiveTilingThreshold: 0.5
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  serializedVersion: 2
+  m_Size: {x: 3.228, y: 1.128}
+  m_EdgeRadius: 0
+--- !u!114 &4977375209971515018
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3197334178101885014}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5df5ed4fdf8e64c7086883d232433d78, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  targetRenderer: {fileID: 4981744675166538355}
+  flashColor: {r: 1, g: 0, b: 0, a: 1}
+  seconds: 0.2
 --- !u!1 &3595285260455224602
 GameObject:
   m_ObjectHideFlags: 0
@@ -779,7 +837,6 @@ MonoBehaviour:
   buoyancyStartDelay: 1.5
   waterCheckInterval: 0.25
   enableBuoyancy: 1
-  debugFloatation: 0
   physicsLifetime: 15
   velocityThreshold: 0.1
   autoCleanup: 1
@@ -951,7 +1008,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   isLeftBoundary: 0
-  debugTriggers: 1
   boatID: 
 --- !u!1 &6424523540721141613
 GameObject:
@@ -1060,7 +1116,6 @@ MonoBehaviour:
   buoyancyStartDelay: 1.5
   waterCheckInterval: 0.25
   enableBuoyancy: 1
-  debugFloatation: 0
   physicsLifetime: 15
   velocityThreshold: 0.1
   autoCleanup: 1
@@ -1158,12 +1213,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   assignedEnemies: []
-  showDebugInfo: 1
   identifier: 1
   boatID:
     _uniqueID: Boat_1bb50b88
   autoDetectBoatID: 1
-  debugPlatform: 0
 --- !u!61 &611578597188868134
 BoxCollider2D:
   m_ObjectHideFlags: 0

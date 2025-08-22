@@ -274,7 +274,7 @@ public abstract class Enemy : Entity
         StartDefeatBehaviors();
     }
 
-    protected virtual void TriggerEaten()
+    public virtual void TriggerEaten()
     {
         GameLogger.Log($"{gameObject.name} has been EATEN!");
         ChangeState_Eaten();

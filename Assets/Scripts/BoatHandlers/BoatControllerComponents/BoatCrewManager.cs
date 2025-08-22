@@ -196,19 +196,15 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
         {
             if (crew != null)
             {
-                totalPowerLevel += crew.PowerLevel;
-                
                 int crewIndex = allCrewMembers.IndexOf(crew);
                 if (crewIndex >= 0 && crewIndex < crewHandlerRoots.Count && crewHandlerRoots[crewIndex].activeInHierarchy)
                 {
                     activePowerLevel += crew.PowerLevel;
+                    totalPowerLevel = activePowerLevel;
                 }
+                
+                boatController.SetInitialIntegrity(totalPowerLevel, activePowerLevel);
             }
-        }
-        
-        if (boatController != null)
-        {
-            boatController.SetInitialIntegrity(totalPowerLevel, activePowerLevel);
         }
         
         GameLogger.LogVerbose($"[CREW INSTANT INTEGRITY] {GetBoatID()} - Calculated Max: {totalPowerLevel}, Current: {activePowerLevel}");
@@ -355,12 +351,12 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
         
         GameLogger.LogVerbose($"[CREW CONFIG] {GetBoatID()} - Configuring {boatFisherman.name} (Handler: {handlerRoot.name})");
         
+        boatFisherman.Initialize();
         boatFisherman.SetBoatID(boatID);
         boatFisherman.SetAssignedPlatform(boatPlatform);
         boatFisherman.OnPlatformAssigned(boatPlatform);
         
         boatFisherman.InitializeBoatContext(boatController, boatFloater, boatPlatform);
-        
         boatFisherman.SetLocalBoundaries(calculatedLeftBoundary, calculatedRightBoundary);
         
         Vector3 targetLocalPosition = CalculateCrewMemberLocalPosition(spawnIndex);
