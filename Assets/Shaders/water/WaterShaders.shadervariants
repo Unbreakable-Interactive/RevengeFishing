@@ -1,0 +1,16 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!200 &20000000
+ShaderVariantCollection:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: WaterShaders
+  m_Shaders:
+  - first: {fileID: 4800000, guid: f346e41372cc51e4ea042abea250f185, type: 3}
+    second:
+      variants: []
+  - first: {fileID: 4800000, guid: 5885eb27dcc25bc40a5798a45f421ea0, type: 3}
+    second:
+      variants: []
