@@ -75,13 +75,13 @@ public class GameManager : MonoBehaviour
     private void PauseGame()
     {
         GameStates.instance.SetGameState_Pause();
-        Time.timeScale = 0;
+        // Time.timeScale = 0;
     }
     
     private void ResumeGame()
     {
         GameStates.instance.GoBackToOldGameState();
-        Time.timeScale = 1;
+        // Time.timeScale = 1;
     }
     
 }
