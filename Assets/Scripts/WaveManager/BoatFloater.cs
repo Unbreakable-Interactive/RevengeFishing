@@ -23,11 +23,14 @@ public class BoatFloater : MonoBehaviour
   
     void FixedUpdate()
     {
-        ApplyBuoyancy();
-        
-        if (enableAutomaticMovement)
+        if (GameStates.instance.IsGameplayRunning())
         {
-            ApplyMovement();
+            ApplyBuoyancy();
+            
+            if (enableAutomaticMovement)
+            {
+                ApplyMovement();
+            }
         }
     }
     

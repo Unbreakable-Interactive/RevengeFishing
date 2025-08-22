@@ -175,6 +175,11 @@ public class Player : Entity
     protected override void Update()
     {
         base.Update(); // Call base Update to handle movement mode
+    }
+
+    protected override void UpdateLogic()
+    {
+        base.UpdateLogic();
         
         //playerSpriteRenderer.flipY = (transform.rotation.z > 0.7f || transform.rotation.z < -0.7f);
         if (allowSpriteFlipping)

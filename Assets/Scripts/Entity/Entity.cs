@@ -73,6 +73,14 @@ public abstract class Entity : MonoBehaviour
 
     protected virtual void Update()
     {
+        if (GameStates.instance.IsGameplayRunning())
+        {
+            UpdateLogic();
+        }
+    }
+
+    protected virtual void UpdateLogic()
+    {
         if (!isInitialized || rb == null) return;
 
         if (isAboveWater)
@@ -84,6 +92,7 @@ public abstract class Entity : MonoBehaviour
             UnderwaterBehavior();
         }
     }
+    
 
     public virtual void SetMovementMode(bool aboveWater)
     {

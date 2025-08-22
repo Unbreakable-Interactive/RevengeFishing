@@ -223,6 +223,11 @@ public class LandEnemy : Enemy, IBoatComponent
     protected override void Update()
     {
         base.Update();
+    }
+
+    protected override void UpdateLogic()
+    {
+        base.UpdateLogic();
         if (hasStartedFloating && rb.velocity.y > 0)
         {
             if (!animator.GetBool(IsRising)) animator?.SetBool(IsRising, true);

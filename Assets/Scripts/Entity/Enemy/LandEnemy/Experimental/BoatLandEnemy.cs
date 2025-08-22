@@ -715,7 +715,12 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
     protected override void Update()
     {
         base.Update();
+    }
 
+    protected override void UpdateLogic()
+    {
+        base.UpdateLogic();
+        
         if (_state == EnemyState.Alive)
         {
             if (isOnBoat && enableHookThrowing)
@@ -730,6 +735,7 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
             hasFallenFromBoat = true;
         }
     }
+
     #endregion
 
     #region Reset and Cleanup

@@ -82,23 +82,26 @@ public class CameraScaler : MonoBehaviour
 
     private void Update()
     {
-        if (playerScaler == null || virtualCamera == null) return;
-
-        float playerScale = playerScaler.GetCurrentScaleMultiplier();
-        float newTargetDistance = Mathf.Abs(baseDistance) * playerScale;
-
-        targetDistance = newTargetDistance;
-
-        if (smoothMovement)
+        if (GameStates.instance.IsGameplayRunning())
         {
-            currentDistance = Mathf.Lerp(currentDistance, targetDistance, moveSpeed * Time.deltaTime);
-        }
-        else
-        {
-            currentDistance = targetDistance;
-        }
+            if (playerScaler == null || virtualCamera == null) return;
 
-        UpdateCameraDistance();
+            float playerScale = playerScaler.GetCurrentScaleMultiplier();
+            float newTargetDistance = Mathf.Abs(baseDistance) * playerScale;
+
+            targetDistance = newTargetDistance;
+
+            if (smoothMovement)
+            {
+                currentDistance = Mathf.Lerp(currentDistance, targetDistance, moveSpeed * Time.deltaTime);
+            }
+            else
+            {
+                currentDistance = targetDistance;
+            }
+
+            UpdateCameraDistance();
+        }
     }
 
     private void UpdateCameraDistance()

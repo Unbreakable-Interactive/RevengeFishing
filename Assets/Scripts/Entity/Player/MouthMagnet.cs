@@ -57,9 +57,12 @@ public class MouthMagnet : MonoBehaviour
 
     void FixedUpdate()
     {
-        UpdateMagnetRange();
-        ApplyMagneticForceToEntities();
-        CleanupNullReferences();
+        if (GameStates.instance.IsGameplayRunning())
+        {
+            UpdateMagnetRange();
+            ApplyMagneticForceToEntities();
+            CleanupNullReferences();
+        }
     }
     
     private void UpdateMagnetRange()
