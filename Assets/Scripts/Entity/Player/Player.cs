@@ -273,7 +273,8 @@ public class Player : Entity
             case Phase.Monster:
                 GameLogger.Log("Victory!");
                 //transition to victory scene
-                SceneManager.LoadScene("Victory");
+                // SceneManager.LoadScene("Victory");
+                GameSceneManager.LoadScene(GameScene.Victory);
                 break;
             default:
                 break;
@@ -586,7 +587,8 @@ public class Player : Entity
         yield return new WaitForSeconds(0f);
 
         // Transition to GameOver scene
-        SceneManager.LoadScene("GameOver");
+        // SceneManager.LoadScene("GameOver");
+        GameSceneManager.LoadScene(GameScene.Lose);
     }
 
     #endregion
