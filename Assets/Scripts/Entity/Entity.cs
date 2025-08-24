@@ -129,4 +129,3 @@ public abstract class Entity : MonoBehaviour
     protected abstract void AirborneBehavior();
     protected abstract void UnderwaterBehavior();
 }
-

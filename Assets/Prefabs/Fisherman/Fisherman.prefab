@@ -460,6 +460,8 @@ MonoBehaviour:
   entityFatigue:
     fatigue: 0
     maxFatigue: 0
+    regenPercentPerSecond: 0
+    regenMultiplier: 0
   isAboveWater: 1
   airGravityScale: 2
   airDrag: 1.5

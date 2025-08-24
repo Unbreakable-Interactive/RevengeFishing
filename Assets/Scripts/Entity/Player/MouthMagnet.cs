@@ -1,11 +1,10 @@
 using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 
 public class MouthMagnet : MonoBehaviour
 {
     [Header("Player Reference")]
-    [SerializeField] private Player player; // Reference to the Player component
+    [SerializeField] private Player player;
 
     [Header("Magnet Settings")]
     [SerializeField] private float magneticForce = 10f;
@@ -36,6 +35,9 @@ public class MouthMagnet : MonoBehaviour
             return (Vector2)transform.position + rotatedOffset;
         }
     }
+    
+    public void MultiplyForce(float factor) => magneticForce = Mathf.Max(0f, magneticForce * factor);
+    public void AddForce(float delta) => magneticForce = Mathf.Max(0f, magneticForce + delta);
 
     void Start()
     {

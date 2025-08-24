@@ -1,8 +1,6 @@
-using UnityEngine.SceneManagement;
 using System.Collections.Generic;
 using UnityEngine;
 using RevengeFishing.Hunger;
-using static Enemy;
 
 public class Player : Entity
 {
@@ -30,10 +28,15 @@ public class Player : Entity
         Starved,
         Slain
     }
+    
+    public static Player Instance { get; private set; }
 
     [Header("Player Settings")]
     [SerializeField] private PlayerConfig playerConfig;
 
+    [SerializeField] private PlayerStatsAndUpgradesView playerStats;
+    public PlayerStatsAndUpgradesView PlayerStats => playerStats;
+    
     [Header("Camera Reference")]
     [SerializeField] private Camera mainCamera;
     private Vector2 lastMousePosition = Vector2.zero;
@@ -79,16 +82,16 @@ public class Player : Entity
     private float currentGravityScale;          // Current gravity being applied
 
     [Header("Water Movement Settings")]
-    [SerializeField] protected float forceAmount = 1f;
-    [SerializeField] protected float maxSpeed = 5f;
-    [SerializeField] protected float naturalDrag = 0.5f;
-    [SerializeField] protected float rotationDrag = 1f; // Extra drag applied during rotation
-    [SerializeField] protected float constantAccel = 0.2f; 
-    [SerializeField] protected float minForwardVelocity = 1f; 
-    [SerializeField] protected float sidewaysDrag = 1f; // higher = less sideways drift
+    [SerializeField] protected float forceAmount = 2f;
+    [SerializeField] protected float maxSpeed = 15f;
+    [SerializeField] protected float naturalDrag = 0.8f;
+    [SerializeField] protected float rotationDrag = 0.5f; // Extra drag applied during rotation
+    [SerializeField] protected float constantAccel = 1f; 
+    [SerializeField] protected float minForwardVelocity = 1.5f; 
+    [SerializeField] protected float sidewaysDrag = 2f; // higher = less sideways drift
 
     [Header("Steering Settings")]
-    [SerializeField] protected float steeringForce = 5f;
+    [SerializeField] protected float steeringForce = 10f;
     [SerializeField] protected float steeringDamping = 0.98f; // Reduces velocity over time when steering
 
     [Header("External Constraints")]
@@ -113,11 +116,6 @@ public class Player : Entity
 
     public Animator animator;
 
-    [Header("Debug")]
-    public bool enableDebugLogs = false;
-
-    public static Player Instance { get; private set; }
-    
     [Header("Components to share")] 
     [SerializeField] private Collider2D colliderToShare;
     
@@ -169,7 +167,9 @@ public class Player : Entity
 
         originalMaxSpeed = maxSpeed;
 
-        playerSpriteRenderer = GetComponentInChildren<SpriteRenderer>();
+        // playerSpriteRenderer = GetComponentInChildren<SpriteRenderer>();
+        
+        playerStats.RefreshNow();
     }
 
     protected override void Update()
@@ -246,6 +246,9 @@ public class Player : Entity
 
     protected void Mature()
     {
+        GameManager.instance.UpdateCachedPhase(currentPhase);
+        GameManager.instance.OpenUpgradeMenu();
+        
         switch (currentPhase)
         {
             case Phase.Infant:
@@ -363,7 +366,6 @@ public class Player : Entity
         {
             PlayerDie(Status.Fished);
         }
-
     }
 
     // Method for hooks to register when they bite
@@ -420,19 +422,12 @@ public class Player : Entity
                     // If player is at or near max distance, deal fatigue damage
                     if (currentDistanceSqr >= hookMaxDistanceSqr * (0.9f * 0.9f)) // 90% of max distance
                     {
-                        // if (fisherman != null)
-                        // {
-                        //     fisherman.TakeFatigue(PowerLevel);
-                        //     DebugLog($"Player pulls against {fisherman.name}'s fishing line - fisherman suffers fatigue!");
-                        // }
-
                         if (enemy != null)
                         {
                             enemy.TakeFatigue(PowerLevel);
                             DebugLog($"Player pulls against {enemy.name}'s fishing line - enemy suffers fatigue!");
                         }
                     }
-
                 }
             }
         }
@@ -561,11 +556,13 @@ public class Player : Entity
     public void GainPowerFromEating(int enemyPowerLevel)
     {
         //adjust powerLevel.
-        _powerLevel += Mathf.RoundToInt((float)enemyPowerLevel * 0.1f); // 10% of enemy's power
+        _powerLevel += Mathf.RoundToInt(enemyPowerLevel * 0.1f); // 10% of enemy's power
         // Update new max values to match new power level
         entityFatigue.maxFatigue = _powerLevel;
 
         hungerHandler.GainedPowerFromEating(enemyPowerLevel, _powerLevel);
+
+        playerStats.RefreshNow();
 
         DebugLog($"Player gained {Mathf.RoundToInt((float)enemyPowerLevel * 0.2f)} power from eating enemy! New power level: {_powerLevel}");
     }
@@ -598,6 +595,8 @@ public class Player : Entity
     [Header("Ability System")]
     [SerializeField] private AbilitySystem abilitySystem;
 
+    public AbilitySystem AbilitySystem => abilitySystem;
+    
     protected void SpecialAbilityOne() //this will be the Backflip ability
     {
         if (abilitySystem != null)
@@ -627,18 +626,13 @@ public class Player : Entity
             }
             else
             {
-                if (enableDebugLogs)
-                {
-                    GameLogger.LogWarning("[Player] No Big Bite ability found in ability system!");
-                }
+            
+                GameLogger.LogWarning("[Player] No Big Bite ability found in ability system!");
             }
         }
         else
         {
-            if (enableDebugLogs)
-            {
-                GameLogger.LogWarning("[Player] No ability system found!");
-            }
+            GameLogger.LogWarning("[Player] No ability system found!");
         }
     }
 
@@ -894,7 +888,7 @@ public class Player : Entity
     //Passes Debugger messages through enabled check
     void DebugLog(string message)
     {
-        if (enableDebugLogs) GameLogger.Log(message);
+        GameLogger.Log(message);
     }
     
     // Public method to control auto-rotation (for abilities like Backflip)
@@ -970,10 +964,7 @@ public class Player : Entity
             animator.SetBool(IsBackflipping, isBackflipping);
             animator.SetInteger(BackflipPower, backflipPower);
 
-            if (enableDebugLogs)
-            {
-                GameLogger.LogVerbose($"[Player Animation] Backflip animation updated: isBackflipping={isBackflipping}, power={backflipPower}");
-            }
+            GameLogger.LogVerbose($"[Player Animation] Backflip animation updated: isBackflipping={isBackflipping}, power={backflipPower}");
         }
         else
         {
@@ -987,10 +978,7 @@ public class Player : Entity
         {
             animator.SetBool(IsBackflipping, isBackflipping);
 
-            if (enableDebugLogs)
-            {
-                GameLogger.LogVerbose($"[Player Animation] Backflip state updated: isBackflipping={isBackflipping}");
-            }
+            GameLogger.LogVerbose($"[Player Animation] Backflip state updated: isBackflipping={isBackflipping}");
         }
     }
 
@@ -1000,10 +988,7 @@ public class Player : Entity
         {
             animator.SetInteger(BackflipPower, backflipPower);
 
-            if (enableDebugLogs)
-            {
-                GameLogger.LogVerbose($"[Player Animation] Backflip power updated: power={backflipPower}");
-            }
+            GameLogger.LogVerbose($"[Player Animation] Backflip power updated: power={backflipPower}");
         }
     }
 
@@ -1028,10 +1013,7 @@ public class Player : Entity
             animator.SetBool(IsBigBiting, isBigBiting);
             animator.SetInteger(BigBitePower, bigBitePower);
             
-            if (enableDebugLogs)
-            {
-                GameLogger.LogVerbose($"[Player Animation] Big Bite animation updated: isBigBiting={isBigBiting}, power={bigBitePower}");
-            }
+            GameLogger.LogVerbose($"[Player Animation] Big Bite animation updated: isBigBiting={isBigBiting}, power={bigBitePower}");
         }
         else
         {
@@ -1045,10 +1027,7 @@ public class Player : Entity
         {
             animator.SetBool(IsBigBiting, isBigBiting);
             
-            if (enableDebugLogs)
-            {
-                GameLogger.LogVerbose($"[Player Animation] Big Bite state updated: isBigBiting={isBigBiting}");
-            }
+            GameLogger.LogVerbose($"[Player Animation] Big Bite state updated: isBigBiting={isBigBiting}");
         }
     }
     
@@ -1058,10 +1037,7 @@ public class Player : Entity
         {
             animator.SetInteger(BigBitePower, bigBitePower);
             
-            if (enableDebugLogs)
-            {
-                GameLogger.LogVerbose($"[Player Animation] Big Bite power updated: power={bigBitePower}");
-            }
+            GameLogger.LogVerbose($"[Player Animation] Big Bite power updated: power={bigBitePower}");
         }
     }
     
@@ -1077,4 +1053,41 @@ public class Player : Entity
     }
     #endregion
 
+    
+    #region Upgrade Hooks (para Upgrades/Shop)
+
+    public void AddMaxSpeed(float delta)
+    {
+        maxSpeed += delta;
+        originalMaxSpeed = maxSpeed;
+    }
+    public void MultiplyMaxSpeed(float factor)
+    {
+        maxSpeed *= factor;
+        originalMaxSpeed = maxSpeed;
+    }
+
+    public void AddAcceleration(float delta)         => constantAccel += delta;
+    public void MultiplyAcceleration(float factor)   => constantAccel *= factor;
+
+    public void MultiplySteeringForce(float factor)  => steeringForce *= factor;
+
+    public void MultiplyMagnetForce(float factor)
+    {
+        if (magnet != null) magnet.MultiplyForce(factor);
+    }
+
+    public void MultiplyMaxFatigue(float factor)     => entityFatigue.MultiplyMaxFatigue(factor);
+    public void AddMaxFatigue(int amount)            => entityFatigue.AddMaxFatigue(amount);
+
+    public void MultiplyMaxHunger(float factor)      => hungerHandler?.MultiplyMaxHunger(factor);
+    public void AddMaxHunger(int amount)             => hungerHandler?.AddMaxHunger(amount);
+
+    public void MultiplyEatSatiation(float factor)   => hungerHandler?.MultiplyEatSatiation(factor);
+
+    public void MultiplyHungerDecay(float factor)    => hungerHandler?.MultiplyHungerDecay(factor);
+
+    public void MultiplyFatigueRegen(float factor)   => entityFatigue.MultiplyRegen(factor);
+
+    #endregion
 }
