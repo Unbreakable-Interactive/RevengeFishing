@@ -15,7 +15,7 @@ public class DeathManager : MonoBehaviour
         switch (deathType)
         {
             case Player.Status.Fished:
-                return "You've been fished!";
+                return "You've been caught!";
             case Player.Status.Starved:
                 return "You've starved!";
             case Player.Status.Slain:
