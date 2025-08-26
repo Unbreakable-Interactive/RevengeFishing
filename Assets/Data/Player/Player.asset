@@ -15,10 +15,10 @@ MonoBehaviour:
   startingPowerLevel: 100
   phaseThresholds:
     juvenile: 120
-    adult: 2500
-    beast: 12500
-    monster: 62500
-    victory: 312500
+    adult: 400
+    beast: 800
+    monster: 1600
+    victory: 3200
   maxHunger: 100
   maxFatigue: 100
   hungerDecayRate: 1
