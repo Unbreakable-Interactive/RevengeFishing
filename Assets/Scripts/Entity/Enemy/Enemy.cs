@@ -266,7 +266,7 @@ public abstract class Enemy : Entity
         GameLogger.Log($"{gameObject.name} state reset to Alive with complete physics reset");
     }
 
-    protected virtual void TriggerDefeat()
+    public virtual void TriggerDefeat()
     {
         GameLogger.Log($"{gameObject.name} has been defeated!");
         ChangeState_Defeated();

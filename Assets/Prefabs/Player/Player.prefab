@@ -454,6 +454,9 @@ MonoBehaviour:
   sidewaysDrag: 2
   steeringForce: 10
   steeringDamping: 0.98
+  velocityBoostThreshold: 8
+  velocityBoostCooldown: 0.9
+  velocityBoostForce: 1
   activeBitingHooks: []
   lineExtensionAmount: 1
   maxLineExtension: 10

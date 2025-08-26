@@ -666,7 +666,7 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
         }
     }
 
-    protected override void TriggerDefeat()
+    public override void TriggerDefeat()
     {
         GameLogger.Log($"[BOAT DEBUG] {gameObject.name} - TriggerDefeat called. Current state: {_state}, IsOnBoat: {isOnBoat}");
 
