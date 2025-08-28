@@ -251,6 +251,7 @@ public class Player : Entity
         
         switch (currentPhase)
         {
+            default:
             case Phase.Infant:
                 currentPhase = Phase.Juvenile;
                 animator.SetBool(IsInfant, false);
@@ -279,9 +280,8 @@ public class Player : Entity
                 // SceneManager.LoadScene("Victory");
                 GameSceneManager.LoadScene(GameScene.Victory);
                 break;
-            default:
-                break;
         }
+        MetaPoints.AddPhasePoints(currentPhase);
     }
 
     #region Input Handling
