@@ -68,7 +68,7 @@ public class SimpleFPSCounter : BaseDisplay
         // Handle toggle input
         HandleInput();
         
-        if (!showFPS || !CanUpdateDisplay()) return;
+        if (!showFPS) return;
         
         // Update delta time with smoothing
         deltaTime += (Time.unscaledDeltaTime - deltaTime) * 0.1f;
@@ -87,7 +87,7 @@ public class SimpleFPSCounter : BaseDisplay
 
     protected override void UpdateDisplay()
     {
-        if (!CanUpdateDisplay()) return;
+        // if (!CanUpdateDisplay()) return;
         
         // Build display text efficiently
         BuildDisplayText();

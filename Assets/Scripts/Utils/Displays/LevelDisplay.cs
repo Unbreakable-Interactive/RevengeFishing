@@ -18,7 +18,7 @@ public class LevelDisplay : BaseDisplay
 
     protected override void UpdateDisplay()
     {
-        if (!CanUpdateDisplay() || entity == null) return;
+        if (entity == null) return;
 
         string levelText;
         
