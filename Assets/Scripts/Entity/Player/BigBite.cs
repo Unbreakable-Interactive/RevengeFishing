@@ -345,16 +345,17 @@ public class BigBite : AbilityBase
         int eatingPower = GetEatingPower();
         
         DebugLog($"Big Bite ate enemy! {enemy.name} with power {enemy.PowerLevel} (Our eating power: {eatingPower})");
-        
+
         // Mark enemy as eaten using the existing enemy state system
-        enemy.ChangeState_Eaten();
+        enemy.TriggerDefeat();
+        enemy.TriggerEaten();
         
-        // Trigger the eaten behavior (this should handle cleanup, pool return, etc.)
-        if (enemy.GetComponent<Enemy>() != null)
-        {
-            // The enemy's existing eaten logic should handle cleanup
-            enemy.TriggerEaten();
-        }
+        //// Trigger the eaten behavior (this should handle cleanup, pool return, etc.)
+        //if (enemy.GetComponent<Enemy>() != null)
+        //{
+        //    // The enemy's existing eaten logic should handle cleanup
+        //    enemy.TriggerEaten();
+        //}
         
         // Give player some benefit for eating (could be health, power, points, etc.)
         // Using PowerLevel instead of health since health system might not exist yet

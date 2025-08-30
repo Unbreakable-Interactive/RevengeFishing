@@ -94,6 +94,12 @@ public class Player : Entity
     [SerializeField] protected float steeringForce = 10f;
     [SerializeField] protected float steeringDamping = 0.98f; // Reduces velocity over time when steering
 
+    [Header("Velocity Boost Settings")]
+    [SerializeField] protected float velocityBoostThreshold = 2f; // Minimum velocity before triggering auto-boost
+    [SerializeField] protected float velocityBoostCooldown = 0.5f; // Time between auto-boosts
+    [SerializeField] protected float velocityBoostForce = 1f; // Force multiplier for velocity-based boosts
+    private float lastVelocityBoostTime = 0f; // Track when last boost was applied
+
     [Header("External Constraints")]
     private bool isConstrainedByExternalForce = false;
     private Vector3 constraintCenter;
@@ -324,6 +330,9 @@ public class Player : Entity
     //Triggers as long as mouse is being clicked
     void OnMouseHold(Vector2 mousePosition)
     {
+        // Check for velocity-based boost regardless of rotation state
+        CheckVelocityBoost(mousePosition);
+        
         // If we're not currently doing initial rotation and we're moving, this will trigger steering
         if (!shouldApplyForceAfterRotation && !isRotatingToTarget)
         {
@@ -344,6 +353,52 @@ public class Player : Entity
         //Let object coast if mouse is released
         if (rb.drag < naturalDrag) rb.drag += naturalDrag / 60;
         if (rb.drag > naturalDrag) rb.drag = naturalDrag; // Clamp to natural drag
+        
+        // Reset velocity boost timer when mouse is released
+        lastVelocityBoostTime = 0f;
+    }
+    
+    // Check if player needs a velocity boost while holding mouse
+    void CheckVelocityBoost(Vector2 mousePosition)
+    {
+        // Only boost if enough time has passed since last boost
+        if (Time.time - lastVelocityBoostTime < velocityBoostCooldown) return;
+        
+        // Check if velocity is below threshold
+        if (rb.velocity.magnitude < velocityBoostThreshold)
+        {
+            // Apply velocity boost
+            ApplyVelocityBoost(mousePosition);
+            lastVelocityBoostTime = Time.time;
+            
+            DebugLog($"Velocity boost applied! Current speed: {rb.velocity.magnitude:F2}, Threshold: {velocityBoostThreshold}");
+        }
+        else
+        {
+            // Optional debug: show current speed when above threshold
+            DebugLog($"Speed OK: {rb.velocity.magnitude:F2} >= {velocityBoostThreshold}");
+        }
+    }
+    
+    // Apply a boost when velocity is too low
+    void ApplyVelocityBoost(Vector2 mousePosition)
+    {
+        // Set target rotation toward mouse (similar to click behavior)
+        SetTargetRotation(mousePosition);
+        
+        // Reset rotation flags to allow immediate boost
+        isRotatingToTarget = true;
+        shouldApplyForceAfterRotation = true;
+        hasAppliedBoost = false;
+        
+        // Apply immediate force in current facing direction
+        Vector2 forceDirection = transform.right;
+        rb.AddForce(forceDirection * (forceAmount * velocityBoostForce), ForceMode2D.Impulse);
+        
+        // Optional: Reduce drag temporarily for smoother boost
+        rb.drag = naturalDrag / 20;
+        
+        DebugLog($"Applied velocity boost in direction: {forceDirection}, Force: {forceAmount * velocityBoostForce}");
     }
     #endregion
 

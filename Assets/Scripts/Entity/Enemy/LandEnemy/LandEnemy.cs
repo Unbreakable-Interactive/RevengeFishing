@@ -518,7 +518,7 @@ public class LandEnemy : Enemy, IBoatComponent
         GameLogger.Log($"{gameObject.name} LandEnemy state completely reset to Alive");
     }
 
-    protected override void TriggerDefeat()
+    public override void TriggerDefeat()
     {
         base.TriggerDefeat();
         OnFishingToolUnequipped();

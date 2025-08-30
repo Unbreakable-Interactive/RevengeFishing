@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: PlayerScalingConfig
   m_EditorClassIdentifier: 
   minPowerLevel: 100
-  maxPowerLevel: 62500
+  maxPowerLevel: 1600
   minScaleMultiplier: 1
   maxScaleMultiplier: 3
   scalingCurve:
@@ -29,14 +29,32 @@ MonoBehaviour:
       inWeight: 0
       outWeight: 0
     - serializedVersion: 3
-      time: 0.16916437
-      value: 0.44755083
-      inSlope: 2.0649626
-      outSlope: 2.0649626
+      time: 0.0691659
+      value: 0.30369097
+      inSlope: 4.7264285
+      outSlope: 4.7264285
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33734205
+      outWeight: 0.0602536
+    - serializedVersion: 3
+      time: 0.1362602
+      value: 0.5461597
+      inSlope: 2.14991
+      outSlope: 2.14991
       tangentMode: 0
       weightedMode: 0
       inWeight: 0.33333334
-      outWeight: 0.062189143
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 0.32144636
+      value: 0.78994644
+      inSlope: 0.82200456
+      outSlope: 0.82200456
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.15260938
     - serializedVersion: 3
       time: 1
       value: 1
