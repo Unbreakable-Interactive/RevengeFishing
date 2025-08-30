@@ -18,7 +18,12 @@ public class Fisherman : LandEnemy
     protected override void Update()
     {
         base.Update();
+    }
 
+    protected override void UpdateLogic()
+    {
+        base.UpdateLogic();
+        
         if (hasThrownHook) HandleActiveHook();
     }
 

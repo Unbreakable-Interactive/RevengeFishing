@@ -159,6 +159,14 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5706962072255297144, guid: b69f09c4e1675754487856532c9a780a, type: 3}
+      propertyPath: playerConfig
+      value: 
+      objectReference: {fileID: 11400000, guid: b58f1ffc3494e4d65979f0b335fd9388, type: 2}
+    - target: {fileID: 5706962072255297144, guid: b69f09c4e1675754487856532c9a780a, type: 3}
+      propertyPath: abilitySystem
+      value: 
+      objectReference: {fileID: 5362059535638091425}
     - target: {fileID: 6728867108004361845, guid: b69f09c4e1675754487856532c9a780a, type: 3}
       propertyPath: m_Name
       value: Player
@@ -187,6 +195,17 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: db54e0ff2b071fe458d3e7adf83cb10b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &5362059535638091425 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1609196705297687871, guid: b69f09c4e1675754487856532c9a780a, type: 3}
+  m_PrefabInstance: {fileID: 6646432737778152350}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 98344338058364395}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 00924bea6eb3b2749953d27e95a8aa13, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!4 &7443348865966703534 stripped

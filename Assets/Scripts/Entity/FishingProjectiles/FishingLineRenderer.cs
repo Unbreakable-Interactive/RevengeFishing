@@ -88,7 +88,8 @@ public class FishingLineRenderer : MonoBehaviour
 
     void Update()
     {
-        UpdateLinePositions();
+        if (GameStates.instance.IsGameplayRunning())
+            UpdateLinePositions();
     }
 
     private void UpdateLinePositions()

@@ -46,17 +46,4 @@ public class LevelDisplay : BaseDisplay
         if (entity != null)
             initPowerLevel = entity.PowerLevel;
     }
-
-    /// <summary>
-    /// Get current entity reference
-    /// </summary>
-    public Entity GetEntity() => entity;
-
-    /// <summary>
-    /// Toggle between absolute and relative power level display
-    /// </summary>
-    public void ToggleDisplayMode()
-    {
-        showAbsolutePowerLevel = !showAbsolutePowerLevel;
-    }
 }

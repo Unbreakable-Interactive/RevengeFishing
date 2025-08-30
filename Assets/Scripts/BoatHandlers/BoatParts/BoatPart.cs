@@ -166,14 +166,17 @@ public class BoatPart : MonoBehaviour
     
     private void FixedUpdate()
     {
-        if (!waterCheckEnabled || !hasAppliedForce || !enableBuoyancy || WaterPhysics.Instance == null || rb == null) 
-            return;
-        
-        float currentTime = Time.time;
-        if (currentTime - lastWaterCheckTime >= waterCheckInterval)
+        if (GameStates.instance.IsGameplayRunning())
         {
-            CheckWaterStatusOptimized();
-            lastWaterCheckTime = currentTime;
+            if (!waterCheckEnabled || !hasAppliedForce || !enableBuoyancy || WaterPhysics.Instance == null || rb == null) 
+                return;
+            
+            float currentTime = Time.time;
+            if (currentTime - lastWaterCheckTime >= waterCheckInterval)
+            {
+                CheckWaterStatusOptimized();
+                lastWaterCheckTime = currentTime;
+            }
         }
     }
     

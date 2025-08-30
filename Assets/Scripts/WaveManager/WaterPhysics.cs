@@ -98,6 +98,7 @@ public class WaterPhysics : MonoBehaviour
 
     const int MaxWaveParticlesShader = 64; // debe igualar MAX_WAVE_PARTICLES en el shader
 
+    // ! Initialize
     void Awake()
     {
         if (Instance == null) Instance = this;
@@ -136,16 +137,19 @@ public class WaterPhysics : MonoBehaviour
 
     void Update()
     {
-        // Actualiza partículas (y elimina muertas)
-        for (int i = waveParticles.Count - 1; i >= 0; i--)
-            if (!waveParticles[i].Update(Time.deltaTime)) waveParticles.RemoveAt(i);
-
-        if (waterMaterial != null) UpdateShaderData();
-
-        if (useApproximation && Time.time > lastUpdateTime + approximationUpdateInterval)
+        if (GameStates.instance.IsGameplayRunning())
         {
-            UpdateApproximationGrid();
-            lastUpdateTime = Time.time;
+            // Actualiza partículas (y elimina muertas)
+            for (int i = waveParticles.Count - 1; i >= 0; i--)
+                if (!waveParticles[i].Update(Time.deltaTime)) waveParticles.RemoveAt(i);
+
+            if (waterMaterial != null) UpdateShaderData();
+
+            if (useApproximation && Time.time > lastUpdateTime + approximationUpdateInterval)
+            {
+                UpdateApproximationGrid();
+                lastUpdateTime = Time.time;
+            }
         }
     }
 
