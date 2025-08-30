@@ -13,14 +13,16 @@ public class WaterCheckFollow : MonoBehaviour
     void Start()
     {
         GetComponent<Collider2D>().isTrigger = true;
-
     }
 
     void Update()
     {
-        // Follow player horizontally, stay at fixed Y
-        if(!isOnBoat)
-            transform.position = new Vector3(target.transform.position.x, waterSurfaceY, transform.position.z);
+        if (GameStates.instance.IsGameplayRunning())
+        {
+            // Follow player horizontally, stay at fixed Y
+            if(!isOnBoat)
+                transform.position = new Vector3(target.transform.position.x, waterSurfaceY, transform.position.z);
+        }
     }
 
     private void FixedUpdate()

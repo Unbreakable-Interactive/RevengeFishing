@@ -27,8 +27,11 @@ public abstract class BaseDisplay : MonoBehaviour
 
     protected virtual void Update()
     {
-        UpdateDisplay();
-        HandleCameraFacing();
+        if (GameStates.instance.IsGameplayRunning())
+        {
+            UpdateDisplay();
+            HandleCameraFacing();
+        }
     }
 
     /// <summary>

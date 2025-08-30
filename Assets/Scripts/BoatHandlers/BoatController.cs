@@ -90,19 +90,25 @@ public class BoatController : MonoBehaviour
         
     private void Update()
     {
-        if (!isInitialized || !canPlayLogic || isDestroyed) return;
-                
-        stateTimer += Time.deltaTime;
-        UpdateCurrentState();
+        if (GameStates.instance.IsGameplayRunning())
+        {
+            if (!isInitialized || !canPlayLogic || isDestroyed) return;
+                    
+            stateTimer += Time.deltaTime;
+            UpdateCurrentState();
+        }
     }
         
     private void FixedUpdate()
     {
-        if (!isInitialized || isDestroyed) return;
-                
-        ApplyStabilityForces();
-        UpdateMovement();
-        CheckBoundariesPeriodically();
+        if (GameStates.instance.IsGameplayRunning())
+        {
+            if (!isInitialized || isDestroyed) return;
+                    
+            ApplyStabilityForces();
+            UpdateMovement();
+            CheckBoundariesPeriodically();
+        }
     }
         
     #endregion

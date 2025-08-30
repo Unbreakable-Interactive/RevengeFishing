@@ -35,20 +35,23 @@ public class WaterCheck : MonoBehaviour
 
     private void Update()
     {
-        // Continuously update wall state when player is in water
-        if (enableHookBasedTriggerControl && 
-            entityMovement != null && 
-            entityMovement.GetComponent<Player>() != null && 
-            !entityMovement.IsAboveWater)
+        if (GameStates.instance.IsGameplayRunning())
         {
-            bool hasAnyBitingHooks = HasAnyActiveBitingHooks();
-            bool shouldBeWall = hasAnyBitingHooks;
-            bool currentlyWall = !GetComponent<Collider2D>().isTrigger;
-            
-            if (shouldBeWall != currentlyWall)
+            // Continuously update wall state when player is in water
+            if (enableHookBasedTriggerControl && 
+                entityMovement != null && 
+                entityMovement.GetComponent<Player>() != null && 
+                !entityMovement.IsAboveWater)
             {
-                GetComponent<Collider2D>().isTrigger = !shouldBeWall;
-                GameLogger.LogVerbose($"[WATER WALL] Wall state changed - Hooks: {hasAnyBitingHooks}, Wall Active: {shouldBeWall}");
+                bool hasAnyBitingHooks = HasAnyActiveBitingHooks();
+                bool shouldBeWall = hasAnyBitingHooks;
+                bool currentlyWall = !GetComponent<Collider2D>().isTrigger;
+                
+                if (shouldBeWall != currentlyWall)
+                {
+                    GetComponent<Collider2D>().isTrigger = !shouldBeWall;
+                    GameLogger.LogVerbose($"[WATER WALL] Wall state changed - Hooks: {hasAnyBitingHooks}, Wall Active: {shouldBeWall}");
+                }
             }
         }
     }

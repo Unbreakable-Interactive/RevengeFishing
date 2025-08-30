@@ -1,6 +1,5 @@
 using System;
 using UnityEngine;
-using Utils;
 
 public abstract class Enemy : Entity
 {

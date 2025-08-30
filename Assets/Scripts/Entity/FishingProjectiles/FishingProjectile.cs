@@ -53,6 +53,25 @@ public abstract class FishingProjectile : Entity
 
     protected override void Update()
     {
+        base.Update();
+        
+        // if (isBeingHeld && player != null)
+        // {
+        //     // Position hook at player center
+        //     MoveHookToFollowPlayer();
+        //
+        //     // Apply same distance constraint but to player position
+        //     ConstrainPlayerToMaxDistance();
+        // }
+        // else
+        // {
+        //     // Normal behavior
+        //     ConstrainToMaxDistance();
+        // }
+    }
+
+    protected override void UpdateLogic()
+    {
         if (isBeingHeld && player != null)
         {
             // Position hook at player center
@@ -64,7 +83,7 @@ public abstract class FishingProjectile : Entity
         else
         {
             // Normal behavior
-            base.Update();
+            base.UpdateLogic();
             ConstrainToMaxDistance();
         }
     }

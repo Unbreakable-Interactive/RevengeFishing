@@ -1,13 +1,13 @@
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.SceneManagement;
 
 [RequireComponent(typeof(Button))]
 public class SceneSwitchButton : MonoBehaviour
 {
     [Header("Scene Settings")]
-    [SerializeField] private string targetSceneName = "";
-
+    [SerializeField] private GameScene gameScene;
+    
+    
     [Header("Optional Settings")]
     [SerializeField] private bool enableDebugLogs = true;
 
@@ -39,23 +39,5 @@ public class SceneSwitchButton : MonoBehaviour
         }
     }
 
-    public void SwitchScene()
-    {
-        if (string.IsNullOrEmpty(targetSceneName))
-        {
-            if (enableDebugLogs)
-                GameLogger.LogWarning($"SceneSwitchButton: Target scene name is empty on {gameObject.name}");
-            return;
-        }
-
-        if (enableDebugLogs)
-            GameLogger.LogVerbose($"SceneSwitchButton: Switching to scene '{targetSceneName}'");
-
-        SceneManager.LoadScene(targetSceneName);
-    }
-
-    public void SetTargetScene(string sceneName)
-    {
-        targetSceneName = sceneName;
-    }
+    public void SwitchScene() => GameSceneManager.LoadScene(gameScene);
 }
