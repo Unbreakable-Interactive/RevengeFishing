@@ -11,13 +11,6 @@ public abstract class BaseDisplay : MonoBehaviour
 
     protected virtual void Start()
     {
-        if (displayText == null)
-        {
-            GameLogger.LogError($"{gameObject.name}: No TextMeshProUGUI component found!");
-            displayText = GetComponent<TextMeshProUGUI>();
-            return;
-        }
-
         if (faceCamera)
         {
             if (mainCamera == null)
@@ -56,16 +49,7 @@ public abstract class BaseDisplay : MonoBehaviour
     /// </summary>
     protected virtual void SetDisplayText(string text)
     {
-        if (displayText != null)
-            displayText.text = text;
-    }
-
-    /// <summary>
-    /// Validates if display can be updated
-    /// </summary>
-    protected virtual bool CanUpdateDisplay()
-    {
-        return displayText != null;
+        displayText.text = text;
     }
 }
 

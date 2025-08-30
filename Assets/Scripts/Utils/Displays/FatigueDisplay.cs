@@ -1,28 +1,17 @@
 using UnityEngine;
+using UnityEngine.UI;
 
 public class FatigueDisplay : BaseDisplay
 {
     [Header("Fatigue Settings")]
     [SerializeField] private Entity entity;
 
+    [SerializeField] private Image image;
+    
     protected override void UpdateDisplay()
     {
-        if (!CanUpdateDisplay() || entity == null) return;
+        if (entity == null) return;
 
-        string fatigueText = $"{entity.entityFatigue.fatigue} / {entity.entityFatigue.maxFatigue}";
-        SetDisplayText(fatigueText);
+        image.fillAmount = 1 - ((float)entity.entityFatigue.fatigue / (float)entity.entityFatigue.maxFatigue);
     }
-
-    /// <summary>
-    /// Set the entity reference at runtime (useful for spawned enemies)
-    /// </summary>
-    public void SetEntity(Entity newEntity)
-    {
-        entity = newEntity;
-    }
-
-    /// <summary>
-    /// Get current entity reference
-    /// </summary>
-    public Entity GetEntity() => entity;
 }
