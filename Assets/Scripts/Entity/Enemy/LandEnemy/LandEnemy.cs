@@ -374,8 +374,8 @@ public class LandEnemy : Enemy, IBoatComponent
             return;
         }
 
-        float fatigueDamage = PowerLevel * 0.1f;
-        player.TakeFishingFatigue(fatigueDamage);
+        float energyDamage = PowerLevel * 0.1f;
+        player.TakeEnergyDamage(energyDamage);
     }
 
     private float ShortenFishingLine()

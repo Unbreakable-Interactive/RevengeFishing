@@ -10,10 +10,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 519a09f620bc541718bfd3478ee4de16, type: 3}
-  m_Name: MaxFatigue
+  m_Name: 3.EnergyCapacity
   m_EditorClassIdentifier: 
-  title: MaxFatigue
-  description: 
+  title: Energy Capacity
+  description: +15% max energy
   icon: {fileID: 0}
   cost: 1
   unique: 0

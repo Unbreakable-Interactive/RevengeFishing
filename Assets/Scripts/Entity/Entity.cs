@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 
 [RequireComponent(typeof(Rigidbody2D))]
 public abstract class Entity : MonoBehaviour
@@ -8,8 +9,8 @@ public abstract class Entity : MonoBehaviour
     
     [Header("Character Stats")]
     [SerializeField] protected int _powerLevel;
-    [SerializeField] public EntityFatigue entityFatigue;
-
+    [FormerlySerializedAs("entityFatigue")] [SerializeField] public EntityEnergy entityEnergy;
+    
     [Header("Is Above Water?")]
     [SerializeField] protected bool isAboveWater = true;
 
@@ -63,12 +64,12 @@ public abstract class Entity : MonoBehaviour
             _powerLevel = 100;
         }
 
-        entityFatigue = new EntityFatigue(_powerLevel != 0 ? _powerLevel : 100, 0);
+        entityEnergy = new EntityEnergy(_powerLevel != 0 ? _powerLevel : 100, _powerLevel != 0 ? _powerLevel : 100);
 
         SetMovementMode(isAboveWater);
         isInitialized = true;
 
-        GameLogger.Log($"{gameObject.name} - EntityMovement initialized successfully");
+        GameLogger.Log($"{gameObject.name} - Entity initialized successfully with Energy system");
     }
 
     protected virtual void Update()

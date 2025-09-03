@@ -193,7 +193,7 @@ public class SimpleObjectPool : MonoBehaviour
         if (enemy != null)
         {
             enemy.ChangeState_Alive();
-            enemy.ResetFatigue();
+            enemy.ResetEnergy();
             
             Collider2D collider = enemy.BodyCollider;
             collider.isTrigger = false;

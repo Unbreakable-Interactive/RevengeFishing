@@ -163,16 +163,22 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
     }
     #endregion
 
-    #region Initialization and Setup
+    #region Power and Energy System  // Cambiar de "Power and Fatigue System"
     public override void Initialize()
     {
         int powerLevel = CalculateBalancedBoatCrewPowerLevel();
         SetPowerLevel(powerLevel);
         base.Initialize();
-        
+    
+        if (entityEnergy == null)
+        {
+            entityEnergy = new EntityEnergy(_powerLevel, _powerLevel);
+        }
+    
         GameLogger.Log($"[BOAT DEBUG] {gameObject.name} - Initialize: Balanced Power Level {_powerLevel}, State: {_state}");
-        GameLogger.Log($"[BOAT DEBUG] {gameObject.name} - Fatigue: {entityFatigue.fatigue}/{entityFatigue.maxFatigue}");
+        GameLogger.Log($"[BOAT DEBUG] {gameObject.name} - Energy: {entityEnergy.CurrentEnergy:F1}/{entityEnergy.MaxEnergy:F1}");
     }
+
 
     protected override void EnemySetup()
     {
@@ -226,41 +232,44 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
         return balancedPowerLevel;
     }
 
-    public override void TakeFatigue(int playerPowerLevel)
+    public override void TakeEnergyDamage(int playerPowerLevel)
     {
-        GameLogger.Log($"[BOAT DEBUG] {gameObject.name} - BEFORE: Fatigue {entityFatigue.fatigue}/{entityFatigue.maxFatigue}, State: {_state}");
+        GameLogger.Log($"[BOAT DEBUG] {gameObject.name} - BEFORE: Energy {entityEnergy.CurrentEnergy:F1}/{entityEnergy.MaxEnergy:F1}, State: {_state}");
         GameLogger.Log($"[BOAT DEBUG] {gameObject.name} - Player hitting with power: {playerPowerLevel}");
 
-        int fatigueToAdd = CalculateBalancedFatigueIncrease(playerPowerLevel);
-        
-        if (!hasReceivedFirstFatigue)
+        float energyDamageToAdd = CalculateBalancedEnergyDamage(playerPowerLevel);
+    
+        if (!hasReceivedFirstFatigue) // Mantener variable para serialización
         {
             hasReceivedFirstFatigue = true;
             canPullPlayer = true;
-            OnFirstFatigueReceived();
-            GameLogger.Log($"{gameObject.name} received first fatigue damage - can now pull player!");
+            OnFirstEnergyDamageReceived();
+            GameLogger.Log($"{gameObject.name} received first energy damage - can now pull player!");
         }
 
-        entityFatigue.fatigue += fatigueToAdd;
-
-        GameLogger.Log($"[BOAT DEBUG] {gameObject.name} - Fatigue added: {fatigueToAdd}");
-        GameLogger.Log($"[BOAT DEBUG] {gameObject.name} - AFTER: Fatigue {entityFatigue.fatigue}/{entityFatigue.maxFatigue}, State: {_state}");
-
-        if (entityFatigue.fatigue >= entityFatigue.maxFatigue && _state == EnemyState.Alive)
+        if (entityEnergy != null)
         {
-            GameLogger.Log($"[BOAT DEBUG] {gameObject.name} - FATIGUE FULL! Triggering defeat...");
+            entityEnergy.ConsumeEnergyFromDamage(energyDamageToAdd);
+        }
+
+        GameLogger.Log($"[BOAT DEBUG] {gameObject.name} - Energy damage added: {energyDamageToAdd:F1}");
+        GameLogger.Log($"[BOAT DEBUG] {gameObject.name} - AFTER: Energy {entityEnergy.CurrentEnergy:F1}/{entityEnergy.MaxEnergy:F1}, State: {_state}");
+
+        if (entityEnergy != null && entityEnergy.IsEnergyDepleted && _state == EnemyState.Alive)
+        {
+            GameLogger.Log($"[BOAT DEBUG] {gameObject.name} - ENERGY DEPLETED! Triggering defeat...");
             TriggerDefeat();
         }
     }
 
-    private int CalculateBalancedFatigueIncrease(int playerPowerLevel)
+    private float CalculateBalancedEnergyDamage(int playerPowerLevel)
     {
         float powerRatio = (float)playerPowerLevel / _powerLevel;
-        
-        int baseFatigue = Mathf.RoundToInt(_powerLevel * 0.15f);
-        
+    
+        float baseEnergyDamage = _powerLevel * 0.15f; // 15% del poder como daño base
+    
         float adjustmentMultiplier = 1f;
-        
+    
         if (powerRatio > 1.5f)
         {
             adjustmentMultiplier = 1.5f;
@@ -269,18 +278,18 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
         {
             adjustmentMultiplier = 0.7f;
         }
-        
-        int finalFatigue = Mathf.RoundToInt(baseFatigue * adjustmentMultiplier);
-        
-        finalFatigue = Mathf.Clamp(finalFatigue, 10, 100);
-        
-        GameLogger.Log($"[BOAT DEBUG] {gameObject.name} - Fatigue Calculation:");
+    
+        float finalEnergyDamage = baseEnergyDamage * adjustmentMultiplier;
+    
+        finalEnergyDamage = Mathf.Clamp(finalEnergyDamage, 10f, 100f);
+    
+        GameLogger.Log($"[BOAT DEBUG] {gameObject.name} - Energy Damage Calculation:");
         GameLogger.Log($"    Player Power: {playerPowerLevel}, Crew Power: {_powerLevel}");
         GameLogger.Log($"    Power Ratio: {powerRatio:F2}");
-        GameLogger.Log($"    Base Fatigue: {baseFatigue}, Adjustment: {adjustmentMultiplier:F2}");
-        GameLogger.Log($"    Final Fatigue: {finalFatigue}");
-        
-        return finalFatigue;
+        GameLogger.Log($"    Base Energy Damage: {baseEnergyDamage:F1}, Adjustment: {adjustmentMultiplier:F2}");
+        GameLogger.Log($"    Final Energy Damage: {finalEnergyDamage:F1}");
+    
+        return finalEnergyDamage;
     }
     #endregion
 

@@ -135,19 +135,17 @@ public abstract class Enemy : Entity
                 _powerLevel = 100;
             }
         }
-
-        entityFatigue.fatigue = 0;
-        entityFatigue.maxFatigue = _powerLevel;
+    
+        entityEnergy = new EntityEnergy(_powerLevel, _powerLevel);
         _state = EnemyState.Alive;
-
+    
         CalculateTier();
     }
 
     public virtual void SetPowerLevel(int newPowerLevel)
     {
         _powerLevel = newPowerLevel;
-        entityFatigue.maxFatigue = _powerLevel;
-        entityFatigue.fatigue = 0;
+        entityEnergy.SetMaxEnergy(_powerLevel);
         GameLogger.Log($"{gameObject.name} power level set to {_powerLevel}");
     }
 
@@ -173,22 +171,30 @@ public abstract class Enemy : Entity
         base.SetMovementMode(aboveWater);
     }
 
-    public virtual void TakeFatigue(int playerPowerLevel)
+    public virtual void TakeEnergyDamage(int playerPowerLevel)
     {
-        if (!hasReceivedFirstFatigue)
+        if (!hasReceivedFirstFatigue) // Mantener nombre de variable para compatibilidad de serialización
         {
             hasReceivedFirstFatigue = true;
             canPullPlayer = true;
-            OnFirstFatigueReceived();
-            GameLogger.Log($"{gameObject.name} received first fatigue damage - can now pull player!");
+            OnFirstEnergyDamageReceived();
+            GameLogger.Log($"{gameObject.name} received first energy damage - can now pull player!");
         }
-
-        entityFatigue.fatigue += (int)((float)playerPowerLevel * .05f);
-
-        if (entityFatigue.fatigue >= entityFatigue.maxFatigue && _state == EnemyState.Alive)
+    
+        if (entityEnergy != null)
         {
-            TriggerDefeat();
+            entityEnergy.ConsumeEnergyFromDamage((float)playerPowerLevel * 0.05f);
+        
+            if (entityEnergy.IsEnergyDepleted && _state == EnemyState.Alive)
+            {
+                TriggerDefeat();
+            }
         }
+    }
+    
+    protected virtual void OnFirstEnergyDamageReceived()
+    {
+        GameLogger.LogVerbose($"{gameObject.name} can now pull the player!");
     }
 
     protected virtual void OnFirstFatigueReceived()
@@ -201,14 +207,18 @@ public abstract class Enemy : Entity
         return canPullPlayer && _state == EnemyState.Alive;
     }
 
-    public virtual void ResetFatigue()
+    public virtual void ResetEnergy()
     {
-        hasReceivedFirstFatigue = false;
+        hasReceivedFirstFatigue = false; // Mantener nombre para serialización
         canPullPlayer = false;
-        entityFatigue.fatigue = 0;
-
+    
+        if (entityEnergy != null)
+        {
+            entityEnergy.ModifyEnergy(entityEnergy.MaxEnergy);
+        }
+    
         if (enableDebugMessages)
-            GameLogger.LogVerbose($"{gameObject.name}: Fatigue reset to 0");
+            GameLogger.LogVerbose($"{gameObject.name}: Energy reset to full");
     }
 
     public virtual void ChangeState_Alive()
@@ -246,8 +256,8 @@ public abstract class Enemy : Entity
     public virtual void TriggerAlive()
     {
         ChangeState_Alive();
-        ResetFatigue();
-
+        ResetEnergy();
+    
         if (rb != null)
         {
             rb.velocity = Vector2.zero;
@@ -256,13 +266,13 @@ public abstract class Enemy : Entity
             rb.simulated = true;
             rb.freezeRotation = true;
         }
-
+    
         if (bodyCollider != null)
         {
             bodyCollider.isTrigger = false;
         }
-
-        GameLogger.Log($"{gameObject.name} state reset to Alive with complete physics reset");
+    
+        GameLogger.Log($"{gameObject.name} state reset to Alive with complete energy reset");
     }
 
     public virtual void TriggerDefeat()
@@ -384,6 +394,7 @@ public abstract class Enemy : Entity
 
     private void NotifySpawnHandlerOfDeath()
     {
+        // ! Fix 
         SpawnHandler[] allSpawnHandlers = FindObjectsOfType<SpawnHandler>();
 
         foreach (SpawnHandler handler in allSpawnHandlers)

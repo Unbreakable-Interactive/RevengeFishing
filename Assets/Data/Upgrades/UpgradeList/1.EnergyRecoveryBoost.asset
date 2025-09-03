@@ -10,10 +10,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 519a09f620bc541718bfd3478ee4de16, type: 3}
-  m_Name: FatigueRegen
+  m_Name: 1.EnergyRecoveryBoost
   m_EditorClassIdentifier: 
-  title: FatigueRegen
-  description: 
+  title: Energy Recovery Boost
+  description: Increases energy recovery from eating by 30%. Get more energy from
+    each meal!
   icon: {fileID: 0}
   cost: 1
   unique: 0

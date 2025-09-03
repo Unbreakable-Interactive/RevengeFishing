@@ -313,11 +313,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   rb: {fileID: 8723077445984565078}
   _powerLevel: 0
-  entityFatigue:
-    fatigue: 0
-    maxFatigue: 0
-    regenPercentPerSecond: 0
-    regenMultiplier: 0
+  entityEnergy:
+    currentEnergy: 0
+    maxEnergy: 0
+    energyDecayPerSecond: 0
+    energyRecoveryMultiplier: 0
   isAboveWater: 1
   airGravityScale: 2
   airDrag: 1.5

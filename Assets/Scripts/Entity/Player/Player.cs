@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using UnityEngine;
-using RevengeFishing.Hunger;
 
 public class Player : Entity
 {
@@ -49,12 +48,9 @@ public class Player : Entity
     private Quaternion targetRotation;
     private bool isRotatingToTarget = false;
     private bool shouldApplyForceAfterRotation = false;
-    private bool hasAppliedBoost = false; // Track if boost was already applied
+    private bool hasAppliedBoost = false;
 
-    [SerializeField] protected HungerHandler hungerHandler;
     [SerializeField] protected MouthMagnet magnet;
-    
-    public HungerHandler HungerHandler => hungerHandler;
     
     public MouthMagnet Magnet => magnet;
 
@@ -165,15 +161,11 @@ public class Player : Entity
         //change the next line once an actual fix is found for player threshold not assigning properly
         nextPowerLevel = playerConfig.phaseThresholds.juvenile; // Set next phase threshold
 
-        hungerHandler = new HungerHandler(_powerLevel, entityFatigue, 0);
-
         rb.drag = naturalDrag;
         targetRotation = transform.rotation; //set target rotation to Player's current rotation
         currentGravityScale = underwaterGravityScale;
 
         originalMaxSpeed = maxSpeed;
-
-        // playerSpriteRenderer = GetComponentInChildren<SpriteRenderer>();
         
         playerStats.RefreshNow();
     }
@@ -404,22 +396,24 @@ public class Player : Entity
 
     #region Reverse Fishing
 
-    public int GetFatigue() => entityFatigue.fatigue;
-
+    public float GetEnergy() => entityEnergy?.CurrentEnergy ?? 0f;
+    public float GetEnergyPercentage() => entityEnergy?.EnergyPercentage ?? 0f;
+    
     public void TriggerBite()
     {
         animator.SetTrigger(IsBiting);
     }
 
-    public void TakeFishingFatigue(float fatigueDamage)
+    public void TakeEnergyDamage(float energyDamage)
     {
-        // 10% enemy's fatigue
-        entityFatigue.fatigue += (int)(fatigueDamage);
-
-        // Check if enemy should be defeated
-        if (entityFatigue.fatigue >= entityFatigue.maxFatigue)
+        if (entityEnergy != null)
         {
-            PlayerDie(Status.Fished);
+            entityEnergy.ConsumeEnergyFromDamage(energyDamage);
+        
+            if (entityEnergy.IsEnergyDepleted)
+            {
+                PlayerDie(Status.Starved);
+            }
         }
     }
 
@@ -479,8 +473,8 @@ public class Player : Entity
                     {
                         if (enemy != null)
                         {
-                            enemy.TakeFatigue(PowerLevel);
-                            DebugLog($"Player pulls against {enemy.name}'s fishing line - enemy suffers fatigue!");
+                            enemy.TakeEnergyDamage(PowerLevel);
+                            DebugLog($"Player pulls against {enemy.name}'s fishing line - enemy suffers energy!");
                         }
                     }
                 }
@@ -610,16 +604,18 @@ public class Player : Entity
 
     public void GainPowerFromEating(int enemyPowerLevel)
     {
-        //adjust powerLevel.
-        _powerLevel += Mathf.RoundToInt(enemyPowerLevel * 0.1f); // 10% of enemy's power
-        // Update new max values to match new power level
-        entityFatigue.maxFatigue = _powerLevel;
-
-        hungerHandler.GainedPowerFromEating(enemyPowerLevel, _powerLevel);
-
+        _powerLevel += Mathf.RoundToInt(enemyPowerLevel * 0.1f);
+    
+        // Recuperar energía al comer según David
+        float energyRecovery = enemyPowerLevel * 0.2f;
+        if (entityEnergy != null)
+        {
+            entityEnergy.RecoverEnergyFromEating(energyRecovery);
+        }
+    
         playerStats.RefreshNow();
-
-        DebugLog($"Player gained {Mathf.RoundToInt((float)enemyPowerLevel * 0.2f)} power from eating enemy! New power level: {_powerLevel}");
+    
+        DebugLog($"Player gained {Mathf.RoundToInt((float)enemyPowerLevel * 0.1f)} power and {energyRecovery:F1} energy from eating enemy!");
     }
 
     public void PlayerDie(Status deathType)
@@ -1116,33 +1112,26 @@ public class Player : Entity
         maxSpeed += delta;
         originalMaxSpeed = maxSpeed;
     }
+
     public void MultiplyMaxSpeed(float factor)
     {
         maxSpeed *= factor;
         originalMaxSpeed = maxSpeed;
     }
 
-    public void AddAcceleration(float delta)         => constantAccel += delta;
-    public void MultiplyAcceleration(float factor)   => constantAccel *= factor;
-
-    public void MultiplySteeringForce(float factor)  => steeringForce *= factor;
+    public void AddAcceleration(float delta) => constantAccel += delta;
+    public void MultiplyAcceleration(float factor) => constantAccel *= factor;
+    public void MultiplySteeringForce(float factor) => steeringForce *= factor;
 
     public void MultiplyMagnetForce(float factor)
     {
         if (magnet != null) magnet.MultiplyForce(factor);
     }
 
-    public void MultiplyMaxFatigue(float factor)     => entityFatigue.MultiplyMaxFatigue(factor);
-    public void AddMaxFatigue(int amount)            => entityFatigue.AddMaxFatigue(amount);
-
-    public void MultiplyMaxHunger(float factor)      => hungerHandler?.MultiplyMaxHunger(factor);
-    public void AddMaxHunger(int amount)             => hungerHandler?.AddMaxHunger(amount);
-
-    public void MultiplyEatSatiation(float factor)   => hungerHandler?.MultiplyEatSatiation(factor);
-
-    public void MultiplyHungerDecay(float factor)    => hungerHandler?.MultiplyHungerDecay(factor);
-
-    public void MultiplyFatigueRegen(float factor)   => entityFatigue.MultiplyRegen(factor);
+    public void MultiplyMaxEnergy(float factor) => entityEnergy?.MultiplyMaxEnergy(factor);
+    public void AddMaxEnergy(float amount) => entityEnergy?.AddMaxEnergy(amount);
+    public void MultiplyEnergyRecovery(float factor) => entityEnergy?.MultiplyRecoveryRate(factor);
+    public void MultiplyEnergyDecayRate(float factor) => entityEnergy?.MultiplyEnergyDecayRate(factor);
 
     #endregion
 }

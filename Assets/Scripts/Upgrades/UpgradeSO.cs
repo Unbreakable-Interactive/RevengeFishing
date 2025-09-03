@@ -4,14 +4,14 @@ public enum UpgradeEffectType
 {
     None,
     UnlockSpecial,
-    FatigueRegenMultiplier,
-    EatSatiationMultiplier,
+    EnergyRecoveryMultiplier,     
+    EnergyDecayMultiplier,       
     PullStrengthMultiplier,
     MaxSpeedAdd,
     AccelerationMultiplier,
-    MaxFatigueMultiplier,
-    MaxHungerMultiplier,
-    HungerDecayMultiplier
+    MaxEnergyMultiplier,        
+    MaxEnergyAdd,        
+    EnergyEfficiencyMultiplier  
 }
 
 public enum SpecialToUnlock
@@ -49,12 +49,16 @@ public class UpgradeSO : ScriptableObject
                 UnlockAbilityOnPlayer(player, special);
                 break;
 
-            case UpgradeEffectType.FatigueRegenMultiplier:
-                player.MultiplyFatigueRegen(value);
+            case UpgradeEffectType.EnergyRecoveryMultiplier:
+                player.MultiplyEnergyRecovery(value);
                 break;
 
-            case UpgradeEffectType.EatSatiationMultiplier:
-                player.MultiplyEatSatiation(value);
+            case UpgradeEffectType.EnergyDecayMultiplier:
+                player.MultiplyEnergyDecayRate(value);
+                break;
+
+            case UpgradeEffectType.EnergyEfficiencyMultiplier:
+                player.MultiplyEnergyRecovery(value);
                 break;
 
             case UpgradeEffectType.PullStrengthMultiplier:
@@ -69,16 +73,12 @@ public class UpgradeSO : ScriptableObject
                 player.MultiplyAcceleration(value);
                 break;
 
-            case UpgradeEffectType.MaxFatigueMultiplier:
-                player.MultiplyMaxFatigue(value);
+            case UpgradeEffectType.MaxEnergyMultiplier:
+                player.MultiplyMaxEnergy(value);
                 break;
 
-            case UpgradeEffectType.MaxHungerMultiplier:
-                player.MultiplyMaxHunger(value);
-                break;
-
-            case UpgradeEffectType.HungerDecayMultiplier:
-                player.MultiplyHungerDecay(value);
+            case UpgradeEffectType.MaxEnergyAdd:
+                player.AddMaxEnergy(value);
                 break;
         }
     }

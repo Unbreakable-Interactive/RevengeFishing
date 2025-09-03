@@ -10,9 +10,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 519a09f620bc541718bfd3478ee4de16, type: 3}
-  m_Name: HungerDecay
+  m_Name: Energy Efficient Multiplier
   m_EditorClassIdentifier: 
-  title: HungerDecay
+  title: Energy Efficient Multiplier
   description: 
   icon: {fileID: 0}
   cost: 1
@@ -20,4 +20,4 @@ MonoBehaviour:
   minPhase: 0
   effectType: 9
   special: 0
-  value: 0.85
+  value: 1.2
