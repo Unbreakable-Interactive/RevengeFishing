@@ -184,7 +184,6 @@ public abstract class Enemy : Entity
         if (entityEnergy != null)
         {
             entityEnergy.ConsumeEnergyFromDamage((float)playerPowerLevel * 0.05f);
-        
             if (entityEnergy.IsEnergyDepleted && _state == EnemyState.Alive)
             {
                 TriggerDefeat();
@@ -209,7 +208,7 @@ public abstract class Enemy : Entity
 
     public virtual void ResetEnergy()
     {
-        hasReceivedFirstFatigue = false; // Mantener nombre para serialización
+        hasReceivedFirstFatigue = false;
         canPullPlayer = false;
     
         if (entityEnergy != null)

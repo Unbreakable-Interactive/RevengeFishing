@@ -280,9 +280,9 @@ public class LandEnemy : Enemy, IBoatComponent
         WaterMovement();
     }
 
-    protected override void OnFirstFatigueReceived()
+    protected override void OnFirstEnergyDamageReceived()
     {
-        base.OnFirstFatigueReceived();
+        base.OnFirstEnergyDamageReceived();
         if (CanPullPlayer() && hookSpawner.HasActiveHook())
         {
             StartCoroutine(ContinuousPull());
@@ -314,7 +314,7 @@ public class LandEnemy : Enemy, IBoatComponent
             yield break;
         }
 
-        ApplyPullFatigueDamage();
+        ApplyPullEnergyDamage();
         float lineShortened = ShortenFishingLine();
 
         if (lineShortened > minLineLength)
@@ -366,7 +366,7 @@ public class LandEnemy : Enemy, IBoatComponent
         yield return null;
     }
 
-    private void ApplyPullFatigueDamage()
+    private void ApplyPullEnergyDamage()
     {
         if (player == null)
         {

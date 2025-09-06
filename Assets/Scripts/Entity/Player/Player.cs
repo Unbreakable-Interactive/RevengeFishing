@@ -635,7 +635,6 @@ public class Player : Entity
         yield return new WaitForSeconds(0f);
 
         // Transition to GameOver scene
-        // SceneManager.LoadScene("GameOver");
         GameSceneManager.LoadScene(GameScene.Lose);
     }
 
