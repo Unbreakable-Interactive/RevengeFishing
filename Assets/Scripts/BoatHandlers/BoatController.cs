@@ -58,7 +58,8 @@ public class BoatController : MonoBehaviour
         
     [Header("Destruction System")]
     [SerializeField] private BoatPart[] boatParts;
-    [SerializeField] private float destructionDelay = 2f; // DEPRECATED: Destruction is now immediate
+
+    [SerializeField] private float destructionDelay = 2f; // For now is not working any destruction delay
     [SerializeField] private float resetDelay = 8f;
         
     [Header("Pool Management")]
@@ -131,7 +132,6 @@ public class BoatController : MonoBehaviour
         SetupBoatComponents();
         ConfigureAllBoatIDs();
         
-        // Set default integrity in case crew initialization fails
         if (currentIntegrity <= 0f)
         {
             currentIntegrity = maxIntegrity;
@@ -373,7 +373,6 @@ public class BoatController : MonoBehaviour
                             
             case BoatState.Destroyed:
                 SetMovementActive(false);
-                // HandleDestruction is already started in TriggerDestruction()
                 break;
         }
     }
@@ -471,8 +470,6 @@ public class BoatController : MonoBehaviour
         }
     }
 
-   
-
     #endregion
 
     #region Health System
@@ -492,11 +489,9 @@ public class BoatController : MonoBehaviour
         currentIntegrity -= damageAmount;
         GameLogger.Log($"[BOAT DAMAGE] {gameObject.name} - Took {damageAmount} damage. Integrity: {currentIntegrity}/{maxIntegrity}");
 
-        // boatSpriteRenderer.color = Color.red;
         flashColor.Flash();
         // StartCoroutine(TriggerDamage());
-        
-        // Check if boat is destroyed
+
         if (currentIntegrity <= 0f)
         {
             currentIntegrity = 0f;
@@ -517,6 +512,18 @@ public class BoatController : MonoBehaviour
         float integritytBefore = currentIntegrity;
         TakeDamage(damageAmount);
         GameLogger.Log($"[BOAT DAMAGE] {gameObject.name} - Player dealt {damageAmount} damage with {damageSource}. Integrity: {integritytBefore} → {currentIntegrity}");
+    }
+
+    public void ForceIntegrityToZero(string reason = "Forced")
+    {
+        if (isDestroyed) return;
+        
+        float previousIntegrity = currentIntegrity;
+        currentIntegrity = 0f;
+        
+        GameLogger.Log($"[BOAT INTEGRITY] {gameObject.name} - Integrity forced to 0. Reason: {reason}. Previous: {previousIntegrity}");
+        
+        TriggerDestruction();
     }
 
     public void OnCrewInitializationComplete()

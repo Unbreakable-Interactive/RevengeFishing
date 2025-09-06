@@ -185,6 +185,13 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
         {
             GameLogger.LogError($"[CREW INSTANT DEACTIVATION ERROR] {GetBoatID()} - Active count {finalActiveCount} outside expected range [{expectedMin}-{expectedMax}]!");
         }
+        
+        // NUEVA VERIFICACIÓN: Después de la deactivación aleatoria
+        if (!HasAnyActiveCrewMembers())
+        {
+            GameLogger.LogWarning($"[CREW INSTANT DEACTIVATION] {GetBoatID()} - All crew members deactivated during random deactivation!");
+            CheckCrewIntegrityStatus();
+        }
     }
     
     private void CalculateInitialIntegrity()
@@ -612,6 +619,41 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
         return count;
     }
     
+    // NUEVA FUNCIÓN: Verificar si hay tripulantes activos
+    public bool HasAnyActiveCrewMembers()
+    {
+        for (int i = 0; i < allCrewMembers.Count; i++)
+        {
+            var crew = allCrewMembers[i];
+            var handlerRoot = crewHandlerRoots[i];
+            
+            if (crew != null && handlerRoot != null && 
+                handlerRoot.activeInHierarchy && 
+                crew.State == Enemy.EnemyState.Alive)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    // NUEVA FUNCIÓN: Verificar estado de integridad basado en tripulación
+    public void CheckCrewIntegrityStatus()
+    {
+        if (boatController != null)
+        {
+            if (!HasAnyActiveCrewMembers())
+            {
+                GameLogger.Log($"[CREW INTEGRITY] {GetBoatID()} - No active crew members detected, forcing integrity to 0");
+                boatController.ForceIntegrityToZero("No active crew members");
+            }
+            else
+            {
+                boatController.RecalculateBoatIntegrity();
+            }
+        }
+    }
+    
     public void OnCrewMemberDied(Enemy deadCrew)
     {
         if (deadCrew is BoatLandEnemy boatEnemy)
@@ -622,6 +664,7 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
         StartCoroutine(DelayedIntegrityRecalculation());
     }
     
+    // FUNCIÓN MODIFICADA: Manejo de muerte de tripulantes con verificación de integridad
     public void HandleCrewMemberDeath(BoatLandEnemy deadCrewMember)
     {
         if (!BoatEnemyBelongToBoat(deadCrewMember))
@@ -651,7 +694,7 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
             GameLogger.LogVerbose($"[CREW DEATH] {GetBoatID()} - {deadCrewMember.name} handler deactivated. Remaining active: {GetActiveCrewCount()}");
         }
         
-        StartCoroutine(DelayedIntegrityRecalculation());
+        StartCoroutine(DelayedCrewIntegrityCheck());
     }
     
     private bool BoatEnemyBelongToBoat(BoatLandEnemy enemy)
@@ -667,6 +710,13 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
         {
             boatController.RecalculateBoatIntegrity();
         }
+    }
+    
+    // NUEVA FUNCIÓN: Verificación de integridad con delay
+    private IEnumerator DelayedCrewIntegrityCheck()
+    {
+        yield return new WaitForSeconds(0.1f);
+        CheckCrewIntegrityStatus();
     }
     
     public void Reset()

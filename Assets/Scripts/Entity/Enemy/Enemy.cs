@@ -173,7 +173,7 @@ public abstract class Enemy : Entity
 
     public virtual void TakeEnergyDamage(int playerPowerLevel)
     {
-        if (!hasReceivedFirstFatigue) // Mantener nombre de variable para compatibilidad de serialización
+        if (!hasReceivedFirstFatigue)
         {
             hasReceivedFirstFatigue = true;
             canPullPlayer = true;
