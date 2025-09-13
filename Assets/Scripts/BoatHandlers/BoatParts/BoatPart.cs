@@ -8,8 +8,8 @@ public class BoatPart : MonoBehaviour
     [SerializeField] private float torqueMultiplier = 5f;
     
     [Header("Downward Force Settings")]
-    [SerializeField] private float minAngle = 45f;
-    [SerializeField] private float maxAngle = 135f;
+    [SerializeField] private float minAngle = 15f;
+    [SerializeField] private float maxAngle = 75f;
     [SerializeField] private float baseDownwardForce = 3f;
     [SerializeField] private float lateralForceVariation = 1.5f;
     
@@ -88,22 +88,27 @@ public class BoatPart : MonoBehaviour
     
     private Vector2 GenerateDownwardConicalForce()
     {
-        float randomAngle = Random.Range(minAngle, maxAngle);
+        float randomAngle = Random.Range(minAngle, Mathf.Min(maxAngle, 90f)); 
         float angleInRadians = randomAngle * Mathf.Deg2Rad;
-        
+    
         float baseForceX = Mathf.Sin(angleInRadians) * Random.Range(-lateralForceVariation, lateralForceVariation);
-        float baseForceY = -Mathf.Cos(angleInRadians) * baseDownwardForce;
-        
+        float baseForceY = -Mathf.Abs(Mathf.Cos(angleInRadians)) * baseDownwardForce;
+    
         Vector2 forceDirection = new Vector2(baseForceX, baseForceY);
-        
+    
         float forceMagnitude = Random.Range(baseDownwardForce * 0.8f, baseDownwardForce * 1.2f);
         Vector2 finalForce = forceDirection.normalized * forceMagnitude;
-        
+    
+        if (finalForce.y > 0)
+        {
+            finalForce.y = -Mathf.Abs(finalForce.y);
+        }
+    
         GameLogger.LogVerbose($"BoatPart {gameObject.name} - Generated conical force: Direction={forceDirection}, FinalForce={finalForce}, Angle={randomAngle:F1}°");
-        
+    
         return finalForce;
     }
-    
+
     private void EnableDynamicPhysics()
     {
         if (isDynamicPhysicsActive) return;
