@@ -7,6 +7,12 @@ public class BoatPart : MonoBehaviour
     [SerializeField] private float forceMultiplier = 8f;
     [SerializeField] private float torqueMultiplier = 5f;
     
+    [Header("Downward Force Settings")]
+    [SerializeField] private float minAngle = 45f;
+    [SerializeField] private float maxAngle = 135f;
+    [SerializeField] private float baseDownwardForce = 3f;
+    [SerializeField] private float lateralForceVariation = 1.5f;
+    
     [Header("Physics Settings")]
     [SerializeField] private float airGravityScale = 2f;
     [SerializeField] private float airDrag = 1.5f;
@@ -60,12 +66,9 @@ public class BoatPart : MonoBehaviour
         
         SetPhysicsMode(true);
         
-        Vector2 explosionForce = new Vector2(
-            Random.Range(-2f, 2f),
-            Random.Range(-0.5f, 1.5f) 
-        );
+        Vector2 downwardForce = GenerateDownwardConicalForce();
         
-        rb.AddForce(explosionForce * forceMultiplier, ForceMode2D.Impulse);
+        rb.AddForce(downwardForce * forceMultiplier, ForceMode2D.Impulse);
         rb.AddTorque(Random.Range(-torqueMultiplier, torqueMultiplier), ForceMode2D.Impulse);
         
         hasAppliedForce = true;
@@ -80,8 +83,25 @@ public class BoatPart : MonoBehaviour
             physicsLifetimeCoroutine = StartCoroutine(PhysicsLifetimeManager());
         }
         
+        GameLogger.LogVerbose($"BoatPart {gameObject.name} - Applied downward conical force: {downwardForce * forceMultiplier} (angle: {Vector2.Angle(Vector2.down, downwardForce):F1}°)");
+    }
     
-        GameLogger.LogVerbose($"BoatPart {gameObject.name} - Applied destruction forces: {explosionForce * forceMultiplier}");
+    private Vector2 GenerateDownwardConicalForce()
+    {
+        float randomAngle = Random.Range(minAngle, maxAngle);
+        float angleInRadians = randomAngle * Mathf.Deg2Rad;
+        
+        float baseForceX = Mathf.Sin(angleInRadians) * Random.Range(-lateralForceVariation, lateralForceVariation);
+        float baseForceY = -Mathf.Cos(angleInRadians) * baseDownwardForce;
+        
+        Vector2 forceDirection = new Vector2(baseForceX, baseForceY);
+        
+        float forceMagnitude = Random.Range(baseDownwardForce * 0.8f, baseDownwardForce * 1.2f);
+        Vector2 finalForce = forceDirection.normalized * forceMagnitude;
+        
+        GameLogger.LogVerbose($"BoatPart {gameObject.name} - Generated conical force: Direction={forceDirection}, FinalForce={finalForce}, Angle={randomAngle:F1}°");
+        
+        return finalForce;
     }
     
     private void EnableDynamicPhysics()
@@ -100,15 +120,15 @@ public class BoatPart : MonoBehaviour
         rb.angularVelocity = 0f;
         rb.velocity = Vector2.zero;
         
-        if (partCollider != null)
-        {
-            partCollider.isTrigger = false;
-        }
+        // if (partCollider != null)
+        // {
+        //     partCollider.isTrigger = false;
+        // }
         
         isDynamicPhysicsActive = true;
         
         GameLogger.LogVerbose($"BoatPart {gameObject.name} - Dynamic physics enabled with mass {rb.mass}");
-}
+    }
     
     private void SetPhysicsMode(bool aboveWater)
     {

@@ -124,9 +124,9 @@ public class LandEnemy : Enemy, IBoatComponent
             CalculatePlatformBounds();
         }
 
-        if (Time.time >= nextActionTime - 0.5f)
+        if (actionTimer == null || actionTimer.IsRunning)
         {
-            nextActionTime = Time.time + Random.Range(0.5f, 1.5f);
+            ScheduleNextAction();
         }
         
         _landMovementState = LandMovementState.Idle;
@@ -151,10 +151,17 @@ public class LandEnemy : Enemy, IBoatComponent
     {
         if (landEnemyConfig != null)
         {
-            nextActionTime = Time.time + Random.Range(1f, 3f);
+            float randomDuration = Random.Range(1f, 3f);
+            
+            if (actionTimer == null)
+            {
+                actionTimer = new Timer(randomDuration);
+            }
+            
+            actionTimer.Restart(randomDuration);
             
             if (assignedPlatform != null)
-                GameLogger.LogVerbose($"{gameObject.name}: Next action scheduled for {nextActionTime:F1}");
+                GameLogger.LogVerbose($"{gameObject.name}: Next action scheduled for {randomDuration:F1}s");
         }
         else
         {
@@ -182,7 +189,7 @@ public class LandEnemy : Enemy, IBoatComponent
         if (landEnemyConfig == null)
         {
             landEnemyConfig = Resources.Load<LandEnemyConfig>("LandEnemyConfig");
-            
+        
             if (landEnemyConfig == null)
             {
                 landEnemyConfig = ScriptableObject.CreateInstance<LandEnemyConfig>();
@@ -190,7 +197,7 @@ public class LandEnemy : Enemy, IBoatComponent
                 landEnemyConfig.walkProbability = 0.3f;
                 landEnemyConfig.runProbability = 0.3f;
                 landEnemyConfig.identifier = TypeIdentifier.Land;
-                
+            
                 GameLogger.LogWarning($"{gameObject.name}: No LandEnemyConfig assigned! Created default config.");
             }
             else
@@ -199,14 +206,23 @@ public class LandEnemy : Enemy, IBoatComponent
             }
         }
 
-        nextActionTime = Time.time + Random.Range(0.5f, 2f);
+        if (actionTimer == null)
+        {
+            InitializeActionTimer();
+        }
+        else
+        {
+            float randomDuration = Random.Range(0.5f, 2f);
+            actionTimer.Restart(randomDuration);
+        }
+    
         _landMovementState = LandMovementState.Idle;
-        
+    
         if (hookSpawner == null)
         {
             hookSpawner = GetComponent<HookSpawner>();
         }
-        
+    
         hookSpawner.Initialize();
         SetMovementMode(isAboveWater);
         idleDetector = GetComponentInChildren<IdleDetector>();
@@ -458,12 +474,14 @@ public class LandEnemy : Enemy, IBoatComponent
     #region Land Movement Logic
     public virtual void LandMovement()
     {
-        if (Time.time >= nextActionTime)
+        if (IsTimeToAct())
         {
             MakeAIDecision();
         }
+        
         CalculatePlatformBounds();
         ExecuteLandMovementBehaviour();
+        
         if (platformBoundsCalculated)
         {
             CheckPlatformBounds();

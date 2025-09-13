@@ -163,6 +163,7 @@ GameObject:
   - component: {fileID: 1551637374989697810}
   - component: {fileID: 7081784477181152349}
   - component: {fileID: 6817366124321017162}
+  - component: {fileID: 8688607944366234662}
   m_Layer: 6
   m_Name: BoatPart2
   m_TagString: Untagged
@@ -251,6 +252,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   forceMultiplier: 8
   torqueMultiplier: 5
+  minAngle: 45
+  maxAngle: 135
+  baseDownwardForce: 3
+  lateralForceVariation: 1.5
   airGravityScale: 2
   airDrag: 1.5
   underwaterGravityScale: -0.5
@@ -261,7 +266,7 @@ MonoBehaviour:
   physicsLifetime: 15
   velocityThreshold: 0.1
   autoCleanup: 1
-  rb: {fileID: 0}
+  rb: {fileID: 8688607944366234662}
 --- !u!61 &6817366124321017162
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -307,6 +312,33 @@ BoxCollider2D:
   serializedVersion: 2
   m_Size: {x: 1.364, y: 0.888}
   m_EdgeRadius: 0
+--- !u!50 &8688607944366234662
+Rigidbody2D:
+  serializedVersion: 4
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 919244316435478149}
+  m_BodyType: 0
+  m_Simulated: 1
+  m_UseFullKinematicContacts: 0
+  m_UseAutoMass: 0
+  m_Mass: 1
+  m_LinearDrag: 0
+  m_AngularDrag: 0.05
+  m_GravityScale: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_Interpolate: 0
+  m_SleepingMode: 1
+  m_CollisionDetection: 0
+  m_Constraints: 0
 --- !u!1 &1725949659940357100
 GameObject:
   m_ObjectHideFlags: 0
@@ -742,6 +774,7 @@ GameObject:
   - component: {fileID: 8041602805694101544}
   - component: {fileID: 8364685129650910935}
   - component: {fileID: 2232732426229390306}
+  - component: {fileID: 2455705083246761549}
   m_Layer: 6
   m_Name: BoatPart3
   m_TagString: Untagged
@@ -830,6 +863,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   forceMultiplier: 8
   torqueMultiplier: 5
+  minAngle: 45
+  maxAngle: 135
+  baseDownwardForce: 3
+  lateralForceVariation: 1.5
   airGravityScale: 2
   airDrag: 1.5
   underwaterGravityScale: -0.5
@@ -837,10 +874,10 @@ MonoBehaviour:
   buoyancyStartDelay: 1.5
   waterCheckInterval: 0.25
   enableBuoyancy: 1
-  physicsLifetime: 15
+  physicsLifetime: 10
   velocityThreshold: 0.1
   autoCleanup: 1
-  rb: {fileID: 0}
+  rb: {fileID: 8688607944366234662}
 --- !u!61 &2232732426229390306
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -886,6 +923,33 @@ BoxCollider2D:
   serializedVersion: 2
   m_Size: {x: 1.376, y: 1.12}
   m_EdgeRadius: 0
+--- !u!50 &2455705083246761549
+Rigidbody2D:
+  serializedVersion: 4
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5587843507457551362}
+  m_BodyType: 0
+  m_Simulated: 1
+  m_UseFullKinematicContacts: 0
+  m_UseAutoMass: 0
+  m_Mass: 1
+  m_LinearDrag: 0
+  m_AngularDrag: 0.05
+  m_GravityScale: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_Interpolate: 0
+  m_SleepingMode: 1
+  m_CollisionDetection: 0
+  m_Constraints: 0
 --- !u!1 &5674966400638831099
 GameObject:
   m_ObjectHideFlags: 0
@@ -1021,6 +1085,7 @@ GameObject:
   - component: {fileID: 2979381925943829690}
   - component: {fileID: 4316885148912153313}
   - component: {fileID: 3666627265282306395}
+  - component: {fileID: 2726129152844278732}
   m_Layer: 6
   m_Name: BoatPart1
   m_TagString: Untagged
@@ -1109,6 +1174,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   forceMultiplier: 8
   torqueMultiplier: 5
+  minAngle: 45
+  maxAngle: 135
+  baseDownwardForce: 3
+  lateralForceVariation: 1.5
   airGravityScale: 2
   airDrag: 1.5
   underwaterGravityScale: -0.5
@@ -1119,7 +1188,7 @@ MonoBehaviour:
   physicsLifetime: 15
   velocityThreshold: 0.1
   autoCleanup: 1
-  rb: {fileID: 0}
+  rb: {fileID: 8688607944366234662}
 --- !u!61 &3666627265282306395
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -1165,6 +1234,33 @@ BoxCollider2D:
   serializedVersion: 2
   m_Size: {x: 1.268, y: 0.888}
   m_EdgeRadius: 0
+--- !u!50 &2726129152844278732
+Rigidbody2D:
+  serializedVersion: 4
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6424523540721141613}
+  m_BodyType: 0
+  m_Simulated: 1
+  m_UseFullKinematicContacts: 0
+  m_UseAutoMass: 0
+  m_Mass: 1
+  m_LinearDrag: 0
+  m_AngularDrag: 0.05
+  m_GravityScale: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_Interpolate: 0
+  m_SleepingMode: 1
+  m_CollisionDetection: 0
+  m_Constraints: 0
 --- !u!1 &6629729176795069028
 GameObject:
   m_ObjectHideFlags: 0

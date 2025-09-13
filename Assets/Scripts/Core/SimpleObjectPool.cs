@@ -183,7 +183,6 @@ public class SimpleObjectPool : MonoBehaviour
             rb.angularVelocity = 0f;
             rb.gravityScale = 1f;
             rb.simulated = true;
-            // rb.freezeRotation = true;
             rb.drag = 0f;
             rb.angularDrag = 0.05f;
             rb.isKinematic = false;
@@ -194,30 +193,32 @@ public class SimpleObjectPool : MonoBehaviour
         {
             enemy.ChangeState_Alive();
             enemy.ResetEnergy();
-            
+        
             Collider2D collider = enemy.BodyCollider;
             collider.isTrigger = false;
             collider.enabled = true;
-            
+        
             if (enemy is LandEnemy landEnemy)
             {
-                if (landEnemy.GetAssignedPlatform() != null)
+                if (landEnemy is not BoatLandEnemy)
                 {
-                    landEnemy.GetAssignedPlatform().UnregisterEnemy(landEnemy);
-                    landEnemy.SetAssignedPlatform(null);
+                    if (landEnemy.GetAssignedPlatform() != null)
+                    {
+                        landEnemy.GetAssignedPlatform().UnregisterEnemy(landEnemy);
+                        landEnemy.SetAssignedPlatform(null);
+                    }
                 }
-                
+            
                 landEnemy.platformBoundsCalculated = false;
                 landEnemy.fishingToolEquipped = false;
                 landEnemy.HasStartedFloating = false;
                 landEnemy.HasThrownHook = false;
                 landEnemy.MovementStateLand = LandEnemy.LandMovementState.Idle;
-                
+            
                 landEnemy.SetMovementMode(spawnPosition.y > 0f);
-                
                 landEnemy.ScheduleNextAction();
             }
-            
+        
             enemy.Initialize();
         }
 
@@ -319,7 +320,7 @@ public class SimpleObjectPool : MonoBehaviour
         }
 
         Enemy enemy = handler.GetComponentInChildren<Enemy>();
-        if (enemy != null && enemy is LandEnemy landEnemy)
+        if (enemy != null && enemy is LandEnemy landEnemy && landEnemy is not BoatLandEnemy)
         {
             if (landEnemy.GetAssignedPlatform() != null)
             {

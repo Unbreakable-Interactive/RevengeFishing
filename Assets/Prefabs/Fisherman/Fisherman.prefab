@@ -479,7 +479,11 @@ MonoBehaviour:
   pullDuration: 0.1
   minActionTime: 1
   maxActionTime: 4
-  nextActionTime: 0
+  actionTimer:
+    duration: 0
+    currentTime: 0
+    isRunning: 0
+    hasCompleted: 0
   enableDebugMessages: 0
   bodyCollider: {fileID: 0}
   parentContainer: {fileID: 0}

@@ -4,6 +4,10 @@ using UnityEngine;
 
 public class BoatLandEnemy : LandEnemy, IBoatComponent
 {
+    [Header("Object Pooling - Initial State")]
+    [SerializeField] private float initialActionTimeOffset = 0f;
+    [SerializeField] private bool hasStoredInitialValues = false;
+    
     #region Header Fields
     [Header("Boat Identity")]
 
@@ -38,6 +42,8 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
     [SerializeField] private bool isNavigating = false;
     #endregion
 
+    [SerializeField] private Timer boatHookTimer;
+    
     #region Private Variables
     private Transform crewContainer;
     private bool boatContextInitialized = false;
@@ -106,10 +112,13 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
     {
         if (!hasThrownHook) return;
 
-        hookTimer += Time.deltaTime;
+        if (boatHookTimer != null)
+        {
+            boatHookTimer.Update(Time.deltaTime);
+        }
 
         if (hookSpawner.CurrentHook != null &&
-            hookTimer >= hookDuration &&
+            boatHookTimer != null && boatHookTimer.IsFinished &&
             !hookSpawner.CurrentHook.isBeingHeld)
         {
             if (hookSpawner.HasActiveHook())
@@ -123,7 +132,12 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
         {
             CleanupHookSubscription();
             hasThrownHook = false;
-            hookTimer = 0f;
+            
+            // Reset del hook timer
+            if (boatHookTimer != null)
+            {
+                boatHookTimer.Reset();
+            }
 
             if (fishermanConfig != null && Random.value < fishermanConfig.unequipToolChance)
             {
@@ -365,8 +379,6 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
             {
                 float randomValue = Random.Range(0f, 100f);
                 
-                GameLogger.Log($"[BOAT AI] {gameObject.name} - Random: {randomValue:F1}%, Hook Threshold: {hookThrowProbability:F1}%");
-                
                 if (randomValue <= hookThrowProbability)
                 {
                     if (hookSpawner?.CanThrowHook() == true)
@@ -375,7 +387,13 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
                         
                         hookSpawner.ThrowHook();
                         hasThrownHook = true;
-                        hookTimer = 0f;
+                        
+                        if (boatHookTimer == null)
+                        {
+                            boatHookTimer = new Timer(hookDuration);
+                        }
+                        boatHookTimer.Restart(hookDuration);
+                        
                         SubscribeToHookEvents();
                         ScheduleNextActionWithFrequency();
                         return;
@@ -383,8 +401,6 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
                 }
                 else if (fishermanConfig != null && Random.value < fishermanConfig.unequipToolChance)
                 {
-                    GameLogger.Log($"[BOAT AI] {gameObject.name} - 🔄 UNEQUIPPING TOOL!");
-                    
                     TryUnequipFishingTool();
                     ScheduleNextActionWithFrequency();
                     return;
@@ -451,7 +467,10 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
         float baseInterval = Random.Range(minActionTime, maxActionTime);
         float adjustedInterval = baseInterval / aiDecisionFrequency;
     
-        nextActionTime = Time.time + adjustedInterval;
+        if (actionTimer == null)
+            actionTimer = new Timer(adjustedInterval);
+        
+        actionTimer.Restart(adjustedInterval);
     
         GameLogger.Log($"[BOAT AI] {gameObject.name} - Next action in {adjustedInterval:F1}s (freq: {aiDecisionFrequency:F1}x)");
     }
@@ -460,27 +479,45 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
     #region Movement System
     public override void SetMovementMode(bool aboveWater)
     {
-        GameLogger.Log($"[BOAT DEBUG] {gameObject.name} - SetMovementMode called: aboveWater={aboveWater}, isOnBoat={isOnBoat}");
-
         if (isOnBoat)
         {
             if (crewPhysics != null)
                 crewPhysics.SetBoatMode(true);
             
-            GameLogger.Log($"[BOAT DEBUG] {gameObject.name} - Boat movement mode: {(aboveWater ? "Above Water" : "In Water")} - STAYING KINEMATIC");
+            GameLogger.Log($"[BOAT DEBUG] {gameObject.name} - SetMovementMode: {(aboveWater ? "Above Water" : "In Water")} - STAYING KINEMATIC");
             return;
         }
 
-        GameLogger.Log($"[BOAT DEBUG] {gameObject.name} - CALLING BASE SetMovementMode({aboveWater})");
+        GameLogger.LogVerbose($"[BOAT DEBUG] {gameObject.name} SetMovementMode: aboveWater={aboveWater}, state={_state}, hasStartedFloating={hasStartedFloating}");
         
         base.SetMovementMode(aboveWater);
         
-        if (crewPhysics != null && crewPhysics.IsParentedToBoat())
+        if (!aboveWater)
         {
-            crewPhysics.SetBoatMode(false);
+            if (_state == EnemyState.Alive)
+            {
+                GameLogger.Log($"[BOAT DEBUG] {gameObject.name} - TOUCHED WATER! Destroying BoatLandEnemy completely");
+                
+                OnEnemyDied?.Invoke(this);
+                
+                DestroyBoatLandEnemy();
+                return;
+            }
+        }
+        else
+        {
+            if (_state == EnemyState.Defeated && hasStartedFloating)
+            {
+                GameLogger.Log($"[BOAT DEBUG] {gameObject.name} - ESCAPE CONDITIONS MET! Destroying BoatLandEnemy completely");
+                
+                OnEnemyDied?.Invoke(this);
+                
+                DestroyBoatLandEnemy();
+                return;
+            }
         }
         
-        GameLogger.Log($"[BOAT DEBUG] {gameObject.name} - BASE SetMovementMode complete. RigidbodyType: {(rb != null ? rb.bodyType.ToString() : "NULL")}, Gravity: {(rb != null ? rb.gravityScale.ToString("F2") : "NULL")}");
+        GameLogger.LogVerbose($"[BOAT DEBUG] {gameObject.name} - Movement mode set, RigidbodyType: {(rb != null ? rb.bodyType.ToString() : "NULL")}");
     }
 
     public override void LandMovement()
@@ -502,7 +539,7 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
 
     private void BoatLandMovement()
     {
-        if (Time.time >= nextActionTime)
+        if (IsTimeToAct())
         {
             MakeBoatAIDecision();
         }
@@ -514,13 +551,20 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
     private void StopMovementAndChooseNewAction(params LandMovementState[] excludedStates)
     {
         _landMovementState = LandMovementState.Idle;
-    
-        nextActionTime = Time.time + 0.1f;
-    
+
+        if (actionTimer == null)
+        {
+            actionTimer = new Timer(0.1f);
+            actionTimer.Start();
+        }
+        else
+            actionTimer.Restart(0.1f);
+
         ChooseRandomActionExcluding(excludedStates);
-    
+
         GameLogger.Log($"[BOUNDARY RESPONSE] {gameObject.name} excluded {string.Join(", ", excludedStates)} → chose {_landMovementState}");
     }
+
 
     private void ExecuteBoatLandMovementBehaviour()
     {
@@ -663,12 +707,6 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
             
         LeaveBoatCrew();
 
-        if (assignedPlatform != null)
-        {
-            assignedPlatform.UnregisterEnemy(this);
-            assignedPlatform = null;
-        }
-
         if (isNavigating)
         {
             ReleaseFromWheel();
@@ -686,12 +724,6 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
             GameLogger.Log($"[BOAT DEBUG] {gameObject.name} - Enemy defeated while on boat, will handle fall from boat");
             
             LeaveBoatCrew();
-            
-            if (assignedPlatform != null)
-            {
-                assignedPlatform.UnregisterEnemy(this);
-                assignedPlatform = null;
-            }
             
             if (isNavigating)
             {
@@ -716,15 +748,42 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
         GameLogger.Log($"[BOAT DEBUG] {gameObject.name} - TriggerEscape called");
 
         CleanupBoatSystems();
-        base.TriggerEscape();
+        player.Magnet.RemoveEntity(this);
+        gameObject.SetActive(false);
+    }
+    
+    protected override void EnemyDie()
+    {
+        GameLogger.Log($"[BOAT DEBUG] {gameObject.name} - EnemyDie called - BoatLandEnemy managed by BoatCrewManager");
+
+        OnEnemyDied?.Invoke(this);
+
+        gameObject.SetActive(false);
+    }
+    
+    public override void ReturnToPool()
+    {
+        GameLogger.Log($"[BOAT DEBUG] {gameObject.name} - ReturnToPool called - BoatLandEnemy should not use standard pooling");
+        
+        if (isReturningToPool)
+        {
+            GameLogger.LogVerbose($"{gameObject.name} already returning to pool, skipping duplicate call");
+            return;
+        }
+
+        isReturningToPool = true;
+        
+        CleanupBoatSystems();
+        
+        StopAllCoroutines();
+        
+        gameObject.SetActive(false);
+        
+        GameLogger.LogVerbose($"{gameObject.name} deactivated - lifecycle managed by BoatCrewManager");
     }
     #endregion
 
     #region Update and Core Loop
-    protected override void Update()
-    {
-        base.Update();
-    }
 
     protected override void UpdateLogic()
     {
@@ -755,13 +814,14 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
         isHandlingDefeat = false;
         fishingToolEquipped = false;
         hasThrownHook = false;
-        hookTimer = 0f;
         _landMovementState = LandMovementState.Idle;
         hasInteractedWithPlayer = false;
 
         transform.localScale = Vector3.one;
         transform.localRotation = Quaternion.identity;
 
+        ResetAllTimers();
+    
         if (crewPhysics != null)
         {
             crewPhysics.ResetToOriginalState();
@@ -773,8 +833,33 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
         EnemyAnimator?.SetBool(RodEquipped, false);
         EnemyAnimator?.SetBool(IsRising, false);
         EnemyAnimator?.SetBool(IsSinking, false);
-        
+    
         GameLogger.Log($"[BOAT DEBUG] {gameObject.name} - Reset to original state");
+    }
+    
+    private void ResetAllTimers()
+    {
+        if (actionTimer == null)
+            InitializeActionTimer();
+        else
+        {
+            actionTimer.Reset();
+            float randomDelay = Random.Range(0.5f, 2.0f);
+            actionTimer.Restart(randomDelay);
+        }
+
+        if (boatHookTimer == null)
+            boatHookTimer = new Timer(hookDuration);
+        else
+            boatHookTimer.Reset();
+
+        GameLogger.LogVerbose($"[BOAT RESET] {gameObject.name} - All timers reset and restarted");
+    }
+
+    public void StoreInitialValuesForPooling()
+    {
+        hasStoredInitialValues = true;
+        GameLogger.LogVerbose($"[BOAT POOLING] {gameObject.name} - Marked as having stored values");
     }
 
     private void CleanupBoatSystems()
@@ -798,8 +883,36 @@ public class BoatLandEnemy : LandEnemy, IBoatComponent
             CleanupHookSubscription();
             hookSpawner.OnHookDestroyed();
             hasThrownHook = false;
-            hookTimer = 0f;
         }
     }
+    
+    public void ForceDeactivateWithoutPooling()
+    {
+        CleanupBoatSystems();
+        gameObject.SetActive(false);
+        GameLogger.LogVerbose($"[BOAT DEBUG] {gameObject.name} - Force deactivated by BoatCrewManager");
+    }
     #endregion
+    
+    
+    protected override void CleanupBeforePoolReturn()
+    {
+        StopAllCoroutines();
+        GameLogger.LogVerbose($"[BOAT CLEANUP] {gameObject.name} - Cleanup without clearing AssignedPlatform");
+    }
+
+    private void DestroyBoatLandEnemy()
+    {
+        GameLogger.Log($"[BOAT DEBUG] {gameObject.name} - DESTROYING BoatLandEnemy completely");
+        
+        StopAllCoroutines();
+        CleanupHookSubscription();
+        
+        if (crewPhysics != null)
+            crewPhysics.ResetPhysics();
+
+        GameObject handlerToDestroy = transform.parent?.gameObject ?? gameObject;
+        Destroy(handlerToDestroy);
+    }
+
 }

@@ -37,7 +37,9 @@ public abstract class Enemy : Entity
     [Header("Decision making Timer")]
     [SerializeField] protected float minActionTime = 1f;
     [SerializeField] protected float maxActionTime = 4f;
-    [SerializeField] protected float nextActionTime;
+    [SerializeField] protected Timer actionTimer;
+
+    public Timer ActionTimer => actionTimer;
 
     [Header("Debug")]
     [SerializeField] protected bool enableDebugMessages = false;
@@ -52,12 +54,6 @@ public abstract class Enemy : Entity
     public Action<Enemy> OnEnemyDied;
 
     [HideInInspector] public bool isReturningToPool = false;
-
-    public float NextActionTime
-    {
-        get { return nextActionTime; }
-        set { nextActionTime = value; }
-    }
 
     public bool HasReceivedFirstFatigue
     {
@@ -88,7 +84,15 @@ public abstract class Enemy : Entity
 
         AutoAssignReferences();
 
+        InitializeActionTimer();
         Initialize();
+    }
+    
+    protected virtual void InitializeActionTimer()
+    {
+        float randomDuration = UnityEngine.Random.Range(minActionTime, maxActionTime);
+        actionTimer = new Timer(randomDuration);
+        actionTimer.Start();
     }
 
     private void AutoAssignReferences()
@@ -139,6 +143,11 @@ public abstract class Enemy : Entity
         entityEnergy = new EntityEnergy(_powerLevel, _powerLevel);
         _state = EnemyState.Alive;
     
+        if (actionTimer == null)
+        {
+            InitializeActionTimer();
+        }
+        
         CalculateTier();
     }
 
@@ -159,9 +168,14 @@ public abstract class Enemy : Entity
         else _tier = Tier.Tier1;
     }
 
-    protected override void Update()
+    protected override void UpdateLogic()
     {
-        base.Update();
+        base.UpdateLogic();
+        
+        if (actionTimer != null)
+        {
+            actionTimer.Update(Time.deltaTime);
+        }
     }
 
     public abstract void WaterMovement();
@@ -249,7 +263,27 @@ public abstract class Enemy : Entity
     public virtual void ScheduleNextAction()
     {
         float actionDuration = UnityEngine.Random.Range(minActionTime, maxActionTime);
-        nextActionTime = Time.time + actionDuration;
+        
+        if (actionTimer == null)
+        {
+            actionTimer = new Timer(actionDuration);
+        }
+        
+        actionTimer.Restart(actionDuration);
+    }
+
+    public void ResetActionTimer()
+    {
+        if (actionTimer != null)
+        {
+            actionTimer.Reset();
+        }
+        GameLogger.LogVerbose($"{gameObject.name}: Action timer reset");
+    }
+    
+    public bool IsTimeToAct()
+    {
+        return actionTimer != null && actionTimer.IsFinished;
     }
 
     public virtual void TriggerAlive()
@@ -288,7 +322,7 @@ public abstract class Enemy : Entity
         ChangeState_Eaten();
         InterruptAllActions();
 
-        MouthMagnet magnet = player.GetComponentInChildren<MouthMagnet>();
+        MouthMagnet magnet = player.Magnet;
         if (magnet != null)
         {
             magnet.RemoveEntity(this);
@@ -316,7 +350,7 @@ public abstract class Enemy : Entity
     protected virtual void TriggerEscape()
     {
         GameLogger.Log($"{gameObject.name} has ESCAPED! The player can no longer catch this enemy.");
-        player.GetComponentInChildren<MouthMagnet>().RemoveEntity(this);
+        player.Magnet.RemoveEntity(this);
         ReturnToPool();
     }
 
@@ -412,7 +446,7 @@ public abstract class Enemy : Entity
     {
         StopAllCoroutines();
 
-        if (this is LandEnemy landEnemy)
+        if (this is LandEnemy landEnemy && this is not BoatLandEnemy)
         {
             if (landEnemy.GetAssignedPlatform() != null)
             {

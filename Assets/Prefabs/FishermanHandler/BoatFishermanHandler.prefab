@@ -335,7 +335,11 @@ MonoBehaviour:
   pullDuration: 0.1
   minActionTime: 1
   maxActionTime: 4
-  nextActionTime: 0
+  actionTimer:
+    duration: 0
+    currentTime: 0
+    isRunning: 0
+    hasCompleted: 0
   enableDebugMessages: 1
   bodyCollider: {fileID: 3479015762017106946}
   parentContainer: {fileID: 1963649820016990938}
@@ -368,6 +372,8 @@ MonoBehaviour:
   lineReductionVariation: 0.4
   animator: {fileID: 2694603455566713901}
   assignedPlatform: {fileID: 0}
+  initialActionTimeOffset: 0
+  hasStoredInitialValues: 0
   crewPhysics: {fileID: 4277006710572366899}
   fishermanConfig: {fileID: 11400000, guid: 93deef848c2a54c8d966d2f88dafc97f, type: 2}
   hookThrowProbability: 33
@@ -379,6 +385,11 @@ MonoBehaviour:
   enableHookThrowing: 1
   crewRole: 0
   isNavigating: 0
+  boatHookTimer:
+    duration: 0
+    currentTime: 0
+    isRunning: 0
+    hasCompleted: 0
 --- !u!114 &4277006710572366899
 MonoBehaviour:
   m_ObjectHideFlags: 0
