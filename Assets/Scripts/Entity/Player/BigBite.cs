@@ -68,16 +68,18 @@ public class BigBite : AbilityBase
     {
         isCharging = true;
         isWaitingForApex = false;
-        hasReachedApex = true; // Mark as reached apex since we're starting the eating phase
-        chargeLevel = Mathf.Max(1, chargeLevel); // Ensure at least 1 charge
+        hasReachedApex = true;
+        chargeLevel = Mathf.Max(1, chargeLevel);
         hasEatenEnemy = false;
         isMouthOpen = true;
-        
-        // Update animation: Now big bite is active, set power based on charge level
+    
+        player.SetSpriteFlipping(false);
+    
         UpdateBigBiteAnimation();
-        
+    
         DebugLog($"Started Big Bite - Charge level: {chargeLevel}, Eating power: {GetEatingPower()}");
     }
+
     
     private void StartWaitingForApex()
     {
@@ -248,13 +250,13 @@ public class BigBite : AbilityBase
     private void EndBigBite()
     {
         if (!isCharging) return;
-        
+    
         DebugLog($"Ending Big Bite - Final charge level: {chargeLevel}, eaten enemy: {hasEatenEnemy}");
-        
-        // Turn off big bite animation when ending
+    
         player.SetBigBiteAnimation(false, 0);
-        
-        // Reset charging state
+    
+        player.SetSpriteFlipping(true);
+    
         isCharging = false;
         chargeLevel = 0;
         hasEatenEnemy = false;
@@ -270,6 +272,7 @@ public class BigBite : AbilityBase
         if (player != null)
         {
             player.SetBigBiteAnimation(false, 0);
+            player.SetSpriteFlipping(true);
         }
         
         // Reset all states

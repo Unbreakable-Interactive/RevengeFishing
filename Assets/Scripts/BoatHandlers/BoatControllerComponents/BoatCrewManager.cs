@@ -86,63 +86,31 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
             return;
         }
         
-        if (allCrewMembers.Count > 0)
+        if (gameObject.activeInHierarchy)
         {
-            if (gameObject.activeInHierarchy)
-            {
-                StartCoroutine(ResetExistingCrew());
-            }
-            else
-            {
-                ResetExistingCrewSync();
-            }
+            StartCoroutine(InitializeCrewInstantly());
         }
         else
         {
-            if (gameObject.activeInHierarchy)
-            {
-                StartCoroutine(InitializeCrewInstantly());
-            }
-            else
-            {
-                InitializeCrewSync();
-            }
+            InitializeCrewSync();
         }
-    }
-    
-    private IEnumerator ResetExistingCrew()
-    {
-        GameLogger.LogVerbose($"[CREW RESET] {GetBoatID()} - DESTROYING existing crew and creating new ones");
-    
-        DestroyAllExistingCrew();
-    
-        yield return StartCoroutine(InitializeCrewInstantly());
-    }
-    
-    private void ResetExistingCrewSync()
-    {
-        GameLogger.LogVerbose($"[CREW RESET SYNC] {GetBoatID()} - DESTROYING existing crew and creating new ones (synchronous)");
-    
-        DestroyAllExistingCrew();
-    
-        InitializeCrewSync();
     }
     
     private void DestroyAllExistingCrew()
     {
         GameLogger.Log($"[CREW DESTROY] {GetBoatID()} - Destroying all existing crew members completely");
-    
+
         foreach (var crew in allCrewMembers)
         {
             if (crew != null)
             {
                 crew.OnEnemyDied -= OnCrewMemberDied;
-            
+
                 if (boatPlatform != null)
                 {
                     boatPlatform.UnregisterEnemy(crew);
                 }
-            
+
                 GameObject handlerToDestroy = crew.transform.parent?.gameObject ?? crew.gameObject;
                 if (handlerToDestroy != null)
                 {
@@ -150,7 +118,7 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
                 }
             }
         }
-    
+
         foreach (var handlerRoot in crewHandlerRoots)
         {
             if (handlerRoot != null)
@@ -158,13 +126,13 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
                 Destroy(handlerRoot);
             }
         }
-    
+
         allCrewMembers.Clear();
         crewHandlerRoots.Clear();
         originalCrewPositions.Clear();
         originalCrewActiveStates.Clear();
         currentNavigator = null;
-    
+
         GameLogger.Log($"[CREW DESTROY] {GetBoatID()} - All existing crew destroyed and lists cleared");
     }
     
@@ -220,12 +188,12 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
     private void InitializeCrewSync()
     {
         GameLogger.LogVerbose($"[CREW SYNC INIT] {GetBoatID()} - Starting synchronous crew initialization (max: {maxCrewSize})");
-        
+    
         for (int i = 0; i < maxCrewSize; i++)
         {
             Vector3 spawnPosition = CalculateCrewMemberWorldPosition(i);
             BoatLandEnemy newCrewMember = SpawnCrewMember(spawnPosition, i);
-            
+        
             if (newCrewMember != null)
             {
                 allCrewMembers.Add(newCrewMember);
@@ -233,21 +201,26 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
                 crewHandlerRoots.Add(handlerRoot);
                 originalCrewPositions.Add(CalculateCrewMemberLocalPosition(i));
                 originalCrewActiveStates.Add(true);
-                
+            
                 ConfigureCrewMember(newCrewMember, i);
-                
+            
                 GameLogger.LogVerbose($"[CREW SYNC SPAWN] {GetBoatID()} - Spawned crew member {i}: {newCrewMember.name}");
             }
         }
-        
+    
         ApplyRandomCrewDeactivationInstantly();
         InitializeFloaterWithActiveCrew();
         CalculateInitialIntegrity();
         AssignNavigator();
-        
+    
         currentActiveCrewCount = GetActiveCrewCount();
-        
+    
         GameLogger.LogVerbose($"[CREW SYNC INIT COMPLETE] {GetBoatID()} - Total spawned: {allCrewMembers.Count}, Active: {currentActiveCrewCount}");
+    
+        if (boatController != null)
+        {
+            boatController.OnCrewInitializationComplete();
+        }
     }
     
     private void ApplyRandomCrewDeactivationInstantly()
@@ -312,25 +285,26 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
     {
         float totalPowerLevel = 0f;
         float activePowerLevel = 0f;
-        
+    
         foreach (var crew in allCrewMembers)
         {
             if (crew != null)
             {
+                totalPowerLevel += crew.PowerLevel;
+            
                 int crewIndex = allCrewMembers.IndexOf(crew);
                 if (crewIndex >= 0 && crewIndex < crewHandlerRoots.Count && crewHandlerRoots[crewIndex].activeInHierarchy)
                 {
                     activePowerLevel += crew.PowerLevel;
-                    totalPowerLevel = activePowerLevel;
-                }
-                
-                if (boatController != null)
-                {
-                    boatController.SetInitialIntegrity(totalPowerLevel, activePowerLevel);
                 }
             }
         }
-        
+    
+        if (boatController != null)
+        {
+            boatController.SetInitialIntegrity(totalPowerLevel, activePowerLevel);
+        }
+    
         GameLogger.LogVerbose($"[CREW INSTANT INTEGRITY] {GetBoatID()} - Calculated Max: {totalPowerLevel}, Current: {activePowerLevel}");
     }
     
@@ -752,33 +726,24 @@ public class BoatCrewManager : MonoBehaviour, IBoatComponent
     public void Reset()
     {
         ReleaseNavigator();
-
+        
         if (allCrewMembers.Count > 0)
         {
-            if (gameObject.activeInHierarchy)
-            {
-                StartCoroutine(ResetExistingCrew());
-            }
-            else
-            {
-                ResetExistingCrewSync();
-            }
+            DestroyAllExistingCrew();
+        }
+        
+        if (gameObject.activeInHierarchy)
+        {
+            StartCoroutine(InitializeCrewInstantly());
         }
         else
         {
-            if (gameObject.activeInHierarchy)
-            {
-                StartCoroutine(InitializeCrewInstantly());
-            }
-            else
-            {
-                InitializeCrewSync();
-            }
+            InitializeCrewSync();
         }
 
         currentActiveCrewCount = GetActiveCrewCount();
 
-        GameLogger.LogVerbose($"[CREW RESET] {GetBoatID()} - Reset initiated. Current active: {currentActiveCrewCount}");
+        GameLogger.LogVerbose($"[CREW RESET] {GetBoatID()} - Reset completed. Current active: {currentActiveCrewCount}");
     }
 
     private void OnDrawGizmosSelected()

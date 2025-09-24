@@ -180,15 +180,32 @@ public class Player : Entity
         base.UpdateLogic();
         
         //playerSpriteRenderer.flipY = (transform.rotation.z > 0.7f || transform.rotation.z < -0.7f);
+        // if (allowSpriteFlipping)
+        // {
+        //     if (transform.rotation.z > 0.7f || transform.rotation.z < -0.7f)
+        //     {
+        //         transform.localScale = new Vector3(transform.localScale.x, -Mathf.Abs(transform.localScale.y), transform.localScale.z); // Flip sprite vertically
+        //     }
+        //     else
+        //     {
+        //         transform.localScale = new Vector3(transform.localScale.x, Mathf.Abs(transform.localScale.y), transform.localScale.z); // Unflip sprite vertically
+        //     }
+        // }
+        
         if (allowSpriteFlipping)
         {
-            if (transform.rotation.z > 0.7f || transform.rotation.z < -0.7f)
+            bool isSafeToFlip = !GetBigBitingState(); // Chequear si Big Bite está activo
+    
+            if (isSafeToFlip)
             {
-                transform.localScale = new Vector3(transform.localScale.x, -Mathf.Abs(transform.localScale.y), transform.localScale.z); // Flip sprite vertically
-            }
-            else
-            {
-                transform.localScale = new Vector3(transform.localScale.x, Mathf.Abs(transform.localScale.y), transform.localScale.z); // Unflip sprite vertically
+                if (transform.rotation.z > 0.7f || transform.rotation.z < -0.7f)
+                {
+                    transform.localScale = new Vector3(transform.localScale.x, -Mathf.Abs(transform.localScale.y), transform.localScale.z);
+                }
+                else
+                {
+                    transform.localScale = new Vector3(transform.localScale.x, Mathf.Abs(transform.localScale.y), transform.localScale.z);
+                }
             }
         }
 

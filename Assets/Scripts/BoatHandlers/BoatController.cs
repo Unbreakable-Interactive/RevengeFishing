@@ -59,7 +59,7 @@ public class BoatController : MonoBehaviour
     [Header("Destruction System")]
     [SerializeField] private BoatPart[] boatParts;
 
-    [SerializeField] private float destructionDelay = 2f; // For now is not working any destruction delay
+    [SerializeField] private float destructionDelay = 2f;
     [SerializeField] private float resetDelay = 8f;
         
     [Header("Pool Management")]
@@ -123,27 +123,29 @@ public class BoatController : MonoBehaviour
             GameLogger.LogWarning($"[BOAT CONTROLLER] {gameObject.name} - Already initialized, skipping");
             return;
         }
-                
+            
         leftBoundaryPoint  = _leftBoundary;
         rightBoundaryPoint  = _rightBoundary;
-                
+
+        if (flashColor != null)
+        {
+            flashColor.ResetColor();
+        }
+    
         CacheComponents();
         SetupBoatPhysics();
         SetupBoatComponents();
         ConfigureAllBoatIDs();
-        
-        if (currentIntegrity <= 0f)
-        {
-            currentIntegrity = maxIntegrity;
-            GameLogger.LogVerbose($"[BOAT CONTROLLER] {gameObject.name} - Set default integrity: {currentIntegrity}/{maxIntegrity}");
-        }
-        
+    
+        currentIntegrity = 0f;
+        maxIntegrity = 0f;
+    
         InitializeCrewManager();
         SetRandomInitialDirection();
         InitializeState(BoatState.Idle);
-                
+            
         isInitialized = true;
-                
+            
         GameLogger.LogVerbose($"[BOAT CONTROLLER] {gameObject.name} - Boat fully initialized with ID: {boatID.UniqueID}");
     }
         
@@ -477,8 +479,8 @@ public class BoatController : MonoBehaviour
     public void SetInitialIntegrity(float maxIntegrityValue, float currentIntegrityValue)
     {
         maxIntegrity = maxIntegrityValue;
-        currentIntegrity = currentIntegrityValue;
-        
+        // currentIntegrity = currentIntegrityValue;
+        currentIntegrity = maxIntegrityValue;
         GameLogger.LogVerbose($"[BOAT CONTROLLER] {gameObject.name} - Integrity initialized: {currentIntegrity}/{maxIntegrity}");
     }
 
@@ -542,8 +544,8 @@ public class BoatController : MonoBehaviour
     {
         if (!isInitialized) return;
 
-        // Reset crew-based integrity calculation
         float crewIntegrity = 0f;
+        float maxCrewIntegrity = 0f;
         tempEnemyList.Clear();
 
         if (boatPlatform != null)
@@ -552,31 +554,25 @@ public class BoatController : MonoBehaviour
 
             foreach (var enemy in tempEnemyList)
             {
-                if (enemy != null && enemy.State == Enemy.EnemyState.Alive)
+                if (enemy != null)
                 {
-                    crewIntegrity += enemy.PowerLevel;
+                    if (enemy.State == Enemy.EnemyState.Alive)
+                    {
+                        maxCrewIntegrity += enemy.PowerLevel;
+                        crewIntegrity += enemy.PowerLevel;
+                    }
                 }
             }
         }
 
         tempEnemyList.Clear();
 
-        // Set the boat's integrity to crew-based integrity if not damaged
-        if (currentIntegrity <= 0f)
-        {
-            currentIntegrity = crewIntegrity;
-            GameLogger.LogVerbose($"[BOAT INTEGRITY] {gameObject.name} - Integrity set to crew power: {currentIntegrity}");
-        }
-        
-        // If we have no crew and haven't set initial integrity, use max integrity
-        if (currentIntegrity <= 0f && crewIntegrity <= 0f)
-        {
-            currentIntegrity = maxIntegrity;
-            GameLogger.LogVerbose($"[BOAT INTEGRITY] {gameObject.name} - No crew found, using max integrity: {currentIntegrity}");
-        }
+        maxIntegrity = maxCrewIntegrity;
+        currentIntegrity = crewIntegrity;
 
-        // Trigger destruction only if boat was damaged and now has no crew
-        if (crewIntegrity <= 0f && currentIntegrity <= 0f && !isDestroyed)
+        GameLogger.LogVerbose($"[BOAT INTEGRITY] {gameObject.name} - Recalculated integrity: {currentIntegrity}/{maxIntegrity}");
+
+        if (crewIntegrity <= 0f && !isDestroyed)
         {
             TriggerDestruction();
         }
@@ -589,22 +585,19 @@ public class BoatController : MonoBehaviour
         isDestroyed = true;
         ChangeState(BoatState.Destroyed);
         OnBoatSunk?.Invoke(this);
-        
-        // Defeat all crew members as if they were caught by fishing rod
+    
         DefeatAllCrewMembers();
-        
-        // Immediately destroy boat parts for visual feedback
-        DestroyBoatParts();
-        
-        // Start the reset timer (but destruction is immediate)
+    
         StartCoroutine(HandleDestruction());
     }
 
     private IEnumerator HandleDestruction()
     {
-        // No delay for destruction anymore - it happened immediately
-        // Only wait for reset
-        yield return new WaitForSeconds(resetDelay);
+        yield return new WaitForSeconds(destructionDelay);
+    
+        DestroyBoatParts();
+    
+        yield return new WaitForSeconds(resetDelay - destructionDelay);
 
         ResetBoat();
     }
@@ -658,16 +651,25 @@ public class BoatController : MonoBehaviour
 
     public void ResetBoat()
     {
+        GameLogger.Log($"[BOAT RESET] {gameObject.name} - Starting boat reset process...");
+
         isDestroyed = false;
-        currentIntegrity = maxIntegrity; // Start with full integrity
+
+        if (flashColor != null)
+        {
+            flashColor.ResetColor();
+        }
 
         if (crewManager != null)
         {
             crewManager.Reset();
         }
-        
-        boatSpriteRenderer.gameObject.SetActive(true);
-        
+
+        if (boatSpriteRenderer != null)
+        {
+            boatSpriteRenderer.gameObject.SetActive(true);
+        }
+
         if (boatParts != null)
         {
             foreach (var part in boatParts)
@@ -682,8 +684,8 @@ public class BoatController : MonoBehaviour
 
         SetRandomInitialDirection();
         ChangeState(BoatState.Idle);
-        
-        GameLogger.LogVerbose($"[BOAT RESET] {gameObject.name} - Reset with integrity: {currentIntegrity}/{maxIntegrity}");
+
+        GameLogger.Log($"[BOAT RESET] {gameObject.name} - Reset completed, integrity will be recalculated on crew initialization");
 
         if (useObjectPool)
         {

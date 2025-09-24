@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class FlashColorOnce : MonoBehaviour
 {
-    static readonly int ColorId = Shader.PropertyToID("_BaseColor"); // o "_Color" según tu shader
+    static readonly int ColorId = Shader.PropertyToID("_BaseColor");
     [SerializeField] Renderer targetRenderer;
     [SerializeField] Color flashColor = Color.red;
     [SerializeField] float seconds = 0.2f;
@@ -33,6 +33,15 @@ public class FlashColorOnce : MonoBehaviour
 
     [ContextMenu("Test Flash")]
     public void Flash() => StartCoroutine(FlashRoutine());
+
+    public void ResetColor()
+    {
+        if (!_cached) Awake();
+    
+        targetRenderer.GetPropertyBlock(_mpb);
+        _mpb.SetColor(ColorId, _originalColor);
+        targetRenderer.SetPropertyBlock(_mpb);
+    }
 
     IEnumerator FlashRoutine()
     {
